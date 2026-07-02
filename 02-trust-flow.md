@@ -158,7 +158,7 @@ Der Restart-/Quellvektor unterscheidet die Sichten; die Berechnung ist identisch
 
 ## 7. Partitionstoleranz
 
-Jeder rechnet über seinen *aktuell bekannten* Teilgraphen (die via Gossip/LXMF erhaltenen
+Jeder rechnet über seinen *aktuell bekannten* Teilgraphen (die per Gossip erhaltenen
 Vouch-Claims). Die Partition ist kein zu behebender Defekt — die Lokalität *macht* die
 Toleranz.
 

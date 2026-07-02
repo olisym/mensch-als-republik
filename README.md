@@ -18,7 +18,9 @@ kein globaler Preis. Aus dieser einen Entscheidung folgen alle anderen.
 
 ## Leitsätze (die Verfassung des Protokolls)
 
-- **A1 — Selbstenthalten.** Ein Claim reist über RNS/LXMF/QR/Papier; Transport ist nie Teil des Objekts.
+- **A1 — Selbstenthalten & transport-agnostisch.** Ein Claim reist über beliebige Medien
+  (Funk-Mesh, QR, Papier, …); Transport ist nie Teil des Objekts. Die Bindung an ein konkretes
+  Transportnetz (z. B. Reticulum/LXMF) ist ein separates Transport-Profil, kein Kern-Bestandteil.
 - **A2 — Lebenszyklus, nicht Bedeutung.** Das Protokoll versteht Gültigkeit, Ordnung und Widerruf —
   nie den sozialen Sinn. **Mechanismus ins Protokoll, Policy nach oben.**
 - **A3 — Erkennen statt Verhindern.** Kein globaler Konsens; hash-verkettete Logs, Equivocation

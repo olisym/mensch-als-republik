@@ -10,9 +10,11 @@ Nutzungskonventionen über genau diesem Atom. Ein Profil fügt **niemals** ein F
 
 ## 1. Leitsätze (Geltungsrahmen)
 
-- **A1 — Selbstenthalten.** Ein Claim ist ein in sich geschlossenes Objekt. Es trägt alles,
-  was zur Verifikation nötig ist, und reist über RNS, QR oder Papier. Transport steht nie
-  im Atom.
+- **A1 — Selbstenthalten & transport-agnostisch.** Ein Claim ist ein in sich geschlossenes
+  Objekt aus Bytes. Es trägt alles, was zur Verifikation nötig ist, und reist über **beliebige**
+  Medien (Funk-Mesh, QR, Papier, …). Transport steht **nie** im Atom; die Bindung an ein
+  konkretes Transportnetz (z. B. Reticulum/LXMF) ist ein separates **Transport-Profil**, kein
+  Kern-Bestandteil.
 - **A2 (geschärft) — Lebenszyklus, nicht Bedeutung.** Das Protokoll versteht den *Lebenszyklus
   von Claims und Keys* (Gültigkeit, Ordnung, Verkettung, Widerruf der eigenen Claims).
   Es versteht **niemals** die *Bedeutung von Aussagen*. Alles Soziale ist Policy und bleibt
@@ -124,10 +126,10 @@ nicht `σ`. `σ` beweist getrennt die **Urheberschaft** der Bytes. Verifikation:
 
 > **Offline-selbstenthalten (A1).** Weil `I` der volle 32-Byte-Ed25519-Verify-Key ist, trägt der
 > Core sein eigenes Verifikationsmaterial — ein Claim ist ohne Nachschlagen prüfbar (Papier/QR).
-> Preis ist Größe: 32 statt 16 Byte je Identity-Referenz. Die kompaktere Alternative (16-Byte-
-> RNS-Hash + separat mitgeführter Pubkey) wurde bewusst verworfen: sie knüpft Offline-Prüfung an
-> eine Nachschlage-Vorbedingung und öffnet einen 128-bit-Truncation-Kollisionsspielraum — bei
-> einem sicherheitstragenden Identitätsverweis nicht akzeptabel.
+> Preis ist Größe: 32 statt 16 Byte je Identity-Referenz. Die kompaktere Alternative (ein
+> 16-Byte-Truncation-Hash + separat mitgeführter Pubkey) wurde bewusst verworfen: sie knüpft
+> Offline-Prüfung an eine Nachschlage-Vorbedingung und öffnet einen 128-bit-Truncation-
+> Kollisionsspielraum — bei einem sicherheitstragenden Identitätsverweis nicht akzeptabel.
 
 **Verkettung.** `h_prev` ist die `claim_id` des unmittelbar vorhergehenden Claims *desselben
 Autors*. Der erste Claim einer Identity (Genesis) setzt einen **identity-gebundenen Anker**:
