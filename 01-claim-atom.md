@@ -97,11 +97,18 @@ formale Grammatik steht in **Anhang A**; dieser Abschnitt bleibt normativ maßge
    Claim-Mengen nach dem **aufgelösten Scope** (`resolve_scope(N)`), nicht nach dem
    rohen `p`-String allein (§2.4, Invariante 2).
 
-- Namensraum **`core`** ist protokoll-reserviert und **geschlossen**. In v1 existieren dort
-  genau zwei Prädikate: `core/revoke@1` und `core/supersede@1` (§5). Jedes andere `core/*`
-  ist strukturell ungültig → Reject (§2.4, Invariante 4).
-- Jeder andere Namensraum ist **opak/Policy**. Das Protokoll behandelt `p` als
-  undurchsichtigen Identifier; seine Bedeutung lebt vollständig in der Interpretationsschicht.
+- **Genau zwei gültige Namensräume in v1:** das geschlossene **`core`** und das offene
+  **`nuc:<scope>`** (Anhang A). Ein Prädikat, dessen Namensraum **weder** `core` **noch** `nuc:`
+  ist, ist **strukturell ungültig → Reject** (`UNKNOWN_NAMESPACE`, Anhang B). Das hält die
+  Scope-Autorität einzig an `N` (§2.4, Invariante 2) und verhindert einen wildwachsenden
+  Namensraum-Zoo neben `N`.
+- Namensraum **`core`** ist protokoll-reserviert und **geschlossen**: genau `core/revoke@1` und
+  `core/supersede@1` (§5). Jedes andere `core/*` ist strukturell ungültig → Reject (§2.4,
+  Invariante 4).
+- **Innerhalb `nuc:<scope>` ist der Prädikat-*Name* opak/Policy.** Das Protokoll behandelt ihn
+  als undurchsichtigen Identifier; seine Bedeutung lebt vollständig in der Interpretationsschicht.
+  Neue Profile (`vouch`, `accept-rules`, `validation`, `timestamp`, …) sind genau das: neue
+  **Namen** unter `nuc:`, **kein** neuer Namensraum — deshalb wächst die Grammatik nie mit.
 
 ### 2.3 `N` — Scope (Atom bleibt blind für die Herleitung)
 
@@ -304,7 +311,8 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
 2. der Core ist **kanonisch** kodiert (§3: Re-Serialisierung byte-gleich), dekodierbar, ohne
    doppelte Keys, mit korrekten Feldtypen;
 3. `J.tag` ist im geschlossenen Enum (§2.1);
-4. bei `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈
+4. Namensraum von `p` ist `core` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
+   `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈
    `{revoke@1, supersede@1}` und `J.tag == claim-ref` und `ziel.I == C.I`;
 5. `Ed25519-Verify(C.I, DOM_SIG ‖ bytes, C.σ)` ist wahr;
 6. `h_prev ≠ 32×0x00` (§4); ist `h_prev == SHA-256(DOM_ID_GEN ‖ C.I)`, ist `C` ein
@@ -509,6 +517,7 @@ lokal). Alle anderen sind über Verifizierer hinweg deterministisch gegeben dens
 | `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3) |
 | `MALFORMED_CBOR` | nicht dekodierbar / doppelte Keys / falscher Feldtyp / indefinite-length |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
+| `UNKNOWN_NAMESPACE` | Namensraum von `p` ist weder `core` noch `nuc:` (§2.2) |
 | `BAD_SCOPE_BINDING` | `nuc:…` ohne `N`, oder `N ≠ bytes.fromhex(scope)` bei kanonischer Kodierung (§2.2 R3) |
 | `RESERVED_CORE_PREDICATE` | `core/*` ∉ `{revoke@1, supersede@1}` (§2.4 Inv. 4) |
 | `FOREIGN_LIFECYCLE` | `core/revoke`/`supersede` mit `ziel.I ≠ C.I` (§5.1) |
@@ -712,5 +721,7 @@ erwartet = Reject: NON_CANONICAL_ENCODING
 - **§8 Key-Rotation** auf DF-0 angeglichen (`rotate-key@1`-Profil / Governance-Akt;
   Diebstahl ⇒ Equivocation).
 - **Selektive Stille** als non-normativer §1-Leitsatz mit VISION-Verweis.
+- **Namensraum geglättet:** genau `core` + `nuc:` gültig; alles andere Reject
+  (`UNKNOWN_NAMESPACE`); Prosa an Anhang-A-Grammatik angeglichen (§2.2, §6, Anhang B).
 - **Test-Vektoren** real gerechnet (TV1–TV4, NV1–NV3; Anhang C); Beispiel-Nukleus
   jetzt schema-valide (00 §4/§5) und byte-identisch mit 00 §3.1 geteilt.
