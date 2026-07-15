@@ -32,7 +32,10 @@ Für eine Anfrage `(Scope N, Zweck π)`:
 - **Knoten** `V` = Identitäten (Ed25519-Verify-Keys).
 - **Kanten** `E` = gerichtete Kante `I → J` für jeden **aktiven** `nuc:N/vouch@1`-Claim
   mit Autor `I`, Subjekt `J`. „Aktiv" heißt: strukturell gültig, nicht abgelaufen, nicht
-  widerrufen, nicht supersediert (Atom-Spec §6).
+  widerrufen, nicht supersediert (Atom-Spec §6). Ein **partial-sync**-Vouch, dessen Vorgänger
+  noch fehlt, ist erst `pending` (Atom-Spec §6) und trägt **noch keine** Kante bei — er wird
+  aufgenommen, sobald er `active` wird. Das ist dieselbe sichere Richtung wie §7: fehlendes
+  Wissen senkt nur, es erfindet keine Kante.
 - **Scope-Partition.** Es gibt einen Graphen *pro* `N`. Vertrauen aus Scope A fließt nicht
   nach Scope B (Kontextbindung).
 - **Zweck-Filter.** Trägt der Vouch in `v` einen Zweck-Tag, werden für Zweck `π` nur passende
@@ -141,7 +144,10 @@ Projektion.
 
 Ein Vouch mit `t_exp` voidet sich selbst nach Ablauf — **auch wenn sein Widerruf nie
 ankommt**. Das ist der partitionstolerante Backstop gegen den steckengebliebenen Revoke
-(§7). Strukturell, ohne Policy.
+(§7). Strukturell, ohne Policy. **Ausgewertet wird `t_exp` lokal** gegen die subjektive
+Verifizierer-Zeit `now` (Atom-Spec §6): zwei Verifizierer dürfen legitim uneins sein, ob ein
+Vouch schon abgelaufen ist — die sichere Richtung ist stets Unter-Vertrauen. „Voidet sich
+selbst" meint also *strukturell definiert*, nicht *global synchron*.
 
 ### 6.3 Geschichtete Seeds
 
