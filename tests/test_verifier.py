@@ -1,0 +1,345 @@
+"""Tests für Verifizierer und Zustandsmaschine."""
+
+import json
+from pathlib import Path
+
+import cbor2
+import pytest
+
+from mensch_als_republik import cbor_canon
+from mensch_als_republik.atom import claim_from_bytes, claim_id, is_equivocation_pair
+from mensch_als_republik.errors import (
+    BadScopeBinding,
+    BadSignature,
+    ErrorCode,
+    ForeignLifecycle,
+    IncoherentExpiry,
+    InvalidGenesisAnchor,
+    MalformedCbor,
+    NonCanonicalEncoding,
+    ReservedCorePredicate,
+    UnknownJTag,
+    UnknownNamespace,
+    UnsupportedVersion,
+)
+from mensch_als_republik.verifier import (
+    InMemoryStore,
+    State,
+    classify,
+    structural_check,
+)
+
+VECTORS = json.loads(
+    (Path(__file__).resolve().parent / "vectors" / "vectors_01.json").read_text()
+)
+
+
+def _vec(name: str) -> dict:
+    for v in VECTORS["vectors"]:
+        if v["name"] == name:
+            return v
+    raise KeyError(name)
+
+
+def _claim(name: str):
+    return claim_from_bytes(bytes.fromhex(_vec(name)["signed_bytes"]))
+
+
+def _add_chain(store: InMemoryStore, *names: str) -> None:
+    for n in names:
+        store.add(_claim(n))
+
+
+# --- Positive structural checks ---
+
+
+@pytest.mark.parametrize("name", ["TV1", "TV2", "TV3", "TV4"])
+def test_structural_check_valid_vectors(name: str):
+    structural_check(bytes.fromhex(_vec(name)["signed_bytes"]))
+
+
+def test_nv1_invalid_genesis_anchor_not_pending():
+    with pytest.raises(InvalidGenesisAnchor) as exc:
+        structural_check(bytes.fromhex(_vec("NV1")["signed_bytes"]))
+    assert exc.value.code == ErrorCode.INVALID_GENESIS_ANCHOR
+
+
+def test_nv2_non_canonical_encoding():
+    nv2 = _vec("NV2")
+    # Nicht-kanonischer Core + σ als Key 9 angehängt (ebenfalls nicht kanonisch sortiert)
+    core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
+    sigma = bytes.fromhex(_vec("TV1")["sigma"])
+    obj = cbor2.loads(core_nc)
+    obj[9] = sigma
+    wire_nc = cbor2.dumps(obj, canonical=False)
+    with pytest.raises(NonCanonicalEncoding):
+        structural_check(wire_nc)
+
+
+def test_nv2_reserializes_to_tv1_core():
+    nv2 = _vec("NV2")
+    core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
+    assert cbor_canon.reserialize(core_nc).hex() == nv2["reserializes_to"]
+
+
+# --- Classification ---
+
+
+def test_tv1_active_when_genesis():
+    store = InMemoryStore()
+    tv1 = _claim("TV1")
+    store.add(tv1)
+    result = classify(tv1, store, now=1_700_000_000)
+    assert result.state == State.ACTIVE
+    assert result.trust_usable is True
+
+
+def test_tv2_pending_without_predecessor():
+    store = InMemoryStore()
+    tv2 = _claim("TV2")
+    result = classify(tv2, store, now=1_700_000_100)
+    assert result.state == State.PENDING
+
+
+def test_tv2_active_with_predecessor():
+    store = InMemoryStore()
+    _add_chain(store, "TV1", "TV2")
+    result = classify(_claim("TV2"), store, now=1_700_000_100)
+    assert result.state == State.ACTIVE
+
+
+def test_tv3_revokes_tv1():
+    store = InMemoryStore()
+    _add_chain(store, "TV1", "TV2", "TV3")
+    assert classify(_claim("TV1"), store, now=1_700_000_200).state == State.REVOKED
+    assert classify(_claim("TV3"), store, now=1_700_000_200).state == State.ACTIVE
+
+
+def test_nv3_equivocation_flags_pair():
+    store = InMemoryStore()
+    tv1 = _claim("TV1")
+    nv3 = _claim("NV3")
+    assert is_equivocation_pair(tv1, nv3)
+    store.add(tv1)
+    store.add(nv3)
+    assert classify(tv1, store, now=1_700_000_000).state == State.EQUIVOCATION_FLAGGED
+    assert classify(nv3, store, now=1_700_000_001).state == State.EQUIVOCATION_FLAGGED
+
+
+def test_equivocation_does_not_invalidate_downstream():
+    store = InMemoryStore()
+    _add_chain(store, "TV1", "TV2")
+    store.add(_claim("NV3"))
+    assert classify(_claim("TV2"), store, now=1_700_000_100).state == State.ACTIVE
+
+
+def test_idempotent_add():
+    store = InMemoryStore()
+    tv1 = _claim("TV1")
+    store.add(tv1)
+    store.add(tv1)
+    assert len(store.all_claims()) == 1
+
+
+def test_tv1_linked_when_now_missing_and_t_exp_set():
+    store = InMemoryStore()
+    tv1 = _claim("TV1")
+    store.add(tv1)
+    result = classify(tv1, store, now=None)
+    assert result.state == State.LINKED
+    assert result.trust_usable is False
+
+
+def test_expired_when_now_past_t_exp():
+    store = InMemoryStore()
+    tv1 = _claim("TV1")
+    store.add(tv1)
+    result = classify(tv1, store, now=1_800_000_000)
+    assert result.state == State.EXPIRED
+    assert result.trust_usable is False
+
+
+def test_core_revoke_ignores_t_exp():
+    """core/* ignoriert t_exp auch wenn gesetzt (§5.3)."""
+    store = InMemoryStore()
+    _add_chain(store, "TV1", "TV2")
+    tv3 = _claim("TV3")
+    store.add(tv3)
+    result = classify(tv3, store, now=9_999_999_999)
+    assert result.state == State.ACTIVE
+
+
+# --- Error class coverage ---
+
+
+def test_unsupported_version():
+    data = bytearray.fromhex(_vec("TV1")["signed_bytes"])
+    data[2] = 0x02  # corrupt version value byte — use proper construction
+    obj = cbor2.loads(bytes.fromhex(_vec("TV1")["signed_bytes"]))
+    obj[0] = 99
+    wire = cbor_canon.encode(obj)
+    with pytest.raises(UnsupportedVersion):
+        structural_check(wire)
+
+
+def test_malformed_cbor():
+    with pytest.raises(MalformedCbor):
+        structural_check(b"\xff\xff\xff")
+
+
+def test_unknown_j_tag():
+    obj = cbor2.loads(bytes.fromhex(_vec("TV1")["signed_bytes"]))
+    obj[2] = [99, obj[2][1]]
+    wire = cbor_canon.encode(obj)
+    with pytest.raises(UnknownJTag):
+        structural_check(wire)
+
+
+def test_unknown_namespace_in_structural():
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from mensch_als_republik.atom import Claim, sign, signed_bytes
+
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
+    base = _claim("TV1")
+    c = Claim(
+        version=1,
+        I=base.I,
+        J=base.J,
+        p="svc:foo/bar@1",
+        t=base.t,
+        h_prev=base.h_prev,
+        N=base.N,
+        sigma=None,
+    )
+    wire = signed_bytes(
+        Claim(
+            version=c.version,
+            I=c.I,
+            J=c.J,
+            p=c.p,
+            t=c.t,
+            h_prev=c.h_prev,
+            N=c.N,
+            sigma=sign(sk, c),
+        )
+    )
+    with pytest.raises(UnknownNamespace):
+        structural_check(wire)
+
+
+def test_bad_scope_binding_structural():
+    obj = cbor2.loads(bytes.fromhex(_vec("TV1")["signed_bytes"]))
+    del obj[5]
+    wire = cbor_canon.encode(obj)
+    with pytest.raises(BadScopeBinding):
+        structural_check(wire)
+
+
+def test_reserved_core_predicate_structural():
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from mensch_als_republik.atom import Claim, sign, signed_bytes
+
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
+    base = _claim("TV1")
+    c = Claim(
+        version=1,
+        I=base.I,
+        J=(2, claim_id(base)),
+        p="core/vouch@1",
+        t=1,
+        h_prev=base.h_prev,
+        sigma=None,
+    )
+    wire = signed_bytes(
+        Claim(
+            version=c.version,
+            I=c.I,
+            J=c.J,
+            p=c.p,
+            t=c.t,
+            h_prev=c.h_prev,
+            sigma=sign(sk, c),
+        )
+    )
+    with pytest.raises(ReservedCorePredicate):
+        structural_check(wire)
+
+
+def test_foreign_lifecycle():
+    store = InMemoryStore()
+    store.add(_claim("TV4"))  # Bob's claim as target
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from mensch_als_republik.atom import Claim, sign, signed_bytes
+
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
+    target = _claim("TV4")
+    c = Claim(
+        version=1,
+        I=bytes.fromhex(VECTORS["params"]["ALICE"]),
+        J=(2, claim_id(target)),
+        p="core/revoke@1",
+        t=1,
+        h_prev=bytes.fromhex(VECTORS["params"]["id_genesis_anchor_ALICE"]),
+        sigma=None,
+    )
+    wire = signed_bytes(
+        Claim(
+            version=c.version,
+            I=c.I,
+            J=c.J,
+            p=c.p,
+            t=c.t,
+            h_prev=c.h_prev,
+            sigma=sign(sk, c),
+        )
+    )
+    with pytest.raises(ForeignLifecycle):
+        structural_check(wire, store=store)
+
+
+def test_bad_signature():
+    wire = bytearray.fromhex(_vec("TV1")["signed_bytes"])
+    wire[-1] ^= 0xFF
+    with pytest.raises(BadSignature):
+        structural_check(bytes(wire))
+
+
+def test_incoherent_expiry():
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from mensch_als_republik.atom import Claim, sign, signed_bytes
+
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
+    base = _claim("TV1")
+    c = Claim(
+        version=base.version,
+        I=base.I,
+        J=base.J,
+        p=base.p,
+        t=1_735_689_600,
+        h_prev=base.h_prev,
+        v=base.v,
+        N=base.N,
+        t_exp=1_700_000_000,
+        sigma=None,
+    )
+    wire = signed_bytes(
+        Claim(
+            version=c.version,
+            I=c.I,
+            J=c.J,
+            p=c.p,
+            t=c.t,
+            h_prev=c.h_prev,
+            v=c.v,
+            N=c.N,
+            t_exp=c.t_exp,
+            sigma=sign(sk, c),
+        )
+    )
+    with pytest.raises(IncoherentExpiry):
+        structural_check(wire)
+
+
+def test_non_canonical_positive_canonical_passes():
+    wire = bytes.fromhex(_vec("TV1")["signed_bytes"])
+    assert cbor_canon.is_canonical(wire)
