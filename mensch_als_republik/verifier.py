@@ -19,6 +19,7 @@ from mensch_als_republik.atom import (
 from mensch_als_republik.errors import (
     BadScopeBinding,
     BadSignature,
+    ErrorCode,
     ForeignLifecycle,
     IncoherentExpiry,
     InvalidGenesisAnchor,
@@ -63,7 +64,7 @@ class ClaimStore(Protocol):
 
     def add(self, claim: Claim) -> None: ...
 
-    def is_author_equivocation_flagged(self, I: bytes) -> bool: ...
+    def all_claims(self) -> list[Claim]: ...
 
 
 class InMemoryStore:
@@ -72,16 +73,12 @@ class InMemoryStore:
     def __init__(self) -> None:
         self._by_id: dict[bytes, Claim] = {}
         self._by_author_hprev: dict[tuple[bytes, bytes], list[Claim]] = {}
-        self._flagged_authors: set[bytes] = set()
 
     def get(self, cid: bytes) -> Claim | None:
         return self._by_id.get(cid)
 
     def by_author_hprev(self, I: bytes, h_prev: bytes) -> list[Claim]:
         return list(self._by_author_hprev.get((I, h_prev), []))
-
-    def is_author_equivocation_flagged(self, I: bytes) -> bool:
-        return I in self._flagged_authors
 
     def add(self, claim: Claim) -> None:
         cid = claim_id(claim)
@@ -91,8 +88,6 @@ class InMemoryStore:
         key = (claim.I, claim.h_prev)
         siblings = self._by_author_hprev.setdefault(key, [])
         siblings.append(claim)
-        if len(siblings) > 1:
-            self._flagged_authors.add(claim.I)
 
     def all_claims(self) -> list[Claim]:
         return list(self._by_id.values())
@@ -331,23 +326,6 @@ def classify(claim: Claim, store: ClaimStore, now: int | None = None) -> Classif
 
     return Classification(state=State.ACTIVE, trust_usable=True)
 
-
-# Re-export errors for convenience
-from mensch_als_republik.errors import (  # noqa: E402
-    BadScopeBinding,
-    BadSignature,
-    ErrorCode,
-    ForeignLifecycle,
-    IncoherentExpiry,
-    InvalidGenesisAnchor,
-    MalformedCbor,
-    NonCanonicalEncoding,
-    ReservedCorePredicate,
-    UnknownJTag,
-    UnknownNamespace,
-    UnsupportedVersion,
-    VerifierError,
-)
 
 __all__ = [
     "BadScopeBinding",
