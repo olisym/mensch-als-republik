@@ -200,6 +200,29 @@ zu klein ⇒ jeder bekannte Anteil zu groß ⇒ **fehlendes Wissen erhöht das e
 Nicht durch eine Normalisierungsregel reparierbar: Jede Regel, in der andere Kanten den Anteil
 einer Kante beeinflussen, hat diesen Defekt. Er liegt in der Kopplung, nicht in der Formel.
 
+### D27 — Die PageRank-Relaxation liest `w`
+
+Nachtrag aus der Prüfung des Spec-Nachzugs. D1 hinterließ `§5` unterspezifiziert: ob die
+Übergangsmatrix das Vouch-Gewicht berücksichtigt, war offen — zwei Implementierungen hätten
+legitim auseinanderlaufen können.
+
+**Beschluss:** Der Übergangsanteil ist proportional zu `w`, danach spaltenstochastisch
+normalisiert. Begründung: Ignorierte `§5` das Gewicht, behandelte es einen Probe-Vouch mit
+`w = 0.05` wie eine volle Bürgschaft und wäre damit **großzügiger als die harte Sicht** — die
+falsche Richtung. Eine Relaxation darf ungenauer sein, nie über-vertrauend.
+
+**Kein Widerspruch zu D9.** Die dort verworfene Normalisierung bricht die Monotonie der *harten*
+Schranke. In `§5` ist sie zulässig, weil dieser Abschnitt keine harte Schranke trägt und für
+Gates verboten ist (`§5`, `§9`).
+
+**Nebenbeschluss:** Übergangsmatrix `C` → `P` umbenannt (Kollision mit der Knotenkapazität
+`C(x)`). Reine Notation.
+
+**Weitere Nachbesserungen aus derselben Prüfung** (ohne eigene Entscheidungsnummer):
+Symbolkollision `n` in `§3.1` aufgelöst; Abgrenzung des Knotenkapazitäts-Blockzitats in `§3`
+gegen `§3.1`; `pending`-Vouches binden Budget (sonst umgeht ein zurückgehaltener Vorgänger die
+Budgetregel).
+
 ---
 
 ## B. Sybil-Schranke und Kollusion (Layer 02) ⚠️
@@ -631,8 +654,9 @@ Layer 02) → Golden Anchors → `02a-maxflow` → `02b-pagerank` → Layer 03.
 `Σw`-Prüfung über dem Budget-Set, Multi-Sink-Pfad, Einheitskapazitäts-Pfad für
 Disjunktheitszählung, Über-Commitment-Erkennung als Fehlerklasse.
 
-**`02b-pagerank` unverändert** — die Relaxation war nie kapazitätstragend (`02 §5`) und bleibt
-für harte Entscheidungen verboten.
+**`02b-pagerank`:** Die Relaxation bleibt für harte Entscheidungen verboten (`02 §5`), liest
+aber nun das Vouch-Gewicht (D27). Golden-Anchor-Werte für die weiche Sicht sind entsprechend
+mit gewichteter Adjazenz zu rechnen.
 
 ---
 

@@ -74,7 +74,9 @@ mit der Distanz vom Seed ab — und genau das erzeugt die Sybil-Schranke und die
 > **Warum Knoten- und nicht Kantenkapazität (bewusste Wahl).** Nur die Kapazität *am Knoten*
 > macht die Schranke unabhängig von der Zahl der Sybils: der Engpass ist die endliche
 > Kapazität der **ehrlichen Grenzknoten**, nicht die Zahl der Kanten oder Knoten dahinter.
-> Das ist das tragende Element des Bounds in §4.
+> Das ist das tragende Element des Bounds in §4. Die Kantenkapazitäten aus §3.1 kommen
+> additiv hinzu: sie können den Fluss nur weiter **senken** und berühren die
+> `|S|`-Unabhängigkeit nicht.
 
 ### 3.1 Vouch-Gewicht `w` und Selbstbindungsbudget
 
@@ -100,6 +102,13 @@ Ein Vouch deklariert in `v`, wie viel Vertrauen er weiterreicht.
 | **Aktiv-Set** | nicht widerrufen, nicht abgelaufen | Kantensatz für den Fluss (§2) |
 | **Budget-Set** | nicht abgelaufen (widerrufen **eingeschlossen**) | Prüfung `Σw ≤ 1` |
 
+**`pending` bindet Budget.** Ein Vouch, dessen Vorgänger in der Autorenkette noch fehlt, trägt
+keine Kante bei (§2), gehört aber ins **Budget-Set**: Er ist signiert, und der
+Über-Commitment-Beweis beruht auf Signaturen, nicht auf Aktivität. Andernfalls ließe sich die
+Budgetregel umgehen, indem ein Autor Vorgänger absichtlich zurückhält — alle Vouches blieben
+`pending` und budgetfrei, bis der fehlende Vorgänger nachgereicht wird und sie gleichzeitig
+`active` werden.
+
 **Widerruf und Freigabe.** Ein Widerruf stoppt den Fluss sofort (die Kante verlässt das
 Aktiv-Set) und beendet die Haftung des Bürgen — **gibt das Budget aber nicht frei**. Frei wird es
 erst bei `t_exp` (§6.2). Budget ist vorwärtsgerichtet, Haftung rückwärtsgerichtet; sie folgen
@@ -112,7 +121,7 @@ ist die **Deklaration selbst der Einsatz** — hohes Vertrauen lässt sich nicht
 Ein erfolgreicher Vouch bringt dem Bürgen umgekehrt **keine** Kapazitätsprämie (§1): der Ertrag
 liegt in der Beziehung, nicht in der Metrik.
 
-**Über-Commitment ist selbst-validierend.** Liegen `n` signierte Vouches derselben Identität im
+**Über-Commitment ist selbst-validierend.** Liegen mehrere signierte Vouches derselben Identität im
 selben Scope mit `Σw > 1` vor, ist das ein unabhängig nachrechenbarer Beweis — dieselbe Klasse
 wie Equivocation (Atom-Spec §4), mechanisch slashbar, ohne Verdikt. Bei Teilwissen ist das
 beobachtete `Σw` zu klein: eine Verletzung wird möglicherweise **nicht erkannt**, aber nie eine
@@ -193,11 +202,25 @@ fremdes `w` bleiben sie wertlos.
 Personalisierter Random-Walk-mit-Restart vom Seed:
 
 ```
-t_s = α · e_s + (1−α) · Cᵀ · t_s     ⇔     t_s = α (I − (1−α) Cᵀ)⁻¹ · e_s
+t_s = α · e_s + (1−α) · Pᵀ · t_s     ⇔     t_s = α (I − (1−α) Pᵀ)⁻¹ · e_s
 ```
 
-mit spaltenstochastischer Übergangsmatrix `C` (normalisierte Vouch-Adjazenz),
+mit spaltenstochastischer Übergangsmatrix `P` (**gewichtete**, normalisierte Vouch-Adjazenz),
 Restart-Vektor `e_s` (der Seed, §6.3) und Restart-Wahrscheinlichkeit `α`.
+
+> **Die Relaxation liest `w` (§3.1).** Der Übergangsanteil von `I` nach `J` ist proportional zum
+> Gewicht `w` der Kante `I → J`, anschließend spaltenstochastisch normalisiert — **nicht**
+> gleichverteilt über die ausgehenden Kanten. Andernfalls behandelte die schnelle Sicht einen
+> Probe-Vouch mit `w = 0.05` wie eine volle Bürgschaft und wäre damit **großzügiger** als die
+> harte Sicht (§4). Eine Relaxation darf ungenauer sein, nie über-vertrauend.
+>
+> Die hier nötige Normalisierung über `Σw` wäre in §4 **verboten** (sie koppelt Kanten
+> aneinander und bricht damit die Monotonie aus §7, siehe das Blockzitat in §3.1). In §5 ist sie
+> zulässig, **weil dieser Abschnitt ohnehin keine harte Schranke trägt** und für Gates verboten
+> ist. Das ist kein Widerspruch, sondern genau die Trennlinie zwischen beiden Sichten.
+>
+> Der Buchstabe `P` ersetzt das frühere `C`, um die Kollision mit der Knotenkapazität `C(x)`
+> (§3) zu vermeiden. Reine Umbenennung, keine inhaltliche Änderung.
 
 - **Garantie:** nur **weich/probabilistisch** sybil-resistent — Walks überqueren wenige
   Angriffskanten selten, also erreicht `S` wenig stationäre Masse, aber **keine harte
