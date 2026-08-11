@@ -114,6 +114,12 @@ Ein Vouch deklariert in `v`, wie viel Vertrauen er weiterreicht.
 - **Selbstbindungsbudget.** Für jede Identität `I` und jeden Scope `N` gilt `Σ wᵢ ≤ 1`,
   gleichbedeutend `Σ_J n_budget ≤ D`, über alle Gruppen `(I, J, N)` im Budget-Set.
 
+> **Nicht abgelaufen ist ein Prädikat, kein Zustand.** Die Zugehörigkeit zum Budget-Set
+> prüft `t_exp` gegen `now` (`now ≤ t_exp`, fehlendes `t_exp` bindet unbegrenzt) —
+> **unabhängig** vom Lebenszyklus-Zustand. Wer sie an einen Zustand „abgelaufen" knüpft,
+> erzeugt einen Deadlock: ein widerrufener Claim erreicht diesen Zustand nie, weil der
+> Widerruf vorrangig ist, und bände sein Budget für immer (D41).
+
 > **Aggregation je `(I, J, N)`.** Mehrere Vouches derselben Identität auf dasselbe Subjekt im
 > selben Scope bilden **eine** Gruppe. Es zählen `n_budget = max n` über die
 > Gruppenmitglieder im Budget-Set und `n_kante = max n` über die im Aktiv-Set; die Kante
@@ -425,9 +431,11 @@ Der *Mechanismus* ist festgelegt; die *Werte* sind Interpretation (A2):
 - **Budgetgrenze:** Default `Σw ≤ 1`. Ein Nukleus darf lockerer oder strenger setzen.
 - **Pfad-Disjunktheit statt bloßer Anzahl.** Eine Policy kann „N Attestierungen über
   **knoten-disjunkte** Pfade vom Seed" verlangen statt nur „N Attestierungen". Berechnung:
-  derselbe Max-Flow mit **Einheitskapazitäten auf den internen Knotenkanten** und ∞ auf den
-  Vouch-Kanten — also **knoten**-disjunkt, nicht kantendisjunkt. Zwei Pfade durch denselben
-  Bürgen sind ein Bürge. **Endpunkte werden nicht gespalten:** die internen Kanten der Anker
+  derselbe Max-Flow mit **Einheitskapazitäten auf den internen Knotenkanten und auf den
+  Vouch-Kanten** — also **knoten**-disjunkt, nicht kantendisjunkt. Zwei Pfade durch denselben
+  Bürgen sind ein Bürge. Die Vouch-Kanten tragen `1` und nicht ∞: zwei knotendisjunkte Pfade
+  teilen nie eine Kante, die Kappung ist daher verlustfrei — und ohne sie liefert der Solver bei
+  einer direkten Anker→Ziel-Kante keinen Pfadwert, sondern den ∞-Sentinel (D42). **Endpunkte werden nicht gespalten:** die internen Kanten der Anker
   tragen ∞, die des Ziels liegt ohnehin nicht auf dem Pfad (§4). Sonst wäre die Zahl von
   einem einzelnen Anker aus trivial 1. Wirkung: eine Koalition, die über *einen*
   Bürgen eingesickert ist, hat Min-Cut 1 — egal wie viele Mitglieder sie hat. Das ist die

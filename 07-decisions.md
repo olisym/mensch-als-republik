@@ -633,6 +633,10 @@ Glaubwürdigkeit erfordert Kosten. Ostroms Design-Prinzip 5 (abgestufte Sanktion
 | `02-trust-flow.md §4` | Definition auf `s_in`; Super-Sink an `T_in`; schärfere Schranke; zwei Divergenzursachen; Angriffsform | D31, D30 |
 | `02-trust-flow.md §8` | `C₀` nicht verhältniserhaltend; `D` scope-fest + SHOULD `≥ C₀`, keine Kurzform; Granularitätsboden; Bootstrap-Ungleichungen; `r_max`; knoten-disjunkt mit Endpunkt-Regel; `include_flagged` | D28, D32–D35, D39 |
 | Repo-Wurzel | `02-golden-anchors.md` aufnehmen | J |
+| `02-trust-flow.md §3.1` | Budget-Austritt als `t_exp`-Prädikat, nicht als Zustand | D41 |
+| `02-trust-flow.md §8` | Vouch-Kanten im Disjunktheitslauf tragen `1`, nicht ∞ | D42 |
+| `02-golden-anchors.md §8` | INV-2 als Schranke; INV-8 verengt | D42, D44 |
+| Repo-Wurzel | `02a-abnahme.md` aufnehmen | D41–D44 |
 | `05-enforcement.md §1` | Beta-Update multiplikativ + additiv | D12 |
 | `05-enforcement.md §3` | Über-Commitment ⇒ direkt Stufe 3 (wie Equivocation) | D4 |
 | `05-enforcement.md §4` | `severity = base · f(standing)`, Deckelung, Kalibrierungsbedingung | D11 |
@@ -942,3 +946,94 @@ Falschbeschuldigung (D3).
 Budget-Set, Beweis nur über dem Aktiv-Set). Das repariert die Erneuerung ebenfalls, öffnet aber
 die Umgehung aus `§3.1`: ein Autor hält Vorgänger zurück oder widerruft reihum und hält seine
 aktive Menge stets klein.
+
+### D41 — Budget-Austritt ist ein `t_exp`-Prädikat, kein Zustand
+
+Der `02a`-Prompt verkürzte den Austritt aus dem Budget-Set auf `state == EXPIRED`. Das ist falsch,
+und die Spec sagt bereits das Richtige: `02 §3.1` definiert das Budget-Set als „nicht abgelaufen
+(widerrufen, supersediert und `pending` eingeschlossen)". **„Nicht abgelaufen" ist ein Prädikat
+über `t_exp` und `now`, kein Zustand der Layer-01-Zustandsmaschine.**
+
+Der Fehler war folgenreich, weil `classify()` `REVOKED`/`SUPERSEDED`/`PENDING` **vor** der
+Ablaufprüfung entscheidet. Ein einmal widerrufener Claim erreicht `EXPIRED` daher nie. Unter der
+Prompt-Fassung bände ein widerrufener Vouch **für immer** Budget — kein konservatives Verhalten,
+sondern ein Deadlock: der Autor bekäme die Kapazität nie zurück, und Anker 5 Schritt S2 wäre
+unerreichbar.
+
+Normativ:
+
+```
+im Budget-Set  ⟺  state ∈ {ACTIVE, REVOKED, SUPERSEDED, PENDING}
+                  UND (t_exp fehlt ODER now ≤ t_exp)
+```
+
+Die Ablaufbedingung wird **unabhängig vom Layer-01-State** geprüft. Die Grenzkonvention ist
+`now ≤ t_exp` und stimmt mit dem Verifizierer überein — gleiche Konvention, zwei
+Auswertungsstellen. Das ist der Preis dafür, dass Layer 01 eingefroren ist; die Kopplung ist
+dokumentiert und getestet, aber sie ist eine Kopplung. Ändert Layer 01 je seine Ablaufkonvention,
+muss Layer 02 mitgezogen werden.
+
+### D42 — Vouch-Kanten tragen im Disjunktheitslauf Kapazität 1, nicht ∞ ⚠️
+
+Korrigiert D32. Die dortige Belegung „interne Kanten `1`, Vouch-Kanten `∞`" ist **defekt**, aus
+zwei unabhängigen Gründen.
+
+**Der Sentinel ist nicht wohldefiniert.** `INF = Σ(endliche Kapazitäten) + 1` war gegen den
+Kapazitätslauf definiert. Im Einheitslauf sind die Vouch-Kanten selbst die ∞-Kanten; „Summe der
+endlichen" ist dort zirkulär.
+
+**Ohne Zwischenknoten degeneriert jeder Pfad.** Anker intern ∞ (D31/D32), Vouch-Kante ∞, Ziel
+intern wegen D30 nicht auf dem Pfad — jede Kante des Pfades trägt ∞, und der Solver liefert den
+Sentinel statt einer Pfadzahl. In `TP-BOOT` bürgen die Gründer **direkt** für die Neulinge; es
+gibt keinen Zwischenknoten. Gemessen wurden 219 statt 1. In `TP-02` fällt es nicht auf, weil BOB
+und CAROL dazwischenliegen — die Konvention wurde an einem Graphen entworfen, der den Fehler
+nicht zeigen kann, und `TP-BOOT` stand mit seiner Disjunktheitsspalte daneben, ohne dass der
+Widerspruch auffiel.
+
+Normativ:
+
+| Lauf | interne Kanten | interne Kanten der Anker | Vouch-Kanten |
+|---|---|---|---|
+| Fluss | `C(d(x))` | `C(0)` wie alle | `⌊n_kante·C(I)/D⌋` |
+| Disjunktheit | `1` | `INF` | **`1`** |
+
+**Die Änderung ist beweisbar verlustfrei.** Zwei knotendisjunkte Pfade teilen nie eine Kante —
+teilten sie `I→J`, teilten sie die Knoten `I` und `J`. In jedem knotendisjunkten Pfadsystem trägt
+also jede Kante höchstens eine Einheit. Die Kappung entfernt kein gültiges Pfadsystem und lässt
+keines zusätzlich zu. Sie ist äquivalent, wo ∞ wohldefiniert war, und wohldefiniert, wo ∞ es
+nicht war. Wegen D40 existiert ohnehin nur eine Kante je Paar, es entsteht keine
+Aggregationsfrage.
+
+Die Endpunkt-Regel aus D32 bleibt unberührt: die internen Kanten der Anker tragen weiterhin
+`INF`. `TP-FAN` prüft, dass die Kappung sie nicht mitgekappt hat.
+
+### D43 — Equivocation ist global, Über-Commitment ist scope-gebunden
+
+D39 nennt zwei Flags, ohne ihren Geltungsbereich zu klären. Sie unterscheiden sich, und zwar
+zwingend:
+
+- **Equivocation** ist eine Aussage über die **Hash-Kette einer Identität** — zwei Claims mit
+  demselben `h_prev`. Die Kette ist scope-übergreifend, also ist der Befund es auch. Ein Autor,
+  der in *irgendeinem* Scope äquivoziert, hat seine Kette gebrochen; das ist keine Eigenschaft
+  eines Scopes.
+- **Über-Commitment** ist `Σ n_budget ≤ D` je Scope, und `D` ist scope-fest (D35). Der Befund
+  kann gar nicht anders als scope-gebunden sein.
+
+Normativ: bei `include_flagged = False` trägt keine Kante eines Autors, der (a) in irgendeinem
+Scope `equivocation-flagged` ist **oder** (b) im **abgefragten** Scope über-committet ist. Das
+Budget-Set bleibt in beiden Fällen unberührt (D39).
+
+### D44 — Subgranularität gilt nur für erreichbare Autoren
+
+Ein Befund „Kante ohne Durchsatz" entsteht genau dann, wenn ein Autor mit `d(I) < ∞` eine Gruppe
+mit `n_kante ≥ 1` trägt, deren Kapazität `⌊n_kante·C(I)/D⌋` null ist.
+
+Bei `C(I) = 0` wegen **Unerreichbarkeit** ist die Ursache nicht Granularität, sondern Position.
+Ein Subgranularitäts-Befund wäre dort eine Falschaussage über die Ursache und würde bei jeder
+Abfrage für jeden nicht erreichten Teil des Stores feuern — Rauschen proportional zur
+Store-Größe statt einer Aussage über den ausgewerteten Graphen.
+
+Folge für D39: Der Befund ist damit **flag-abhängig**. Fällt die Kante eines geflaggten Autors
+weg, verschlechtern sich stromabwärts die Distanzen, sinken die Kapazitäten, und Kanten rutschen
+unter die Granularitätsgrenze. Das ist konstruktiv so — die Budgetbefunde bleiben flag-invariant,
+der Subgranularitätsbefund nicht.

@@ -1,6 +1,6 @@
 # Golden Anchors — Layer 02 (Trust Flow)
 
-Revision 2 · Status: gerechnet und gegengerechnet · gilt gegen `02-trust-flow.md` nach Anwendung
+Revision 3 · Status: gerechnet, gegengerechnet und gegen die Implementierung geprüft · gilt gegen `02-trust-flow.md` nach Anwendung
 von `02-spec-nachzug.md` Rev 2
 Zweck: normative Testvektoren für `02a-maxflow`. Alle Werte exakt, ganzzahlig, von Hand geprüft.
 
@@ -14,6 +14,7 @@ Zweck: normative Testvektoren für `02a-maxflow`. Alle Werte exakt, ganzzahlig, 
 | 4 | **K8 neu:** BFS über `E⁺` — der Fork N5 aus Rev 1 ist entschieden | Fälschungssicherheit des Disjunktheitslaufs |
 | 5 | Abschnitt „Angreifer-Optimum" **neu gerechnet**, Variante **F** ergänzt | die alte Aussage („Streuung 9 gegen Konzentration 4, Trade-off") ist falsch: F dominiert C und E in jeder Spalte |
 | 6 | **INV-1 korrigiert** | die Erwartung „`≠` für A und D" war für D falsch und widersprach INV-5 |
+| 8 | **K5: Vouch-Kanten `1`** (D42), **INV-2 als Schranke**, **INV-8 verengt** (D44), Anker 5b um „beide aktiv", Variante E mit vier subgranularen Kanten | Befunde der `02a`-Abnahme; drei davon Fehler in Rev-2-Zahlen |
 | 7 | **`include_flagged`-Voraussetzung explizit** (§1), **INV-8 neu** | die Flusswerte setzen stillschweigend voraus, dass über-committete Autoren ihre Kanten tragen — mit dem Default `False` liefert A `0/0/0` |
 
 ---
@@ -29,7 +30,7 @@ Spec-Nachzug in `02 §2`/`§3`/`§4`/`§8`, nicht nur in dieses Dokument.
 | K2 | Budgetprüfung | `Σw ≤ 1 ⇔ Σn ≤ D` (ganzzahlig, `D` **scope**-fest). Keine Rationalarithmetik. |
 | K3 | Super-Sink (Multi-Sink) | `gᵢ_in → T*` mit ∞. Konsistent zur Einzelabfrage `maxflow(· → T_in)`. |
 | K4 | Super-Source (Ankerset) | `S* → a_in` mit ∞ für jeden Anker `a`; `d(x) = min_a d(a,x)`. Die interne Kante des Ankers liegt auf dem Pfad — Voraussetzung des `§4`-Satzes. |
-| K5 | Einheitskapazitäts-Lauf | **Knoten**-disjunkt (D19): interne Kanten `= 1`, Vouch-Kanten `= ∞`, **Endpunkte ungespalten** (Anker intern `∞`; Ziel intern liegt wegen K3 nicht auf dem Pfad). |
+| K5 | Einheitskapazitäts-Lauf | **Knoten**-disjunkt (D19): interne Kanten `= 1`, **Vouch-Kanten `= 1`** (D42 — ∞ ist dort nicht wohldefiniert und degeneriert ohne Zwischenknoten), **Endpunkte ungespalten** (Anker intern `∞`; Ziel intern liegt wegen K3 nicht auf dem Pfad). |
 | K6 | Out-Degree | `wirksame Out-Degree(I) ≤ min(D, C(I))`, gezählt in **Subjekten** (Gruppen im Budget-Set), nicht in Claims. |
 | K7 | Mehrere Claims auf dasselbe Subjekt | Aggregation je `(I, J, N)`: `n_budget = max n` über das Budget-Set, `n_kante = max n` über das Aktiv-Set. **Maximum, nicht Summe.** |
 | K8 | BFS-Kantenset | `E⁺ = { e ∈ Aktiv-Set : cap(e) ≥ 1 }`. Kanten ohne Durchsatz verleihen keine Position. |
@@ -141,6 +142,8 @@ Fluss verlässt `gᵢ_in` sofort nach `T*`, die `S`-internen Kanten tragen **nic
 
 **E.** `g₁`: `min(4, 4) = 4`. `g₂`: `Rumpf 4 → g₁_in 4 → g₁ intern 2 → g₁_out→g₂_in 1` = **1**.
 Kein zweiter Weg: `g₃_out→g₂_in` hat `cap ⌊2·1/4⌋ = 0` (Granularitätsboden, `C(g₃)=1`).
+**Vier** der sechs `S`-internen Kanten sind subgranular: `d(g₂) = d(g₃) = 4`, `C = 1`, also sind
+`g₂→g₁`, `g₂→g₃`, `g₃→g₁`, `g₃→g₂` null. Nur `g₁→g₂` und `g₁→g₃` tragen (`C(g₁) = 2`).
 Simultan: alles, was `g₁_in` erreicht, geht direkt nach `T*` → 4.
 
 **E₀.** `g₂, g₃` ohne eingehende Kante ⇒ `d = ∞`, `C = 0`, Fluss 0 (`§4` „Neuling ≈ 0").
@@ -258,6 +261,7 @@ derselben Gruppe: **V1 supersediert, nicht abgelaufen**; **V2 aktiv**.
 | **Erneuerung** | 2 | 2 | 2 | 2 | 2 | **4 ✅** | 2 / 1 / 1 | 4 |
 | **Herabstufung** | 2 | 1 | 2 | 1 | 1 | **4 ✅** | 1 / 1 / 1 | 3 |
 | **Heraufstufung** | 1 | 3 | 3 | 3 | 3 | **5 ❌** | `ERR_OVERCOMMIT` | — |
+| **beide aktiv** | 2 (aktiv) | 2 | 2 | 2 | 2 | **4 ✅** | 2 / 1 / 1 | 4 |
 
 Der Erneuerungsfall trennt drei Implementierungen:
 
@@ -270,12 +274,18 @@ Der Erneuerungsfall trennt drei Implementierungen:
 Die Herabstufung ist der zweite Testpunkt: `n_kante` fällt sofort auf 1, `n_budget` bleibt bis
 `t_exp` bei 2. **Fluss folgt dem Willen, Budget folgt der Uhr.**
 
+Die Zeile **beide aktiv** prüft dasselbe ohne Lifecycle-Akt: zwei gleichzeitig gültige Vouches
+auf dasselbe Subjekt sind **eine** Kante mit `n = 2`, nicht zwei Kanten und nicht `Σn = 4` aus
+dieser Gruppe. Sie liefert dieselben Werte wie die Erneuerung — Duplikat und Supersede-Kette
+werden identisch behandelt, und genau das ist INV-6.
+
 ---
 
 ## 6. Anker 6 — Einheitskapazitäten, Pfad-Disjunktheit (D19/D24)
 
-Belegung nach K5: alle internen Kanten `= 1`, alle Vouch-Kanten `= ∞`, **Endpunkte ungespalten**
-(ALICE intern `∞`; das Ziel endet an `T_in`). Quelle `S* → ALICE_in`, Senke `T_in` bzw. `T*`.
+Belegung nach K5: alle internen Kanten `= 1`, alle Vouch-Kanten **`= 1`** (D42), **Endpunkte
+ungespalten** (ALICE intern `∞`; das Ziel endet an `T_in`). Quelle `S* → ALICE_in`, Senke
+`T_in` bzw. `T*`.
 Graph: Variante C.
 
 | Abfrage | Wert | Min-Cut |
@@ -315,6 +325,7 @@ BOB   → X    n=4      BOB2  → X    n=4      (je Σn = 4 ✅)
 | Kapazität, `trust(ALICE→X)` | **16** | `cap(ALICE→BOBᵢ) = ⌊2·16/4⌋ = 8`, `C(BOBᵢ) = 8`, `cap(BOBᵢ→X) = ⌊4·8/4⌋ = 8` ⇒ `8+8`, gedeckelt durch `C(ALICE) = 16` |
 | Einheiten, Disjunktheit `ALICE→X` | **2** | zwei knoten-disjunkte Pfade über BOB und BOB2 |
 | Einheiten **ohne** Endpunkt-Regel | 1 | die interne Kante von ALICE trüge `1` und läge auf jedem Pfad |
+| Einheiten mit **∞** auf Vouch-Kanten | Sentinel | kein Zwischenknoten ⇒ jede Kante des Pfades ist ∞ (D42) |
 
 Ohne diesen Vektor ist die Endpunkt-Regel nicht getestet: in `TP-02` ist die Antwort wegen BOB
 ohnehin 1, dort unterscheiden die beiden Belegungen nichts.
@@ -403,9 +414,17 @@ die Kante `BOB→CAROL`) und **A′** (simultan `16` gegen `48`).
 Split 3. Rev 1 erwartete hier `≠` und widersprach damit INV-5. Und **nicht** für die
 Einzelabfrage von A: dort sind beide Läufe 4.
 
-**INV-2 — `|S|`-Unabhängigkeit.** Der simultane Fluss ist invariant gegen Hinzufügen weiterer
-Sybils **und** gegen jede Kantentopologie innerhalb `S`.
-*Test:* C, D und C+1000 zusätzliche Sybils liefern alle simultan `3`.
+**INV-2 — `|S|`-Unabhängigkeit ist eine Schranke, keine Gleichheit.** Der simultane Fluss in die
+Sybil-Region ist durch `Σ_{h ∈ Grenze} C(h)` beschränkt, **unabhängig von `|S|`** — er wächst
+nicht mit der Zahl der Sybils. Bei `TP-02` ist diese Schranke `C(CAROL) = 4`.
+*Test:* C mit Zielmenge `{g₁,g₂,g₃}` liefert `3`; C plus 1000 weitere Sybils **hinter CAROL**,
+alle 1003 in der Zielmenge, liefert `4` und damit weiterhin `≤ 4`. Der Wert steigt, die Schranke
+hält. D liefert `3` wie C — die Topologie innerhalb `S` ist ohne Wirkung.
+⚠️ Die frühere Fassung („C+1000 liefert `3`") war falsch: sie galt nur, solange die Zielmenge bei
+drei blieb, und dann ändern zusätzliche Sybils trivialerweise nichts. `§4` sagt `≤`, nicht `=`.
+Nebenwirkung: CAROL kann bei `D = 4` höchstens vier Subjekte bebürgen, 1003 sind notwendig
+über-committet — der Vektor prüft damit zugleich, dass die Schranke gegen einen über-committeten
+Grenzknoten hält.
 
 **INV-3 — Monotonie (§7).** Entfernen einer beliebigen Kante senkt jeden `trust`-Wert oder lässt
 ihn gleich. Nie Anstieg.
@@ -430,11 +449,14 @@ testet, hat VR-02.1 halb getestet.
 wenn der Anker selbst Grenzknoten ist.
 *Test:* A′ simultan `== 16 == C(ALICE)`.
 
-**INV-8 — Das Flag ändert nur den Kantensatz.** `Σ n_budget` und die Findings sind identisch, ob
-`include_flagged` `True` oder `False` ist. Ändert sich beides mit, ist die
-Auswertungsreihenfolge verletzt: das Flag hängt am Budget-Set, nie umgekehrt.
-*Test:* je Variante beide Läufe; Findings byte-gleich, Flusswerte nach der Tabelle in §1
-(A: `4/4/4` gegen `0/0/0`, D: `3/3/3` gegen `1/1/1`, C und F unverändert).
+**INV-8 — Das Flag ändert den Kantensatz, nicht die Budgetrechnung.** `Σ n_budget` und die
+**Budget- und Payload-Befunde** sind identisch, ob `include_flagged` `True` oder `False` ist —
+sie entstehen vor der Flag-Anwendung. Der **Subgranularitätsbefund** entsteht danach und ist
+flag-abhängig: fällt die Kante eines geflaggten Autors weg, verschlechtern sich stromabwärts die
+Distanzen, sinken die Kapazitäten, und Kanten rutschen unter die Granularitätsgrenze (D44). Das
+ist konstruktiv so und kein Defekt.
+*Test:* je Variante beide Läufe; Budget- und Payload-Befunde byte-gleich, Flusswerte nach der
+Tabelle in §1 (A: `4/4/4` gegen `0/0/0`, D: `3/3/3` gegen `1/1/1`, C und F unverändert).
 
 ---
 
