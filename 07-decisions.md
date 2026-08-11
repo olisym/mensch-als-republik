@@ -1037,3 +1037,191 @@ Folge für D39: Der Befund ist damit **flag-abhängig**. Fällt die Kante eines 
 weg, verschlechtern sich stromabwärts die Distanzen, sinken die Kapazitäten, und Kanten rutschen
 unter die Granularitätsgrenze. Das ist konstruktiv so — die Budgetbefunde bleiben flag-invariant,
 der Subgranularitätsbefund nicht.
+
+### D45 — `P` ist sub-stochastisch, ohne Rückführung ⚠️ (korrigiert D27)
+
+`§5` schrieb „spaltenstochastisch normalisiert" über `Σw`. Die Fassung hat zwei Defekte.
+
+**Der absolute Pegel von `w` verschwindet.** Normalisiert man je Knoten über `Σn`, kürzt sich
+`D` heraus. Ein Autor mit **einer** ausgehenden Kante und `n = 1` bei `D = 100` bekommt
+`P = 1` — exakt wie bei `n = 100`. Damit erreicht D27 sein erklärtes Ziel nicht: der
+Probe-Vouch mit `w = 0.05` wird sehr wohl wie eine volle Bürgschaft behandelt, sobald er
+allein steht. Die Begründung von D27 trug die Regel von D27 nicht.
+
+**Die Monotonie aus `§7` bricht.** Eine zusätzliche Kante von `I` senkt den Anteil jeder
+bestehenden Kante von `I`. Umkehrschluss: **fehlendes Wissen hebt fremde Werte** — wörtlich
+der Defekt, den D9 als nicht reparierbar verworfen hat. Erschöpfend gemessen an Variante B
+(alle 32 Teilgraphen): **9 Verletzungen** unter der alten Fassung, **0** unter der neuen.
+
+Normativ:
+
+```
+P[J][I] = n_kante(I, J) / D          — absolut, keine Kopplung an andere Kanten
+Sigma t <= 1 − (1 − alpha)^K         — das Defizit ist das ungenutzte Budget
+```
+
+**Keine Rückführung des Defizits.** Die zunächst gewählte Fassung leitete das Defizit auf den
+Restart-Vektor, um `Σt = 1` zu erhalten. Sie ist überflüssig: mit `T = (I − (1−α)Pᵀ)⁻¹` ist
+der Fixpunkt mit Rückführung `t = (α + (1−α)ℓ(t))·T·e_s` und ohne `t' = α·T·e_s`; weil `ℓ(t)`
+ein **Skalar** ist, gilt `t = (s/α)·t'`. Beide Fixpunkte sind proportional — gleiche Ordnung,
+gleiche Verhältnisse, nur andere Normierung. Die Rückführung kostet einen Rang-1-Term je
+Iteration und ein `min()` je Knoten und ist zudem ein Informationsverlust: ohne sie ist
+`1 − Σt` das ungenutzte Budget, als Zahl lesbar (Anker PR-5).
+
+**Die D9-Ausnahme entfällt ersatzlos.** Es gibt keine Normalisierung über `Σw` mehr. Der
+Sonderstatus von `§5` gegenüber D9 wird gestrichen, nicht umformuliert — `§5` ist damit frei
+von der Kopplung, die D9 verbietet, und `§7` gilt in **beiden** Sichten.
+
+**Nebenwirkung:** Dangling Nodes sind kein Fall. Ein Knoten ohne ausgehende Kante in `E⁺`
+reicht nichts weiter; die bei ihm angekommene Masse bleibt bei ihm.
+
+### D46 — Exakte Integer-Arithmetik über festem Nenner
+
+```
+u_0[J]     = 0
+u_{k+1}[J] = a·D·(b·D)^k · [J in A]  +  (b−a) · Sum_{(I,J) in E+} u_k[I] · n_kante(I,J)
+t[J]       = u_K[J] / Delta_K              Delta_K = |A| · (b·D)^K,  alpha = a/b
+```
+
+Der Streckfaktor je Runde ist `Δ_{k+1}/Δ_k = bD`; damit sind Restart- und Transferterm
+ganzzahlig, und `|A|` kürzt sich aus der Rekursion heraus. **Es gibt an keiner Stelle eine
+Division, also keine Rundung und keine Rundungsrichtung.** Kein `Fraction`, kein `decimal`,
+kein `float` — dieselbe Aussage wie D28/D29, ein zweites Mal.
+
+Nur unter D45 ist das billig: die spaltenstochastische Fassung hätte knotenweise Nenner
+`Σn_I`, deren kgV unkontrolliert wächst. Dann bliebe Festkomma mit Abrundung je
+Multiplikation, samt Rundungsrichtungs-Fork und Fehlerakkumulation. **Das ist das praktische
+Argument für D45, unabhängig vom prinzipiellen.**
+
+Bei `TP-02` (`a=1, b=2, D=4, K=20`) ist `Δ = 8²⁰ = 2⁶⁰` — unter `2⁶³` und damit auch in einer
+Sprache ohne Bigints darstellbar.
+
+### D47 — Feste Rundenzahl, `t₀ = 0`
+
+Mit `t₀ = 0` ist `t_K = α · Σ_{i=0}^{K−1} (1−α)^i (Pᵀ)^i e_s` die abgeschnittene
+Neumann-Reihe. Bei sub-stochastischem `P` gilt `‖t_K − t_*‖₁ ≤ (1−α)^K`, und die Folge ist
+**monoton wachsend** in `K` — jeder Abbruch ist eine Untergrenze und damit die sichere
+Richtung.
+
+`t₀ = e_s` wäre die naheliegendere Wahl und ist schlechter: die Schranke verdoppelt sich auf
+`2(1−α)^K`, die Monotonie in `K` geht verloren, und `u₀` ist teurer.
+
+**Normativ ist `t_K`, nicht `t_*`.** Der Fixpunkt ist die Motivation, nicht die Definition.
+Nur so ist der Wert exakt und byte-reproduzierbar. Ein Konvergenztest zur Laufzeit ist damit
+verboten: er machte das Ergebnis implementierungsabhängig.
+
+`K` folgt aus `α` und der Zielgenauigkeit: `K = ⌈log ε / log(1−α)⌉`. Für `α = ½, ε = 2⁻²⁰`
+ist `K = 20`.
+
+### D48 — `α = 1 − γ` als Profilkopplung
+
+Entlang eines Pfades zerfällt die Masse in `§5` wie `(1−α)^d`, die Kapazität in `§3` wie
+`γ^d`. Mit `α = 1 − γ` zerfällt `§5` **mindestens** so schnell wie `§3` — schneller, weil
+sich die Masse zusätzlich über die Kanten aufteilt. Das ist die sichere Richtung, und das
+Profil hat einen Knopf weniger.
+
+Der Standardwert `α = 0.15` aus der Suchmaschinenliteratur ist auf globale Reichweite
+kalibriert und steht quer zum Lokal-Ethos aus `§1`/`§8` („Default eher schnelles Abklingen").
+
+**SHOULD, nicht MUST.** `§5` trägt keine Schranke, also ist die Kopplung nicht beweisbar —
+sie ist begründbar und dokumentierbar, mehr nicht. Eine Policy darf `α` unabhängig setzen;
+sie sollte es begründen. Für `γ = ½` folgt `α = ½`, also `a = 1, b = 2`.
+
+### D49 — `§5` läuft über demselben Kantensatz wie `§4`
+
+Gruppen-Aggregation `max n` (D40), `E⁺`-Filter (D36) und Flag-Anwendung (D39) gelten
+unverändert. `§5` selbst sagt es: „Beide Sichten teilen denselben Graphen."
+
+Drei Klarstellungen, die im Code sonst schiefgehen:
+
+- **`C(x)` geht in `§5` ein, aber nur als Filter, nie als Faktor.** Ohne `E⁺` wäre der
+  D36-Angriff eins zu eins übertragbar: drei Kolludierende mit `n = 1` bei `d = 2`, die in
+  `§4` exakt null Fluss tragen, bekämen volle Übergangswahrscheinlichkeit. Eine Gewichtung
+  mit `cap(e)` statt `n_e` wurde geprüft und verworfen — knotenweise kürzt sich `C(I)` bis
+  auf Rundungsartefakte weg, das kauft nichts und bringt Rauschen.
+- **Kein Knoten-Splitting.** Der Split ist eine Max-Flow-Konstruktion für Knotenkapazitäten;
+  `§5` hat keine. Wer den `02a`-Graphbauer arglos wiederverwendet, rechnet über einer
+  verdoppelten Knotenmenge und bekommt einen zusätzlichen `(1−α)`-Faktor je Hop. Belegt durch
+  Anker PR-4 (`TP-FAN`).
+- **Das Budget-Set spielt keine Rolle.** `§5` liest `n_kante` aus dem Aktiv-Set. Das
+  Budget-Set dient der Über-Commitment-Erkennung, und die geschieht vor der Sichttrennung.
+
+Folge für die Implementierung: `02b` teilt die Ableitungsstufe mit `02a` und beginnt danach.
+
+### D50 — „Nie über-vertrauend" ist eine Kanalaussage, keine Wertaussage ⚠️ (präzisiert D27)
+
+`§4` liefert Fluss in Kapazitätseinheiten, `§5` stationäre Wahrscheinlichkeitsmasse. **Die
+Größen sind nicht kommensurabel.** „`§5 ≤ §4`" ist punktweise nicht formulierbar, und die
+Ordnungen stimmen im Allgemeinen auch nicht überein: `§4` misst Engpässe, `§5` misst
+Erreichbarkeitsmasse.
+
+Prüfbar ist allein, dass `§5` **keinen Signalkanal ignoriert, den `§4` benutzt, um einen Wert
+zu senken**:
+
+| Kanal | Regel |
+|---|---|
+| Gewicht `w` | D45 |
+| wirksames Kantenset `E⁺` | D36/D49 |
+| Gruppenmaximum `n_kante` | D40/D49 |
+| Flag | D39/D49 |
+
+Vier Kanäle, vier Tests. Ohne diese Präzisierung steht in `§5` und D27 ein Satz, den niemand
+widerlegen und niemand prüfen kann — und die nächste Abnahme sucht vergeblich nach dem
+Testvektor.
+
+### D51 — Restart-Vektor gleichverteilt über das Ankerset
+
+`e_a = 1/|A|` für `a ∈ A`, sonst `0`. Eine gewichtete Fassung bräuchte einen Mechanismus, aus
+dem Gewichte kämen; `§6.3` kennt keinen.
+
+**Zu benennende Asymmetrie:** in `§4` hängt der Super-Source mit ∞ an *jedem* Anker — ein
+zweiter Anker kann den Wert nur heben. In `§5` verdünnt ein zweiter Anker den ersten: das
+Hinzufügen eines Ankers kann einen Knotenwert **senken**. Das ist kein `§7`-Bruch (`§7`
+handelt von Kanten), aber ein echter Verhaltensunterschied zwischen den Sichten. Er gehört
+ins Register, nicht in einen Codekommentar.
+
+### D52 — Die Oberfläche trägt die Trennlinie aus `§9`
+
+`§9`: „PageRank nur als Relaxation — bei Missbrauch für harte Gates verliert man die
+Schranke. Diese Trennlinie ist nicht verhandelbar." Im Code ist die Oberfläche die einzige
+verfügbare Durchsetzung.
+
+Normativ: eigenes Modul, eigener Name, eigener Rückgabetyp. **Nicht `trust`, nicht
+`TrustResult`.** Der Rückgabetyp führt `Δ` mit; wer eine Schwelle vergleichen will, muss sich
+sichtbar dafür entscheiden.
+
+Mehr ist mechanisch nicht zu haben, und das steht so in der Spec, statt Sicherheit zu
+suggerieren.
+
+### D53 — Kein Clamp für über-committete Autoren ⚠️
+
+Ohne Deckel kann ein über-committeter Autor (`Σn_I > D`) in `§5` Masse **erzeugen**. Gemessen
+an Variante D (`gᵢ` mit `Σn = 8 > 4`): `t(gᵢ) = 17/64` gegen `131071/4194304` in der
+budgetgültigen Variante C, und `Σt = 107/64 > 1`. `§4` liefert für beide `3/3/3` (INV-5).
+Die schnelle Sicht überzeichnet also um das Achtfache.
+
+**Jede Reparatur wurde geprüft und verworfen.** Ob `n/max(D, N_I)` oder `ñ = ⌊n·D/N_I⌋` — der
+Anteil einer Kante hinge an den **anderen** Kanten desselben Autors. Das ist wörtlich der
+D9-Defekt: bei Teilwissen ist `N_I` zu klein, der Clamp greift nicht, und fehlendes Wissen
+hübe Werte. Wir hätten die Monotonie, für die D45 überhaupt gewählt wurde, gegen einen
+Randfall wieder eingetauscht.
+
+Zwei Eigenschaften erledigen den Fall stattdessen:
+
+- **Der Default schützt.** `include_flagged = False` entfernt die Kanten über-committeter
+  Autoren. Gemessen: Variante D mit `False` ist **byte-gleich mit B**. Wer `True` setzt, sagt
+  ausdrücklich „ich weiß, dass dieser Autor über-committet ist, und will ihn trotzdem
+  zählen", und trägt die Deutung.
+- **Die Massenbilanz ist ein Detektor, kostenlos.** Bei budgetgültigem Kantensatz gilt per
+  Induktion `Σt ≤ 1 − (1−α)^K`. Also:
+
+  ```
+  Sigma t > 1 − (1 − alpha)^K   ==>   ein einbezogener Autor ist ueber-committet
+  ```
+
+  Einseitig — kein Falschalarm, nur Unter-Erkennung. Exakt D3, exakt die Richtung, die `§3.1`
+  für das beobachtete `Σw` schon festhält. Eine Summe, die ohnehin gebildet wird.
+
+**Getragene Grenze:** `§5` ist gegen einen über-committeten Autor bei `include_flagged = True`
+nicht konservativ. Das ist die dokumentierte Grenze der Relaxation und gehört in `§9` zu den
+bewusst getragenen v1-Grenzen.
