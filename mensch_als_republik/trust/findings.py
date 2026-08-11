@@ -1,0 +1,19 @@
+"""Trust-Findings: eigene Enum, kein Claim-Reject (02a §5)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+
+
+class TrustFinding(str, Enum):
+    OVERCOMMITTED_AUTHOR = "OVERCOMMITTED_AUTHOR"
+    SUBGRANULAR_VOUCH = "SUBGRANULAR_VOUCH"
+    INVALID_VOUCH_WEIGHT = "INVALID_VOUCH_WEIGHT"
+    UNPARSABLE_VOUCH_PAYLOAD = "UNPARSABLE_VOUCH_PAYLOAD"
+
+
+@dataclass(frozen=True, slots=True, order=True)
+class Finding:
+    kind: TrustFinding
+    subject: bytes
