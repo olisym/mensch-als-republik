@@ -58,6 +58,11 @@ def test_S1_revoked_vouch_leaves_active_set_keeps_budget(via_supersede: bool) ->
     )
     assert r_sim.value == 2
 
+    # S1: d(g1)=4, C(g1)=1, cap(g1->gj) = floor(2*1/4) = 0 -> zwei SUBGRANULAR_VOUCH
+    # (g1->g2, g1->g3); Anker 5 in 02-golden-anchors.md.
+    subgranular = [f for f in r_sim.findings if f.kind == TrustFinding.SUBGRANULAR_VOUCH]
+    assert len(subgranular) == 2
+
     # Budgetwirkung bei now=1000: Sigma n_budget(CAROL) = 3 (g1 weiterhin im Budget-Set)
     for n, overcommitted in ((2, True), (1, False)):
         dave = Identity(f"DAVE-{suffix}-{n}")
@@ -92,13 +97,15 @@ _CASES = {
     "renewal": (2, "superseded", 2, (2, 1, 1, 4, False)),
     "downgrade": (2, "superseded", 1, (1, 1, 1, 3, False)),
     "upgrade": (1, "superseded", 3, (3, 1, 1, 4, True)),
-    # 02a-maxflow-prompt.md T-02.2b listet fuer "beide aktiv" Sigma n_budget=4 und "keins",
-    # obwohl n_budget(g1-Gruppe)=max(2,3)=3 und die fest verdrahteten g2/g3 (je n=1) macht
-    # 3+1+1=5>4 -- dieselbe Rechnung wie bei "Heraufstufung", das dort OVERCOMMITTED_AUTHOR
-    # ergibt. Der Prompt-Tabelleneintrag ist in sich widerspruechlich (Trust-Werte 3/1/1
-    # setzen n_budget=3 voraus, die Summenspalte passt nicht dazu); siehe Ruecksprachen im
-    # Abnahme-Bericht. Hier folgen wir der Arithmetik, nicht der Summenspalte.
-    "both_active": (2, "active", 3, (3, 1, 1, 4, True)),
+    # War zuvor (2, "active", 3, ...): das war ein rechnerisches Duplikat von "upgrade"
+    # (n_budget(g1)=max(2,3)=3 in beiden Faellen) und stammte aus einer widerspruechlichen
+    # Vorgabe (02a-maxflow-prompt.md T-02.2b nannte Sigma n_budget=4 bei "keins", obwohl
+    # 3+1+1=5>4 dieselbe Rechnung wie bei "Heraufstufung" ist, das OVERCOMMITTED_AUTHOR
+    # ergibt). Aufloesung siehe 02a-abnahme.md Teil B.4: n(V1)=n(V2)=2 prueft das Eigentliche
+    # -- zwei gleichzeitig aktive Vouches auf dasselbe Subjekt sind eine Kante mit n=2, nicht
+    # zwei Kanten und nicht Sigma n=4 aus dieser Gruppe. Liefert dieselben Werte wie
+    # "renewal": Duplikat und Supersede-Kette werden identisch behandelt.
+    "both_active": (2, "active", 2, (2, 1, 1, 4, False)),
 }
 
 
@@ -144,8 +151,12 @@ def test_group_aggregation_variant_G(case: str) -> None:
 
 
 def test_INV6_aggregation_is_idempotent() -> None:
-    """G-Erneuerung == einfacher Graph mit CAROL->g1 n=2 (S isoliert)."""
-    scope = scope_id("INV6")
+    """G-Erneuerung == einfacher Graph mit CAROL->g1 n=2 (S isoliert).
+
+    Beide Graphen bauen und die Ergebnisse direkt vergleichen (nicht nur je gegen ein
+    Literal), damit der Test nicht gruen wird, wenn beide Seiten gemeinsam falsch sind.
+    """
+    scope = scope_id("INV6-simple")
     ALICE, BOB, CAROL = Identity("INV6-A"), Identity("INV6-B"), Identity("INV6-C")
     g1, g2, g3 = Identity("INV6-g1"), Identity("INV6-g2"), Identity("INV6-g3")
     claims = _rump(ALICE, BOB, CAROL, scope, T_EXP)
@@ -156,14 +167,50 @@ def test_INV6_aggregation_is_idempotent() -> None:
     ]
     store = store_with(*claims)
     anchors = frozenset({ALICE.pub})
-    for target, expected in ((g1, 2), (g2, 1), (g3, 1)):
-        r = trust(
-            store, anchors=anchors, targets=frozenset({target.pub}), scope=scope,
+    targets = (g1, g2, g3)
+
+    simple_values = [
+        trust(
+            store, anchors=anchors, targets=frozenset({t.pub}), scope=scope,
             now=1000, params=PARAMS, include_flagged=True,
-        )
-        assert r.value == expected
-    r_sim = trust(
-        store, anchors=anchors, targets=frozenset({g1.pub, g2.pub, g3.pub}), scope=scope,
+        ).value
+        for t in targets
+    ]
+    simple_sim = trust(
+        store, anchors=anchors, targets=frozenset(t.pub for t in targets), scope=scope,
         now=1000, params=PARAMS, include_flagged=True,
-    )
-    assert r_sim.value == 4
+    ).value
+
+    # Literale als zusaetzliche Zusicherung -- siehe Docstring.
+    assert simple_values == [2, 1, 1]
+    assert simple_sim == 4
+
+    scope_g = scope_id("INV6-renewal")
+    ALICE_g, BOB_g, CAROL_g = Identity("INV6g-A"), Identity("INV6g-B"), Identity("INV6g-C")
+    g1_g, g2_g, g3_g = Identity("INV6g-g1"), Identity("INV6g-g2"), Identity("INV6g-g3")
+    claims_g = _rump(ALICE_g, BOB_g, CAROL_g, scope_g, T_EXP)
+    claims_g += [
+        CAROL_g.vouch(g2_g, n=1, scope=scope_g, t=1, t_exp=T_EXP),
+        CAROL_g.vouch(g3_g, n=1, scope=scope_g, t=1, t_exp=T_EXP),
+    ]
+    v1 = CAROL_g.vouch(g1_g, n=2, scope=scope_g, t=1, t_exp=T_EXP)
+    v2 = CAROL_g.vouch(g1_g, n=2, scope=scope_g, t=2, t_exp=T_EXP)
+    claims_g += [v1, v2, CAROL_g.supersede(v1, t=3)]
+    store_g = store_with(*claims_g)
+    anchors_g = frozenset({ALICE_g.pub})
+    targets_g = (g1_g, g2_g, g3_g)
+
+    renewal_values = [
+        trust(
+            store_g, anchors=anchors_g, targets=frozenset({t.pub}), scope=scope_g,
+            now=1000, params=PARAMS, include_flagged=True,
+        ).value
+        for t in targets_g
+    ]
+    renewal_sim = trust(
+        store_g, anchors=anchors_g, targets=frozenset(t.pub for t in targets_g),
+        scope=scope_g, now=1000, params=PARAMS, include_flagged=True,
+    ).value
+
+    assert renewal_values == simple_values
+    assert renewal_sim == simple_sim

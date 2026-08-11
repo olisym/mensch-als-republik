@@ -27,19 +27,24 @@ def test_disjoint_paths_variant_C() -> None:
 
 
 def test_disjoint_paths_invariant_to_1000_extra_sybils() -> None:
+    """D24: alle Pfade laufen durch BOB, unabhaengig von |S|.
+
+    Die Sybils haengen an CAROL (dem ehrlichen Grenzknoten) und sind selbst Ziele --
+    sonst prueft der Test nichts: stromabwaerts vom Ziel kann nichts wirken.
+    """
     g = build("C")
     claims = list(g.claims)
     extra_targets = []
     for i in range(1000):
         h = Identity(f"sybil-{i}")
-        claims.append(g.g1.vouch(h, n=2, scope=g.scope, t=1, t_exp=T_EXP))
-        extra_targets.append(h)
+        claims.append(g.CAROL.vouch(h, n=1, scope=g.scope, t=1, t_exp=T_EXP))
+        extra_targets.append(h.pub)
     store = store_with(*claims)
 
     r = trust(
         store,
         anchors=frozenset({g.ALICE.pub}),
-        targets=frozenset({g.g1.pub}),
+        targets=frozenset({g.g1.pub}) | frozenset(extra_targets),
         scope=g.scope,
         now=NOW,
         params=PARAMS,

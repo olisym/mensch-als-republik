@@ -112,33 +112,35 @@ def test_INV1_differs_for_A_prime_simultaneous() -> None:
 
 
 def test_INV2_sybil_count_independence() -> None:
-    g_c = build("C")
-    g_d = build("D")
+    """|S|-Unabhaengigkeit ist eine Schranke, keine Gleichheit (§4).
+
+    Sybils haengen hinter CAROL (dem ehrlichen Grenzknoten) und sind selbst Ziele --
+    sonst prueft der Test nichts: stromabwaerts vom Ziel kann nichts wirken.
+    """
+    g_c, g_d = build("C"), build("D")
     anchors_c = frozenset({g_c.ALICE.pub})
-    anchors_d = frozenset({g_d.ALICE.pub})
     targets_c = frozenset({g_c.g1.pub, g_c.g2.pub, g_c.g3.pub})
     targets_d = frozenset({g_d.g1.pub, g_d.g2.pub, g_d.g3.pub})
 
-    r_c = trust(
-        g_c.store(), anchors=anchors_c, targets=targets_c, scope=g_c.scope,
-        now=NOW, params=PARAMS, include_flagged=True,
-    )
-    r_d = trust(
-        g_d.store(), anchors=anchors_d, targets=targets_d, scope=g_d.scope,
-        now=NOW, params=PARAMS, include_flagged=True,
-    )
-    assert r_c.value == r_d.value == 3
+    r_c = trust(g_c.store(), anchors=anchors_c, targets=targets_c, scope=g_c.scope,
+                now=NOW, params=PARAMS, include_flagged=True)
+    r_d = trust(g_d.store(), anchors=frozenset({g_d.ALICE.pub}), targets=targets_d,
+                scope=g_d.scope, now=NOW, params=PARAMS, include_flagged=True)
+    assert r_c.value == r_d.value == 3        # Topologie in S ist ohne Wirkung
 
     claims = list(g_c.claims)
+    extra = []
     for i in range(1000):
         h = Identity(f"inv2-sybil-{i}")
-        claims.append(g_c.g1.vouch(h, n=2, scope=g_c.scope, t=1, t_exp=T_EXP))
+        claims.append(g_c.CAROL.vouch(h, n=1, scope=g_c.scope, t=1, t_exp=T_EXP))
+        extra.append(h.pub)
     store_plus = store_with(*claims)
-    r_plus = trust(
-        store_plus, anchors=anchors_c, targets=targets_c, scope=g_c.scope,
-        now=NOW, params=PARAMS, include_flagged=True,
-    )
-    assert r_plus.value == 3
+
+    r_plus = trust(store_plus, anchors=anchors_c,
+                   targets=targets_c | frozenset(extra), scope=g_c.scope,
+                   now=NOW, params=PARAMS, include_flagged=True)
+    assert r_plus.value == 4                    # steigt von 3 auf 4
+    assert r_plus.value <= capacity(PARAMS, 2)  # aber nie ueber C(CAROL)
 
 
 def test_INV3_monotonicity_exhaustive_over_variant_B() -> None:

@@ -97,7 +97,15 @@ def bfs_capacities(
 
 
 def infinity(bfs_result: BfsResult) -> int:
-    """INF = Summe aller endlichen Kapazitäten + 1 (§2.8), nie float('inf')."""
+    """INF = Summe aller endlichen Kapazitäten + 1 (§2.8), nie float('inf').
+
+    Wird aus dem Flusslauf berechnet und fuer beide Laeufe (Fluss und Einheitskapazitaet)
+    verwendet. Das traegt auch im Einheitslauf: jede Kante in bfs_result.edges hat per
+    Filter (E+, §2.7/K8) cap >= 1, also gilt |edges| <= Summe der cap-Werte < INF, und
+    maxflow im Einheitslauf ist durch die Anzahl der Kanten beschraenkt -- also INF >
+    |edges| >= maxflow. Diese Kette bricht still, falls der cap>=1-Filter je gelockert
+    wird (dann koennte eine Kante mit cap==0 in bfs_result.edges landen).
+    """
     finite = list(bfs_result.node_capacity.values()) + [e.cap for e in bfs_result.edges]
     return sum(finite) + 1
 

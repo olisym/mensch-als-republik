@@ -101,7 +101,10 @@ def test_no_overcommitted_carol(variant: str) -> None:
     )
 
 
-def test_E_subgranular_between_g2_g3() -> None:
+def test_E_subgranular_edges() -> None:
+    """d(g2)=d(g3)=4, C=1 => g2->g1, g2->g3, g3->g1, g3->g2 sind alle null (vier Findings).
+
+    Nur g1->g2 und g1->g3 tragen (C(g1)=2)."""
     g = build("E")
     r = trust(
         g.store(),
@@ -112,7 +115,8 @@ def test_E_subgranular_between_g2_g3() -> None:
         params=PARAMS,
         include_flagged=True,
     )
-    assert any(f.kind == TrustFinding.SUBGRANULAR_VOUCH for f in r.findings)
+    subgranular = [f for f in r.findings if f.kind == TrustFinding.SUBGRANULAR_VOUCH]
+    assert len(subgranular) == 4
 
 
 @pytest.mark.parametrize("variant", sorted(EXPECTED))

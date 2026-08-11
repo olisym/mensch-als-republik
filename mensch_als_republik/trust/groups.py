@@ -18,7 +18,12 @@ BUDGET_STATES = frozenset(
 
 @dataclass(frozen=True, slots=True)
 class Group:
-    """Ein Kantenkandidat (I, J) im Scope: aggregiertes Budget und Kantengewicht."""
+    """Ein Kantenkandidat (I, J) im Scope: aggregiertes Budget und Kantengewicht.
+
+    D40 spricht von Gruppen (I, J, N); der Schluessel hier ist nur (author, subject) ohne
+    N, weil build_groups() den Scope bereits vorher filtert (_is_scope_vouch) -- pro Aufruf
+    von build_groups() gibt es nur einen Scope, N ist also nicht Teil des Schluessels noetig.
+    """
 
     author: bytes
     subject: bytes
