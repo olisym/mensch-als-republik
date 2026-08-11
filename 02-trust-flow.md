@@ -42,6 +42,11 @@ Für eine Anfrage `(Scope N, Zweck π)`:
   noch fehlt, ist erst `pending` (Atom-Spec §6) und trägt **noch keine** Kante bei — er wird
   aufgenommen, sobald er `active` wird. Das ist dieselbe sichere Richtung wie §7: fehlendes
   Wissen senkt nur, es erfindet keine Kante.
+- **Eine Kante je `(I, J)`.** Mehrere Vouches derselben Identität auf dasselbe Subjekt im
+  selben Scope erzeugen **eine** Kante mit `n_kante = max n` über die aktiven
+  Gruppenmitglieder (§3.1) — keine parallelen Kanten, keine addierten Kapazitäten. Eine
+  Beziehung ist eine Kante. Trägt kein Gruppenmitglied eine gültige Belegung nach §3.1,
+  entsteht **keine** Kante, auch wenn der Claim nach Atom-Spec §6 `active` ist.
 - **Scope-Partition.** Es gibt einen Graphen *pro* `N`. Vertrauen aus Scope A fließt nicht
   nach Scope B (Kontextbindung).
 - **Zweck-Filter.** Trägt der Vouch in `v` einen Zweck-Tag, werden für Zweck `π` nur passende
@@ -63,13 +68,24 @@ Die Kapazität bestimmt, wie viel Vertrauen *durch* einen Knoten fließen kann. 
 mit der Distanz vom Seed ab — und genau das erzeugt die Sybil-Schranke und die
 „Neuling ≈ 0"-Eigenschaft **strukturell, ohne Sonderregel**.
 
-- **Distanz** `d(s, x)` = kürzeste Pfadlänge in Hops von Seed `s` zu `x` über `E` (BFS).
-  Unerreichbar ⇒ `d = ∞`.
-- **Knotenbudget** `C(x) = C₀ · γ^{d(s,x)}`, mit Decay `γ ∈ (0,1)` und Seed-Budget `C₀ > 0`
-  bei `d = 0`. Es gilt `C(x) = 0` für unerreichbare `x`.
+- **Distanz** `d(s, x)` = kürzeste Pfadlänge in Hops von Seed `s` zu `x` über dem
+  **wirksamen** Kantenset `E⁺ = { e ∈ E : cap(e) ≥ 1 }` (BFS). Unerreichbar ⇒ `d = ∞`. Wer
+  keine Kapazitätseinheit weiterreicht, reicht auch keine Position weiter. Die Definition ist
+  wohlfundiert: `cap(I→J)` hängt nur von `d(I)` ab, das feststeht, wenn die BFS `I`
+  expandiert — ein Durchlauf, kein Fixpunkt.
+- **Knotenbudget** `C(x) = ⌊ C₀ · γ^{d(s,x)} ⌋`, mit `γ = γ_num/γ_den ∈ (0,1)` und
+  Seed-Budget `C₀ > 0` bei `d = 0`. **Einmal am Ende abgerundet, nicht pro Schritt** —
+  iteratives Runden machte das Ergebnis von der Auswertungsreihenfolge abhängig. Es gilt
+  `C(x) = 0` für unerreichbare `x` und für alle `d` mit `C₀·γ^d < 1`.
 - **Knoten-Splitting (Advogato-Konstruktion).** Jeder Knoten `x` wird in `x_in → x_out`
   gespalten, mit interner Kantenkapazität `C(x)`. Jede Vouch-Kante `I → J` wird zu
-  `I_out → J_in` mit Kapazität **`w · C(I)`** (§3.1).
+  `I_out → J_in` mit Kapazität **`⌊ n_kante · C(I) / D ⌋`** (§3.1).
+- **Ankerset statt einzelnem Seed.** Ist der Seed eine Menge (§6.3), gilt
+  `d(x) = min_a d(a,x)`, und die Quelle im Flussgraphen ist ein Super-Source `S*` mit
+  ∞-Kanten auf jedes `a_in`. Die interne Kante des Ankers liegt damit auf dem Pfad: sein
+  Budget `C(a)` bindet auch auf der Quellseite. Bei gültigem Budget ist das identisch zur
+  Anbindung an `a_out` (`Σ_e cap(e) ≤ C(a)`); es unterscheidet sich genau bei
+  über-committetem Anker, und dort in Richtung Unter-Vertrauen.
 
 > **Warum Knoten- und nicht Kantenkapazität (bewusste Wahl).** Nur die Kapazität *am Knoten*
 > macht die Schranke unabhängig von der Zahl der Sybils: der Engpass ist die endliche
@@ -77,17 +93,42 @@ mit der Distanz vom Seed ab — und genau das erzeugt die Sybil-Schranke und die
 > Das ist das tragende Element des Bounds in §4. Die Kantenkapazitäten aus §3.1 kommen
 > additiv hinzu: sie können den Fluss nur weiter **senken** und berühren die
 > `|S|`-Unabhängigkeit nicht.
+>
+> **Nachtrag seit D1.** Gilt die Budgetregel, ist `Σ_e ⌊n_e·C(I)/D⌋ ≤ (Σn_e)·C(I)/D ≤ C(I)`
+> — die interne Knotenkante ist dann nie **allein** bindend (Gleichheit ist möglich,
+> striktes Überschreiten nicht), und die Schranke wird gleichermaßen von den Kanten-Caps
+> getragen. Sie bindet ausschließlich bei über-committeten Knoten, und auch dort nur, wenn
+> tatsächlich mehr Fluss ankommt als `C(I)`. Das entwertet die Konstruktion nicht: sie ist
+> weiterhin nötig, um Über-Commitment überhaupt sichtbar zu machen, und der
+> Einheitskapazitäts-Lauf (§8) lebt vollständig auf ihr.
 
 ### 3.1 Vouch-Gewicht `w` und Selbstbindungsbudget
 
 Ein Vouch deklariert in `v`, wie viel Vertrauen er weiterreicht.
 
-- **Gewicht.** `w = n / D` mit `n ∈ [1, D]`; `D` ist Nukleus-Policy (§8), Default `n = D`
+- **Gewicht.** `w = n / D` mit `n ∈ [1, D]`; `D` ist Policy des Scopes (§8), Default `n = D`
   (also `w = 1`). Untypisierte Vouches gelten als `w = 1`.
-- **Kantenkapazität.** `I_out → J_in` erhält `⌊ n · C(I) / D ⌋`. Abrunden ist die sichere
-  Richtung (Unter-Vertrauen) und erhält die exakte Integer-Arithmetik der harten Sicht.
-- **Selbstbindungsbudget.** Für jede Identität `I` und jeden Scope `N` gilt `Σ wᵢ ≤ 1` über
-  alle **budget-bindenden** ausgehenden Vouches von `I`.
+- **Kantenkapazität.** `I_out → J_in` erhält `⌊ n_kante · C(I) / D ⌋`. Abrunden ist die
+  sichere Richtung (Unter-Vertrauen) und erhält die exakte Integer-Arithmetik der harten
+  Sicht.
+- **Selbstbindungsbudget.** Für jede Identität `I` und jeden Scope `N` gilt `Σ wᵢ ≤ 1`,
+  gleichbedeutend `Σ_J n_budget ≤ D`, über alle Gruppen `(I, J, N)` im Budget-Set.
+
+> **Aggregation je `(I, J, N)`.** Mehrere Vouches derselben Identität auf dasselbe Subjekt im
+> selben Scope bilden **eine** Gruppe. Es zählen `n_budget = max n` über die
+> Gruppenmitglieder im Budget-Set und `n_kante = max n` über die im Aktiv-Set; die Kante
+> trägt `cap(I→J) = ⌊n_kante·C(I)/D⌋`, das Budget prüft `Σ_J n_budget ≤ D`. Weil
+> Aktiv-Set ⊆ Budget-Set gilt, ist stets `n_kante ≤ n_budget`. **Maximum, nicht Summe** —
+> sonst wäre die bloße Erneuerung eines Vouch ein selbst-validierender Beweis gegen den
+> eigenen Autor (§6.2), und zwei aktive Vouches auf dasselbe Subjekt trügen doppelte
+> Kapazität bei einfachem Budget.
+
+> **Out-Degree folgt aus dem Budget.** Aus `n ≥ 1` und `Σn ≤ D` folgt: höchstens `D`
+> gleichzeitig bebürgte **Subjekte** pro Identität und Scope — gezählt werden Gruppen im
+> Budget-Set, nicht Claims. Aus `cap ≥ 1 ⟺ n·C(I) ≥ D` folgt schärfer
+> `wirksame Out-Degree(I) ≤ min(D, C(I))`. Bei `D ≥ C₀` (§8) bindet stets `C(I)`: **die Zahl
+> der Menschen, für die man bürgen kann, ist die eigene Position** — keine gezählte
+> Rationierung, sondern dieselbe positionale Größe wie alles andere in dieser Schicht.
 
 > **Obergrenze, kein Anteil (bewusste Wahl).** Der Cap einer Kante hängt **nur von dieser
 > Kante** ab — es gibt keine Normalisierung über `Σw`. Andernfalls wäre bei Teilwissen das
@@ -100,7 +141,7 @@ Ein Vouch deklariert in `v`, wie viel Vertrauen er weiterreicht.
 | Menge | Inhalt | Verwendung |
 |---|---|---|
 | **Aktiv-Set** | nicht widerrufen, nicht abgelaufen | Kantensatz für den Fluss (§2) |
-| **Budget-Set** | nicht abgelaufen (widerrufen **eingeschlossen**) | Prüfung `Σw ≤ 1` |
+| **Budget-Set** | nicht abgelaufen (**widerrufen, supersediert und `pending` eingeschlossen**), aggregiert je `(I, J, N)` über `max n` | Prüfung `Σ n_budget ≤ D` |
 
 **`pending` bindet Budget.** Ein Vouch, dessen Vorgänger in der Autorenkette noch fehlt, trägt
 keine Kante bei (§2), gehört aber ins **Budget-Set**: Er ist signiert, und der
@@ -109,9 +150,16 @@ Budgetregel umgehen, indem ein Autor Vorgänger absichtlich zurückhält — all
 `pending` und budgetfrei, bis der fehlende Vorgänger nachgereicht wird und sie gleichzeitig
 `active` werden.
 
-**Widerruf und Freigabe.** Ein Widerruf stoppt den Fluss sofort (die Kante verlässt das
-Aktiv-Set) und beendet die Haftung des Bürgen — **gibt das Budget aber nicht frei**. Frei wird es
-erst bei `t_exp` (§6.2). Budget ist vorwärtsgerichtet, Haftung rückwärtsgerichtet; sie folgen
+**Widerruf, Supersede und Freigabe.** Ein Widerruf stoppt den Fluss sofort (die Kante
+verlässt das Aktiv-Set) und beendet die Haftung des Bürgen — **gibt das Budget aber nicht
+frei**. Für Supersede gilt dasselbe. Frei wird Budget erst bei `t_exp` (§6.2), und erst, wenn
+**alle** Vouches der Gruppe `(I, J, N)` abgelaufen sind. **Kein selbst-bezüglicher
+Lebenszyklus-Akt gibt Budget frei; Budget folgt der Uhr, nicht dem Willen des Autors.**
+Andernfalls ließe sich eine lange Laufzeit — das stärkste Signal — beliebig oft per Supersede
+zurückholen, und die Knappheit wäre eine Formalität. Weil innerhalb einer Gruppe das
+**Maximum** zählt und nicht die Summe, sind Erneuerung und Herabstufung dennoch frei: Ein
+Autor kann seine Aussage jederzeit korrigieren, er kann nur ihr Gewicht nicht vorzeitig
+anderswo einsetzen. Budget ist vorwärtsgerichtet, Haftung rückwärtsgerichtet; sie folgen
 verschiedenen Uhren. Eine Nachhaftungsfrist wäre nicht auswertbar, weil sie eine
 Cross-Chain-Zeitordnung verlangte, die es nicht gibt.
 
@@ -127,11 +175,22 @@ wie Equivocation (Atom-Spec §4), mechanisch slashbar, ohne Verdikt. Bei Teilwis
 beobachtete `Σw` zu klein: eine Verletzung wird möglicherweise **nicht erkannt**, aber nie eine
 erfunden.
 
+**Unlesbares oder ungültiges `n`.** Ist `v` keine CBOR-Map, fehlt der Key `0`, ist sein Wert
+kein `uint`, oder liegt `n` außerhalb `[1, D]`, trägt dieser Vouch **keine Kante** und
+**keinen Budget-Beitrag**. Weitere Keys sind unschädlich — geprüft wird Key `0`, nicht die
+Map als Ganzes. Kein Beitrag, weil eine geratene Zahl eine Falschbeschuldigung wegen
+Über-Commitment erzeugen könnte; keine Kante, weil das Unter-Vertrauen ist. Beides ist die
+sichere Richtung, in verschiedene Richtungen.
+
 ---
 
 ## 4. Vertrauen als Fluss & der Min-Cut-Bound
 
-**Definition.** `trust(s → T) = maxflow(s_out → T_in)` im gespaltenen, kapazitierten Graphen.
+**Definition.** `trust(s → T) = maxflow(s_in → T_in)` im gespaltenen, kapazitierten Graphen.
+Die Quelle hängt an `s_in`, damit die interne Kante des Ankers — sein Budget `C(s)` — auf dem
+Pfad liegt. Bei gültigem Budget ist das identisch zur Anbindung an `s_out`, weil
+`Σ_e cap(e) ≤ C(s)` gilt; es unterscheidet sich genau dann, wenn der Anker über-committet
+ist, und dann in Richtung Unter-Vertrauen.
 
 **Schranke gegen Sybils.** Sei `H` die ehrliche Region (enthält `s`), `S` die Sybil-Region
 (beliebig viele vom Angreifer erzeugte Identitäten). Eine **Angriffskante** ist ein Vouch
@@ -146,18 +205,33 @@ verlassen kann).
 > wobei `maxflow(s → S)` der Multi-Sink-Fluss über der **gesamten** Menge `S` ist und
 > `Grenze` = die ehrlichen Knoten mit mindestens einer Angriffskante.
 
-**Herleitung.** Führe einen Super-Sink `T*` mit ∞-Kanten von jedem `g ∈ S` ein; dann ist der
-simultane Gesamtfluss in `S` gleich `maxflow(s → T*)`. Nach dem Max-Flow-Min-Cut-Theorem ist
-das gleich der minimalen Schnittkapazität. Jeder Pfad von `s` nach `T*` muss einen ehrlichen
-Grenzknoten `h` passieren, dessen Durchsatz durch seine interne Kante `C(h)` gedeckelt ist.
-Also `maxflow(s → T*) ≤ Σ_{h ∈ Grenze} C(h)`. Die endlichen Kantenkapazitäten `w · C(·)` aus
-§3.1 können den Fluss nur weiter **senken**, nie anheben; die Schranke gilt daher erst recht. ∎
+**Herleitung.** Führe einen Super-Sink `T*` mit ∞-Kanten von jedem `gᵢ_in` ein — an `T_in`,
+nicht an `T_out`, sonst zählte die interne Kante des Ziels mit und die Multi-Sink-Semantik
+wiche von der Einzelabfrage ab. Dann ist der simultane Gesamtfluss in `S` gleich
+`maxflow(s_in → T*)`. Nach dem Max-Flow-Min-Cut-Theorem ist das gleich der minimalen
+Schnittkapazität. Jeder Pfad von der Quelle nach `T*` passiert einen ehrlichen Grenzknoten
+`h` — **einschließlich des Ankers selbst** —, dessen Durchsatz durch seine interne Kante
+`C(h)` gedeckelt ist. Also `maxflow(s → T*) ≤ Σ_{h ∈ Grenze} C(h)`. Die endlichen
+Kantenkapazitäten `⌊n·C(·)/D⌋` aus §3.1 können den Fluss nur weiter **senken**, nie anheben;
+die Schranke gilt daher erst recht. ∎
+
+Hinge die Quelle an `a_out`, wäre der Satz **falsch**: drei Kanten mit `n = D` von einem
+Anker mit `C₀ = 16, D = 4` tragen je `⌊4·16/4⌋ = 16` und simultan 48 gegen eine behauptete
+Schranke von 16. Die Anbindung an `a_in` ist kein Konventionsdetail, sondern die
+Voraussetzung des Beweises.
 
 > **⚠️ Die Summe der Einzelabfragen ist nicht beschränkt.** `Σ_{T ∈ S} trust(s → T)` ist eine
 > **andere Größe** als `maxflow(s → S)` und kann diese überschreiten. Gegenbeispiel: `C(h) = 10`,
 > `h` bürgt für `g₁` und `g₂`; einzeln berechnet ist `trust(s→g₁) = trust(s→g₂) = 10`, Summe 20,
 > simultaner Fluss 10. Innerhalb von `S` verteilt sich der bei `g` ankommende Fluss über die
 > internen Kanten auf jedes Ziel — **bei Einzelabfrage verdünnt nichts.**
+
+> **Zwei unabhängige Divergenzursachen.** `Σ trust(s→Tᵢ)` übersteigt `maxflow(s→S)`, wenn
+> (i) ein gemeinsamer Engpass stromaufwärts bindet, **oder** (ii) eine Einzelabfrage Knoten
+> aus `S` als Zwischenknoten benutzt — im simultanen Lauf wird der Fluss dort schon an
+> `gᵢ_in` absorbiert. Jede Ursache erzeugt für sich allein Divergenz (Golden Anchors: A nur
+> (i), E nur (ii)); greift keine, sind beide Größen gleich (B, E₀). Wer nur einen der beiden
+> Fälle testet, hat VR-02.1 halb getestet.
 
 > **VR-02.1 — Aggregation MUSS simultan rechnen.** Jede Entscheidung, die Vertrauen über
 > **mehrere** Identitäten verrechnet (Quorum, Abstimmung, „N unabhängige Attestierungen",
@@ -169,8 +243,13 @@ Also `maxflow(s → T*) ≤ Σ_{h ∈ Grenze} C(h)`. Die endlichen Kantenkapazit
 Grenzknoten ab — **nicht von `|S|`**. Sind es `g` Angriffskanten mit Grenz-Kapazität `≤ C_max`,
 gilt `maxflow(s → S) ≤ g · C_max`. Eine Million zusätzliche Sybils teilen dasselbe feste Budget.
 Das ist „Identitäten gratis, Kanten teuer" — **bewiesen**, nicht erhofft. Und weil
-`C(h) = C₀ γ^{d(s,h)}` mit der Distanz fällt, ist eine seed-ferne Angriffskante ohnehin billig:
-doppelter Schutz.
+`C(h) = ⌊C₀ γ^{d(s,h)}⌋` mit der Distanz fällt, ist eine seed-ferne Angriffskante ohnehin
+billig: doppelter Schutz.
+
+> **Schärfere Schranke.** Unter gültigem Budget gilt zusätzlich
+> `maxflow(s → S) ≤ Σ_{h ∈ Grenze} Σ_{e Angriffskante von h} ⌊n_e·C(h)/D⌋ ≤ Σ_{h} C(h)`.
+> Die Kanten-Caps sind die tatsächlich bindende Größe; `Σ C(h)` ist die schwächere, aber
+> budget-unabhängige Form.
 
 **Wirkung des Gewichts auf die Einzelabfrage.** Auch ohne Verdünnung über `|S|` ist der Wert
 eines einzelnen Sybils nicht durch `C(h)` gedeckelt, sondern durch `w_e` — durch das, was der
@@ -178,6 +257,24 @@ ehrliche Bürge **dieser einen Kante** explizit zugewiesen hat (§3.1). Um Sybil
 Schwelle zu heben, braucht ein Angreifer daher ein großes `w`; ein großes `w` bindet das Budget
 des Bürgen und aktiviert seine Haftung. Identitäten bleiben gratis — ohne teuer gebundenes
 fremdes `w` bleiben sie wertlos.
+
+> **Was `Σw ≤ 1` kostet — und was nicht.** Am kanonischen Testgraphen (Golden Anchors §3)
+> senkt die Budgetregel den **simultanen** Fluss in die Sybil-Region **nicht**: 4 mit
+> über-committetem Bürgen (Variante A), 4 mit gültigem Budget (E, F). Sie senkt allein die
+> Summe der Einzelabfragen, und auch die nur von 12 auf 10. Der Ertrag liegt nicht in der
+> Unterdrückung, sondern darin, dass A mechanisch beweisbar wird (Über-Commitment, §3.1) und
+> F nicht. Das ist L2 in Zahlen — wer `Σw ≤ 1` für eine Sybil-Abwehr hält, hat den
+> Mechanismus falsch verstanden.
+>
+> **Die Angriffsform hängt nicht vom Verifizierer ab — die Schranke tut es.** Bei fester
+> Sybil-Zahl ist eine gemischte Belegung (`n = 2,1,1` auf drei Ziele, `S` vernetzt) gegen
+> **beide** Verifiziererformen optimal: Summe 10, simultan 4, drei Identitäten über einer
+> Schwelle von 2. Es gibt keinen Trade-off zwischen Streuung und Konzentration, den ein
+> Angreifer zu treffen hätte. Der Unterschied liegt allein beim Verifizierer: gegen die Summe
+> der Einzelabfragen ist der Angriff **unbeschränkt**, weil `|S|` frei ist und jeder weitere
+> erreichbare Sybil addiert; gegen den simultanen Fluss greift die Schranke dieses
+> Abschnitts. Wer VR-02.1 verletzt, wählt nicht eine ungenauere Zahl — er wählt eine Größe
+> ohne obere Schranke.
 
 > **⚠️ Die Sybil-Schranke ist keine Kollusions-Schranke.** Der Beweis setzt voraus, dass
 > zwischen `H` und `S` **wenige** Angriffskanten liegen. Bei echter Unterwanderung gilt das
@@ -308,16 +405,31 @@ Der *Mechanismus* ist festgelegt; die *Werte* sind Interpretation (A2):
 
 - `γ` (Distanz-Decay) und `α` (PageRank-Restart): Default eher **schnelles** Abklingen —
   passt zum Lokal-Ethos und verbessert die Sybil-Resistenz (weniger Fluss in die Peripherie).
-- `C₀` (Seed-Budget): skaliert nur, ändert keine Verhältnisse.
+- `C₀` (Seed-Budget): skaliert die Leiter. **Nicht mehr verhältniserhaltend**, seit die
+  Kantenkapazität abrundet: bei `C₀ = 16` ist `⌊1·2/4⌋ = 0`, bei `C₀ = 160` ist
+  `⌊1·20/4⌋ = 5`. `C₀` bestimmt zusammen mit `D` den Granularitätsboden und damit, wie weit
+  vom Seed noch gebürgt werden kann.
 - Schwelle & Gate pro Aktion: die Metrik **exponiert** nur einen Wert; ob er „reicht", ist
   Policy. (Der Neuling hat Null — die anderen *sehen* das und entscheiden selbst.)
 - Zweck-Filter, Bond-Pflicht für Hochrisiko: Filter, keine neuen Mechanismen.
-- `D` (Nenner des Vouch-Gewichts, §3.1): bestimmt die Granularität von `w`. Nukleus-fest, damit
-  die Auswertung byte-reproduzierbar bleibt.
+- `D` (Nenner des Vouch-Gewichts, §3.1): bestimmt die Granularität von `w`. **Über die
+  Lebensdauer eines Scopes unveränderlich** — ein anderes `D` bedeutet einen neuen Scope,
+  sonst würden bestehende signierte Vouches still umbewertet. **SHOULD `D ≥ C₀`**, damit die
+  Out-Degree an der Position hängt (§3.1) und nicht an einer gezählten Grenze. Eine
+  geschlossene Kurzform der Kantenkapazität gibt es **nicht**: `⌊n·⌊C₀γ^d⌋/D⌋` ist doppelt
+  gerundet und lässt sich nur bei ganzzahligem `C₀γ^d` zu `⌊n·γ^d⌋` zusammenziehen
+  (Gegenbeispiel `C₀ = D = 16, γ = ⅔, d = 2, n = 9`: `3` gegen `4`).
+- **⚠️ Granularitätsboden.** `cap(I→J) = 0`, sobald `n·C(I) < D`. Ein Knoten mit kleiner
+  Kapazität kann nur noch für wenige — am Rand für genau einen — mit vollem Budget bürgen,
+  oder für niemanden. `D` schneidet die Peripherie ab, unabhängig von `γ`.
 - **Budgetgrenze:** Default `Σw ≤ 1`. Ein Nukleus darf lockerer oder strenger setzen.
 - **Pfad-Disjunktheit statt bloßer Anzahl.** Eine Policy kann „N Attestierungen über
   **knoten-disjunkte** Pfade vom Seed" verlangen statt nur „N Attestierungen". Berechnung:
-  derselbe Max-Flow mit **Einheitskapazitäten**. Wirkung: eine Koalition, die über *einen*
+  derselbe Max-Flow mit **Einheitskapazitäten auf den internen Knotenkanten** und ∞ auf den
+  Vouch-Kanten — also **knoten**-disjunkt, nicht kantendisjunkt. Zwei Pfade durch denselben
+  Bürgen sind ein Bürge. **Endpunkte werden nicht gespalten:** die internen Kanten der Anker
+  tragen ∞, die des Ziels liegt ohnehin nicht auf dem Pfad (§4). Sonst wäre die Zahl von
+  einem einzelnen Anker aus trivial 1. Wirkung: eine Koalition, die über *einen*
   Bürgen eingesickert ist, hat Min-Cut 1 — egal wie viele Mitglieder sie hat. Das ist die
   strukturelle Fassung von „Zeugen dürfen nicht voneinander abhängen".
 - **Beobachtungskennzahlen (keine Schwellen, kein Zwang).** Zwei Zahlen, die jeder Verifizierer
@@ -329,16 +441,34 @@ Der *Mechanismus* ist festgelegt; die *Werte* sind Interpretation (A2):
   und jederzeit bestreitbar. Hohe Stellung aus einer Quelle ohne Alternative ist ein
   Kaperungsziel, unabhängig von der Verdienstlage der Person. Die Metrik exponiert nur die
   Zahlen; die Deutung bleibt beim Beobachter.
-- **⚠️ Kalibrierungs-Nebenbedingung (Bootstrap).** `Σw ≤ 1` macht die Frühphase eng: drei
-  Gründer haben zusammen Budget 3; zwanzig frühe Mitglieder bedeuten `w ≈ 0.05`, also
-  Kantenkapazität `0.05 · C₀`. Ob das über der Admission-Schwelle liegt, hängt von `C₀`, `γ`
-  **und** der Schwelle gemeinsam ab — diese Knöpfe sind nicht mehr unabhängig kalibrierbar.
+- **⚠️ Kalibrierungs-Nebenbedingung (Bootstrap).** `Σw ≤ 1` macht die Frühphase eng. Für `f`
+  Gründer, `M` Neulinge, `m` Bürgen je Neuling und Admission-Schwelle `θ`:
+  ```
+  θ ≤ f · C₀ / M          (Kapazität — unabhängig von D und m)
+  D ≥ M · m / f           (Granularität — Out-Degree je Gründer)
+  ```
+  Beide Bedingungen sind unabhängig und beide bindend. Für `f = 3, C₀ = 16, M = 17` folgt
+  `θ ≤ 2`; `m = 2` liefert dieselbe Vertrauenshöhe wie `m = 1` bei doppelter
+  Pfad-Disjunktheit (die Rundung frisst den Unterschied — Redundanz ist dort gratis),
+  `m = 3` kollabiert am Granularitätsboden auf null. Die Kapazitätsbedingung ist dabei die
+  **optimistische** Form: nach Rundung sind von `f·C₀ = 48` Einheiten real nur 36
+  verteilbar (Golden Anchors §7).
+- **⚠️ Harte Reichweite.** Ab `d` mit `⌊C₀γ^d⌋ = 0` kann ein Mitglied **keinen** wirksamen
+  Vouch mehr tragen — gleich wie viel Budget es einsetzt und gleich wie viele Bürgen ein
+  Kandidat sammelt. Damit gilt `r_max = ⌊log_{1/γ} C₀⌋`, bei `C₀ = 16, γ = ½` also
+  `r_max = 4` für die Bürgschaftsfähigkeit und `5` für die Mitgliedschaft. Ein Nukleus mit
+  `θ = 2` sättigt bei rund **600 Mitgliedern** und Radius 5; wer mehr will, muss `C₀` oder
+  `γ` ändern. Das ist die quantitative Fassung von „maximal lokal" und keine Panne.
+- **Geflaggte Autoren.** Ob ein Bürge mit `equivocation-flagged` oder erwiesenem
+  Über-Commitment noch Fluss trägt, ist Policy (`include_flagged`, Default *nein*). Die
+  Budgetrechnung ist davon **unberührt** — ein Flag darf die Grundlage nicht verschieben, auf
+  der es erkannt wurde.
 
 ---
 
 ## 9. Bewusst getragene v1-Grenzen & gemachte Designentscheidungen
 
-- **Geometrischer Decay** `C₀ γ^d` ist eine *gewählte* Form (ein Knopf, saubere Monotonie);
+- **Geometrischer Decay** `⌊C₀ γ^d⌋` ist eine *gewählte* Form (ein Knopf, saubere Monotonie);
   Advogatos Original nutzt ein gestuftes Schema. Austauschbar, solange monoton fallend.
 - **Hop-Distanz** (BFS) als Default; gewichtete Distanz wäre ein Knopf.
 - **PageRank nur als Relaxation** — bei Missbrauch für harte Gates verliert man die Schranke

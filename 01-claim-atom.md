@@ -379,9 +379,16 @@ Interpretation (Policy). Es fügt **kein Feld** hinzu. Das ist das radiale Prinz
 |--------|----------|
 | `I`    | der Bürge |
 | `J`    | `[identity, verbürgte_identity]` |
-| `v`    | opak, Policy-geparst; Vorschlag: `{ weight ∈ [0,1], bond_ref?, note? }` |
+| `v`    | kanonische CBOR-Map mit `0: n`, `n : uint`, `1 ≤ n ≤ D` — das Vouch-Gewicht (Trust-Flow-Spec §3.1). **Abwesend ⇒ `n = D`, also `w = 1`.** Weitere Keys sind zulässig und für das Atom opak. |
 | `N`    | **Pflicht** — Vertrauen ist kontextgebunden |
-| `t_exp`| optional — zeitlich begrenzte Bürgschaft (lokale Gültigkeitsdecke, §6) |
+| `t_exp`| optional im Atom; in Scopes mit Budgetregel **Pflicht**, oder die Policy setzt eine Maximallaufzeit als Default (Trust-Flow-Spec §6.2) |
+
+> `n` ist ein **uint**, kein Bruch. `w = n/D` mit scope-festem `D` (Trust-Flow-Spec §8) hält
+> die gesamte harte Sicht ganzzahlig; ein `weight ∈ [0,1]` als Float verstieße gegen §3
+> Regel 6. Geprüft wird **Key `0`**, nicht die Map als Ganzes. Reservierte Keys: `0` = `n`
+> (normativ), `1` = Zweck-Tag (Trust-Flow-Spec §2), `2` = `bond_ref` (Trust-Flow-Spec §6.1);
+> die Kodierung von `1` und `2` wird mit `03`/`05` festgelegt. Referenzvektor TV1 trägt
+> `v = h'a1001864'` = `{0: 100}` — bei `D = 100` der Default `w = 1`.
 
 - **Lebenszyklus:** Rücknahme via `core/revoke@1` (`J = [claim-ref, vouch.claim_id]`).
   Selbst-bezüglich → verstanden → in **jeder** Default-Sicht inaktiv. (Genau das schließt
