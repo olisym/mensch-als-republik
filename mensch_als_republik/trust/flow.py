@@ -4,21 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.verifier import ClaimStore, State
+from mensch_als_republik.verifier import ClaimStore
 
+from .derive import derive
 from .dinic import Dinic
-from .findings import Finding, TrustFinding
-from .graph import (
-    SINK,
-    SOURCE,
-    bfs_capacities,
-    build_flow_graph,
-    infinity,
-    source_side_cut,
-)
-from .groups import build_groups
-from .index import classify_all
+from .findings import Finding
+from .graph import SINK, SOURCE, build_flow_graph, infinity, source_side_cut
 from .params import TrustParams
 
 
@@ -43,46 +34,12 @@ def trust(
     if anchors & targets:
         raise ValueError("anchors and targets must be disjoint")
 
-    # 1. classify_all
-    classifications = classify_all(store, now)
-    claims = store.all_claims()
-
-    # 2-3. Vouch-Claims des Scopes sammeln, v dekodieren, Gruppen bilden
-    groups, payload_findings = build_groups(claims, classifications, scope, params.D, now)
-
-    # 4. Budget je Autor prüfen -> OVERCOMMITTED_AUTHOR
-    budget_by_author: dict[bytes, int] = {}
-    for (author, _subject), group in groups.items():
-        budget_by_author[author] = budget_by_author.get(author, 0) + group.n_budget
-    overcommitted_authors = {
-        author for author, total in budget_by_author.items() if total > params.D
-    }
-    overcommit_findings = tuple(
-        Finding(kind=TrustFinding.OVERCOMMITTED_AUTHOR, subject=author)
-        for author in overcommitted_authors
+    # 1-6. geteilte Ableitung (D49): classify_all -> Gruppen -> Budget -> Flags -> BFS über E+
+    derivation = derive(
+        store, anchors=anchors, scope=scope, now=now, params=params,
+        include_flagged=include_flagged,
     )
-
-    equivocation_flagged_authors = {
-        c.I
-        for c in claims
-        if classifications[claim_id(c)].state == State.EQUIVOCATION_FLAGGED
-    }
-    flagged_authors = overcommitted_authors | equivocation_flagged_authors
-
-    # 5. Flags anwenden -> Kantenkandidaten
-    if include_flagged:
-        candidate_groups = groups
-    else:
-        candidate_groups = {
-            key: group for key, group in groups.items() if group.author not in flagged_authors
-        }
-
-    # 6. BFS über E+ -> d, C, cap, SUBGRANULAR_VOUCH
-    bfs_result = bfs_capacities(anchors, candidate_groups, params)
-
-    all_findings = tuple(
-        sorted(set(payload_findings) | set(overcommit_findings) | set(bfs_result.findings))
-    )
+    bfs_result = derivation.bfs
 
     identities = frozenset(bfs_result.node_capacity) | anchors | targets
     inf = infinity(bfs_result)
@@ -104,5 +61,5 @@ def trust(
         value=value,
         disjoint_paths=disjoint_paths,
         cut=cut,
-        findings=all_findings,
+        findings=derivation.findings,
     )

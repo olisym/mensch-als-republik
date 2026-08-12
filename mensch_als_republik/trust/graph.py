@@ -33,6 +33,7 @@ class Edge:
     subject: bytes
     cap: int
     claim_id: bytes
+    n_kante: int  # Gruppengewicht vor der C(I)-Gewichtung; von rank() gelesen (02b §2/D49)
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +79,13 @@ def bfs_capacities(
                     )
                     continue
                 edges.append(
-                    Edge(author=author, subject=subject, cap=cap, claim_id=group.kante_claim_id)
+                    Edge(
+                        author=author,
+                        subject=subject,
+                        cap=cap,
+                        claim_id=group.kante_claim_id,
+                        n_kante=group.n_kante,
+                    )
                 )
                 if subject not in seen:
                     seen.add(subject)
