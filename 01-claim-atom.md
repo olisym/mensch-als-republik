@@ -447,9 +447,27 @@ Interpretation (Policy). Es fügt **kein Feld** hinzu. Das ist das radiale Prinz
 > `n` ist ein **uint**, kein Bruch. `w = n/D` mit scope-festem `D` (Trust-Flow-Spec §8) hält
 > die gesamte harte Sicht ganzzahlig; ein `weight ∈ [0,1]` als Float verstieße gegen §3
 > Regel 6. Geprüft wird **Key `0`**, nicht die Map als Ganzes. Reservierte Keys: `0` = `n`
-> (normativ), `1` = Zweck-Tag (Trust-Flow-Spec §2), `2` = `bond_ref` (Trust-Flow-Spec §6.1);
-> die Kodierung von `1` und `2` wird mit `03`/`05` festgelegt. Referenzvektor TV1 trägt
-> `v = h'a1001864'` = `{0: 100}` — bei `D = 100` der Default `w = 1`.
+> (normativ), `1` = Zweck-Tag (Trust-Flow-Spec §2), `2` = `bond_ref` (Trust-Flow-Spec §6.1).
+> Referenzvektor TV1 trägt `v = h'a1001864'` = `{0: 100}` — bei `D = 100` der Default `w = 1`.
+
+**Zu den Keys `1` und `2`.** Key `2` ist **typ-fest**: `2 : bstr`, Länge 32, nie dereferenziert.
+Er trägt in v1 keine Wirkung und keinen Testvektor; festgelegt ist nur der Typ, damit die
+Durchsetzungs- und die Profilschicht denselben Slot nicht verschieden belegen.
+
+Key `1` bleibt **unkodiert**. Er ist Trust-Flow-Semantik, nicht Profil-Semantik: sobald ein
+Zweck-Tag existiert, brauchen `trust()` und `rank()` einen `purpose`-Parameter, das Kantengewicht
+muss über der **gefilterten** Teilmenge maximiert werden — sonst erbt ein Probe-Vouch für einen
+Zweck das Gewicht eines vollen Vouch für einen anderen —, und das Budget muss über **alle**
+Zwecke laufen, sonst kauft ein Autor durch Zweck-Splitting neues Budget. Das ist ein eigener
+Durchgang und nicht der Nebeneffekt einer Kodierungszeile.
+
+**Kanonizität von `v` prüft die lesende Schicht.** §3 verlangt kanonisches CBOR, aber der
+Re-Serialisierungs-Check aus §6 Regel 2 deckt nur den **Core** ab; `v` ist darin eine `bstr`,
+deren Inhalt uninterpretiert bleibt. Das Atom liest `v` nicht und wird es nicht tun — eine
+Prüfung hier bräche die Bedeutungsblindheit. Durchgesetzt wird die Anforderung dort, wo `v`
+gelesen wird: Trust-Flow-Spec §3.1 für Key `0`, Profile-II §1.3 für die Profil-Keys. Ein
+Verstoß erzeugt dort einen Vermerk und lässt den defekten Teil wegfallen — **nie** einen Reject
+und **nie** den Abwesend-Default.
 
 - **Lebenszyklus:** Rücknahme via `core/revoke@1` (`J = [claim-ref, vouch.claim_id]`).
   Selbst-bezüglich → verstanden → in **jeder** Default-Sicht inaktiv. (Genau das schließt
