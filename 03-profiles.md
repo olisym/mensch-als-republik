@@ -83,6 +83,7 @@ Content-Adressierung eine Behauptung.
 | Lage | Antwort |
 |---|---|
 | Genesis passt nicht zu `scope` | `ValueError` |
+| Genesis ohne `constitution_hash` oder mit falschem Typ darin | `ValueError` |
 | Verfassungsobjekt fehlt (Partition) | Sicherheits-Default, Vermerk `CONSTITUTION_UNAVAILABLE` |
 | Verfassungsobjekt passt nicht zum `constitution_hash` | Sicherheits-Default, Vermerk `CONSTITUTION_HASH_MISMATCH` |
 | beides passt | `irrevocable_predicates` der Verfassung, normalisiert |
@@ -164,6 +165,19 @@ Nukleus B eine Schuld aus Nukleus A, und eine Unterwerfung aus Nukleus B bindet 
 in Nukleus A. Betroffen sind: `receipt` ↔ `obligation` (§3.3.2), `verdict` ↔ `accusation` ↔
 `submit-arbitration` (§2.4), `accept-rules` ↔ `grant-membership` (§4). Vermerk bei Verstoß:
 `SCOPE_MISMATCH`.
+
+**Für den bewerteten Claim selbst gilt es schärfer.** Nimmt eine Funktion dieser Schicht einen
+Claim als Argument entgegen — `settlement(obligation=…)`, `verdict_status(verdict=…)` —, dann
+ist ein falsches Prädikat oder ein falsches `N` kein Vermerk, sondern:
+
+> **Normativ:** Die Funktion prüft als Erstes, dass der übergebene Claim das erwartete Prädikat
+> im Scope trägt und im Store liegt. Sonst `ValueError`, vor jedem weiteren Zugriff.
+
+Der Unterschied zum Beziehungsfall ist der Unterschied zwischen einem Claim, den ich im Bestand
+*finde*, und einem, den der Aufrufer mir *reicht*. Den ersten darf ich nicht zählen; beim
+zweiten hat der Aufrufer eine Behauptung aufgestellt, die falsch ist, und dafür gibt es keine
+sichere Voreinstellung (Atom-Spec §5.4). Ohne diese Zeile bindet ein Verdikt aus Nukleus B einen
+Streit in Nukleus A, sobald sein Autor in beiden Arbitratorenlisten steht.
 
 ---
 
@@ -253,6 +267,9 @@ byte-weise. Aus demselben Grund findet hier **keine Schlüsselauflösung** statt
 FROST-Panel verifiziert als gewöhnliche Ed25519-Signatur unter seinem Gruppenschlüssel, und
 `resolve_current_key` liegt außerhalb dieser Schicht (§5).
 
+Eingangsprüfung nach §1.4: ist `verdict` kein `nuc:{scope}/verdict@1` oder liegt es nicht im
+Store, wirft die Funktion `ValueError` — dieselbe Strecke wie `settlement()` in §3.3.2.
+
 **`BINDING` gdw. das Verdikt aktiv ist und mindestens einer der beiden Pfade trägt:**
 
 ```
@@ -294,11 +311,23 @@ Nukleus-Spec §5.1 spricht von „beiden Parteien", ohne sie zu benennen. Normat
 | Beschuldigter, `accusation.J.tag == identity` | `accusation.J.value` |
 | Beschuldigter, `accusation.J.tag == claim-ref` | der **Autor** des bestrittenen Claims |
 
-Die Anklage wird über `verdict.J` gefunden. Ist sie nicht auflösbar — `verdict.J.tag` ist nicht
-`claim-ref`, die Anklage ist lokal unbekannt, ihr `N` ist nicht `scope`, oder der bestrittene
-Claim ist lokal unbekannt —, ist **Pfad (ii) nicht auswertbar**; Pfad (i) bleibt es. Trägt auch
-er nicht, lautet die Antwort `ATTRIBUTED_OPINION` mit dem entsprechenden Vermerk. Teilwissen
-senkt, was ich behaupten kann, und die schwächere Behauptung ist hier die sichere.
+Die Anklage wird über `verdict.J` gefunden. Ist sie nicht auflösbar, ist **Pfad (ii) nicht
+auswertbar**; Pfad (i) bleibt es. Trägt auch er nicht, lautet die Antwort
+`ATTRIBUTED_OPINION`. Teilwissen senkt, was ich behaupten kann, und die schwächere Behauptung
+ist hier die sichere.
+
+Vier Fälle, vier Vermerke — die Wirkung ist dieselbe, die Diagnose nicht:
+
+| Lage | Vermerk |
+|---|---|
+| `verdict.J.tag` ist nicht `claim-ref` | `UNKNOWN_ACCUSATION` |
+| die Anklage ist lokal unbekannt | `UNKNOWN_ACCUSATION` |
+| die Anklage liegt in einem anderen Nukleus | `SCOPE_MISMATCH` |
+| der bestrittene Claim ist lokal unbekannt | `UNRESOLVED_ACCUSED` |
+
+Die dritte Zeile ist der Grund für die Tabelle. Eine Anklage aus fremdem Scope ist **bekannt**;
+sie zählt nur nicht. `UNKNOWN_ACCUSATION` schickte den Betreiber in die Partitionsecke, während
+das Objekt vor ihm liegt.
 
 **Der Zustand der Anklage ist irrelevant.** Sie wird nur gelesen, um die Parteien zu
 bestimmen; ob der Ankläger sie inzwischen widerrufen hat, ändert nichts daran, wer die Parteien
@@ -358,6 +387,13 @@ SLA-Fenster), und ein Verbot verlöre mehr, als es schützt. Entschärft ist es 
 Obligation **einseitig** ist: es gibt keine signierte Annahme des Gläubigers, er trägt die
 Prüfpflicht ohnehin, und `t_exp` steht ihm vor der Gegenleistung sichtbar im Claim. Der Vermerk
 macht die Falle für Werkzeuge lesbar, ohne ihr Bedeutung zuzuschreiben.
+
+> **Normativ:** `EXPIRING_OBLIGATION` erscheint, sobald `obligation.t_exp` gesetzt ist —
+> **unabhängig vom Zustand der Obligation**, also auch und gerade, solange sie aktiv ist.
+
+Ihn nur beim Verfall zu setzen kehrte seinen Zweck um: nach dem Erlöschen ist die Warnung
+wertlos, und `EXPIRED` sagt es ohnehin. Gerichtet ist sie an den Gläubiger **vor** der
+Gegenleistung.
 
 #### 3.3.2 `nuc:N/receipt@1` und die Tilgung
 

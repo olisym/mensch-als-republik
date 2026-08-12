@@ -2301,3 +2301,81 @@ prüfen. Ein Filter, der das Prüfobjekt entfernt, macht den Test grün und die 
 im ursprünglichen Kontext trug — ein Claim, ein Aufrufer, eine Behauptung — und beim Übertragen
 auf einen anderen Kontext still ihren Geltungsbereich verlor. Diesmal war der Übertragende ich,
 im selben Register, vier Einträge später.
+
+---
+
+## U. Aus der `03`-Abnahme
+
+Drei Beschlüsse aus sechs Befunden. Die anderen drei (`_dedupe_sort`-Benennung, `KeyError` statt
+`ValueError` im Verdikt, `KeyError` bei defektem Genesis) sind Ausführung und brauchen keinen
+Registereintrag — sie fallen unter D92 bzw. sind kosmetisch.
+
+### D92 — Der bewertete Claim wird an der Eingangstür geprüft ⚠️
+
+`03 §1.4` normierte Scope-Gleichheit für **Beziehungen zwischen zwei Claims** —
+`receipt` ↔ `obligation`, `accept-rules` ↔ `grant-membership`, `submit-arbitration` ↔ `verdict`.
+Für den Claim, den eine Funktion als **Argument** entgegennimmt, stand die Regel nur bei
+`settlement()` (`§3.3.2`) und nirgends allgemein. `verdict_status()` hatte sie deshalb nicht.
+
+**Die Folge war real.** Ein Verdikt aus Nukleus B, mit `scope = N_A` ausgewertet, wurde nicht
+abgewiesen: steht sein Autor in A's Arbitratorenliste, lautete die Antwort `BINDING`. Ein
+anerkannter Schiedsrichter sitzt typischerweise in mehreren Nuklei — der Fall ist der Normalfall.
+
+**Beschluss:** Jede Funktion dieser Schicht, die einen Claim als Argument nimmt, prüft als
+Erstes: erwartetes Prädikat, `N == scope`, im Store. Sonst `ValueError`, vor jedem weiteren
+Zugriff. Vektoren `VS-13`, `VS-14`, Invariante `PR-INV-13`.
+
+**Der Unterschied zum Beziehungsfall ist die Herkunft des Claims.** Einen Claim, den ich im
+Bestand *finde*, darf ich nicht zählen — Vermerk, weiter. Bei einem, den der Aufrufer mir
+*reicht*, hat er eine Behauptung aufgestellt, die falsch ist, und dafür gibt es keine sichere
+Voreinstellung (D73). Dass diese Unterscheidung nirgends stand, ist der ganze Befund.
+
+Derselbe Beschluss deckt das defekte Genesis-Objekt ab: `resolve_policy` bekommt es gereicht,
+also wirft es, statt still in einen `KeyError` zu laufen (Vektor `P-G`).
+
+### D93 — `EXPIRING_OBLIGATION` erscheint unbedingt, nicht beim Verfall
+
+Der Vermerk stand im `EXPIRED`-Zweig und erschien damit genau dann, wenn er wertlos ist: nach
+dem Erlöschen sagt `EXPIRED` es ohnehin.
+
+`03 §3.3.1` begründet ihn damit, dass `t_exp` dem Gläubiger **vor der Gegenleistung** sichtbar
+sein soll — die einseitige Obligation hat keine signierte Annahme, er trägt die Prüfpflicht
+allein.
+
+**Beschluss:** `obligation.t_exp is not None` ⇒ `EXPIRING_OBLIGATION`, unabhängig vom Zustand.
+Vektor `SE-13`: aktive Obligation mit `t_exp` in der Zukunft, `OPEN` plus Vermerk.
+
+Die Fehlform ist notierenswert, weil sie nicht falsch *aussah*: die Bedingung stand in einem
+Zweig, der sie erwähnt, statt an der Stelle, an der sie gilt. Ein Vermerk, der nur im
+Schadensfall erscheint, ist kein Warnhinweis, sondern ein Nachruf.
+
+### D94 — Vier Nicht-Auflösbar-Fälle, drei Vermerke
+
+`03 §2.4.4` sagte „mit dem entsprechenden Vermerk", ohne die Zuordnung auszuschreiben. Die
+Implementierung wählte für **alle** Fälle `UNKNOWN_ACCUSATION`, auch für eine Anklage aus
+fremdem Scope.
+
+**Beschluss:**
+
+| Lage | Vermerk |
+|---|---|
+| `verdict.J.tag` ist nicht `claim-ref` | `UNKNOWN_ACCUSATION` |
+| Anklage lokal unbekannt | `UNKNOWN_ACCUSATION` |
+| Anklage in einem anderen Nukleus | `SCOPE_MISMATCH` |
+| bestrittener Claim lokal unbekannt | `UNRESOLVED_ACCUSED` |
+
+Die dritte Zeile ist der Grund für die Tabelle: eine Anklage aus fremdem Scope ist **bekannt**
+und zählt nur nicht. `UNKNOWN_ACCUSATION` schickte den Betreiber in die Partitionsecke, während
+das Objekt vor ihm liegt. Wirkung identisch, Diagnose entscheidend — dritte Wiederholung von
+D74. Vektor `VS-12`.
+
+---
+
+**Neue Fehlerform.** D74, D75, D83, D87 und D91 hatten dieselbe Bauart: eine Begründung verlor
+beim Übertragen still ihren Geltungsbereich. D92 ist anders — die Regel wurde **gar nicht erst
+übertragen**. `settlement()` und `verdict_status()` nehmen beide einen Claim entgegen, bewerten
+ihn im Scope und geben Zustand plus Vermerke zurück; sie hätten dieselbe Eingangsstrecke haben
+müssen. `§3.3.2` hat sie ausgeschrieben, `§2.4.2` nicht, weil beim Schreiben von `§2.4` die
+Bindungsfrage im Vordergrund stand und nicht die Eingangsprüfung.
+
+Drei der sechs Abnahmebefunde waren Asymmetrien zwischen genau diesen beiden Funktionen.
