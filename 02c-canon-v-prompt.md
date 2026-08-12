@@ -51,9 +51,10 @@ def _decode_weight(v: bytes | None, D: int) -> tuple[int | None, TrustFinding | 
         return D, None
     try:
         obj = cbor_canon.decode(v)
+        canonical = cbor_canon.is_canonical(v)
     except Exception:
         return None, TrustFinding.UNPARSABLE_VOUCH_PAYLOAD
-    if not cbor_canon.is_canonical(v):
+    if not canonical:
         return None, TrustFinding.NON_CANONICAL_V
     if not isinstance(obj, dict) or 0 not in obj:
         ...unverändert...
@@ -61,19 +62,28 @@ def _decode_weight(v: bytes | None, D: int) -> tuple[int | None, TrustFinding | 
 
 ### 3.1 Drei Randbedingungen, jede mit einem Vektor dahinter
 
-**Nach dem `decode`, nicht davor.** `is_canonical(v)` ruft intern `decode` auf und **wirft** bei
-undekodierbarer Eingabe, statt `False` zu liefern — `h'a1'` → `CBORDecodeEOF`, `h'ff'` →
-`CBOREncodeError` beim Re-Enkodieren. Ein Wächter vor dem `try` verwandelt
-`UNPARSABLE_VOUCH_PAYLOAD` in eine durchschlagende Exception. `V-CANON-6` fängt das.
+**Der Rundlauf zählt in beide Richtungen.** `is_canonical(v)` dekodiert und enkodiert selbst und
+kann an beiden Enden werfen. `cbor2.loads` ist an zwei Stellen nachsichtiger als CBOR erlaubt:
+
+```
+h'a1'      decode RAISE CBORDecodeEOF                  → UNPARSABLE_VOUCH_PAYLOAD
+h'ff'      decode ok (Sentinel), kein dict, encode RAISE → UNPARSABLE_VOUCH_PAYLOAD
+h'a100ff'  decode ok, IST ein dict,      encode RAISE   → UNPARSABLE_VOUCH_PAYLOAD
+h'a1ff01'  decode ok, IST ein dict,      encode RAISE   → UNPARSABLE_VOUCH_PAYLOAD
+```
+
+Die beiden letzten sind der Grund, warum eine vorgeschaltete `isinstance(obj, dict)`-Prüfung den
+Fall **nicht** abfängt. Deshalb steht `is_canonical` im **selben** `try` wie `decode`, und jede
+Exception aus dem Rundlauf bedeutet `UNPARSABLE_VOUCH_PAYLOAD`. Nur ein Rundlauf, der *gelingt*
+und ein abweichendes Ergebnis liefert, bedeutet `NON_CANONICAL_V`.
 
 **Vor der Wertprüfung.** Kanonizität ist eine Eigenschaft der Bytes und geht der Interpretation
 voraus. Trägt ein nicht-kanonisches `v` zugleich ein `n` außerhalb `[1, D]`, lautet der Vermerk
 `NON_CANONICAL_V`, nicht `INVALID_VOUCH_WEIGHT`. `V-CANON-4` fängt das.
 
-**Nicht wie ein abwesendes `v`.** Rückgabe ist `(None, NON_CANONICAL_V)` — kein Beitrag —, nie
-`(D, …)`. Der Abwesend-Default `n = D` auf einen defekten Payload angewandt erzeugt maximales
-Vertrauen aus einem Fehler; das ist Über-Vertrauen und damit die eine gefährliche Richtung
-(`02 §7`).
+**Nicht wie ein abwesendes `v`.** Rückgabe ist `(None, …)` — kein Beitrag —, nie `(D, …)`. Der
+Abwesend-Default `n = D` auf einen defekten Payload angewandt erzeugt maximales Vertrauen aus
+einem Fehler; das ist Über-Vertrauen und damit die eine gefährliche Richtung (`02 §7`).
 
 ### 3.2 Ausdrücklich verboten
 
@@ -128,10 +138,17 @@ liefern. Die Wirkung ist in beiden Fällen dieselbe, der Vermerk nicht.
 **`V-CANON-6` ist der eigentliche Abnahmevektor.** Er prüft nicht die neue Regel, sondern dass
 die neue Regel die alte nicht zertrampelt hat. Er muss einen Vermerk liefern, keine Exception.
 
+**Zwei Bestandsvektoren gehören zu derselben Frage** und werden **nicht** angefasst: der
+Einheitstest und der End-zu-End-Test mit `v = b"\xff"`, beide auf `UNPARSABLE_VOUCH_PAYLOAD`.
+Sie sind der Grund, warum `is_canonical` im selben `try` steht wie `decode` — eine
+Implementierung, die den Rundlauf nur zur Hälfte absichert, macht genau diese beiden rot. Wer
+sie anpasst, statt den Code zu korrigieren, hat die Aufgabe verfehlt.
+
 ### 5.2 Ein End-zu-End-Vektor
 
 `V-CANON-E2E`: derselbe Vouch wie in einem bestehenden Zwei-Knoten-Anker, aber mit
-`v = h'a100190064'` statt `h'a1001864'`. Erwartet:
+`v = h'a100190064'` statt `h'a1001864'`. Zu bauen mit `vouch_raw(...)`, das für den
+`b"\xff"`-Fall bereits existiert. Erwartet:
 
 - `trust()` auf den Gebürgten liefert **0** (die Kante existiert nicht),
 - `TrustResult.findings` enthält `Finding(NON_CANONICAL_V, claim_id(vouch))`,
@@ -144,14 +161,9 @@ tatsächlich aus dem Graphen verschwindet.
 
 ### 5.3 Hilfsmittel
 
-`tests/helpers.py` erzeugt `v` heute ausschließlich über `cbor_canon.encode(payload)`. Für
-`V-CANON-E2E` wird ein Weg gebraucht, **rohe** `v`-Bytes anzuhängen — z. B. ein optionaler
-Parameter `v_raw: bytes | None = None`, der `payload` vorgeht. Bestehende Aufrufe bleiben
-unverändert.
-
-Das ist bewusst so formuliert und nicht ausgeführt: wenn sich beim Bauen zeigt, dass der
-Helfer anders geschnitten ist als hier vermutet, ist das eine **Rückfrage**, keine Umdeutung
-des Vektors.
+`vouch_raw(...)` in `tests/helpers.py` hängt rohe `v`-Bytes an und wird bereits vom
+`b"\xff"`-Bestandsvektor benutzt. Es ist damit ausreichend; `tests/helpers.py` muss **nicht**
+geändert werden.
 
 ---
 
@@ -159,10 +171,9 @@ des Vektors.
 
 1. `make check` grün in allen drei Blöcken.
 2. **242 Tests** (235 + 6 + 1). Keiner der 235 bestehenden ist geändert, übersprungen oder
-   angepasst worden.
-3. `git diff --stat` zeigt **genau vier** Dateien: `trust/findings.py`, `trust/groups.py`,
-   `tests/trust/test_payload.py`, `tests/helpers.py`. Jede weitere Datei ist zu begründen,
-   bevor gemergt wird.
+   angepasst worden — insbesondere nicht die beiden `b"\xff"`-Vektoren.
+3. `git diff --stat` zeigt **genau drei** Dateien: `trust/findings.py`, `trust/groups.py`,
+   `tests/trust/test_payload.py`. Jede weitere Datei ist zu begründen, bevor gemergt wird.
 4. `git status` ohne unversionierte Quelldateien — `tools/check_tree.py` bricht sonst ohnehin ab.
 5. Ein frischer Clone des Branches ist grün.
 

@@ -209,9 +209,24 @@ trennt:
   Interpretation voraus. Der Vorrang ist beobachtbar, sobald ein nicht-kanonisches `v` zugleich
   ein `n` außerhalb `[1, D]` trägt: der Vermerk lautet dann `NON_CANONICAL_V`, nicht
   `INVALID_VOUCH_WEIGHT`.
-- **Nach dem Dekodieren.** Ein undekodierbares `v` erzeugt bereits `UNPARSABLE_VOUCH_PAYLOAD`;
-  eine Kanonizitätsprüfung davor würde dort werfen statt zu vermerken, denn sie dekodiert
-  selbst.
+- **Der Rundlauf zählt in beide Richtungen.** Die Kanonizitätsprüfung ist selbst ein Dekodier-
+  *und* Enkodiervorgang und kann an beiden Enden scheitern.
+
+> **Normativ:** Scheitert der Rundlauf `decode → encode` an irgendeiner Stelle mit einer
+> Exception, ist `v` **unlesbar** (`UNPARSABLE_VOUCH_PAYLOAD`). Liefert er ein Ergebnis, das den
+> Eingabebytes nicht gleicht, ist `v` **nicht kanonisch** (`NON_CANONICAL_V`). Beides führt in
+> denselben Zweig aus dem vorigen Absatz: keine Kante, kein Budget-Beitrag.
+
+Der Grund ist die Nachsicht der Bibliothek, nicht die Bequemlichkeit des Aufrufers: `h'ff'`,
+`h'a100ff'` und `h'a1ff01'` dekodieren **ohne Fehler** zu einem Sentinel-Objekt und scheitern
+erst beim Re-Enkodieren — die beiden letzten sogar zu einem `dict`, sodass auch keine Formprüfung
+sie abfängt. Solche Bytes sind kein Wert, der falsch geschrieben wurde; sie sind kein Wert.
+`NON_CANONICAL_V` würde behaupten, es gebe eine kanonische Form desselben Inhalts, und die gibt
+es nicht.
+
+Für Payloads, die keine CBOR-Map sind, gilt dieselbe Reihenfolge; welcher der beiden Vermerke
+erscheint, hängt von der Verstoßklasse ab. Die Zuordnung ist für jede Eingabe eindeutig, und die
+Wirkung ist in beiden Fällen dieselbe.
 
 Der **doppelte Schlüssel** ist der tragende Fall. Bei den übrigen Verstößen liefert das
 Dekodieren den richtigen Wert, und der Schaden bleibt bei der Byte-Vergleichbarkeit. Bei einem

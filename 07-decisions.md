@@ -2047,3 +2047,58 @@ der die beiden Pfade aus D67 trennt.
 wird mit `03`/`05` festgelegt". Sie gehört in diesen Durchgang, zusammen mit dem D77-Satz zur
 lesenden Schicht: beide betreffen denselben Absatz, und eine Datei zweimal vollständig zu
 liefern wäre unnötig.
+
+---
+
+## R. Aus dem `02c`-Lauf
+
+### D83 — Der Kanonizitäts-Rundlauf zählt in beide Richtungen ⚠️
+
+Aus einer Rückfrage im Implementierungsfenster, nicht aus einem roten Test der neuen Regel: ein
+**Bestandstest** wurde rot. D77 (c) legte fest, die Kanonizitätsprüfung stehe *nach* dem
+Dekodieren, weil `is_canonical` bei undekodierbarer Eingabe wirft. Das war richtig und zu wenig.
+
+**Der Befund.** `cbor2.loads` ist an zwei Stellen nachsichtiger, als CBOR erlaubt. Ein nacktes
+Break-Byte dekodiert zu einem Sentinel-Objekt, statt zu werfen:
+
+```
+h'a1'      decode RAISE CBORDecodeEOF
+h'ff'      decode ok (Sentinel), kein dict, encode RAISE CBOREncodeError
+h'a100ff'  decode ok, IST ein dict,         encode RAISE CBOREncodeError
+h'a1ff01'  decode ok, IST ein dict,         encode RAISE CBOREncodeError
+```
+
+Die beiden letzten schließen die naheliegende Reparatur aus — die Prüfung hinter einen
+`isinstance(obj, dict)`-Test zu schieben. Sie **sind** Dicts. Es gibt keine Vorprüfung, die den
+Fall abfängt.
+
+**Beschluss:** Scheitert der Rundlauf `decode → encode` an irgendeiner Stelle mit einer
+Exception, ist `v` **unlesbar** (`UNPARSABLE_VOUCH_PAYLOAD` bzw. `UNPARSABLE_V`). Liefert er ein
+Ergebnis, das den Eingabebytes nicht gleicht, ist `v` **nicht kanonisch** (`NON_CANONICAL_V`).
+Beide Vermerke führen in denselben Zweig aus D37: keine Kante, kein Budget-Beitrag. In Layer 03
+gilt dasselbe für das Lesen der reservierten Keys.
+
+Implementierung: `decode` und `is_canonical` stehen im **selben** `try`.
+
+**Warum unlesbar und nicht nicht-kanonisch.** `h'a100ff'` ist kein Wert, der falsch geschrieben
+wurde — es ist kein Wert. `NON_CANONICAL_V` würde behaupten, es gebe eine kanonische Form
+desselben Inhalts, und die gibt es nicht. Die Wirkung ist in beiden Fällen dieselbe; die
+Unterscheidung ist Diagnose, und eine falsche Diagnose schickt den Betreiber in die falsche
+Richtung.
+
+**Nicht-Map-Payloads.** Für Bytes, die kein CBOR-Map kodieren, gilt dieselbe Reihenfolge; welcher
+Vermerk erscheint, hängt von der Verstoßklasse ab (`h'c11a514b67b0'` — ein Datums-Tag —
+dekodiert, ist keine Map und ist nicht kanonisch, liefert also `NON_CANONICAL_V`). Die Zuordnung
+ist für jede Eingabe eindeutig; das ist die Anforderung, nicht die Übereinstimmung mit der
+Intuition.
+
+**Herkunft des Fundes.** Der Implementierer hat die Frage zurückgegeben, statt sie im
+Implementierungsfenster zu entscheiden — die Regel aus `§7` der Prompts hat gehalten. Es ist
+der dritte Befund in Folge, der in einer **Formulierung des Prompts** lag und nicht in der
+Ausführung (nach D74 und D75). Alle drei entstanden dadurch, dass eine Bedingung mit einer
+plausiblen, aber unvollständigen Begründung geschrieben wurde. D77 (c) begründete die
+Platzierung mit *einem* Fehlermodus; es gab zwei.
+
+**Betroffene Dateien:** `02-trust-flow.md §3.1`, `03-profiles.md §1.3`, `02c-canon-v-prompt.md`
+§3 und §5 (alle drei vollständig geliefert). `01 §7.1` bleibt unberührt — dort steht keine
+Reihenfolgeaussage.

@@ -123,10 +123,20 @@ als Ganzes):
 3. **Weitere Keys sind zulässig und opak.** Sie werden nicht gelesen und nicht bewertet.
 
 **Kanonizität.** Ist `v` vorhanden und nicht kanonisch kodiert, gilt es als **unlesbar**:
-Vermerk `NON_CANONICAL_V`, und kein reservierter Key wird gelesen. Die Prüfung steht **nach**
-dem Dekodieren (ein undekodierbares `v` erzeugt bereits `UNPARSABLE_V`) und **vor** jeder
-Typprüfung (Kodierung geht der Interpretation voraus). Begründung, Verstoßklassen und der
-Grund, warum der Re-Serialisierungs-Check des Atoms `v` nicht abdeckt: Trust-Flow-Spec §3.1.
+Vermerk `NON_CANONICAL_V`, und kein reservierter Key wird gelesen. Die Prüfung steht **vor**
+jeder Typprüfung — Kodierung geht der Interpretation voraus.
+
+Sie ist selbst ein Dekodier- *und* Enkodiervorgang und kann an beiden Enden scheitern:
+
+> **Normativ:** Scheitert der Rundlauf `decode → encode` an irgendeiner Stelle mit einer
+> Exception, ist `v` **unlesbar** (`UNPARSABLE_V`). Liefert er ein Ergebnis, das den
+> Eingabebytes nicht gleicht, ist `v` **nicht kanonisch** (`NON_CANONICAL_V`).
+
+Die Unterscheidung ist Diagnose, nicht Wirkung — beide Vermerke verhindern dasselbe. Sie ist
+trotzdem normativ, weil `h'ff'` und `h'a100ff'` **ohne Fehler** dekodieren und erst beim
+Re-Enkodieren scheitern: das sind keine falsch geschriebenen Werte, sondern keine Werte.
+Begründung, Verstoßklassen und der Grund, warum der Re-Serialisierungs-Check des Atoms `v` nicht
+abdeckt: Trust-Flow-Spec §3.1.
 
 Für `receipt@1` ist die Folge **die sichere Richtung** und nicht folgenlos: ein unlesbares `v`
 könnte einen Key `0` tragen, also **tilgt die Quittung nicht** (§3.3.2). Für `obligation@1`,
