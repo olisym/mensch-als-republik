@@ -10,6 +10,11 @@ from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id, id_genesis_anchor, sign
 from mensch_als_republik.verifier import InMemoryStore
 
+# Normative Seeds aus 00 §3.1 / 03-golden-anchors.md §3.1 — eine Definition (D88).
+SEED_ALICE = bytes([0x01] * 32)
+SEED_BOB = bytes([0x02] * 32)
+SEED_CAROL = bytes([0x03] * 32)
+
 
 def scope_id(label: str) -> bytes:
     return hashlib.sha256(b"scope:" + label.encode()).digest()
@@ -18,8 +23,9 @@ def scope_id(label: str) -> bytes:
 class Identity:
     """Eine Autorenkette: jeder Aufruf hängt an, h_prev wird intern fortgeführt."""
 
-    def __init__(self, label: str) -> None:
-        seed = hashlib.sha256(b"identity:" + label.encode()).digest()
+    def __init__(self, label: str, *, seed: bytes | None = None) -> None:
+        if seed is None:
+            seed = hashlib.sha256(b"identity:" + label.encode()).digest()
         self._sk = Ed25519PrivateKey.from_private_bytes(seed)
         self.label = label
         self.pub = self._sk.public_key().public_bytes_raw()

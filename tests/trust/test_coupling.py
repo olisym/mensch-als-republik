@@ -36,10 +36,18 @@ def _assert_coupled(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> None:
+    """PR-INV-11 zweiteilig: fremder nuc-Scope ↔ classify(..., None), sonst mit policy."""
     fast = classify_all(store, now, policy)
     for c in store.all_claims():
         cid = claim_id(c)
-        slow = classify(c, store, now, policy)
+        if (
+            policy is not None
+            and c.p.startswith("nuc:")
+            and c.N != policy.scope
+        ):
+            slow = classify(c, store, now, None)
+        else:
+            slow = classify(c, store, now, policy)
         assert fast[cid] == slow, cid.hex()
         assert slow.trust_usable == (slow.state == State.ACTIVE)
 
@@ -74,12 +82,12 @@ def test_coupling_trust_flow_graph_with_lifecycle_claims() -> None:
     _assert_coupled(store, now=1000)
     _assert_coupled(store, now=2001)
 
-    # PR-INV-11 / T-02.4 mit Policy (03-prompt §0)
+    # PR-INV-11 / T-02.4 mit Policy (03-prompt §0, D91)
     policy = NucleusPolicy(scope=scope)
     _assert_coupled(store, now=1000, policy=policy)
     _assert_coupled(store, now=2001, policy=policy)
 
-    # Zusätzlich: irrevocable-Pfad (obligation@1 bleibt ACTIVE trotz revoke)
+    # irrevocable-Pfad (obligation@1 bleibt ACTIVE trotz revoke)
     obl_scope = scope_id("T-02.4-policy")
     alice, bob = Identity("cpl-pol-A"), Identity("cpl-pol-B")
     obl = alice.claim(
@@ -90,3 +98,19 @@ def test_coupling_trust_flow_graph_with_lifecycle_claims() -> None:
     obl_policy = NucleusPolicy(scope=obl_scope)
     _assert_coupled(obl_store, now=100, policy=obl_policy)
     _assert_coupled(obl_store, now=100, policy=None)
+
+
+def test_classify_all_never_raises_on_mixed_scopes() -> None:
+    """PR-INV-12: classify_all wirft nie, egal wie viele Nuklei der Store trägt."""
+    s1, s2, s3 = scope_id("mix-A"), scope_id("mix-B"), scope_id("mix-C")
+    a, b = Identity("mix-A"), Identity("mix-B")
+    claims = [
+        a.claim(p=f"nuc:{s1.hex()}/obligation@1", J=(1, b.pub), t=1, N=s1),
+        a.claim(p=f"nuc:{s2.hex()}/obligation@1", J=(1, b.pub), t=2, N=s2),
+        a.claim(p=f"nuc:{s3.hex()}/vouch@1", J=(1, b.pub), t=3, N=s3),
+    ]
+    store = store_with(*claims)
+    policy = NucleusPolicy(scope=s1)
+    result = classify_all(store, 100, policy)
+    assert len(result) == 3
+    _assert_coupled(store, now=100, policy=policy)

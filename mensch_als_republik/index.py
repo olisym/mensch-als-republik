@@ -60,10 +60,8 @@ def _classify_one(
     supersedes_by_target: dict[bytes, list[Claim]],
     policy: NucleusPolicy | None,
 ) -> Classification:
-    # Scope-Prüfung (§5.4): dieselbe Stelle wie in verifier.classify.
-    if policy is not None and claim.p.startswith("nuc:") and claim.N != policy.scope:
-        raise ValueError("policy scope does not match claim scope")
-
+    # D73 gilt nur für classify() auf einen einzelnen Claim. classify_all wendet policy
+    # scope-lokal an (D91) und reicht hier bereits die passende Policy (oder None) herein.
     if is_core_predicate(claim):
         target = store.get(claim.J[1])
         if target is not None and target.I != claim.I:
@@ -99,18 +97,34 @@ def _classify_one(
     return Classification(state=State.ACTIVE, trust_usable=True)
 
 
+def _policy_for_claim(
+    claim: Claim, policy: NucleusPolicy | None
+) -> NucleusPolicy | None:
+    """Policy nur für nuc:-Claims mit N == policy.scope (03-profiles.md §6, D91)."""
+    if policy is None:
+        return None
+    if claim.p.startswith("nuc:") and claim.N == policy.scope:
+        return policy
+    return None
+
+
 def classify_all(
     store: ClaimStore,
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> dict[bytes, Classification]:
-    """Ein Durchlauf über den Store; klassifiziert jeden Claim (02a §3, D87)."""
+    """Ein Durchlauf über den Store; klassifiziert jeden Claim (02a §3, D87/D91).
+
+    ``policy`` gilt nur für ``nuc:``-Claims mit ``N == policy.scope``; alle übrigen
+    werden mit ``policy=None`` klassifiziert. Wirft nie wegen fremdem Scope (PR-INV-12).
+    """
     claims = store.all_claims()
     revokes_by_target, supersedes_by_target = _build_lifecycle_index(claims)
 
     result: dict[bytes, Classification] = {}
     for claim in claims:
+        effective = _policy_for_claim(claim, policy)
         result[claim_id(claim)] = _classify_one(
-            claim, store, now, revokes_by_target, supersedes_by_target, policy
+            claim, store, now, revokes_by_target, supersedes_by_target, effective
         )
     return result

@@ -19,11 +19,12 @@ from mensch_als_republik.atom import (
 )
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik import cbor_canon
+from tests.helpers import SEED_ALICE, SEED_BOB
 
 VECTORS_PATH = Path(__file__).resolve().parent / "vectors_01.json"
 
-ALICE_SEED = bytes([0x01] * 32)
-BOB_SEED = bytes([0x02] * 32)
+ALICE_SEED = SEED_ALICE
+BOB_SEED = SEED_BOB
 
 ALICE_PUB = bytes.fromhex(
     "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c"
