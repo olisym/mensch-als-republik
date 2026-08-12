@@ -1833,3 +1833,94 @@ bewusst fehlt.
 **Vorgemerkt für Layer 03:** Sobald ein Konsument die Zustände *unterscheidet* statt nur
 „aktiv/inaktiv" zu fragen, wird die Rangfolge relevant und muss dann entschieden werden. In
 `03` ist das nicht der Fall — D60 und D63 fragen ausschließlich auf `active`.
+
+---
+
+## P. Aus dem Eigenauftrag zur Sitzung `03`
+
+### D77 — Kanonizität von `v` prüft die lesende Schicht, nicht das Atom ⚠️
+
+D37 verlangt kanonisches CBOR für `v`. **Durchgesetzt war es nirgends.** `cbor_canon.decode` ist
+ein dünner `cbor2.loads`-Wrapper ohne Prüfung; `is_canonical` steht an genau einer Stelle im
+Paket (`verifier.py`, Re-Serialisierung des **Cores** nach `01 §6` Regel 2). `v` ist im Core eine
+`bstr`, deren Inhalt dabei uninterpretiert bleibt. `trust/groups.py` liest sie per nacktem
+`decode`. Nicht-minimale Ganzzahlen, indefinite-length Maps, unsortierte und doppelte Schlüssel
+gehen durch.
+
+**Kein Testvektor konnte es zeigen.** Jedes `v` im Repo entsteht durch `cbor_canon.encode`
+(`helpers.py`, `tests/trust/test_payload.py`, `tests/vectors/gen.py`) — kanonisch by
+construction. Es gibt keinen Pfad, auf dem ein nicht-kanonisches `v` in einen Test gerät.
+Dieselbe Mechanik wie beim unversionierten `02b`: eine einzige Darstellung des Zustands, und die
+stimmt mit sich selbst überein.
+
+**Nicht in Layer 01.** Ein zwölfter Reject-Code hieße, das Atom liest `v`. Das bricht die
+Bedeutungsblindheit und D55 in derselben Bewegung. Layer 01 bleibt eingefroren.
+
+**Beschluss:** Jede Schicht, die `v` liest, prüft vorher `is_canonical` und behandelt einen
+Verstoß als **unlesbar** im Sinne von D37 — Vermerk `NON_CANONICAL_V`, defekter Teil fällt weg,
+Claim bleibt gültig und sichtbar.
+
+| Schicht | liest | Wirkung bei Verstoß |
+|---|---|---|
+| 02 | `vouch.v` Key `0` | keine Kante, kein Budget-Beitrag (D37, Zeile 2) |
+| 03 | `receipt.v` Key `0` | tilgt nicht (D65-Richtung) |
+| 03 | `obligation.v`, `verdict.v` | Vermerk, sonst folgenlos |
+
+Drei Festlegungen, die den Beschluss erst ausführbar machen:
+
+**(a) Nicht wie ein abwesendes `v`.** Der Abwesend-Default `n = D` (`w = 1`) auf einen defekten
+Payload angewandt wertet ihn zu maximalem Vertrauen auf — Über-Vertrauen, die eine gefährliche
+Richtung (`02 §7`). Nicht-kanonisch fällt in den Zweig „unlesbar", nie in den Zweig „abwesend".
+
+**(b) Vor der Wertprüfung.** Kanonizität ist eine Eigenschaft der Bytes und geht der
+Interpretation voraus. Beobachtbar an genau einem Fall: `v = h'a2001864001865'` bei `D = 100`
+dekodiert zu `{0: 101}`, also `n > D`. Heute `INVALID_VOUCH_WEIGHT`, künftig `NON_CANONICAL_V`.
+Ohne diesen Vektor ist der Vorrang nicht festgelegt und zwei Implementierungen laufen legitim
+auseinander.
+
+**(c) Nach dem Dekodieren.** `is_canonical` dekodiert selbst und **wirft** bei undekodierbarer
+Eingabe, statt `False` zu liefern (gemessen: `h'a1'` → `CBORDecodeEOF`, `h'ff'` →
+`CBOREncodeError` beim Re-Enkodieren). Ein Wächter vor dem `try` verwandelt
+`UNPARSABLE_VOUCH_PAYLOAD` in eine durchschlagende Exception. Die Prüfung steht **nach** dem
+geglückten `decode`.
+
+**Der doppelte Schlüssel ist der tragende Fall.** Bei den übrigen Verstößen liefert das
+Dekodieren den richtigen Wert und der Schaden bleibt bei der Byte-Vergleichbarkeit. Bei einem
+doppelten Key `0` verliert `decode` einen Eintrag, und welcher gewinnt, steht in keiner
+Spezifikation, sondern in cbor2. `01 §6` Regel 2 verlangt „ohne doppelte Keys" — für den Core.
+Für `v` galt der Satz bis hier nicht, und damit hing `n` an einer undokumentierten
+Bibliotheksentscheidung.
+
+**Verworfen — `encode(obj) != v` statt `is_canonical(v)`.** Rechnerisch identisch und spart den
+zweiten Dekodierdurchlauf, dupliziert aber die Definition von „kanonisch" an eine zweite Stelle.
+Zwei Definitionen driften; die Ersparnis liegt bei einem Payload von vier Bytes.
+
+**Der Vermerk trägt in jeder Schicht denselben Namen, das Enum wird nicht geteilt.** Layer 02 und
+Layer 03 haben nach `02a §5` und D69 je einen eigenen Findings-Enum — richtig so, weil beide
+keine Claim-Rejects sind. Die **Zeichenkette** muss beide Male `"NON_CANONICAL_V"` lauten, sonst
+trägt derselbe Defekt zwei Namen und wer `grep` benutzt, findet die Hälfte.
+
+**Reihenfolge.** Der Durchgang heißt `02c-canon-v` und läuft **vor** `03`, weil `03 §5.1` der
+Anker Byte-Vektoren gegen die `v`-Kodierungen aus D55 setzt; ohne durchgesetzte Kanonizität sind
+diese Vektoren illustrativ statt normativ. Der bisher als `02c-purpose` geführte Durchgang
+(D56) heißt ab hier **`02d-purpose`**. Änderungsliste M liest damit: `01a-policy` →
+`02c-canon-v` → `03` → `02d-purpose` → `00a-rotate-key` → zweiter Durchgang.
+
+**Kein Bestandsanker ändert sich.** `TrustFinding` ist ein `str`-Enum und `Finding` sortiert
+`(kind, subject)`; `NON_CANONICAL_V` reiht sich alphabetisch zwischen `INVALID_VOUCH_WEIGHT` und
+`OVERCOMMITTED_AUTHOR` ein. Da kein bestehender Vektor die neue Art trägt, verschiebt sich keine
+bestehende Findings-Liste. **235 grüne Tests sind damit Abnahmekriterium, nicht Hoffnung:** ein
+roter Bestandstest wäre der Beweis, dass die Prüfung an der falschen Stelle sitzt.
+
+**Änderungsliste:**
+
+| Datei | Änderung |
+|---|---|
+| `02-trust-flow.md §3.1` | neuer Absatz „Nicht-kanonisches `v` ist unlesbar" (vollständige Datei geliefert) |
+| `mensch_als_republik/trust/findings.py` | `NON_CANONICAL_V` |
+| `mensch_als_republik/trust/groups.py` | Prüfung in `_decode_weight`, nach `decode`, vor der Wertprüfung |
+| `tests/trust/test_payload.py` | `V-CANON-1` bis `V-CANON-6` |
+| `tests/helpers.py` | roher `v`-Anhänger für den End-zu-End-Vektor |
+| `03-profiles.md` | `NON_CANONICAL_V` im Vermerk-Katalog (mit `03`) |
+| `03-golden-anchors.md §5.1` | Negativvektoren gegen die vier Verstoßklassen (mit `03`) |
+| `01-claim-atom.md §7.1` | Satz, dass die Durchsetzung bei der lesenden Schicht liegt (zusammen mit der D56-Zeile) |

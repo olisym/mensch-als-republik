@@ -188,6 +188,41 @@ Map als Ganzes. Kein Beitrag, weil eine geratene Zahl eine Falschbeschuldigung w
 Über-Commitment erzeugen könnte; keine Kante, weil das Unter-Vertrauen ist. Beides ist die
 sichere Richtung, in verschiedene Richtungen.
 
+**Nicht-kanonisches `v` ist unlesbar.** Atom-Spec §3 verlangt kanonische Kodierung, aber der
+Re-Serialisierungs-Check des Verifizierers (Atom-Spec §6, Regel 2) deckt nur den **Core** ab;
+`v` ist darin eine `bstr`, deren Inhalt uninterpretiert bleibt. Die Anforderung ist damit für
+`v` nirgends durchgesetzt — sie liegt bei der Schicht, die `v` **liest**, und das ist für
+`vouch@1` diese hier.
+
+> **Normativ:** Ist `v` vorhanden und nicht kanonisch kodiert — nicht-minimale Ganzzahl,
+> indefinite-length Map, unsortierte oder doppelte Schlüssel —, trägt dieser Vouch **keine
+> Kante** und **keinen Budget-Beitrag**. Vermerk: `NON_CANONICAL_V`.
+
+Drei Präzisierungen, weil jede von ihnen eine plausible Implementierung von einer korrekten
+trennt:
+
+- **Nicht wie ein abwesendes `v`.** Der Default `n = D` (`w = 1`) gilt für ein *fehlendes* `v`.
+  Ihn auf ein *defektes* anzuwenden würde einen unlesbaren Payload zu maximalem Vertrauen
+  aufwerten — Über-Vertrauen, die eine gefährliche Richtung (§7). Nicht-kanonisch fällt in
+  denselben Zweig wie unlesbar, nicht in denselben wie abwesend.
+- **Vor der Wertprüfung.** Kanonizität ist eine Eigenschaft der Bytes und geht jeder
+  Interpretation voraus. Der Vorrang ist beobachtbar, sobald ein nicht-kanonisches `v` zugleich
+  ein `n` außerhalb `[1, D]` trägt: der Vermerk lautet dann `NON_CANONICAL_V`, nicht
+  `INVALID_VOUCH_WEIGHT`.
+- **Nach dem Dekodieren.** Ein undekodierbares `v` erzeugt bereits `UNPARSABLE_VOUCH_PAYLOAD`;
+  eine Kanonizitätsprüfung davor würde dort werfen statt zu vermerken, denn sie dekodiert
+  selbst.
+
+Der **doppelte Schlüssel** ist der tragende Fall. Bei den übrigen Verstößen liefert das
+Dekodieren den richtigen Wert, und der Schaden bleibt bei der Byte-Vergleichbarkeit. Bei einem
+doppelten Key `0` verliert das Dekodieren einen Eintrag, und welcher der beiden gewinnt, steht
+in keiner Spezifikation, sondern in der verwendeten Bibliothek. Atom-Spec §6, Regel 2 verlangt
+„ohne doppelte Keys" — für den Core; für `v` gilt der Satz erst durch diesen Absatz. Ohne ihn
+hinge `n` an einer undokumentierten Implementierungsentscheidung.
+
+Dieselbe Regel gilt sinngemäß in jeder anderen Schicht, die ein `v` liest; der Vermerk trägt
+dort denselben Namen (Profile-II §3.3).
+
 ---
 
 ## 4. Vertrauen als Fluss & der Min-Cut-Bound
