@@ -22,9 +22,12 @@ hingehört und welche Fallen die Vektoren stellen — er wiederholt die Vektoren
 3. `trust/derive.py` importiert aus dem neuen Ort.
 4. Signatur wird `classify_all(store, now, policy=None)`. Der Parameter geht an dieselbe
    Stelle, an der `verifier.classify` ihn auswertet — nicht an eine zweite, nachgebaute.
-5. Der Kopplungstest `T-02.4` bekommt einen zweiten Fall **mit** Policy:
-   `∀ c ∈ store: classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, policy)`
-   (`PR-INV-11`).
+5. **Die Policy wird scope-lokal angewandt** (`03 §6`): sie geht an `nuc:`-Claims mit
+   `N == policy.scope`, alle übrigen werden mit `None` klassifiziert. Ein Store trägt Claims
+   mehrerer Nuklei; ein Wächter, der bei fremdem Scope wirft, machte ihn unklassifizierbar, und
+   `SE-5`, `MB-9`, `VS-7` verlangen fremd-gescopte Claims ausdrücklich im selben Store.
+6. Der Kopplungstest `T-02.4` bekommt einen zweiten Fall **mit** Policy, zweiteilig nach
+   `PR-INV-11`; dazu `PR-INV-12` an einem Store aus `N_A`, `N_B` und `N_C` gemischt.
 
 **Abnahme dieses Schritts einzeln:** 242 Tests grün, keiner geändert außer der Erweiterung von
 `T-02.4`, keine Verhaltensänderung in `trust/`. Layer 02 ruft weiterhin ohne `policy` auf.

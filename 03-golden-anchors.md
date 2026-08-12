@@ -368,7 +368,8 @@ keiner der drei Fälle ein Fehler.
 | `PR-INV-8` | `BINDING` ⟹ das Verdikt ist aktiv (D67 + `INACTIVE_VERDICT`). |
 | `PR-INV-9` | `findings` ist in allen vier Ergebnistypen sortiert und dedupliziert. |
 | `PR-INV-10` | `classify_all` ist in `profiles/` **dasselbe Funktionsobjekt** wie in `trust/` — Identitätsvergleich, wie `PR-INV-4` in `02b` für `derive()`. |
-| `PR-INV-11` | Kopplung mit Policy: `∀ c ∈ store: classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, policy)` — die Erweiterung von `T-02.4` um den Parameter. |
+| `PR-INV-11` | Kopplung mit Policy, **scope-lokal**: für `c` mit `nuc:`-Prädikat und `c.N != policy.scope` gilt `classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, None)`, für alle übrigen `== classify(c, store, now, policy)`. Die Erweiterung von `T-02.4` um den Parameter. |
+| `PR-INV-12` | `classify_all(store, now, policy)` wirft **nie**, gleich wie viele Nuklei der Store trägt. Zu prüfen an einem Store, der Claims aus `N_A`, `N_B` und `N_C` gemischt enthält. |
 
 `PR-INV-1` ist als Eigenschaftstest über alle drei Profile plus die fehlende Verfassung zu
 führen, nicht als vierter Einzelvektor: der Boden gilt unbedingt, und „unbedingt" ist eine

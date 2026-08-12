@@ -621,8 +621,35 @@ def classify_all(store, now, policy=None) -> dict[bytes, Classification]
 weil `vouch@1` nach Atom-Spec §5.4.3 b nie irrevocable sein kann und der Parameter dort keine
 Wirkung hätte. Für `settlement()` ist er die Sache selbst: ohne ihn klassifiziert eine vom
 Schuldner widerrufene Obligation als `revoked`, und `settlement()` bekäme einen Zustand, für den
-§3.3.2 keine Antwort vorsieht. Die Kopplungsinvariante gilt mit Parameter:
-`classify_all(store, now, policy)[cid] == classify(c, store, now, policy)` für alle `c`.
+§3.3.2 keine Antwort vorsieht.
+
+**Die Policy wird scope-lokal angewandt.** Ein Store trägt Claims mehrerer Nuklei — das ist der
+Normalfall und nicht die Ausnahme. Eine Policy spricht aber nur über *ihren* Nukleus:
+
+> **Normativ:** `classify_all` wendet `policy` auf genau die Claims an, für die sie definiert
+> ist — `nuc:`-Prädikate mit `N == policy.scope`. Alle übrigen Claims klassifiziert sie mit
+> `policy=None`.
+
+Das bricht Atom-Spec §5.4 nicht, sondern setzt es fort. Dort wirft eine Scope-Fehlpaarung, weil
+der Aufrufer für **einen** Claim behauptet, diese Policy gelte für ihn. `classify_all` behauptet
+das nicht; es läuft über einen gemischten Bestand. Ein Wächter, der hier wirft, machte jeden
+Store mit mehr als einem Nukleus unklassifizierbar — und die Vektoren zu Scope-Gleichheit
+(§1.4) verlangen fremd-gescopte Claims ausdrücklich im selben Store.
+
+Die Kopplungsinvariante gilt entsprechend zweiteilig:
+
+```
+c ist nuc: mit c.N != policy.scope :  classify_all(store, now, policy)[cid]
+                                      == classify(c, store, now, None)
+sonst                              :  classify_all(store, now, policy)[cid]
+                                      == classify(c, store, now, policy)
+```
+
+**Getragene Grenze:** der Zustand eines fremd-gescopten Claims ist unter dieser Regel
+*policy-frei* bestimmt und kann für dessen eigenen Nukleus falsch sein. Er ist deshalb nirgends
+tragend: jede Beziehung dieser Schicht verlangt `N == scope` (§1.4), und der einzige Claim, der
+außerhalb des Scopes überhaupt gelesen wird — der bestrittene Claim in §2.4.4 — wird nur nach
+seinem Autor gefragt, nie nach seinem Zustand.
 
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
 *etwas* nicht stimmte, nicht *was*. `subject` ist in der Regel eine `claim_id`; wo kein Claim

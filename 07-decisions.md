@@ -2263,3 +2263,41 @@ ausgelöst hat.
 **Allgemeine Regel, hier zum ersten Mal ausgeschrieben:** `subject` ist in der Regel eine
 `claim_id`; wo kein Claim betroffen ist, ist es das **Objekt, um das es geht**, in der Form, in
 der der Betreiber es benennen würde.
+
+---
+
+### D91 — Die Policy wird scope-lokal angewandt ⚠️
+
+Aus dem `03`-Lauf, zurückgegeben statt entschieden. `classify_all(store, now, policy)` wirft bei
+jedem `nuc:`-Claim mit `N != policy.scope`, weil D73 genau das für einen einzelnen Claim
+verlangt. Damit ist **jeder Store mit mehr als einem Nukleus unklassifizierbar** — und die
+Vektoren `SE-5`, `MB-9` und `VS-7` legen fremd-gescopte Claims ausdrücklich in denselben Store,
+weil sie prüfen, dass `03 §1.4` sie nicht zählt.
+
+**Der Fehler liegt in D87, nicht in D73.** D73 entschied über `classify(claim, …)`: dort behauptet
+der Aufrufer für **einen** Claim, diese Policy gelte für ihn, und eine Fehlpaarung ist eine
+falsche Zuordnung ohne sichere Voreinstellung. D87 hat den Parameter an `classify_all`
+weitergereicht, ohne zu bedenken, dass diese Funktion über einen **heterogenen Bestand** läuft
+und gar nichts behauptet.
+
+**Beschluss:** `classify_all` wendet `policy` auf genau die Claims an, für die sie definiert ist
+— `nuc:`-Prädikate mit `N == policy.scope`. Alle übrigen klassifiziert sie mit `policy=None`.
+D73 bleibt für `classify()` unverändert in Kraft.
+
+Kopplungsinvariante entsprechend zweiteilig (`PR-INV-11`), dazu `PR-INV-12`: `classify_all`
+wirft nie, gleich wie viele Nuklei der Store trägt.
+
+**Getragene Grenze.** Der Zustand eines fremd-gescopten Claims ist damit policy-frei bestimmt
+und kann für dessen eigenen Nukleus falsch sein. Er ist nirgends tragend: jede Beziehung dieser
+Schicht verlangt `N == scope` (D81), und der einzige Claim, der außerhalb des Scopes gelesen
+wird — der bestrittene Claim in D67 (b) — wird nur nach seinem **Autor** gefragt, nie nach
+seinem Zustand. Wer das ändert, muss diese Zeile mit ändern.
+
+**Verworfen — gefilterter Store-Wrapper.** Der Implementierer hat ihn gebaut und wieder
+entfernt, richtigerweise: er nimmt den drei Vektoren genau die Claims weg, deren Nichtzählen sie
+prüfen. Ein Filter, der das Prüfobjekt entfernt, macht den Test grün und die Aussage leer.
+
+**Fünfter Fall desselben Musters** (nach D74, D75, D83, D87): eine Bedingung, deren Begründung
+im ursprünglichen Kontext trug — ein Claim, ein Aufrufer, eine Behauptung — und beim Übertragen
+auf einen anderen Kontext still ihren Geltungsbereich verlor. Diesmal war der Übertragende ich,
+im selben Register, vier Einträge später.
