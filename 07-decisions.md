@@ -1924,3 +1924,126 @@ roter Bestandstest wäre der Beweis, dass die Prüfung an der falschen Stelle si
 | `03-profiles.md` | `NON_CANONICAL_V` im Vermerk-Katalog (mit `03`) |
 | `03-golden-anchors.md §5.1` | Negativvektoren gegen die vier Verstoßklassen (mit `03`) |
 | `01-claim-atom.md §7.1` | Satz, dass die Durchsetzung bei der lesenden Schicht liegt (zusammen mit der D56-Zeile) |
+
+---
+
+## Q. Beim Schreiben von `03-profiles.md`
+
+Vier Forks aus der Widerspruchsprüfung vor dem Schreiben, ein fünfter beim Schreiben selbst,
+dazu zwei Reparaturen im Register. Keine der fünfzehn Entscheidungen aus Abschnitt K wurde dabei
+neu aufgemacht — alle fünf schließen Lücken, die K offen ließ.
+
+### D78 — „Vorab" heißt „aktiv zum Bewertungszeitpunkt" ⚠️
+
+`00 §5.1` und `03 §2.4` verlangen für Pfad (ii), dass beide Parteien sich **vorab** dem
+Schiedsrichter unterworfen haben. D67 übernimmt das als normative Bedingung.
+
+**Der Befund.** Zwischen zwei verschiedenen Autoren gibt es keine Ordnung. `01 §5.3` und
+`00 §6.1` sagen beide: Ordnung kommt aus der Autorenkette, nie aus Wall-Clock `t` — und zwei
+Autoren teilen keine Kette. `submit-arbitration` der Partei A und das `verdict` des
+Schiedsrichters stehen in verschiedenen Ketten. „Vorab" ist damit prinzipiell nicht auswertbar,
+nicht bloß aufwendig.
+
+**Beschluss:** Pfad (ii) verlangt, dass beide Unterwerfungen zum Bewertungszeitpunkt `now`
+**aktiv** sind. `00 §5.1` zieht im zweiten Durchgang auf dieselbe Formulierung nach.
+
+Das ist auch die bessere Regel, nicht nur die berechenbare: wer widerruft und dabei bleibt,
+trägt die Bindung nicht mehr; wer sie nachreicht, trägt sie. Beobachter dürfen über `now`
+legitim uneins sein — dieselbe Lage wie bei `t_exp` (`01 §6`), mit derselben sicheren Richtung:
+im Zweifel `ATTRIBUTED_OPINION`.
+
+**Verworfen — `t` als Ordnung heranziehen.** Es wäre die einzige Stelle im ganzen Protokoll,
+an der Wall-Clock eine Rangfolge zwischen zwei Autoren stiftet. Genau das schließt `01 §5.3`
+aus, und ein Angreifer mit falscher Uhr bekäme Kontrolle über die Bindungsfrage.
+
+### D79 — `settlement()` hat vier Zustände
+
+D60 gab der Mitgliedschaft vier Zustände, D67 dem Verdikt zwei; `settlement()` stand in D69 nur
+als Name. Dieselbe Begründung wie bei D60 trägt hier: mit einem Wahrheitswert fallen „nie
+quittiert", „Quittung widerrufen" (D64) und „Teilbetrag, tilgt nicht" (D65) auf denselben Wert
+zusammen — obwohl D64 und D65 diese Unterscheidung gerade erzeugt haben.
+
+```
+SETTLED         Obligation aktiv, passende aktive Quittung ohne Key 0
+OPEN            Obligation aktiv, keine passende Quittung oder eine, die nicht tilgt
+EXPIRED         Obligation durch t_exp erloschen
+INDETERMINATE   Obligation pending oder unverlinkt — Teilwissen
+```
+
+**`EXPIRED` ist nicht kosmetisch.** Nach D70 ist `obligation@1` **immer** irrevocable, also ist
+`t_exp` der einzige Weg, auf dem eine Obligation inaktiv wird. Der Fall ist nicht selten,
+sondern der einzige, und er verlangt vom Gläubiger etwas anderes als `OPEN`.
+
+**`INDETERMINATE` folgt D3.** Auf Teilwissen `OPEN` zu behaupten hieße, eine Schuld zu
+behaupten, die es vielleicht nicht gibt — die Falschbeschuldigungsrichtung.
+
+Falsches Prädikat oder falscher Scope: `ValueError`, kein fünfter Zustand. Präzedenz D73 — eine
+falsche Zuordnung ist kein unvollständiger Zustand.
+
+**`revoked`/`superseded` sind für `obligation@1` unerreichbar**, weil der Boden aus D70
+unbedingt gilt. Das ist die D75-Lage in neuer Form: die Unmöglichkeit wird zugesichert
+(`assert`), die Semantik nicht getestet.
+
+### D80 — `policy` ist in `settlement()` Pflicht, sonst nicht
+
+D57 verwarf den Wrapper mit dem Satz „die Regel muss unumgehbar sein". D72 machte sie über den
+Konstruktor unumgehbar für die **Menge** — eine unsichere `NucleusPolicy` lässt sich nicht bauen
+—, nicht für den **Aufruf**. `policy=None` bleibt erreichbar, und in `settlement()` ist das
+exakt das Schulden-Lösch-Loch, eine Schicht höher: der Schuldner-Widerruf würde wirken.
+
+**Beschluss:** `settlement(store, *, obligation, scope, now, policy)` — Pflicht-Keyword ohne
+Default. `membership()` und `verdict_status()` behalten `policy=None`, weil keines ihrer
+Prädikate irrevocable ist und der Parameter dort folgenlos bleibt.
+
+**Verworfen — überall Pflicht, der Symmetrie halber.** Symmetrie ist kein Sicherheitsargument.
+Ein Pflichtparameter ohne Wirkung erzieht Aufrufer dazu, irgendeine Policy zu bauen, damit der
+Aufruf durchgeht — und die dann auch dort zu benutzen, wo sie falsch ist.
+
+### D81 — Scope-Gleichheit gilt im ganzen Verdikt-Cluster
+
+D63 normierte `receipt.N == obligation.N` mit der Begründung, `01 §2.2` Regel 3 erzwinge nur
+Selbstkonsistenz, nicht geteilten Scope. Dieselbe Lücke bestand für `accusation`, `verdict` und
+`submit-arbitration`: eine Unterwerfung aus Nukleus B konnte einen Streit in Nukleus A binden.
+
+**Beschluss:** Wo zwei Claims in Beziehung gesetzt werden, müssen beide dasselbe `N` tragen, und
+dieses `N` muss der ausgewertete Scope sein. Als eigener Absatz `03 §1.4` geschrieben statt
+dreimal wiederholt, damit die Regel nicht beim nächsten Profil vergessen wird. Vermerk
+`SCOPE_MISMATCH`, ein Negativvektor je Prädikatpaar.
+
+### D82 — Der Resolver rechnet nach; Genesis-Fehler werfen, Verfassungs-Fehler fallen zurück
+
+Beim Schreiben von `03 §1.2` sichtbar geworden. `resolve_policy` bekommt Genesis- und
+Verfassungsobjekt übergeben. Prüft es nicht nach, ist die Content-Adressierung aus `00 §3` eine
+Behauptung des Aufrufers — und der Sicherheits-Default aus D70 hinge an dessen Sorgfalt.
+
+**Beschluss:** Der Resolver rechnet `scope == SHA-256(DOM_NUC_GEN ‖ cbor(genesis))` und
+`genesis.constitution_hash == SHA-256(cbor(constitution))` nach.
+
+| Lage | Antwort |
+|---|---|
+| Genesis passt nicht zu `scope` | `ValueError` |
+| Verfassung fehlt | Sicherheits-Default, `CONSTITUTION_UNAVAILABLE` |
+| Verfassung passt nicht zum Hash | Sicherheits-Default, `CONSTITUTION_HASH_MISMATCH` |
+
+Die Asymmetrie folgt D73 gegen D3: ein falsches Genesis ist eine **falsche Zuordnung**, dafür
+gibt es keine sichere Voreinstellung. Eine fehlende oder nicht passende Verfassung ist
+**Teilwissen**, und dafür gibt es genau eine: `{"obligation@1"}`.
+
+**Nicht geprüft wird die Ratifizierung.** Ob dieses Verfassungsobjekt die *aktuelle* Version
+ist, entscheidet die `amendment`-Schwelle (`00 §5.3`) — Layer 04, nicht hier. D61 hält.
+
+---
+
+### Reparaturen
+
+**Abschnitt L, Zeile 3 der Gegenprofil-Tabelle** lautete „zwei Arbitratoren, einer davon nicht
+in `arbitration.arbitrators`" — in sich widersprüchlich; wer in der Verfassung steht, ist per
+Definition darin. Gemeint und ab hier gültig: **die Verfassung nennt zwei Arbitratoren, das
+Verdikt kommt von einem Dritten.** Pfad (i) fällt, Pfad (ii) muss tragen. Das ist der Vektor,
+der die beiden Pfade aus D67 trennt.
+
+**Abschnitt M, Zeile `01-claim-atom.md §7.1`** (D56: Key `1` unkodiert, Key `2` typ-fest
+`bstr[32]`) ist noch offen — `01 §7.1` sagt auf `main` weiterhin „die Kodierung von `1` und `2`
+wird mit `03`/`05` festgelegt". Sie gehört in diesen Durchgang, zusammen mit dem D77-Satz zur
+lesenden Schicht: beide betreffen denselben Absatz, und eine Datei zweimal vollständig zu
+liefern wäre unnötig.
