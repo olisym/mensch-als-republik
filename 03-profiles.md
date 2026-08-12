@@ -67,6 +67,14 @@ def resolve_policy(*, scope, genesis_obj, constitution_obj=None) -> PolicyResolu
 
 `PolicyResolution` trägt `policy: NucleusPolicy` und `findings: tuple[Finding, ...]`.
 
+**`findings` trägt ausschließlich Befunde der Auflösung** — fehlendes oder nicht passendes
+Verfassungsobjekt. Die **unsichere Deklaration** (ein trust-gewährendes Prädikat in
+`irrevocable_predicates`) wird nicht hierher übersetzt: sie entsteht bereits im Konstruktor von
+`NucleusPolicy` als `PolicyNote` in `policy.warnings` (Atom-Spec §5.4.3 b) und wird von dort
+gelesen. Eine Diagnose, ein Produzent. Zwei Kanäle für denselben Befund tragen verschiedene
+Subjekte — `PolicyNote` ein Prädikat, `Finding` eine `claim_id` — und laufen auseinander,
+sobald einer von beiden gepflegt wird.
+
 **Der Resolver rechnet nach, statt zu glauben** (Nukleus-Spec §3): er prüft
 `scope == SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj))` und, falls ein Verfassungsobjekt vorliegt,
 `genesis_obj.constitution_hash == SHA-256(cbor(constitution_obj))`. Sonst wäre die
@@ -75,6 +83,7 @@ Content-Adressierung eine Behauptung.
 | Lage | Antwort |
 |---|---|
 | Genesis passt nicht zu `scope` | `ValueError` |
+| Genesis ohne `constitution_hash` oder mit falschem Typ darin | `ValueError` |
 | Verfassungsobjekt fehlt (Partition) | Sicherheits-Default, Vermerk `CONSTITUTION_UNAVAILABLE` |
 | Verfassungsobjekt passt nicht zum `constitution_hash` | Sicherheits-Default, Vermerk `CONSTITUTION_HASH_MISMATCH` |
 | beides passt | `irrevocable_predicates` der Verfassung, normalisiert |
@@ -157,6 +166,19 @@ in Nukleus A. Betroffen sind: `receipt` ↔ `obligation` (§3.3.2), `verdict` �
 `submit-arbitration` (§2.4), `accept-rules` ↔ `grant-membership` (§4). Vermerk bei Verstoß:
 `SCOPE_MISMATCH`.
 
+**Für den bewerteten Claim selbst gilt es schärfer.** Nimmt eine Funktion dieser Schicht einen
+Claim als Argument entgegen — `settlement(obligation=…)`, `verdict_status(verdict=…)` —, dann
+ist ein falsches Prädikat oder ein falsches `N` kein Vermerk, sondern:
+
+> **Normativ:** Die Funktion prüft als Erstes, dass der übergebene Claim das erwartete Prädikat
+> im Scope trägt und im Store liegt. Sonst `ValueError`, vor jedem weiteren Zugriff.
+
+Der Unterschied zum Beziehungsfall ist der Unterschied zwischen einem Claim, den ich im Bestand
+*finde*, und einem, den der Aufrufer mir *reicht*. Den ersten darf ich nicht zählen; beim
+zweiten hat der Aufrufer eine Behauptung aufgestellt, die falsch ist, und dafür gibt es keine
+sichere Voreinstellung (Atom-Spec §5.4). Ohne diese Zeile bindet ein Verdikt aus Nukleus B einen
+Streit in Nukleus A, sobald sein Autor in beiden Arbitratorenlisten steht.
+
 ---
 
 ## 2. Verdikt-Cluster
@@ -229,8 +251,14 @@ Fortbestehen ist dafür nicht die konservative Lesart (Atom-Spec §5.4.3 b).
 
 ```python
 def verdict_status(store, *, verdict, scope, arbitrators, now,
-                   policy=None) -> VerdictStatus     # BINDING | ATTRIBUTED_OPINION
+                   policy=None) -> VerdictResult
 ```
+
+`VerdictResult` trägt `status: VerdictStatus` und `findings: tuple[Finding, ...]`.
+`VerdictStatus` hat **zwei** Werte, `BINDING` und `ATTRIBUTED_OPINION` — die Zweiwertigkeit ist
+eine Aussage über den Status, nicht über den Rückgabetyp. Ohne Vermerk-Kanal wäre nicht
+unterscheidbar, *warum* ein Verdikt nicht bindet, und §2.4.4 macht diesen Unterschied
+normativ.
 
 `arbitrators` ist **Parameter**, kein Auflösungsergebnis: es ist `arbitration.arbitrators` aus
 der Verfassung (Nukleus-Spec §5.1), und welche Verfassungsversion gilt, entscheidet die
@@ -238,6 +266,9 @@ Ratifizierung — eine Governance-Frage. Diese Schicht löst sie nicht auf, sie 
 byte-weise. Aus demselben Grund findet hier **keine Schlüsselauflösung** statt: ein
 FROST-Panel verifiziert als gewöhnliche Ed25519-Signatur unter seinem Gruppenschlüssel, und
 `resolve_current_key` liegt außerhalb dieser Schicht (§5).
+
+Eingangsprüfung nach §1.4: ist `verdict` kein `nuc:{scope}/verdict@1` oder liegt es nicht im
+Store, wirft die Funktion `ValueError` — dieselbe Strecke wie `settlement()` in §3.3.2.
 
 **`BINDING` gdw. das Verdikt aktiv ist und mindestens einer der beiden Pfade trägt:**
 
@@ -280,11 +311,23 @@ Nukleus-Spec §5.1 spricht von „beiden Parteien", ohne sie zu benennen. Normat
 | Beschuldigter, `accusation.J.tag == identity` | `accusation.J.value` |
 | Beschuldigter, `accusation.J.tag == claim-ref` | der **Autor** des bestrittenen Claims |
 
-Die Anklage wird über `verdict.J` gefunden. Ist sie nicht auflösbar — `verdict.J.tag` ist nicht
-`claim-ref`, die Anklage ist lokal unbekannt, ihr `N` ist nicht `scope`, oder der bestrittene
-Claim ist lokal unbekannt —, ist **Pfad (ii) nicht auswertbar**; Pfad (i) bleibt es. Trägt auch
-er nicht, lautet die Antwort `ATTRIBUTED_OPINION` mit dem entsprechenden Vermerk. Teilwissen
-senkt, was ich behaupten kann, und die schwächere Behauptung ist hier die sichere.
+Die Anklage wird über `verdict.J` gefunden. Ist sie nicht auflösbar, ist **Pfad (ii) nicht
+auswertbar**; Pfad (i) bleibt es. Trägt auch er nicht, lautet die Antwort
+`ATTRIBUTED_OPINION`. Teilwissen senkt, was ich behaupten kann, und die schwächere Behauptung
+ist hier die sichere.
+
+Vier Fälle, vier Vermerke — die Wirkung ist dieselbe, die Diagnose nicht:
+
+| Lage | Vermerk |
+|---|---|
+| `verdict.J.tag` ist nicht `claim-ref` | `UNKNOWN_ACCUSATION` |
+| die Anklage ist lokal unbekannt | `UNKNOWN_ACCUSATION` |
+| die Anklage liegt in einem anderen Nukleus | `SCOPE_MISMATCH` |
+| der bestrittene Claim ist lokal unbekannt | `UNRESOLVED_ACCUSED` |
+
+Die dritte Zeile ist der Grund für die Tabelle. Eine Anklage aus fremdem Scope ist **bekannt**;
+sie zählt nur nicht. `UNKNOWN_ACCUSATION` schickte den Betreiber in die Partitionsecke, während
+das Objekt vor ihm liegt.
 
 **Der Zustand der Anklage ist irrelevant.** Sie wird nur gelesen, um die Parteien zu
 bestimmen; ob der Ankläger sie inzwischen widerrufen hat, ändert nichts daran, wer die Parteien
@@ -345,6 +388,13 @@ Obligation **einseitig** ist: es gibt keine signierte Annahme des Gläubigers, e
 Prüfpflicht ohnehin, und `t_exp` steht ihm vor der Gegenleistung sichtbar im Claim. Der Vermerk
 macht die Falle für Werkzeuge lesbar, ohne ihr Bedeutung zuzuschreiben.
 
+> **Normativ:** `EXPIRING_OBLIGATION` erscheint, sobald `obligation.t_exp` gesetzt ist —
+> **unabhängig vom Zustand der Obligation**, also auch und gerade, solange sie aktiv ist.
+
+Ihn nur beim Verfall zu setzen kehrte seinen Zweck um: nach dem Erlöschen ist die Warnung
+wertlos, und `EXPIRED` sagt es ohnehin. Gerichtet ist sie an den Gläubiger **vor** der
+Gegenleistung.
+
 #### 3.3.2 `nuc:N/receipt@1` und die Tilgung
 
 | Feld | Belegung |
@@ -392,22 +442,33 @@ in §5.
 | `SETTLED` | Obligation aktiv, passende aktive Quittung ohne Key `0` |
 | `OPEN` | Obligation aktiv, keine passende Quittung — oder eine, die nicht tilgt |
 | `EXPIRED` | Obligation durch `t_exp` erloschen |
-| `INDETERMINATE` | Obligation `pending` oder unverlinkt — Teilwissen |
+| `INDETERMINATE` | der Zustand der Obligation erlaubt keine Aussage |
 
 **Kein `bool`.** `EXPIRED` ist nicht kosmetisch: da `obligation@1` nach Nukleus-Spec §5.2
 **immer** irrevocable ist, ist `t_exp` der einzige Weg, auf dem eine Obligation inaktiv wird —
 der Fall ist nicht selten, sondern der einzige, und er verlangt vom Gläubiger etwas anderes als
-`OPEN`. `INDETERMINATE` folgt derselben Linie wie Trust-Flow-Spec §7: auf Teilwissen `OPEN` zu
-behaupten hieße, eine Schuld zu behaupten, die es vielleicht nicht gibt — die
-Falschbeschuldigungsrichtung.
+`OPEN`.
+
+**`INDETERMINATE` ist mehr als Teilwissen.** Es deckt jeden Zustand ab, der weder Aktivität noch
+Ablauf ist, und davon gibt es zwei mit gegensätzlicher Ursache:
+
+| Zustand der Obligation | Vermerk | warum keine Aussage |
+|---|---|---|
+| `pending` — Vorgänger unbekannt | `OBLIGATION_PENDING` | ich weiß zu **wenig** |
+| `equivocation_flagged` — der Autor hat gegabelt | `OBLIGATION_AUTHOR_FLAGGED` | ich weiß zu **viel** |
+
+Bei einer Gabelung existiert die Obligation womöglich in zwei Fassungen mit verschiedenen
+Konditionen; `OPEN` zu behaupten hieße, eine bestimmte davon zu behaupten. In beiden Fällen wäre
+die Aussage eine Schuldbehauptung ohne Deckung — die Falschbeschuldigungsrichtung, dieselbe
+Linie wie Trust-Flow-Spec §7.
 
 Ist `obligation` kein aktiver oder inaktiver `obligation@1`-Claim im Scope — falsches Prädikat,
 falsches `N`, gar kein Claim —, wirft die Funktion `ValueError`. Das ist keine unvollständige
 Lage, sondern eine falsche Zuordnung, und dafür gibt es keine sichere Voreinstellung.
 
-**Die Zustände `revoked` und `superseded` sind für `obligation@1` unerreichbar**, weil der Boden
-aus Nukleus-Spec §5.2 unbedingt gilt. Das ist keine Semantik, die getestet werden kann, sondern
-eine Unmöglichkeit, die zugesichert wird — ein `assert` im Modul, kein Vektor.
+**Zwei Zustände sind unerreichbar und werden zugesichert, nicht getestet** (`assert` im Modul):
+`revoked` und `superseded`, weil der Boden aus Nukleus-Spec §5.2 unbedingt gilt; und `linked`,
+weil es nur bei `now is None` entsteht und `now` in dieser Schicht immer ein `int` ist.
 
 **Die Quittung bleibt widerrufbar, Tilgung ist nicht monoton.** Siehe §5.
 
@@ -575,18 +636,62 @@ mensch_als_republik/profiles/
                  NucleusPolicy selbst liegt in Layer 01 — sonst wird der Import zyklisch
   membership.py  membership()     -> MembershipResult
   credit.py      settlement()     -> SettlementResult
-  verdict.py     verdict_status() -> VerdictStatus
+  verdict.py     verdict_status() -> VerdictResult
   findings.py    ProfileFinding, Finding(kind, subject)
 ```
 
 Drei getrennte Funktionen statt einer, weil §1 drei getrennte Cluster behauptet und die
 Trennung sonst nur in der Prosa steht.
 
-`classify_all` aus der Trust-Flow-Schicht wird **geteilt, nicht kopiert**. Zwei Definitionen von
-„aktiv" driften; eine geteilte kann es nicht.
+**`classify_all` wird geteilt, nicht kopiert** — zwei Definitionen von „aktiv" driften, eine
+geteilte kann es nicht. Sie liegt dafür in `mensch_als_republik/index.py`, nicht unter
+`trust/`: ihre Invariante ist die Übereinstimmung mit `verifier.classify` aus Layer 01 und hat
+mit dem Trust-Solver nichts zu tun. Beide Schichten importieren von dort; `trust/` re-exportiert
+sie weiterhin, damit die bestehende Oberfläche unverändert bleibt.
+
+```python
+def classify_all(store, now, policy=None) -> dict[bytes, Classification]
+```
+
+**Der `policy`-Parameter ist für diese Schicht Pflicht der Sache nach.** Layer 02 ruft ohne auf,
+weil `vouch@1` nach Atom-Spec §5.4.3 b nie irrevocable sein kann und der Parameter dort keine
+Wirkung hätte. Für `settlement()` ist er die Sache selbst: ohne ihn klassifiziert eine vom
+Schuldner widerrufene Obligation als `revoked`, und `settlement()` bekäme einen Zustand, für den
+§3.3.2 keine Antwort vorsieht.
+
+**Die Policy wird scope-lokal angewandt.** Ein Store trägt Claims mehrerer Nuklei — das ist der
+Normalfall und nicht die Ausnahme. Eine Policy spricht aber nur über *ihren* Nukleus:
+
+> **Normativ:** `classify_all` wendet `policy` auf genau die Claims an, für die sie definiert
+> ist — `nuc:`-Prädikate mit `N == policy.scope`. Alle übrigen Claims klassifiziert sie mit
+> `policy=None`.
+
+Das bricht Atom-Spec §5.4 nicht, sondern setzt es fort. Dort wirft eine Scope-Fehlpaarung, weil
+der Aufrufer für **einen** Claim behauptet, diese Policy gelte für ihn. `classify_all` behauptet
+das nicht; es läuft über einen gemischten Bestand. Ein Wächter, der hier wirft, machte jeden
+Store mit mehr als einem Nukleus unklassifizierbar — und die Vektoren zu Scope-Gleichheit
+(§1.4) verlangen fremd-gescopte Claims ausdrücklich im selben Store.
+
+Die Kopplungsinvariante gilt entsprechend zweiteilig:
+
+```
+c ist nuc: mit c.N != policy.scope :  classify_all(store, now, policy)[cid]
+                                      == classify(c, store, now, None)
+sonst                              :  classify_all(store, now, policy)[cid]
+                                      == classify(c, store, now, policy)
+```
+
+**Getragene Grenze:** der Zustand eines fremd-gescopten Claims ist unter dieser Regel
+*policy-frei* bestimmt und kann für dessen eigenen Nukleus falsch sein. Er ist deshalb nirgends
+tragend: jede Beziehung dieser Schicht verlangt `N == scope` (§1.4), und der einzige Claim, der
+außerhalb des Scopes überhaupt gelesen wird — der bestrittene Claim in §2.4.4 — wird nur nach
+seinem Autor gefragt, nie nach seinem Zustand.
 
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
-*etwas* nicht stimmte, nicht *was*. `findings` ist sortiert und dedupliziert. `ProfileFinding`
+*etwas* nicht stimmte, nicht *was*. `subject` ist in der Regel eine `claim_id`; wo kein Claim
+betroffen ist, ist es das Objekt, um das es geht: bei `CONSTITUTION_UNAVAILABLE` und
+`CONSTITUTION_HASH_MISMATCH` der im Genesis **deklarierte** `constitution_hash` — nicht der
+berechnete Hash des übergebenen Objekts, der mit jedem falschen Objekt wechselt, und nie `b""`. `findings` ist sortiert und dedupliziert. `ProfileFinding`
 ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben Defekt bezeichnet wie in einer
 anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
 
@@ -600,8 +705,9 @@ anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht 
 | `SCOPE_MISMATCH` | zwei in Beziehung gesetzte Claims mit verschiedenem `N` (§1.4) |
 | `CONSTITUTION_UNAVAILABLE` | Verfassungsobjekt lokal unbekannt (§1.2) |
 | `CONSTITUTION_HASH_MISMATCH` | Verfassungsobjekt passt nicht zum `constitution_hash` (§1.2) |
-| `UNSAFE_IRREVOCABLE_PREDICATE` | trust-gewährendes Prädikat in `irrevocable_predicates` (Atom-Spec §5.4.3 b) |
 | `EXPIRING_OBLIGATION` | `obligation@1` mit `t_exp` (§3.3.1) |
+| `OBLIGATION_PENDING` | Obligation `pending` (§3.3.2) |
+| `OBLIGATION_AUTHOR_FLAGGED` | Autor der Obligation hat gegabelt (§3.3.2) |
 | `PARTIAL_RECEIPT_UNSUPPORTED` | `receipt.v` trägt oder könnte Key `0` tragen (§3.3.2) |
 | `CONSTITUTION_VERSION_MISMATCH` | `accept-rules` auf einen anderen Hash (§4) |
 | `UNAUTHORIZED_GRANT_AUTHOR` | `grant-membership.I ∉ authorized_keys` (§4) |
@@ -611,3 +717,8 @@ anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht 
 
 Kein Vermerk erzeugt einen Reject. Das Atom hat den Claim akzeptiert; diese Schicht wird nicht
 nachträglich strenger, sie sagt nur, was sie sieht.
+
+**`UNSAFE_IRREVOCABLE_PREDICATE` steht bewusst nicht in dieser Tabelle.** Er entsteht im
+Konstruktor von `NucleusPolicy` und lebt als `PolicyNote` in `policy.warnings` (§1.2). Ihn hier
+zu spiegeln hieße, dieselbe Diagnose zweimal zu erzeugen — mit verschiedenen Subjekten und
+absehbarem Auseinanderlaufen.

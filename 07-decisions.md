@@ -2102,3 +2102,280 @@ Platzierung mit *einem* Fehlermodus; es gab zwei.
 **Betroffene Dateien:** `02-trust-flow.md §3.1`, `03-profiles.md §1.3`, `02c-canon-v-prompt.md`
 §3 und §5 (alle drei vollständig geliefert). `01 §7.1` bleibt unberührt — dort steht keine
 Reihenfolgeaussage.
+
+---
+
+## S. Aus dem Abgleich mit dem tatsächlichen Code vor `03-prompt`
+
+Vier Befunde, alle aus dem Lesen von fünf Bestandsdateien (`policy.py`, `trust/__init__.py`,
+`trust/index.py`, `trust/derive.py`, `tests/helpers.py`) vor dem Schreiben des Prompts. Keiner
+davon wäre beim Schreiben aufgefallen; alle vier hätten im Implementierungsfenster als Rückfrage
+oder — schlimmer — als stille Umdeutung geendet.
+
+### D84 — Eine Diagnose, ein Produzent
+
+`03 §6.1` führte `UNSAFE_IRREVOCABLE_PREDICATE` im `ProfileFinding`-Katalog. Der Vermerk
+existiert aber schon: `NucleusPolicy.__post_init__` erzeugt ihn als
+`PolicyNote(PolicyWarning.UNSAFE_IRREVOCABLE_PREDICATE, predicate)` in `policy.warnings`.
+
+**Beschluss:** Der Eintrag fällt aus dem `ProfileFinding`-Katalog. `PolicyResolution.findings`
+trägt ausschließlich Befunde der **Auflösung** (`CONSTITUTION_UNAVAILABLE`,
+`CONSTITUTION_HASH_MISMATCH`); die unsichere Deklaration liest der Aufrufer aus
+`policy.warnings`.
+
+Zwei Kanäle für denselben Befund tragen verschiedene Subjekte — `PolicyNote` ein Prädikat,
+`Finding` eine `claim_id` — und laufen auseinander, sobald einer gepflegt wird. Die Übersetzung
+wäre außerdem verlustbehaftet: es gibt keine `claim_id`, an der eine unsichere
+Verfassungsdeklaration hinge.
+
+### D85 — `INDETERMINATE` deckt auch Gabelung, nicht nur Teilwissen
+
+D79 nannte für `INDETERMINATE` nur `pending`. `State` hat mehr: eine Obligation, deren Autor
+equivokiert hat, steht in `EQUIVOCATION_FLAGGED` und ist weder aktiv noch abgelaufen noch
+schwebend.
+
+**Beschluss:** `INDETERMINATE` heißt nicht mehr „Teilwissen", sondern **„der Zustand der
+Obligation erlaubt keine Aussage"**, mit zwei Ursachen und je eigenem Vermerk:
+
+| Zustand | Vermerk | Grund |
+|---|---|---|
+| `pending` | `OBLIGATION_PENDING` | ich weiß zu **wenig** |
+| `equivocation_flagged` | `OBLIGATION_AUTHOR_FLAGGED` | ich weiß zu **viel** |
+
+Die zweite Zeile ist die interessantere: bei einer Gabelung existiert die Obligation womöglich
+in zwei Fassungen mit verschiedenen Konditionen, und `OPEN` behauptete eine bestimmte davon.
+Beide Male ist die Alternative eine Schuldbehauptung ohne Deckung — D3.
+
+`LINKED` kommt hinzu und ist unerreichbar: es entsteht nur bei `now is None`, und `now` ist in
+dieser Schicht immer ein `int`. D75-Behandlung, `assert` statt Vektor — wie `revoked` und
+`superseded` unter dem Boden aus D70.
+
+### D86 — `classify_all` wandert nach `mensch_als_republik/index.py`
+
+`03` teilt `classify_all`, statt es zu kopieren (D69). Der Helfer lag in `trust/index.py`, was
+`profiles/ → trust/` erzwungen hätte — eine Abhängigkeit quer zur Schichtung zwischen zwei
+Geschwistern, von denen das eine vom anderen nichts braucht.
+
+**Beschluss:** `classify_all` liegt in `mensch_als_republik/index.py`. Beide Schichten
+importieren von dort; `trust/` re-exportiert weiter, damit die bestehende Oberfläche
+unverändert bleibt.
+
+Das Argument ist nicht Ästhetik. Der Kopplungstest `T-02.4` sichert, dass `classify_all` und
+`verifier.classify` nicht auseinanderlaufen — eine Aussage über Layer 01 und ihren schnellen
+Zwilling, nicht über den Trust-Solver. Der Helfer gehört dorthin, wo seine Invariante hingehört.
+
+### D87 — `classify_all` bekommt den `policy`-Parameter ⚠️
+
+`01a-policy-prompt.md §4` schloss ihn ausdrücklich aus: „Layer 02 wertet ausschließlich
+`vouch@1` aus, und `vouch@1` kann nach D58 nie irrevocable sein — der Parameter hätte dort keine
+Wirkung. Nicht anfassen."
+
+**Der Satz stimmt für Layer 02 und trägt für Layer 03 nicht.** `settlement()` steht und fällt
+damit, dass `obligation@1` **unter der Policy** klassifiziert wird. Ohne Parameter liefert
+`classify_all` für den Kernvektor `SE-11` — Schuldner widerruft seine eigene Obligation — den
+Zustand `REVOKED`, und `settlement()` bekäme einen Zustand, für den D79 keine Antwort vorsieht.
+Das Schulden-Lösch-Loch wäre auf dem Umweg über den Helfer wieder offen.
+
+**Beschluss:** `classify_all(store, now, policy=None)`. Layer 02 ruft weiterhin ohne auf,
+Verhalten dort unverändert. Die Kopplungsinvariante erweitert sich mit:
+
+```
+∀ c ∈ store:  classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, policy)
+```
+
+**Verworfen — `03` ruft `classify()` je Claim.** Gibt die geteilte Definition von „aktiv" auf,
+für die D69 und `PR-INV-10` gerade eingerichtet wurden.
+
+**Verworfen — `03` rechnet den Irrevocable-Fall nach.** Die Regel stünde zweimal da. Genau die
+Duplikation, gegen die `T-02.4` gebaut wurde.
+
+D86 und D87 sind derselbe Eingriff: die Verschiebung ist damit keine Aufräumarbeit, sondern
+notwendig.
+
+---
+
+**Muster, vierter Fall.** D74, D75, D83 und jetzt D87 haben dieselbe Form: eine Bedingung, deren
+Begründung im damaligen Kontext trug und im nächsten nicht mehr. Bei D87 war die Begründung
+sogar wörtlich richtig — sie sagte „Layer 02", und niemand las mit, dass sie damit ihren eigenen
+Geltungsbereich benannte. Konsequenz für den Sitzungsabschluss vorgemerkt, nicht hier
+entschieden.
+
+---
+
+## T. Aus den Rückfragen zum `03`-Lauf
+
+Drei Befunde aus dem Implementierungsfenster, alle zurückgegeben statt entschieden. Der erste
+ist eine echte Lücke, der zweite ein Widerspruch in derselben Datei, der dritte eine
+Unbestimmtheit.
+
+### D88 — Testidentitäten kommen aus festen Seeds, der Helfer bekommt einen Konstruktionspfad dazu
+
+`tests/helpers.py::Identity` leitet den Schlüssel aus einem **Label** ab. Die Anker in
+`00 §3.1` und `03-golden-anchors.md §3.1` stammen aus den Seeds `01×32`, `02×32`, `03×32`. Beide
+treffen sich nicht — `Identity("ALICE")` liefert `3e18794e…`, die Spec verlangt `8a88e3dd…`.
+
+**Verworfen — das Ankerdokument auf Label-Seeds umstellen.** Die Seeds sind normativ: sie stehen
+in `00 §3.1`, und `tests/vectors/vectors_01.json` trägt `8a88e3dd…` und `8139770e…` bereits als
+Bytes. Es bräche einen eingefrorenen Vektorsatz.
+
+**Verworfen — ein eigener Fixture-Helfer für `tests/profiles/`.** Das wäre eine zweite
+Implementierung von Kettenfortführung, Signatur und `h_prev`. Zwei Implementierungen desselben
+Dings driften — dieselbe Begründung, mit der D86 `classify_all` teilt statt kopiert.
+
+**Beschluss:** `Identity.__init__(self, label, *, seed=None)`. Bei `seed is None` bleibt die
+Label-Ableitung; bestehende Aufrufe ändern sich nicht. Ein Konstruktionspfad, ein Label für die
+Lesbarkeit, ein optionaler Seed für die Fälle, in denen der Schlüssel normativ ist.
+
+**Die drei Seeds bekommen genau eine Definition** — in `tests/helpers.py`. Wo sie heute ein
+zweites Mal stehen (`tests/vectors/gen.py`), kommen sie von dort. Konstanten an zwei Stellen
+sind die Bauform, die in dieser Sitzung viermal einen Befund erzeugt hat.
+
+### D89 — `verdict_status()` gibt `VerdictResult` zurück, nicht den Enum
+
+`03 §2.4.2` schrieb `-> VerdictStatus` mit zwei Werten; `03 §11` (`PR-INV-9`) verlangte
+`findings` in **allen vier** Ergebnistypen. Zwei Sätze derselben Datei, die sich widersprechen —
+gefunden nicht durch Nachdenken, sondern beim Versuch, beide gleichzeitig zu erfüllen.
+
+**Beschluss:** `VerdictResult(status: VerdictStatus, findings: tuple[Finding, ...])`.
+`VerdictStatus` bleibt zweiwertig — die Zweiwertigkeit ist eine Aussage über den **Status**, nicht
+über den Rückgabetyp (D67 hält).
+
+Der Widerspruch war folgenreich und nicht kosmetisch: `VS-7` (`SCOPE_MISMATCH`), `VS-8`
+(`UNRESOLVED_ACCUSED`) und `VS-9` (`INACTIVE_VERDICT`) liefern alle `ATTRIBUTED_OPINION` und
+unterscheiden sich **ausschließlich** im Vermerk. Ohne Kanal wären drei Vektoren nicht prüfbar,
+und `03 §2.4.4` — „Teilwissen senkt, was ich behaupten kann" — bliebe unbelegbar.
+
+### D90 — `subject` ohne Claim ist der deklarierte `constitution_hash`
+
+`CONSTITUTION_UNAVAILABLE` und `CONSTITUTION_HASH_MISMATCH` betreffen keinen Claim. `03 §6`
+verlangt trotzdem ein Subjekt (D74).
+
+**Beschluss:** `subject = genesis_obj[4]`, der im Genesis **deklarierte** `constitution_hash`.
+
+Nicht der **berechnete** Hash des übergebenen Objekts: der ist eine Eigenschaft dessen, was der
+Aufrufer gereicht hat, und wechselt mit jedem falschen Objekt. Der deklarierte Hash ist der
+stabile Bezeichner und der, unter dem ein Betreiber suchen würde.
+
+Nicht `scope`: der steht bereits im Aufruf, und ein Subjekt, das für alle Vermerke desselben
+Aufrufs gleich ist, trägt keine Information. Nie ein Leerwert — das war der Befund, der D74
+ausgelöst hat.
+
+**Allgemeine Regel, hier zum ersten Mal ausgeschrieben:** `subject` ist in der Regel eine
+`claim_id`; wo kein Claim betroffen ist, ist es das **Objekt, um das es geht**, in der Form, in
+der der Betreiber es benennen würde.
+
+---
+
+### D91 — Die Policy wird scope-lokal angewandt ⚠️
+
+Aus dem `03`-Lauf, zurückgegeben statt entschieden. `classify_all(store, now, policy)` wirft bei
+jedem `nuc:`-Claim mit `N != policy.scope`, weil D73 genau das für einen einzelnen Claim
+verlangt. Damit ist **jeder Store mit mehr als einem Nukleus unklassifizierbar** — und die
+Vektoren `SE-5`, `MB-9` und `VS-7` legen fremd-gescopte Claims ausdrücklich in denselben Store,
+weil sie prüfen, dass `03 §1.4` sie nicht zählt.
+
+**Der Fehler liegt in D87, nicht in D73.** D73 entschied über `classify(claim, …)`: dort behauptet
+der Aufrufer für **einen** Claim, diese Policy gelte für ihn, und eine Fehlpaarung ist eine
+falsche Zuordnung ohne sichere Voreinstellung. D87 hat den Parameter an `classify_all`
+weitergereicht, ohne zu bedenken, dass diese Funktion über einen **heterogenen Bestand** läuft
+und gar nichts behauptet.
+
+**Beschluss:** `classify_all` wendet `policy` auf genau die Claims an, für die sie definiert ist
+— `nuc:`-Prädikate mit `N == policy.scope`. Alle übrigen klassifiziert sie mit `policy=None`.
+D73 bleibt für `classify()` unverändert in Kraft.
+
+Kopplungsinvariante entsprechend zweiteilig (`PR-INV-11`), dazu `PR-INV-12`: `classify_all`
+wirft nie, gleich wie viele Nuklei der Store trägt.
+
+**Getragene Grenze.** Der Zustand eines fremd-gescopten Claims ist damit policy-frei bestimmt
+und kann für dessen eigenen Nukleus falsch sein. Er ist nirgends tragend: jede Beziehung dieser
+Schicht verlangt `N == scope` (D81), und der einzige Claim, der außerhalb des Scopes gelesen
+wird — der bestrittene Claim in D67 (b) — wird nur nach seinem **Autor** gefragt, nie nach
+seinem Zustand. Wer das ändert, muss diese Zeile mit ändern.
+
+**Verworfen — gefilterter Store-Wrapper.** Der Implementierer hat ihn gebaut und wieder
+entfernt, richtigerweise: er nimmt den drei Vektoren genau die Claims weg, deren Nichtzählen sie
+prüfen. Ein Filter, der das Prüfobjekt entfernt, macht den Test grün und die Aussage leer.
+
+**Fünfter Fall desselben Musters** (nach D74, D75, D83, D87): eine Bedingung, deren Begründung
+im ursprünglichen Kontext trug — ein Claim, ein Aufrufer, eine Behauptung — und beim Übertragen
+auf einen anderen Kontext still ihren Geltungsbereich verlor. Diesmal war der Übertragende ich,
+im selben Register, vier Einträge später.
+
+---
+
+## U. Aus der `03`-Abnahme
+
+Drei Beschlüsse aus sechs Befunden. Die anderen drei (`_dedupe_sort`-Benennung, `KeyError` statt
+`ValueError` im Verdikt, `KeyError` bei defektem Genesis) sind Ausführung und brauchen keinen
+Registereintrag — sie fallen unter D92 bzw. sind kosmetisch.
+
+### D92 — Der bewertete Claim wird an der Eingangstür geprüft ⚠️
+
+`03 §1.4` normierte Scope-Gleichheit für **Beziehungen zwischen zwei Claims** —
+`receipt` ↔ `obligation`, `accept-rules` ↔ `grant-membership`, `submit-arbitration` ↔ `verdict`.
+Für den Claim, den eine Funktion als **Argument** entgegennimmt, stand die Regel nur bei
+`settlement()` (`§3.3.2`) und nirgends allgemein. `verdict_status()` hatte sie deshalb nicht.
+
+**Die Folge war real.** Ein Verdikt aus Nukleus B, mit `scope = N_A` ausgewertet, wurde nicht
+abgewiesen: steht sein Autor in A's Arbitratorenliste, lautete die Antwort `BINDING`. Ein
+anerkannter Schiedsrichter sitzt typischerweise in mehreren Nuklei — der Fall ist der Normalfall.
+
+**Beschluss:** Jede Funktion dieser Schicht, die einen Claim als Argument nimmt, prüft als
+Erstes: erwartetes Prädikat, `N == scope`, im Store. Sonst `ValueError`, vor jedem weiteren
+Zugriff. Vektoren `VS-13`, `VS-14`, Invariante `PR-INV-13`.
+
+**Der Unterschied zum Beziehungsfall ist die Herkunft des Claims.** Einen Claim, den ich im
+Bestand *finde*, darf ich nicht zählen — Vermerk, weiter. Bei einem, den der Aufrufer mir
+*reicht*, hat er eine Behauptung aufgestellt, die falsch ist, und dafür gibt es keine sichere
+Voreinstellung (D73). Dass diese Unterscheidung nirgends stand, ist der ganze Befund.
+
+Derselbe Beschluss deckt das defekte Genesis-Objekt ab: `resolve_policy` bekommt es gereicht,
+also wirft es, statt still in einen `KeyError` zu laufen (Vektor `P-G`).
+
+### D93 — `EXPIRING_OBLIGATION` erscheint unbedingt, nicht beim Verfall
+
+Der Vermerk stand im `EXPIRED`-Zweig und erschien damit genau dann, wenn er wertlos ist: nach
+dem Erlöschen sagt `EXPIRED` es ohnehin.
+
+`03 §3.3.1` begründet ihn damit, dass `t_exp` dem Gläubiger **vor der Gegenleistung** sichtbar
+sein soll — die einseitige Obligation hat keine signierte Annahme, er trägt die Prüfpflicht
+allein.
+
+**Beschluss:** `obligation.t_exp is not None` ⇒ `EXPIRING_OBLIGATION`, unabhängig vom Zustand.
+Vektor `SE-13`: aktive Obligation mit `t_exp` in der Zukunft, `OPEN` plus Vermerk.
+
+Die Fehlform ist notierenswert, weil sie nicht falsch *aussah*: die Bedingung stand in einem
+Zweig, der sie erwähnt, statt an der Stelle, an der sie gilt. Ein Vermerk, der nur im
+Schadensfall erscheint, ist kein Warnhinweis, sondern ein Nachruf.
+
+### D94 — Vier Nicht-Auflösbar-Fälle, drei Vermerke
+
+`03 §2.4.4` sagte „mit dem entsprechenden Vermerk", ohne die Zuordnung auszuschreiben. Die
+Implementierung wählte für **alle** Fälle `UNKNOWN_ACCUSATION`, auch für eine Anklage aus
+fremdem Scope.
+
+**Beschluss:**
+
+| Lage | Vermerk |
+|---|---|
+| `verdict.J.tag` ist nicht `claim-ref` | `UNKNOWN_ACCUSATION` |
+| Anklage lokal unbekannt | `UNKNOWN_ACCUSATION` |
+| Anklage in einem anderen Nukleus | `SCOPE_MISMATCH` |
+| bestrittener Claim lokal unbekannt | `UNRESOLVED_ACCUSED` |
+
+Die dritte Zeile ist der Grund für die Tabelle: eine Anklage aus fremdem Scope ist **bekannt**
+und zählt nur nicht. `UNKNOWN_ACCUSATION` schickte den Betreiber in die Partitionsecke, während
+das Objekt vor ihm liegt. Wirkung identisch, Diagnose entscheidend — dritte Wiederholung von
+D74. Vektor `VS-12`.
+
+---
+
+**Neue Fehlerform.** D74, D75, D83, D87 und D91 hatten dieselbe Bauart: eine Begründung verlor
+beim Übertragen still ihren Geltungsbereich. D92 ist anders — die Regel wurde **gar nicht erst
+übertragen**. `settlement()` und `verdict_status()` nehmen beide einen Claim entgegen, bewerten
+ihn im Scope und geben Zustand plus Vermerke zurück; sie hätten dieselbe Eingangsstrecke haben
+müssen. `§3.3.2` hat sie ausgeschrieben, `§2.4.2` nicht, weil beim Schreiben von `§2.4` die
+Bindungsfrage im Vordergrund stand und nicht die Eingangsprüfung.
+
+Drei der sechs Abnahmebefunde waren Asymmetrien zwischen genau diesen beiden Funktionen.
