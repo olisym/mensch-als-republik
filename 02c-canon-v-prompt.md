@@ -139,7 +139,7 @@ liefern. Die Wirkung ist in beiden Fällen dieselbe, der Vermerk nicht.
 die neue Regel die alte nicht zertrampelt hat. Er muss einen Vermerk liefern, keine Exception.
 
 **Zwei Bestandsvektoren gehören zu derselben Frage** und werden **nicht** angefasst: der
-Einheitstest und der End-zu-End-Test mit `v = b"\xff"`, beide auf `UNPARSABLE_VOUCH_PAYLOAD`.
+Einheitstest und der End-zu-End-Test mit `v = h'ff'`, beide auf `UNPARSABLE_VOUCH_PAYLOAD`.
 Sie sind der Grund, warum `is_canonical` im selben `try` steht wie `decode` — eine
 Implementierung, die den Rundlauf nur zur Hälfte absichert, macht genau diese beiden rot. Wer
 sie anpasst, statt den Code zu korrigieren, hat die Aufgabe verfehlt.
@@ -148,7 +148,7 @@ sie anpasst, statt den Code zu korrigieren, hat die Aufgabe verfehlt.
 
 `V-CANON-E2E`: derselbe Vouch wie in einem bestehenden Zwei-Knoten-Anker, aber mit
 `v = h'a100190064'` statt `h'a1001864'`. Zu bauen mit `vouch_raw(...)`, das für den
-`b"\xff"`-Fall bereits existiert. Erwartet:
+`h'ff'`-Fall bereits existiert. Erwartet:
 
 - `trust()` auf den Gebürgten liefert **0** (die Kante existiert nicht),
 - `TrustResult.findings` enthält `Finding(NON_CANONICAL_V, claim_id(vouch))`,
@@ -162,7 +162,7 @@ tatsächlich aus dem Graphen verschwindet.
 ### 5.3 Hilfsmittel
 
 `vouch_raw(...)` in `tests/helpers.py` hängt rohe `v`-Bytes an und wird bereits vom
-`b"\xff"`-Bestandsvektor benutzt. Es ist damit ausreichend; `tests/helpers.py` muss **nicht**
+`h'ff'`-Bestandsvektor benutzt. Es ist damit ausreichend; `tests/helpers.py` muss **nicht**
 geändert werden.
 
 ---
@@ -171,7 +171,7 @@ geändert werden.
 
 1. `make check` grün in allen drei Blöcken.
 2. **242 Tests** (235 + 6 + 1). Keiner der 235 bestehenden ist geändert, übersprungen oder
-   angepasst worden — insbesondere nicht die beiden `b"\xff"`-Vektoren.
+   angepasst worden — insbesondere nicht die beiden `h'ff'`-Vektoren.
 3. `git diff --stat` zeigt **genau drei** Dateien: `trust/findings.py`, `trust/groups.py`,
    `tests/trust/test_payload.py`. Jede weitere Datei ist zu begründen, bevor gemergt wird.
 4. `git status` ohne unversionierte Quelldateien — `tools/check_tree.py` bricht sonst ohnehin ab.
