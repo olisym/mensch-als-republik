@@ -287,13 +287,68 @@ Autorenkette (`h_prev`), nie aus Wall-Clock `t`** — über eine partitionierbar
 ### 5.4 Default-Sicht & Policy-Override
 
 - **Weicher Default:** Claims sind durch ihre Autoren widerrufbar/supersedierbar.
-- **Opt-out:** Eine Nukleus-Policy darf bestimmte Prädikate für *irrevocable* erklären;
-  Verifizierer unter dieser Policy ignorieren dann `revoke`/`supersede`, die auf solche
-  Prädikate zielen. (Beispiel: `obligation@1`, damit ein Schuldner seine Schuld nicht per
-  Selbst-Widerruf löscht — Profile-II §3.3.3.)
+- **Opt-out:** Eine Nukleus-Policy erklärt bestimmte Prädikate für *irrevocable*; Verifizierer
+  unter dieser Policy ignorieren `revoke`/`supersede`, die auf solche Prädikate zielen.
+  (Beispiel: `obligation@1`, damit ein Schuldner seine Schuld nicht per Selbst-Widerruf löscht
+  — Profile-II §3.3.3.)
 
 `revoke`/`supersede` sind selbst Claims in der Autorenkette — sie sind also geordnet und
 gegen Equivocation geschützt wie alles andere.
+
+#### 5.4.1 Woher die Policy kommt (normativ)
+
+Der Verifizierer **wählt** die Policy nicht; sie wird aus dem Claim aufgelöst:
+
+```
+C.N  →  Genesis-Objekt  →  constitution_hash  →  Verfassungsobjekt
+                                              →  irrevocable_predicates   (00 §5)
+```
+
+Jede Stufe ist content-adressiert und lokal nachrechenbar — kein Nachschlagen bei einer
+Autorität, keine Netzwerkabhängigkeit. Ein Claim ohne `N` (also jeder `core/*`-Claim) fällt
+unter keine Policy.
+
+**Fehlt das Verfassungsobjekt lokal** (Partition, noch nicht synchronisiert), gilt der
+Sicherheits-Default aus `00 §5.2`. Die Offline-Berechenbarkeit aus §6 bleibt damit erhalten:
+die Zustandsmaschine braucht das Objekt nicht, um zu einem Ergebnis zu kommen — nur um ein
+vollständigeres zu bekommen.
+
+#### 5.4.2 Prädikat-Abgleich
+
+`irrevocable_predicates` enthält **Profilnamen ohne Scope-Präfix** (`"obligation@1"`). Ein
+Claim `C` fällt darunter gdw.:
+
+```
+C.p beginnt mit "nuc:"  und  der Teil nach dem letzten "/" ist in irrevocable_predicates
+```
+
+`core/*` kann **nie** irrevocable sein: `core/revoke@1` und `core/supersede@1` *sind* der
+Lebenszyklus; ein Widerruf, der sich selbst gegen Widerruf immunisiert, ist keine Aussage,
+sondern ein Fixpunkt. Ein Eintrag `"revoke@1"` oder `"supersede@1"` wird ignoriert.
+
+#### 5.4.3 Zwei Grenzen der Irrevocability (normativ)
+
+**(a) Irrevocability schlägt die Uhr nicht.** Ein irrevocabler Claim mit `t_exp` läuft ab wie
+jeder andere. Der Opt-out schützt gegen den **nachträglichen Willen** des Autors, nicht gegen
+den bei Ausstellung vorprogrammierten Verfall. Wer eine unbefristete Bindung will, stellt
+keinen `t_exp` aus; wer eine befristete annimmt, sieht die Frist vor der Gegenleistung
+(Profile-II §3.3.1).
+
+**(b) Trust-gewährende Prädikate dürfen nicht irrevocable sein.** Irrevocable darf nur ein
+Prädikat sein, dessen **Fortbestehen** die konservative Lesart ist.
+
+| Prädikat | Fortbestehen bedeutet | konservativ? |
+|---|---|---|
+| `obligation@1` | die Schuld bleibt stehen | ja |
+| `vouch@1` | das Vertrauen bleibt stehen | **nein** — Trust-Flow §7, die eine gefährliche Richtung |
+
+> **Normativ:** Steht ein trust-gewährendes Prädikat in `irrevocable_predicates`, ist die
+> Deklaration **unwirksam** — Widerrufe wirken weiterhin. Die Policy trägt den Vermerk
+> `UNSAFE_IRREVOCABLE_PREDICATE`. In v1 ist `vouch@1` das einzige Prädikat dieser Klasse;
+> die Liste wächst mit jedem künftigen Prädikat, das Kapazität, Gewicht oder Zugang verleiht.
+
+Ohne (b) wäre ein Widerruf permanent und strukturell wirkungslos statt nur partitionsbedingt
+verspätet — schlimmer als jeder Fall, gegen den `t_exp` gebaut wurde.
 
 ---
 
@@ -343,6 +398,12 @@ bekannt & gültig) **und**:
   `R.J == [claim-ref, C.claim_id]` existiert, **und**
 - `C` nicht durch einen strukturell gültigen `core/supersede@1`-Claim desselben Autors
   ersetzt ist.
+
+**Unter einer Policy** (§5.4) entfallen beide Bedingungen für Claims, deren Prädikat irrevocable
+ist: ein `revoke`/`supersede` auf ein solches Ziel wird bei der Zustandsbestimmung **ignoriert**.
+Der Widerruf selbst bleibt gültig, gespeichert und sichtbar (§5.2) — er ist soziale Information
+und wird nicht versteckt; er hat nur keine Wirkung auf den Zustand seines Ziels. Die zeitliche
+Gültigkeit bleibt unberührt (§5.4.3 a).
 
 **Pending statt Reject (kritische Klärung).** Ist `C` strukturell gültig, aber sein `h_prev`
 referenziert einen **noch unbekannten** Vorgänger (Partial-Sync über Gossip), dann ist `C`
@@ -508,13 +569,18 @@ Alle Zustände sind aus den gehaltenen Bytes + lokaler Zeit ohne Weltwissen best
 | `pending` | strukturell gültig, aber `h_prev`-Vorgänger unbekannt (Partial-Sync) | **halten**, auf Vorgänger warten |
 | `linked` | Vorgänger bekannt & gültig, Kette konsistent | weiter zu active/neutralisiert |
 | `active` | linked, zeitlich gültig, nicht revoked/superseded | **Default-Sicht** |
-| `revoked` | linked, gültiger selbst-bezüglicher `core/revoke@1` existiert | gültig, **inaktiv** |
-| `superseded` | linked, durch eigenen `core/supersede@1` ersetzt | gültig, **inaktiv** |
+| `revoked` | linked, gültiger selbst-bezüglicher `core/revoke@1` existiert **und** `C.p` ist nicht irrevocable unter der Policy (§5.4) | gültig, **inaktiv** |
+| `superseded` | linked, durch eigenen `core/supersede@1` ersetzt **und** `C.p` ist nicht irrevocable unter der Policy (§5.4) | gültig, **inaktiv** |
 | `expired` | linked, `t_exp` vorhanden und `now > t_exp` (lokal!) | lokal **inaktiv**; andernorts evtl. active |
 | `equivocation-flagged` | zweiter gültiger Claim mit gleichem `(I, h_prev)`, andere `claim_id` | **beide speichern**, Autor flaggen; Downstream nicht rückwirkend invalide |
 
 `expired` ist der einzige Zustand mit legitim **verifizierer-relativer** Belegung (§6, `now`
-lokal). Alle anderen sind über Verifizierer hinweg deterministisch gegeben denselben Bytes.
+lokal). Alle anderen sind über Verifizierer hinweg deterministisch gegeben denselben Bytes
+**und derselben Policy**. Zwei Verifizierer mit verschiedenen Verfassungsobjekten für dasselbe
+`N` sind kein legitimer Zustand, sondern ein Synchronisationsdefekt: `N` ist der Hash des
+Genesis, und der Genesis fixiert `constitution_hash`. Wer eine andere Verfassung hält, hält
+eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst prüfbar
+(`00 §5.3`).
 
 ### B.2 Fehlerklassen (Reject-Gründe)
 

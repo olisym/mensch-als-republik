@@ -1639,3 +1639,95 @@ Keiner dieser fünf Fälle ist unter dem kanonischen Profil sichtbar.
 
 **Reihenfolge:** `01a-policy` → `03` (Anker → Prompt → Abnahme → Merge) → `02c-purpose` →
 `00a-rotate-key` → zweiter Durchgang `05`/`06`/`04`/`00`/`VISION`.
+
+---
+
+## N. Aus dem Spec-Nachzug `01a-policy`
+
+Drei Festlegungen, die beim Schreiben des Ersatztextes zu D57/D58 nötig wurden und über beide
+hinausgehen. D70 ist formal eine **Wiedereröffnung** von `00 §5.2` und daher als eigener Fork
+geführt, nicht als Nachtrag.
+
+### D70 — Der Sicherheits-Default ist ein Boden, keine Rückfallebene ⚠️
+
+`00 §5.2` lautete: „Schweigt die Verfassung zu `irrevocable_predicates`, gilt **trotzdem**
+`obligation@1` als irrevocable. Weitere Prädikate werden nur durch explizite Nennung
+irrevocable."
+
+**Der Befund.** Der Satz regelt nur das Schweigen. Er sagt nicht, was gilt, wenn eine Verfassung
+`["foo@1"]` deklariert und `obligation@1` weglässt. Wörtlich gelesen greift der Default dann
+nicht — und das Schulden-Lösch-Loch ist durch das bloße Nennen einer beliebigen anderen Zeile
+wieder offen. Genau das Loch, das der Abschnitt „nicht durch Vergessen" aufreißbar machen
+wollte, nur mit einem Zwischenschritt.
+
+```
+wirksame Menge  =  { "obligation@1" }  ∪  irrevocable_predicates  ∖  unsicher (01 §5.4.3 b)
+```
+
+**Beschluss:** Der Default ist ein **Boden**. Die Liste erweitert die Menge, sie kann sie nie
+verkleinern. Drei Fälle — Schweigen, Nennung, Nennung anderer Prädikate ohne `obligation@1` —
+sind damit identisch geschützt.
+
+**Verworfen — Alles-oder-nichts bei unsicherer Deklaration.** Nennt eine Verfassung `vouch@1`
+(D58), wäre es denkbar, die ganze Liste zu verwerfen. Das ist schlechter: eine einzelne
+Fehldeklaration nähme dem Nukleus auch den Schuldenschutz. Der unsichere Eintrag fällt heraus,
+der Rest bleibt wirksam.
+
+Dieselbe Bewegung wie D37 („kein Budget-Beitrag bei unlesbarem `n`"): der defekte Teil fällt
+weg, nicht die Aussage als Ganzes.
+
+### D71 — `core/*` kann nie irrevocable sein
+
+`00 §5` deklariert `irrevocable_predicates` als freies `array[text]`. Ein Eintrag `"revoke@1"`
+würde Widerrufe gegen Widerruf immunisieren — das ist keine Aussage über einen Lebenszyklus,
+sondern ein Fixpunkt in ihm.
+
+**Beschluss:** Der Abgleich greift nur für `nuc:`-Prädikate (`01 §5.4.2`). Einträge, die auf
+`core`-Prädikate zeigen, werden ignoriert — nicht als Fehler, sondern weil `core/revoke@1` und
+`core/supersede@1` *der* Lebenszyklus sind und das geschlossene Aufnahmekriterium aus `01 §5`
+sie genau deshalb enthält.
+
+Zusammen mit D58 ergibt das zwei Ausschlussgründe verschiedener Natur: D58 schließt aus, was
+gefährlich wäre; D71 schließt aus, was bedeutungslos wäre.
+
+### D72 — Oberfläche: der Typ trägt die Invarianten, der Resolver liegt in `03`
+
+```python
+@dataclass(frozen=True, slots=True)
+class NucleusPolicy:
+    irrevocable: frozenset[str]      # normalisiert: Boden gesetzt (D70), Unsicheres entfernt (D58)
+    warnings: tuple[str, ...]        # UNSAFE_IRREVOCABLE_PREDICATE, …
+
+def classify(claim, store, now, policy: NucleusPolicy | None = None) -> Classification: ...
+```
+
+**Die Invarianten leben im Konstruktor**, nicht in der Aufrufkonvention. Nach D57 darf die
+Regel nicht umgehbar sein; ein Aufrufer, der `NucleusPolicy` baut, kann keine unsichere Menge
+erzeugen, weil Boden und Filter beim Bauen greifen. Layer 01 honoriert die Menge und ignoriert
+`warnings`.
+
+**`NucleusPolicy` liegt in Layer 01, der Resolver in Layer 03.** Der Typ muss aus `01`
+importierbar sein, sonst wird der Import zyklisch. Die Auflösung aus Genesis- und
+Verfassungsobjekt braucht dagegen ein Objektmodell, das `01` nicht kennt — sie lebt in
+`profiles/policy.py` und liefert `NucleusPolicy` plus Diagnose.
+
+**`Classification` bleibt unverändert** und trägt die angewandte Policy **nicht**. Erwogen als
+Nachvollziehbarkeitshilfe (zwei Verifizierer mit verschiedenen Ergebnissen sähen sofort, woran
+es liegt), verworfen: `Classification` ist heute ein reiner Zustandswert, jedes Zusatzfeld
+verkompliziert die Vergleichbarkeit in Tests, und der Aufrufer kennt die Policy ohnehin — er
+hat sie übergeben.
+
+**`resolve_policy` wird in `01a` nicht gebaut.** `00 §4` und `§5` sind Schemata, kein Code; ein
+Objektmodell dafür entsteht erst mit `03` (D61 braucht die Verfassungsobjekte ohnehin). `01a`
+liefert Typ und Honorierung, mit handgebauten `NucleusPolicy`-Instanzen in den Tests.
+
+---
+
+**Konsequenz für die Zustandsmaschine, offen benannt.** `01` Anhang B sagte bisher, alle
+Zustände außer `expired` seien „deterministisch gegeben denselben Bytes". Ab jetzt gilt
+„gegeben denselben Bytes **und derselben Policy**". Das ist eine echte Abschwächung eines
+tragenden Satzes. Sie ist vertretbar, weil abweichende Verfassungen für dasselbe `N` kein
+legitimer Uneinigkeitsfall sind, sondern ein Synchronisationsdefekt: `N` ist der Hash des
+Genesis, der Genesis fixiert `constitution_hash`, und die Ratifizierung einer neuen Version ist
+selbst prüfbar (`00 §5.3`). `expired` bleibt damit der einzige Zustand, in dem zwei korrekte
+Verifizierer legitim uneins sein dürfen.

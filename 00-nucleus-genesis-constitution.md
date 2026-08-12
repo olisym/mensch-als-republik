@@ -154,7 +154,7 @@ werden, weil an ihnen Sicherheit hängt:
 
 | Feld | Typ | Zweck | Schließt |
 |------|-----|-------|----------|
-| `irrevocable_predicates` | array[text] | Prädikate, deren `core/revoke`/`core/supersede` **ignoriert** werden (Atom-Spec §5.4). | **P-1 / DR-030** |
+| `irrevocable_predicates` | array[text] | Prädikate, deren `core/revoke`/`core/supersede` **ignoriert** werden (Atom-Spec §5.4). Profilnamen ohne Scope-Präfix. `obligation@1` gilt auch ungenannt (§5.2); trust-gewährende Prädikate werden verworfen (Atom-Spec §5.4.3 b). | **P-1 / DR-030** |
 | `thresholds` | map{text→ratio} | Quorum je Schwellenklasse (`ordinary`, `membership`, `amendment`, …). | DR-012 |
 | `arbitration` | map | Zuständige Schiedsrichter / Klausel (§5.1). | **E-1 / DR-029** |
 | `enforcement_policy` | map (optional) | Cure-Kurve, terminale Fehler (Enf-Spec §4, §8). | DR-022 |
@@ -174,12 +174,25 @@ gezeigt haben. Fehlt beides, ist das Verdikt **attributed_opinion** ohne Statusw
 (Enforcement-Spec §3, geänderte Fassung — siehe DF-2). Das ist die maschinenlesbare Antwort
 auf E-1.
 
-### 5.2 Sicherheits-Default (Netz gegen Vergesslichkeit)
+### 5.2 Sicherheits-Default: ein Boden, keine Rückfallebene
 
-Schweigt die Verfassung zu `irrevocable_predicates`, gilt **trotzdem** `obligation@1` als
-irrevocable (Protokoll-Default, Profile-II §3.3.3). So kann ein Nukleus das Schulden-Lösch-Loch
-**nicht durch Vergessen** aufreißen. Weitere Prädikate werden nur durch explizite Nennung
-irrevocable.
+`obligation@1` ist **immer** irrevocable (Protokoll-Default, Profile-II §3.3.3).
+`irrevocable_predicates` kann die Menge nur **erweitern**, nie verkleinern:
+
+```
+wirksame Menge  =  { "obligation@1" }  ∪  irrevocable_predicates  ∖  unsicher (Atom-Spec §5.4.3 b)
+```
+
+Damit gilt der Schutz in drei Fällen gleichermaßen: die Verfassung schweigt; sie nennt
+`obligation@1`; sie nennt **andere** Prädikate und lässt `obligation@1` weg. Eine
+Formulierung, in der der Default nur bei Schweigen greift, wäre durch das bloße Nennen einer
+beliebigen anderen Zeile aushebelbar gewesen — genau das Schulden-Lösch-Loch, das dieser
+Abschnitt schließen soll, nur mit einem Zwischenschritt.
+
+**Unsichere Deklarationen fallen heraus, ohne die übrigen zu entwerten.** Nennt eine Verfassung
+`vouch@1`, bleibt der Rest der Liste wirksam; der unsichere Eintrag wird verworfen und
+vermerkt (`UNSAFE_IRREVOCABLE_PREDICATE`, Atom-Spec §5.4.3 b). Ein Alles-oder-nichts wäre
+schlechter: eine einzelne Fehldeklaration nähme dem Nukleus auch den Schuldenschutz.
 
 ### 5.3 Lebenszyklus
 
