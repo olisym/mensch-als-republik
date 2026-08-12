@@ -6,7 +6,7 @@ from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import claim_id
 from mensch_als_republik.trust import Finding, TrustFinding, TrustParams, trust
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, T_EXP
 
 PARAMS = TrustParams(C0=16, gamma_num=1, gamma_den=2, D=4)

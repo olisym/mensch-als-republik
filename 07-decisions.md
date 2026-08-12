@@ -1759,3 +1759,77 @@ Default wäre der unsichere Fall, und Defaults setzen sich durch.
 **Verworfen — `NucleusPolicy` als Abbildung `scope → Prädikate`.** Löst dasselbe Problem und
 nimmt die Auflösung gleich mit, verlagert aber Mehr-Scope-Logik nach Layer 01. Die Auflösung
 gehört nach `03` (D72); ein Objekt, das mehrere Nuklei kennt, ist dort zu bauen, nicht hier.
+
+---
+
+## O. Aus der `01a`-Abnahme
+
+Der Lauf war beim ersten Versuch grün: 234 Tests, alle neunzehn Vektoren aus dem Prompt beim
+ersten Anlauf richtig, eine Rückfrage (`helpers.py` hatte keinen generischen Anhänger — korrekt
+gemeldet statt `vouch_raw` zweckzuentfremden). Die drei Befunde der Durchsicht sind **allesamt
+Strukturfragen, keine Rechenfehler** — dasselbe Muster wie bei `02b`, wo beide Vorgabefehler in
+Formulierungen lagen.
+
+Zwei der drei sind Fehler in meinem Prompt, nicht in der Ausführung.
+
+### D74 — Policy-Vermerke tragen ihr Subjekt
+
+`01a-policy-prompt.md §2` gab `warnings: tuple[PolicyWarning, ...]` vor — einen nackten Code
+ohne Subjekt. Der Betreiber erfährt damit, dass *etwas* Unsicheres deklariert war, nicht *was*.
+Bei einer Verfassung mit zwanzig Einträgen ist das unbrauchbar.
+
+**Beschluss:** `PolicyNote(code, predicate)`, ein Eintrag je unsicher deklariertem Prädikat,
+sortiert nach `predicate`.
+
+Die Sortierung ist nicht Kosmetik: `declared` ist ein `frozenset`, die Iterationsreihenfolge
+schwankt zwischen Läufen, und ein Vektor über zwei unsichere Einträge wäre sonst nicht
+reproduzierbar. Dieselbe Erwägung wie bei `TrustResult.findings` („sortiert, dedupliziert").
+
+**Der Vorgabefehler ist der eigentliche Eintrag:** Layer 02 hatte `Finding(kind, subject)`
+bereits richtig gebaut. Der Prompt hat die Form nicht übernommen, obwohl der Zweck identisch
+ist. Neue Schichten erben die Diagnoseform der bestehenden, statt sie neu zu erfinden.
+
+### D75 — Die drei Prädikatmengen sind disjunkt, geprüft beim Import
+
+Die Normalisierung aus D70/D58/D71 lautet:
+
+```
+irrevocable = (PROTOCOL_IRREVOCABLE ∪ declared) ∖ TRUST_GRANTING ∖ CORE_ENTRIES
+```
+
+Boden setzen, dann filtern. Läge je ein Prädikat in `PROTOCOL_IRREVOCABLE` **und**
+`TRUST_GRANTING`, verschwände der Boden aus D70 still — und **kein Testvektor kann das
+prüfen**, weil die Konstanten heute disjunkt sind. P-1 bis P-6 bestehen unter jeder Anordnung
+der drei Regeln.
+
+**Beschluss:** zwei `assert` auf Modulebene statt eines weiteren Vektors. Ein künftiger
+Widerspruch zwischen den Mengen wird beim Import laut, nicht in der Semantik leise.
+
+**Das ist die D54-Lage in neuer Form.** Dort versteckte das kanonische Profil (`α = ½`) einen
+Formelfehler; hier verstecken disjunkte Konstanten eine Reihenfolgefrage. Die Lehre aus D54 war
+„ein zweites Testprofil mit unbequemen Zahlen". Sie greift hier nicht, weil sich der unbequeme
+Fall nicht konstruieren lässt, ohne die Konstanten selbst zu verfälschen. Die Ergänzung:
+**wo ein Fall untestbar ist, weil er heute unmöglich ist, wird die Unmöglichkeit zugesichert —
+nicht die Semantik getestet.**
+
+### D76 — Unter Policy schlägt `expired` den Widerruf, ohne Policy umgekehrt
+
+Sichtbar geworden am Kontrollfluss von `classify`: ohne Policy greift der Widerruf-Zweig vor der
+Zeitprüfung, mit Policy fällt die Auswertung auf den `temporal`-Zweig durch.
+
+| Lage | `policy=None` | mit Policy |
+|---|---|---|
+| Obligation, abgelaufen **und** widerrufen | `REVOKED` | `EXPIRED` |
+
+`01` Anhang B legt zwischen `revoked`, `superseded` und `expired` **keine** Rangfolge fest —
+alle drei sind inaktiv, und für jeden Konsumenten der Zustandsmaschine ist das die einzige
+Aussage, die zählt. Die Umkehrung ist damit kein Fehler.
+
+**Beschluss:** Ist-Zustand festhalten, nicht vereinheitlichen. Vektor C-9 hält ihn fest, damit
+er sich nicht unbemerkt ändert. Eine Vereinheitlichung würde entweder den Kontrollfluss von
+`classify` umbauen (Risiko ohne Ertrag) oder eine Rangfolge in Anhang B einführen, die dort
+bewusst fehlt.
+
+**Vorgemerkt für Layer 03:** Sobald ein Konsument die Zustände *unterscheidet* statt nur
+„aktiv/inaktiv" zu fragen, wird die Rangfolge relevant und muss dann entschieden werden. In
+`03` ist das nicht der Fall — D60 und D63 fragen ausschließlich auf `active`.

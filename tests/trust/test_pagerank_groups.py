@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from mensch_als_republik.trust import rank
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 from .pr02 import RP
 from .tp02 import NOW, T_EXP
 

@@ -9,7 +9,7 @@ from mensch_als_republik.atom import claim_from_bytes, claim_id
 from mensch_als_republik.trust import classify_all
 from mensch_als_republik.verifier import InMemoryStore, State, classify
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 from .tp02 import T_EXP, build
 
 VECTORS = json.loads(

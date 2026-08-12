@@ -6,7 +6,7 @@ from mensch_als_republik.atom import Claim
 from mensch_als_republik.trust import TrustParams
 from mensch_als_republik.verifier import InMemoryStore
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 
 NOW = 1000
 T_EXP = 5000
