@@ -1731,3 +1731,31 @@ legitimer Uneinigkeitsfall sind, sondern ein Synchronisationsdefekt: `N` ist der
 Genesis, der Genesis fixiert `constitution_hash`, und die Ratifizierung einer neuen Version ist
 selbst prüfbar (`00 §5.3`). `expired` bleibt damit der einzige Zustand, in dem zwei korrekte
 Verifizierer legitim uneins sein dürfen.
+
+### D73 — Die Policy trägt ihren Scope, und eine Fehlpaarung ist laut ⚠️
+
+Lücke in D72, sichtbar geworden beim Schreiben des `01a`-Prompts: `NucleusPolicy` hatte kein
+Feld, das sagt, für **welchen** Nukleus sie gilt. Layer 01 kann die Auflösung aus `C.N` nicht
+selbst leisten (`01 §5.4.1` braucht Genesis- und Verfassungsobjekte, die Layer 01 nicht kennt) —
+also hätte ein Aufrufer die Policy des Nukleus A auf einen Claim aus Nukleus B anwenden können,
+und nichts hätte es gemerkt.
+
+Das ist kein akademischer Fall: sobald Layer 03 über Stores mit mehreren Scopes läuft, ist die
+falsche Paarung der Normalfall eines Programmierfehlers.
+
+**Beschluss:** `NucleusPolicy` trägt `scope: bytes` als Pflichtfeld. Trifft `classify` auf einen
+`nuc:`-Claim mit `claim.N ≠ policy.scope`, wird `ValueError` geworfen. Für `core/*`-Claims wird
+die Policy ohne Prüfung ignoriert.
+
+**Warum ein Fehler und kein stilles Ignorieren.** Eine nicht angewandte Policy heißt: der
+Widerruf auf eine `obligation@1` wirkt. Das ist die **unsichere** Richtung — genau das
+Schulden-Lösch-Loch, das D57 schließt. Anders als bei Teilwissen (D3) gibt es hier keine sichere
+Voreinstellung, weil der Zustand nicht unvollständig, sondern falsch zugeordnet ist. Ein lauter
+Fehler ist die einzige Antwort, die nicht rät.
+
+**Verworfen — `scope: bytes | None = None` mit „gilt für alles".** Bequemer in Tests, aber der
+Default wäre der unsichere Fall, und Defaults setzen sich durch.
+
+**Verworfen — `NucleusPolicy` als Abbildung `scope → Prädikate`.** Löst dasselbe Problem und
+nimmt die Auflösung gleich mit, verlagert aber Mehr-Scope-Logik nach Layer 01. Die Auflösung
+gehört nach `03` (D72); ein Objekt, das mehrere Nuklei kennt, ist dort zu bauen, nicht hier.
