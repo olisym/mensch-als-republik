@@ -1257,3 +1257,477 @@ ihn sofort gezeigt; genau deshalb steht ein solcher Vektor jetzt als offener Pun
 
 Normativ ist die Produktform. Sie ersetzt jede Fassung mit `//`, auch dort, wo die Division
 zufällig aufgeht.
+
+---
+
+## K. Aus der Forkanalyse Layer 03 (Profile II — Verdikt · Wert · Mitgliedschaft)
+
+Fünfzehn Forks aus 183 Zeilen. Drei der zehn eingebrachten Punkte waren bereits in `00`
+entschieden und in `03` nur nicht nachgezogen — `03-profiles.md` ist im Bestand die älteste
+Profil-Datei, und ihre Antworten sind nach `00` gewandert, ohne dass sie mitkam. Ein
+Widerspruch zwischen zwei Dateien auf `main` wurde dabei sichtbar (→ D68).
+
+**Vorab geklärt (kein Befund):** `trust()` mit leerem Ankerset auf Variante A liefert
+`OVERCOMMITTED_AUTHOR` für CAROL, byte-identisch zum Lauf mit ALICE-Anker. INV-8 hält in
+Layer 02a. Der Vektor aus `02b-golden-anchors.md §11` ist fällig, nicht offen, und gehört
+nach `tests/trust/test_invariants.py`.
+
+---
+
+### D55 — `v`-Kodierung der Layer-03-Profile: typ-normativ, bedeutungsblind
+
+Der Keyraum von `v` ist **prädikat-lokal**. `v` ist für das Atom opak; ein Key trägt nur
+innerhalb seines Profils Bedeutung. Key `0` in `vouch@1` und Key `0` in `obligation@1` sind
+verschiedene Dinge und kollidieren nicht.
+
+```
+obligation@1   0 : uint   amount      uninterpretiert
+               1 : bstr   unit_ref    byte-vergleichbar, nie geparst
+receipt@1      0 : uint   amount      löst KEINE Tilgung aus (D65)
+verdict@1      0 : uint   outcome     Bedeutung ist Policy
+               1 : bstr   reason_ref
+accusation@1   keine reservierten Keys — vollständig opak (D67)
+```
+
+**Normativ ist der Typ, nicht die Bedeutung.** Ist ein reservierter Key vorhanden, MUSS er den
+deklarierten Typ tragen; ein Verstoß erzeugt ein Finding, keinen Reject. Fehlt der Key, ist das
+kein Fehler. Weitere Keys sind zulässig und opak. Das ist exakt die Bauform aus D37: geprüft
+wird der Key, nicht die Map als Ganzes.
+
+**Verworfen — vollständig opak.** Dann gäbe es in `03` keinen einzigen Byte-Vektor. Die
+`02b`-Abnahme lief beim ersten Versuch durch, weil die Golden Numbers exakt und rundungsfrei
+waren; eine Schicht ohne prüfbare Bytes hat kein Äquivalent dazu und fällt auf „der Code stimmt
+mit sich selbst überein" zurück.
+
+**Verworfen — semantisch normativ** (Beträge werden gelesen und verglichen). Bricht die
+Preisblindheit aus `03 §3.1` und A2, und braucht eine Einheiten-Registry, die es nicht gibt.
+Wäre nur nötig, wenn ungedeckte Emission eine mechanische Schranke bekäme — sie bekommt keine
+(D66).
+
+### D56 — Vouch-`v` Key `1` wird vertagt, Key `2` nur typ-fest
+
+D37 sagte, die Kodierung der Keys `1` (Zweck-Tag) und `2` (`bond_ref`) werde „mit `03`/`05`
+festgelegt". Das war eine Terminplanung, keine Ableitung. **Key `1` ist Layer-02-Semantik und
+hat in `03` keine Verwendung.**
+
+Er ist außerdem teurer als er aussieht. Sobald er kodiert ist, ziehen drei Dinge nach:
+
+1. `trust()` und `rank()` brauchen einen `purpose`-Parameter. Er fehlt in beiden Signaturen.
+2. Der Gruppenschlüssel aus D40 ist `(I, J, N)`. Mit Zweck-Tag muss `n_kante` über der
+   **gefilterten** Teilmenge maximiert werden, sonst erbt ein Probe-Vouch für `π₁` das Gewicht
+   eines vollen Vouch für `π₂` — die falsche Richtung, und zwei Implementierungen laufen dort
+   legitim auseinander.
+3. Das Budget bleibt `(I, N)` über **alle** Zwecke, sonst kauft ein Autor durch Zweck-Splitting
+   neues Budget. Das ist zugleich die Begründung, warum D25 für Torwächterschaft eigene
+   *Scopes* verlangt und nicht eigene Zwecke.
+
+**Beschluss:** Key `1` bleibt unkodiert bis zu einem eigenen Durchgang `02c-purpose`, nach `03`.
+Key `2` bekommt jetzt nur den Typ — `2 : bstr`, Länge 32, nie dereferenziert —, damit `03` und
+`05` denselben Slot nicht verschieden belegen. Kein Testvektor, keine Wirkung.
+
+### D57 — Die Policy ist Parameter der Klassifikation und wird aus dem Claim aufgelöst ⚠️
+
+`01 §5.4` und `§6` sagen beide, eine Nukleus-Policy dürfe die Aktiv-Sicht überschreiben. Die
+eingefrorene Signatur `classify(claim, store, now)` hat dafür keinen Ort. Der Satz war zwei
+Layer lang dekorativ und fällt erst auf, weil `03` ihn braucht: ohne ihn ist `03 §3.3.3`
+(`obligation@1` irrevocable) unauswertbar, und das Schulden-Lösch-Loch bleibt offen.
+
+```python
+def classify(claim, store, now, policy: NucleusPolicy | None = None) -> Classification: ...
+```
+
+**Der Aufrufer wählt die Policy nicht — sie wird aufgelöst.** Der Claim trägt `N`; `N` bestimmt
+das Genesis; das Genesis bestimmt `constitution_hash`; die Verfassung bestimmt
+`irrevocable_predicates` (`00 §5`). Ist das Verfassungsobjekt lokal nicht bekannt (Partition),
+greift der Sicherheits-Default aus `00 §5.2`: **exakt** `["obligation@1"]`, nichts sonst.
+
+**Warum kein Wrapper in `03` (Variante b).** Die Regel muss unumgehbar sein. Ein Wrapper ist es
+nie: jeder Aufrufer, der ihn vergisst, reißt das Loch wieder auf — genau der Fehlermodus, vor
+dem `03 §5` warnt. Zusätzlich entstünde eine zweite Definition von „aktiv" neben `02 §2`, und
+zwei Definitionen driften.
+
+**Warum kein Store-Filter (Variante c).** Revokes zu verstecken bricht A3 und `01 §5.2`: sowohl
+der Claim als auch sein Widerruf bleiben sichtbar.
+
+**Der Preis, offen benannt:** Layer 01 wird für einen additiven Parameter mit Default
+aufgetaut. Feldsatz, Serialisierung, Signatur, elf Reject-Codes und acht Zustände bleiben
+unberührt; `policy=None` ist die heutige Semantik, die 61 Tests bleiben grün. Der Durchgang
+heißt `01a-policy` und läuft **vor** `03`, weil drei `03`-Funktionen den Parameter nehmen.
+
+### D58 — Trust-gewährende Prädikate dürfen nicht irrevocable sein ⚠️
+
+`00 §5` deklariert `irrevocable_predicates` als freies `array[text]`. Ein Nukleus, der dort
+`vouch@1` einträgt, macht Widerrufe wirkungslos — also genau die **eine gefährliche Richtung**
+aus `02 §7`, und zwar permanent und strukturell statt nur partitionsbedingt.
+
+> **Normativ:** Irrevocable darf nur ein Prädikat sein, dessen **Fortbestehen** die konservative
+> Lesart ist. Steht `vouch@1` in `irrevocable_predicates`, ist die Deklaration unwirksam: Finding
+> `UNSAFE_IRREVOCABLE_PREDICATE`, und Widerrufe wirken weiterhin.
+
+Für `obligation@1` ist Fortbestehen konservativ (die Schuld bleibt stehen), für `vouch@1` ist es
+das Gegenteil (Vertrauen bleibt stehen). Die Asymmetrie ist der ganze Punkt und stand nirgends.
+
+Testvektor: eine Verfassung, die es versucht.
+
+### D59 — `obligation.t_exp` bleibt erlaubt, wird aber zum Finding
+
+`03 §3.3.1` erlaubt `t_exp` als „harte Decke". Zusammen mit `§3.3.3` ergibt das: der Schuldner
+kann seine Schuld nicht widerrufen, darf sie aber bei Ausstellung so programmieren, dass sie
+von selbst verfällt. Irrevocability schützt gegen den **nachträglichen** Willen, nicht gegen
+den vorprogrammierten.
+
+Entschärft ist es dadurch, dass die Obligation einseitig ist: es gibt keine signierte Annahme
+des Gläubigers, also trägt er die Prüfpflicht ohnehin, und `t_exp` ist für ihn vor der Lieferung
+sichtbar.
+
+**Beschluss:** erlauben, aber sichtbar machen. Eine `obligation@1` mit `t_exp` erzeugt
+`EXPIRING_OBLIGATION`. Bedeutungsblind, billig, und es macht die Falle für Werkzeuge lesbar.
+
+**Verworfen — Policy-Verbot.** Befristete Verpflichtungen sind ein legitimer Fall (`06 §5`,
+SLA-Fenster). Ein Verbot verlöre mehr, als es schützt.
+
+### D60 — Mitgliedschaft hat vier Zustände, nicht zwei
+
+```python
+def membership(store, *, subject, scope, constitution_hash, now,
+               authorized_keys, policy=None) -> MembershipResult
+```
+
+```
+MEMBER        beide Claims aktiv
+APPLICANT     nur accept-rules aktiv
+GRANT_ONLY    nur grant-membership aktiv
+NONE          keiner
+```
+
+**Kein bool.** `05 §1` Stufe 4 unterscheidet Ausschluss (N widerruft den Grant) von Austritt
+(X widerruft die Annahme); mit einem Wahrheitswert sind beide `False` und nicht
+auseinanderzuhalten. `03 §4` nennt `GRANT_ONLY` „ungültig" — das ist richtig als Wirkung, aber
+der Zustand muss benennbar bleiben.
+
+`MembershipResult` trägt zusätzlich die beiden `claim_id` und `findings`, in der Form von
+`TrustResult`.
+
+**„Aktiv" heißt dasselbe wie `02 §2`** — Layer-01-`active`, `pending` zählt nicht —, ausgewertet
+unter der Policy aus D57. Da weder `accept-rules@1` noch `grant-membership@1` irrevocable sind,
+fallen beide Begriffe in `03` faktisch zusammen; die Regel steht trotzdem einmal geschrieben,
+sonst driftet sie beim nächsten Prädikat.
+
+### D61 — Der `constitution_hash` ist Parameter, nicht Auflösung
+
+`accept-rules@1.J = [object-hash, H(Verfassung)]` bindet eine Mitgliedschaft an eine **Version**.
+Nach einem Amendment sind alte Annahmen strukturell weiter aktiv, zeigen aber auf den falschen
+Hash. Welcher Hash gilt, entscheidet die Ratifizierung über die `amendment`-Schwelle
+(`00 §5.3`) — eine Layer-04-Frage.
+
+**Beschluss:** `membership()` nimmt `constitution_hash` als Parameter und vergleicht byte-weise.
+`03` löst nicht auf, welche Version aktuell ist. Damit bleibt `03` frei von Layer 04 und
+bedeutungsblind.
+
+Testvektoren gegen den Bestandsanker aus `00 §3.1`: `890b21e7…` ⇒ `MEMBER`; ein abweichender
+Hash ⇒ die Annahme zählt für diese Version **gar nicht**, also `GRANT_ONLY` bzw. `NONE`.
+
+### D62 — `resolve_current_key` gehört nicht in `03`
+
+`00 §7` ersetzt die alte Regel `I == N` durch `akt.I ∈ resolve_current_key(akt.N)`. Damit ist
+die Frage „trägt `03` einen Gruppenschlüssel?" beantwortet und zwar mit **nein**: `key_mode = 1`
+bedeutet einen FROST-Gruppenschlüssel, und eine FROST-Signatur verifiziert als gewöhnliche
+Ed25519-Signatur unter diesem Schlüssel. Layer 01 bleibt unberührt. Die Tabelle in `03 §4`
+(`I = N`) ist toter Text und wird ersetzt.
+
+`resolve_current_key` selbst ist eine Kettenauflösung über `rotate-key@1` ab `root_keys`, mit
+eigenen Equivocation-Fällen (`01 §8`: ein gestohlener Schlüssel, der zwei Nachfolger signiert).
+
+**Beschluss:** `03` nimmt `authorized_keys: frozenset[bytes]` als Parameter.
+`resolve_current_key` und `rotate-key@1` bekommen einen eigenen Durchgang `00a`. Sonst zöge `03`
+die Schlüsselrotation samt Diebstahlsfällen herein — ein größerer Brocken als alle drei Cluster
+zusammen.
+
+**Ebenfalls ausgeklammert:** der Kompositionspfad aus `04 §3` (`vote_mode = 0`), bei dem eine
+Mitgliedschaft ohne einzelnen `grant-membership`-Autor durch Auszählung entsteht. `03` wertet
+nur den claim-basierten Pfad. Getragene Grenze, in `03 §5` zu nennen.
+
+### D63 — „Passende" Quittung ist ein vierteiliges strukturelles Prädikat
+
+`03 §3.3.2` verlangt eine „passende" Quittung, ohne sie zu definieren.
+
+```
+receipt.J  == [claim-ref, obligation.claim_id]
+receipt.I  == obligation.J.value    und  obligation.J.tag == identity
+receipt.N  == obligation.N
+beide aktiv (Obligation unter der Policy aus D57)
+```
+
+Die dritte Bedingung ist **nicht** redundant. `01 §2.2` Regel 3 erzwingt nur, dass `N` gesetzt
+und selbstkonsistent ist, nicht dass zwei Claims denselben Scope teilen. Ohne sie quittiert eine
+Identität in Nukleus B eine Schuld aus Nukleus A.
+
+Trennende Vektoren: Quittung vom Schuldner statt vom Gläubiger; Quittung mit fremdem `N`;
+Quittung auf eine Obligation, deren `J.tag` `claim-ref` statt `identity` ist.
+
+### D64 — Die Quittung bleibt widerrufbar
+
+Aus D63 folgt eine Asymmetrie, die nirgends stand: die Obligation ist irrevocable, die Quittung
+nicht. Der Gläubiger kann quittieren und den Widerruf nachschieben — die Schuld lebt wieder auf.
+Tilgung ist damit **nicht monoton**.
+
+**Beschluss: getragen.** Die Quittung bleibt per A3 sichtbar, ihr Widerruf ist selbst Evidenz,
+und der Missbrauch ist ein oracle-abhängiger Streit — also genau der Fall, für den `§2.3` das
+Verdikt vorsieht. Gehört als getragene Grenze in `03 §5`.
+
+**Verworfen — `receipt@1` ebenfalls irrevocable empfehlen.** Sieht sicherer aus und erzeugt den
+schlechteren Fehlerzustand: eine irrtümliche Quittung wäre unheilbar, und die Korrektur wäre
+eine neue `obligation@1` des Gläubigers — also eine Schuld, die es nie gab.
+
+### D65 — Teil-Tilgung: ein `amount` im Receipt tilgt nicht
+
+`03 §5` („in v1 nicht modelliert") und `§3.3.2` („optional, z. B. Teilbetrag") widersprechen
+sich in derselben Datei. Die naive Auflösung — `receipt.v` opak lassen und jede Quittung als
+Voll-Tilgung werten — ist die gefährliche: ein Gläubiger, der einen Teilbetrag meint, quittiert
+versehentlich die ganze Schuld. Über-Tilgung, also die falsche Richtung.
+
+> **Normativ:** Trägt `receipt.v` Key `0`, **tilgt die Quittung nicht** und erzeugt
+> `PARTIAL_RECEIPT_UNSUPPORTED`. Die Schuld bleibt stehen.
+
+Sichere Richtung, testbar, und der Erweiterungspfad bleibt offen, ohne dass v1 rät. `§3.3.2`
+wird auf diese Formulierung nachgezogen, `§5` bleibt.
+
+### D66 — Ungedeckte Emission ist auditierbar, nicht selbst-validierend
+
+`03 §3.3.4` zieht die Parallele zum Über-Commitment aus `02 §3.1`. Dort trägt sie die
+Deckungsgrenze `Σn ≤ D`. Hier gibt es keine — die Parallele trägt nicht.
+
+**Beschluss:** `§3.3.4` umformulieren. „Beweisbar" heißt hier **auditierbar** (der signierte
+Schuldgraph ist vollständig nachvollziehbar), nicht **selbst-validierend**. Kein mechanischer
+Slash, kein Stufe-3-Auslöser in `05 §3`.
+
+**Verworfen — Schranke `Σ amount ≤ credit_limit(I)` aus der Verfassung.** Der Grund ist nicht
+der Aufwand: die Prüfung wäre in genau dem Sinn bedeutungsblind, in dem `n ≤ D` es ist, ein
+Integer-Vergleich ohne Interpretation. Der Grund ist, dass die Grenze willkürlich wäre.
+`Σw ≤ 1` ist ökonomisch begründet, weil es **Haftung** bindet (D3, D5). Eine Emissionsgrenze
+bindet nichts. In einem Mutual-Credit-System setzt der **Gläubiger** das Limit pro Trustline,
+nicht die Verfassung pro Person; diese Form gehört in eine Wert-/Exchange-Schicht, die es nicht
+gibt (L4: im Protokoll so wenig wie möglich fixieren).
+
+**Namensbereinigung.** `Über-Commitment` (Vouch-Budget, D4, mechanisch slashbar) und
+`Über-Emission` (IOU, sozial) unterscheiden sich um zwei Silben und um die gesamte Konsequenz.
+Da `05 §3` laut Änderungsliste G „Über-Commitment ⇒ Stufe 3" bekommt, stehen beide bald in
+derselben Datei. `Über-Emission` wird durchgängig zu **`ungedeckte Emission`**.
+
+### D67 — Verdikt-Status ist eine Funktion, und `submit-arbitration@1` ist ein Profil
+
+Drei Teile.
+
+**(a) Die Funktion.** `00 §5.1` ist bereits maschinenlesbar formuliert und nennt sich selbst
+„die maschinenlesbare Antwort auf E-1"; `05 §3` hängt daran. Also implementieren:
+
+```python
+def verdict_status(store, *, verdict, scope, arbitrators, now,
+                   policy=None) -> VerdictStatus   # BINDING | ATTRIBUTED_OPINION
+```
+
+**(b) Parteienauflösung.** Pfad (ii) verlangt, dass **beide Parteien** vorab gezeigt haben. Wer
+sie sind, stand nirgends. Normativ: Ankläger ist `accusation.I`. Der Beschuldigte ist
+`accusation.J.value`, falls `J.tag == identity`; bei `J.tag == claim-ref` ist es der **Autor**
+des bestrittenen Claims. Je ein Vektor.
+
+**(c) `submit-arbitration@1` bekommt eine Profiltabelle.** `03 §2.4` nennt es beiläufig
+„optional", `00 §5.1` macht es zur normativen Bedingung für Pfad (ii). Ohne Tabelle ist der
+Absatz nicht auswertbar.
+
+| Feld | Belegung |
+|------|----------|
+| `I`  | die sich unterwerfende Partei |
+| `J`  | `[identity, schiedsrichter]` |
+| `N`  | **Pflicht** — der Schlichtungs-Kontext |
+| `v`  | opak |
+
+Lebenszyklus über `core/revoke@1`, selbst-bezüglich. Bindung ist selbst ein Claim — das ist die
+Komposition, die `§2.4` behauptet, sauber durchgezogen.
+
+**Nicht implementiert:** die Beweise in `accusation.v`. `§2.1` verlangt „self-contained
+Beweise", aber Layer 01 flaggt Equivocation ohnehin aus dem Store; ein zweiter Prüfpfad in `03`
+wäre Redundanz mit eigener Fehlerfläche. `accusation.v` bleibt vollständig opak (D55). Der Satz
+in `§2.1` ist als Konvention für Menschen zu lesen, nicht als Verifizierer-Pflicht — und so
+umzuformulieren.
+
+### D68 — `00 §5.1` behauptet eine Fassung von `05 §3`, die es nicht gibt
+
+`00 §5.1` verweist auf „Enforcement-Spec §3, geänderte Fassung — siehe DF-2". `05 §3` auf `main`
+enthält weder `attributed_opinion` noch überhaupt eine Statusunterscheidung. Ein Widerspruch
+zwischen zwei Dateien im Bestand, unabhängig von `03`.
+
+**Vor `03` nötig ist nur das Vokabular**, weil `03` es produziert: `BINDING` und
+`ATTRIBUTED_OPINION`. Severity-Schwellen, Cure-Kurven und Slash-Höhen bleiben Policy und Layer
+05.
+
+**Für den zweiten `05`-Durchgang vorgemerkt:** `§3` bekommt den Satz, dass ein Verdikt ohne
+Bindung nach `00 §5.1` **keinen** Statuswechsel auslöst, unabhängig von seiner Severity.
+
+### D69 — Oberfläche und Modulschnitt von Layer 03
+
+```
+mensch_als_republik/profiles/
+  policy.py      NucleusPolicy, Auflösung, Sicherheits-Default (00 §5.2)
+  membership.py  membership()      -> MembershipResult
+  credit.py      settlement()      -> SettlementResult
+  verdict.py     verdict_status()  -> VerdictStatus
+  findings.py
+```
+
+`03` ist reine Komposition über Layer 01 plus Policy: kein Graph, keine Anker, kein
+`TrustParams`. `classify_all` aus `02` wird **geteilt, nicht kopiert**, abgesichert durch
+denselben Identitätsvergleich der Funktionsobjekte, den PR-INV-4 für `derive()` eingeführt hat.
+
+Drei getrennte Funktionen statt einer, weil `03 §1` drei getrennte Cluster behauptet und die
+Trennung sonst nur in der Prosa steht — dieselbe Bewegung wie D52 (`§9` trägt die Trennlinie in
+die Oberfläche).
+
+---
+
+## L. Golden Anchors für Layer 03 — anderer Maßstab, gleiche Disziplin
+
+`03` ist weitgehend nicht-numerisch. Die Trennschärfe kommt hier nicht aus Arithmetik, sondern
+aus **Negativvektoren**. Drei Sorten:
+
+1. **Byte-exakte CBOR-Vektoren** für die Kodierungen aus D55, im Format von TV1
+   (`v = h'a1001864'` = `{0: 100}`). Von Hand nachrechenbar, byte-vergleichbar.
+2. **Bestandsanker.** `00 §3.1` liefert `constitution_hash = 890b21e7…` und
+   `N = 65309fe2…`, byte-identisch mit `01` Anhang C. `03` bindet daran, statt neue Zahlen zu
+   erfinden — dieselbe Disziplin wie „die ganze Spec-Reihe testet gegen denselben Anker".
+3. **Konjunktionstabellen:** Mitgliedschaft (vier Zustände, D60), Tilgung (vier Bedingungen,
+   D63), Verdikt-Status (zwei Pfade × zwei Parteiformen, D67).
+
+**Das unbequeme zweite Profil (Konsequenz aus D54) ist hier keine Parameterwahl, sondern eine
+zweite Verfassung.** Das kanonische Beispiel aus `00 §3.1` trägt jeden Default, den es gibt:
+`irrevocable_predicates: ["obligation@1"]`, ein Arbitrator, `key_mode = 0`, Ankerset der
+Größe 1. Das Gegenprofil verletzt fünf davon, und jede Verletzung trennt zwei plausible
+Implementierungen:
+
+| Abweichung | prüft |
+|---|---|
+| Verfassung **schweigt** zu `irrevocable_predicates` | Sicherheits-Default `00 §5.2` |
+| Verfassung nennt `vouch@1` als irrevocable | D58 |
+| **zwei** Arbitratoren, einer davon nicht in `arbitration.arbitrators` | D67, Pfad (i) vs (ii) |
+| `accept-rules` auf einen **anderen** `constitution_hash` | D61 |
+| `grant-membership` von einem Schlüssel **außerhalb** `authorized_keys` | D62 |
+
+Keiner dieser fünf Fälle ist unter dem kanonischen Profil sichtbar.
+
+---
+
+## M. Änderungsliste Layer 03
+
+| Datei | Änderung | Quelle |
+|---|---|---|
+| `01-claim-atom.md §5.4`, `§6` | `policy`-Parameter der Klassifikation; Auflösungsregel; Sicherheits-Default | D57 |
+| `01-claim-atom.md §5.4` | Negativliste: trust-gewährende Prädikate nicht irrevocable | D58 |
+| `01-claim-atom.md §7.1` | Key `1` bleibt unkodiert (Verweis auf `02c`); Key `2` typ-fest `bstr[32]` | D56 |
+| `00-…-constitution.md §5` | `UNSAFE_IRREVOCABLE_PREDICATE`; Verweis auf die Negativliste | D58 |
+| `03-profiles.md` | **vollständig ersetzt** — drei Abschnitte durch `00` überholt, zwei intern widersprüchlich, `submit-arbitration@1` fehlt | D55–D69 |
+| `03-profiles.md §2.1` | `accusation.v` opak; „self-contained Beweise" als Konvention, nicht als Pflicht | D67 |
+| `03-profiles.md §2.4` | `submit-arbitration@1` mit Profiltabelle; Parteienauflösung | D67 |
+| `03-profiles.md §3.3.1` | `v`-Keys typ-normativ; `EXPIRING_OBLIGATION` | D55, D59 |
+| `03-profiles.md §3.3.2` | „passend" als vierteiliges Prädikat; Teilbetrag tilgt nicht | D63, D65 |
+| `03-profiles.md §3.3.3` | Verweis auf `00 §5` statt freistehender Pflicht | D57 |
+| `03-profiles.md §3.3.4` | auditierbar statt selbst-validierend; `ungedeckte Emission` | D66 |
+| `03-profiles.md §4` | `I ∈ authorized_keys` statt `I = N`; vier Zustände; `constitution_hash` als Parameter | D60–D62 |
+| `03-profiles.md §5` | getragene Grenzen: widerrufbare Quittung, Kompositionspfad, keine Emissionsschranke | D64, D62, D66 |
+| `05-enforcement.md §3` | Vokabular `BINDING`/`ATTRIBUTED_OPINION`; kein Statuswechsel ohne Bindung | D68 |
+| Repo-Wurzel | `03-golden-anchors.md`; zweite Verfassung als Gegenprofil | L |
+| Repo-Wurzel | `02b-golden-anchors.md §11`: INV-8-Vektor bei leerem Ankerset ist fällig, nicht offen | K |
+
+**Reihenfolge:** `01a-policy` → `03` (Anker → Prompt → Abnahme → Merge) → `02c-purpose` →
+`00a-rotate-key` → zweiter Durchgang `05`/`06`/`04`/`00`/`VISION`.
+
+---
+
+## N. Aus dem Spec-Nachzug `01a-policy`
+
+Drei Festlegungen, die beim Schreiben des Ersatztextes zu D57/D58 nötig wurden und über beide
+hinausgehen. D70 ist formal eine **Wiedereröffnung** von `00 §5.2` und daher als eigener Fork
+geführt, nicht als Nachtrag.
+
+### D70 — Der Sicherheits-Default ist ein Boden, keine Rückfallebene ⚠️
+
+`00 §5.2` lautete: „Schweigt die Verfassung zu `irrevocable_predicates`, gilt **trotzdem**
+`obligation@1` als irrevocable. Weitere Prädikate werden nur durch explizite Nennung
+irrevocable."
+
+**Der Befund.** Der Satz regelt nur das Schweigen. Er sagt nicht, was gilt, wenn eine Verfassung
+`["foo@1"]` deklariert und `obligation@1` weglässt. Wörtlich gelesen greift der Default dann
+nicht — und das Schulden-Lösch-Loch ist durch das bloße Nennen einer beliebigen anderen Zeile
+wieder offen. Genau das Loch, das der Abschnitt „nicht durch Vergessen" aufreißbar machen
+wollte, nur mit einem Zwischenschritt.
+
+```
+wirksame Menge  =  { "obligation@1" }  ∪  irrevocable_predicates  ∖  unsicher (01 §5.4.3 b)
+```
+
+**Beschluss:** Der Default ist ein **Boden**. Die Liste erweitert die Menge, sie kann sie nie
+verkleinern. Drei Fälle — Schweigen, Nennung, Nennung anderer Prädikate ohne `obligation@1` —
+sind damit identisch geschützt.
+
+**Verworfen — Alles-oder-nichts bei unsicherer Deklaration.** Nennt eine Verfassung `vouch@1`
+(D58), wäre es denkbar, die ganze Liste zu verwerfen. Das ist schlechter: eine einzelne
+Fehldeklaration nähme dem Nukleus auch den Schuldenschutz. Der unsichere Eintrag fällt heraus,
+der Rest bleibt wirksam.
+
+Dieselbe Bewegung wie D37 („kein Budget-Beitrag bei unlesbarem `n`"): der defekte Teil fällt
+weg, nicht die Aussage als Ganzes.
+
+### D71 — `core/*` kann nie irrevocable sein
+
+`00 §5` deklariert `irrevocable_predicates` als freies `array[text]`. Ein Eintrag `"revoke@1"`
+würde Widerrufe gegen Widerruf immunisieren — das ist keine Aussage über einen Lebenszyklus,
+sondern ein Fixpunkt in ihm.
+
+**Beschluss:** Der Abgleich greift nur für `nuc:`-Prädikate (`01 §5.4.2`). Einträge, die auf
+`core`-Prädikate zeigen, werden ignoriert — nicht als Fehler, sondern weil `core/revoke@1` und
+`core/supersede@1` *der* Lebenszyklus sind und das geschlossene Aufnahmekriterium aus `01 §5`
+sie genau deshalb enthält.
+
+Zusammen mit D58 ergibt das zwei Ausschlussgründe verschiedener Natur: D58 schließt aus, was
+gefährlich wäre; D71 schließt aus, was bedeutungslos wäre.
+
+### D72 — Oberfläche: der Typ trägt die Invarianten, der Resolver liegt in `03`
+
+```python
+@dataclass(frozen=True, slots=True)
+class NucleusPolicy:
+    irrevocable: frozenset[str]      # normalisiert: Boden gesetzt (D70), Unsicheres entfernt (D58)
+    warnings: tuple[str, ...]        # UNSAFE_IRREVOCABLE_PREDICATE, …
+
+def classify(claim, store, now, policy: NucleusPolicy | None = None) -> Classification: ...
+```
+
+**Die Invarianten leben im Konstruktor**, nicht in der Aufrufkonvention. Nach D57 darf die
+Regel nicht umgehbar sein; ein Aufrufer, der `NucleusPolicy` baut, kann keine unsichere Menge
+erzeugen, weil Boden und Filter beim Bauen greifen. Layer 01 honoriert die Menge und ignoriert
+`warnings`.
+
+**`NucleusPolicy` liegt in Layer 01, der Resolver in Layer 03.** Der Typ muss aus `01`
+importierbar sein, sonst wird der Import zyklisch. Die Auflösung aus Genesis- und
+Verfassungsobjekt braucht dagegen ein Objektmodell, das `01` nicht kennt — sie lebt in
+`profiles/policy.py` und liefert `NucleusPolicy` plus Diagnose.
+
+**`Classification` bleibt unverändert** und trägt die angewandte Policy **nicht**. Erwogen als
+Nachvollziehbarkeitshilfe (zwei Verifizierer mit verschiedenen Ergebnissen sähen sofort, woran
+es liegt), verworfen: `Classification` ist heute ein reiner Zustandswert, jedes Zusatzfeld
+verkompliziert die Vergleichbarkeit in Tests, und der Aufrufer kennt die Policy ohnehin — er
+hat sie übergeben.
+
+**`resolve_policy` wird in `01a` nicht gebaut.** `00 §4` und `§5` sind Schemata, kein Code; ein
+Objektmodell dafür entsteht erst mit `03` (D61 braucht die Verfassungsobjekte ohnehin). `01a`
+liefert Typ und Honorierung, mit handgebauten `NucleusPolicy`-Instanzen in den Tests.
+
+---
+
+**Konsequenz für die Zustandsmaschine, offen benannt.** `01` Anhang B sagte bisher, alle
+Zustände außer `expired` seien „deterministisch gegeben denselben Bytes". Ab jetzt gilt
+„gegeben denselben Bytes **und derselben Policy**". Das ist eine echte Abschwächung eines
+tragenden Satzes. Sie ist vertretbar, weil abweichende Verfassungen für dasselbe `N` kein
+legitimer Uneinigkeitsfall sind, sondern ein Synchronisationsdefekt: `N` ist der Hash des
+Genesis, der Genesis fixiert `constitution_hash`, und die Ratifizierung einer neuen Version ist
+selbst prüfbar (`00 §5.3`). `expired` bleibt damit der einzige Zustand, in dem zwei korrekte
+Verifizierer legitim uneins sein dürfen.
