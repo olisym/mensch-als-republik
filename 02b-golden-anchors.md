@@ -1,12 +1,22 @@
 # Golden Anchors — Layer 02b (PageRank-Relaxation, `02 §5`)
 
-Revision 1 · Status: gerechnet und zweifach gegengerechnet (Integer-Rekursion gegen
-`Fraction`, byte-gleich) · gilt gegen `02-trust-flow.md` nach Anwendung von D45–D53
+Revision 2 · Status: gerechnet, zweifach gegengerechnet und gegen die Implementierung
+geprüft · gilt gegen `02-trust-flow.md` nach Anwendung von D45–D54
 Zweck: normative Testvektoren für `02b-pagerank`. Alle Werte exakt, ganzzahlig, ohne Rundung.
 
 Diese Datei setzt `02-golden-anchors.md` (Rev 3) fort. Konventionen werden von `K9` an
 weitergezählt, Invarianten als `PR-INV-n` geführt, damit `INV-1`–`INV-8` der harten Sicht
 unberührt bleiben.
+
+## Änderungen gegenüber Revision 1
+
+| # | Was | Warum |
+|---|---|---|
+| 1 | **Massenschranke in Produktform** (`K9`, `K14`, `§1`, `§9`, `§10`) | `Δ − Δ // 2^K` ist nur für `α = ½` exakt — und `α = ½` ist der Default, also der einzige Wert, unter dem der Fehler unsichtbar bleibt (D54) |
+| 2 | **Knotenmenge des Ergebnisses in `§1` ergänzt** | fehlte ganz; „alle mit `u > 0`" wäre falsch gewesen, weil bei kleinem `K` erreichbare Knoten legitim `0` tragen |
+| 3 | **`§10.1`: Schnittstelle der geteilten Ableitung** auf `Derivation(bfs, findings)` nachgezogen | die Tupelform hätte einen der 144 eingefrorenen `02a`-Tests angefasst; die Implementierung hat die bessere Form gewählt |
+| 4 | **`§11`: offener `PR-INV-9`-Vektor begründet**, zwei weitere offene Vektoren ergänzt | der isolierte zweite Anker ist der einzige Fall, in dem eine falsche und eine richtige Begründung ununterscheidbar sind |
+| 5 | `§9`: `PR-INV-1` auf `2⁵ = 32` Teilgraphen festgenagelt, `PR-INV-4` um die tragende Assertion ergänzt | beide Tests waren in der ersten Fassung schwächer als ihre Behauptung |
 
 ---
 
@@ -14,12 +24,12 @@ unberührt bleiben.
 
 | ID | Frage | Entscheidung |
 |---|---|---|
-| K9 | Normalisierung von `P` | **Sub-stochastisch**, `P[J][I] = n_kante(I,J) / D`. Keine Normalisierung über `Σw`, keine Rückführung des Defizits. `Σt ≤ 1 − (1−α)^K` (D45). |
+| K9 | Normalisierung von `P` | **Sub-stochastisch**, `P[J][I] = n_kante(I,J) / D`. Keine Normalisierung über `Σw`, keine Rückführung des Defizits. `mass ≤ Δ − \|A\|·D^K·(b−a)^K` (D45, D54). |
 | K10 | Arithmetik | Exakte Integer-Zähler `u` über festem Nenner `Δ_K = \|A\|·(b·D)^K`. Kein `Fraction`, kein `float`, **keine Rundung an keiner Stelle** (D46). |
 | K11 | Abbruch | Feste Rundenzahl `K`, `t₀ = 0`. `t_K` ist die abgeschnittene Neumann-Reihe; Fehler `≤ (1−α)^K`, monoton von unten (D47). |
 | K12 | `α` | `α = 1 − γ` als Profilkopplung. Für `γ = ½` also `α = ½`, `a = 1`, `b = 2` (D48). |
 | K13 | Kantensatz | **Identisch zu `§4`**: Gruppen-Aggregation `max n` (D40), `E⁺`-Filter (D36), Flag-Anwendung (D39). **Kein Knoten-Splitting.** Das Budget-Set spielt keine Rolle (D49). |
-| K14 | Über-Commitment | **Kein Clamp.** `Σn_I > D` bleibt unangetastet; `Σt > 1 − (1−α)^K` ist ein einseitiger Indikator (D53). |
+| K14 | Über-Commitment | **Kein Clamp.** `Σn_I > D` bleibt unangetastet; `mass > Δ − \|A\|·D^K·(b−a)^K` ist ein einseitiger Indikator (D53, D54). |
 | K15 | Ankerset | `e_a = 1/\|A\|` gleichverteilt. Ein zusätzlicher Anker kann einen Wert **senken** — anders als in `§4` (D51). |
 | K16 | Oberfläche | Eigenes Modul, eigener Name, eigener Rückgabetyp. Nicht `trust`, nicht `TrustResult` (D52). |
 
@@ -36,6 +46,16 @@ t[J]        = u_K[J] / Delta_K            Delta_K = |A| · (b·D)^K
 ```
 
 Ein Integer-Vektor, `K` Durchläufe, **eine Multiplikation und eine Addition je Kante**.
+
+**Knotenmenge des Ergebnisses:** `A` vereinigt mit allen Endpunkten von `E⁺`. Wer nicht darin
+liegt, erscheint **gar nicht** — nicht als `0` (PR-INV-7). Die Menge ist **strukturell**
+definiert und hängt **nicht** von `K` ab: bei kleinem `K` tragen erreichbare Knoten legitim
+`u = 0`, ohne aus dem Ergebnis zu fallen. Nur so ist PR-INV-8 über `K` hinweg formulierbar.
+
+**Leeres Ankerset ist keine gültige Anfrage.** `Δ = |A|·(bD)^K` wäre `0` und der berichtete
+Bruch `u/Δ` damit `0/0`. Die Implementierung weist es zurück, statt schweigend Unsinn zu
+liefern. `§4` unterscheidet sich hier legitim: dort ist Max-Flow aus leerer Quelle trivial und
+korrekt `0`.
 
 ### Herleitung
 
@@ -86,10 +106,21 @@ Nur so ist der Wert exakt und byte-reproduzierbar.
 ### Massenbilanz als Über-Commitment-Indikator
 
 Bei budgetgültigem Kantensatz ist `P` spaltenweise durch `1` beschränkt, also per Induktion
-`Σt_k ≤ 1 − (1−α)^k`. Umkehrschluss:
+`Σt_k ≤ 1 − (1−α)^k`. Ganzzahlig ausgeschrieben ist das ein **Produkt ohne Division**, weil
+sich `b^K` vollständig gegen `Δ` kürzt (D54):
 
 ```
-Sigma t > 1 − (1 − alpha)^K   ==>   ein einbezogener Autor ist ueber-committet
+Delta * (1-alpha)^K  =  |A| * (b*D)^K * (b-a)^K / b^K  =  |A| * D^K * (b-a)^K
+
+mass  <=  Delta - |A| * D^K * (b-a)^K
+```
+
+Diese Form ist für **jedes** `α` exakt. `Δ − Δ // 2^K` ist es nur für `α = ½` — und das ist
+der Default (D48), also der einzige Wert, unter dem der Fehler unsichtbar bleibt.
+Umkehrschluss:
+
+```
+mass > Delta - |A| * D^K * (b-a)^K   ==>   ein einbezogener Autor ist ueber-committet
 ```
 
 Einseitig: kein Falschalarm, nur Unter-Erkennung. Dieselbe Richtung, die `§3.1` für das
@@ -297,27 +328,37 @@ Out-Degree, und `F1` verteilte weniger je Neuling als `F0` und `F2`.
 
 **PR-INV-1 — Monotonie (`§7`) gilt in der schnellen Sicht.**
 Entfernen einer beliebigen Kante senkt jeden `t`-Wert oder lässt ihn gleich. Nie Anstieg.
-*Test:* alle `2^|E|` Teilgraphen von B, erschöpfend.
+*Test:* alle `2^|E| = 2⁵ = 32` Teilgraphen von B, erschöpfend — **einschließlich der
+Rumpfkanten** `ALICE→BOB` und `BOB→CAROL` —, und paarweise über alle `sub ⊆ sup`, nicht nur
+gegen den vollen Graphen.
 Gerechnet: **0 Verletzungen** unter K9; **9 Verletzungen** unter spaltenstochastischer
 Normalisierung. Das ist der empirische Beleg für D45 und der einzige Test, der unter der
 alten Fassung von `§5` gar nicht existieren könnte.
 
-**PR-INV-2 — Massenbilanz.** `Σt ≤ 1 − (1−α)^K` für jeden budgetgültigen Kantensatz, mit
-Gleichheit genau dann, wenn jeder erreichte Knoten sein Budget voll ausschöpft und keine
-Kante subgranular ist.
+**PR-INV-2 — Massenbilanz.** `mass ≤ Δ − |A|·D^K·(b−a)^K` für jeden budgetgültigen
+Kantensatz, mit Gleichheit genau dann, wenn jeder erreichte Knoten sein Budget voll ausschöpft
+und keine Kante subgranular ist. Die Schranke ist als **Produkt** zu schreiben, nie als
+`Δ − Δ // 2^K` — letzteres ist nur für `α = ½` exakt (D54).
 *Test:* F liefert exakt `1048575/1048576`; B, C, E, E0 liegen strikt darunter; A und D
 (jeweils `True`) liegen darüber und sind die einzigen.
 
 **PR-INV-3 — Über-Commitment-Indikator ist einseitig.**
-`Σt > 1 − (1−α)^K ⇒ ein einbezogener Autor ist über-committet.` Die Umkehrung gilt nicht.
+`mass > Δ − |A|·D^K·(b−a)^K ⇒ ein einbezogener Autor ist über-committet.` Die Umkehrung gilt
+nicht.
 *Test:* A und D mit `True` schlagen an; D mit `False` nicht, obwohl die `gᵢ` weiterhin
 über-committet sind (ihre Kanten sind nur nicht im Lauf). Kein Falschalarm in B, C, E, E0, F.
 
 **PR-INV-4 — Der Kantensatz ist der von `§4`.** Für jede Variante und beide Flag-Werte ist
 der Kantensatz, über den `§5` rechnet, byte-gleich mit dem, den `§4` nach `E⁺`- und
 Flag-Anwendung benutzt.
-*Test:* gemeinsame Ableitungsstufe, ein Vergleich der Kantenmengen. Fällt der Test, sind die
-Sichten auseinandergelaufen.
+*Test:* die tragende Assertion ist der **Identitätsvergleich der Funktionsobjekte** — `derive`
+in `flow` ist dasselbe Objekt wie `derive` in `relax`. Er kann nicht zufällig grün sein, ein
+Datenvergleich schon. Vergleiche der Knotenmengen sind Zusatz und prüfen nur, dass `rank()`
+die Menge korrekt aus `edges` bildet.
+⚠️ Die Gleichheit gilt nur **innerhalb eines Parametersatzes**: nichts erzwingt, dass
+`RelaxParams.base` denselben `TrustParams` entspricht, mit dem `trust()` läuft. Verschiedene
+Parameter sind verschiedene Graphen und legitim — „ein Graph, zwei Sichten" sagt dann nur
+nichts mehr aus.
 
 **PR-INV-5 — Findings sind identisch.** `OVERCOMMITTED_AUTHOR`, `INVALID_VOUCH_WEIGHT`,
 `UNPARSABLE_VOUCH_PAYLOAD` und `SUBGRANULAR_VOUCH` sind byte-gleich zwischen `§4`- und
@@ -343,9 +384,12 @@ jeder Wert halbiert sich. Kein `§7`-Bruch — `§7` handelt von Kanten, nicht v
 
 ## 10. Effizienzhinweise für `02b`
 
-1. **Die Ableitung wird geteilt, nicht wiederholt.** `groups.py` und die BFS aus `graph.py`
-   liefern `E⁺` mit `n_kante`. `02b` beginnt danach. Alles andere lässt die beiden Sichten
-   auseinanderlaufen (PR-INV-4).
+1. **Die Ableitung wird geteilt, nicht wiederholt.** Eine Funktion `derive()` liefert
+   `Derivation(bfs, findings)`; `bfs` trägt Distanzen, Knotenkapazitäten und den `E⁺`-Satz mit
+   `n_kante`. `trust()` liest daraus `node_capacity` für den Split; `rank()` liest
+   **ausschließlich** `bfs.edges` und entpackt sie unmittelbar hinter dem Aufruf in eine
+   lokale Variable. Dass `node_capacity` für `§5` in Reichweite liegt, ist eine Kopplung, die
+   durch Konvention getragen wird und nicht durch den Typ (D49, K13, PR-INV-4).
 2. **Kein Knoten-Splitting.** Der Split ist eine Max-Flow-Konstruktion für Knotenkapazitäten;
    `§5` hat keine. Wer den Split-Graphen wiederverwendet, bekommt verdoppelte Pfadlängen und
    Werte, die nichts bedeuten (PR-INV-4, Anker PR-4).
@@ -357,12 +401,14 @@ jeder Wert halbiert sich. Kein `§7`-Bruch — `§7` handelt von Kanten, nicht v
 6. **Kein `min`, kein `σ`, kein Dangling-Zweig.** Wer einen davon im Code findet, hat die
    Leckform implementiert.
 7. **Cache-Schlüssel wie `02a`**, plus `(alpha, K)`. Der abgeleitete Graph ist derselbe.
+8. **Die Massenschranke ist ein Produkt, keine Division.** `Δ − |A|·D^K·(b−a)^K`, einmal als
+   Helfer, nicht an jeder Prüfstelle neu geschrieben (D54).
 
 ---
 
 ## 11. Forkstand
 
-**Entschieden (D45–D53):** Normalisierungsform, Arithmetik, Abbruch, `α`, Kantensatz,
+**Entschieden (D45–D54):** Normalisierungsform, Arithmetik, Abbruch, `α`, Kantensatz,
 Clamp, Ankergewichtung, Oberfläche, Präzisierung von „nie über-vertrauend".
 
 **Bewusst getragen:**
@@ -383,5 +429,13 @@ Clamp, Ankergewichtung, Oberfläche, Präzisierung von „nie über-vertrauend".
 
 - Ob eine Policy `α` unabhängig von `γ` setzen darf, oder ob `K12` ein MUST wird. Bis dahin
   SHOULD, mit der Begründung aus D48 (`§5` darf nicht langsamer abklingen als `§3`).
-- Ein Vektor für `PR-INV-9` mit einem **nicht** isolierten zweiten Anker; der isolierte Fall
-  zeigt die Asymmetrie, aber nicht ihre interessante Form.
+- Ein Vektor für `PR-INV-9` mit einem **nicht** isolierten zweiten Anker. Der isolierte Fall
+  zeigt die Asymmetrie, aber er ist der einzige, in dem „die `u` bleiben gleich" und „die
+  Rekursion hängt nicht vom Ankerset ab" ununterscheidbar sind. Die zweite Aussage ist
+  **falsch**: der Restart-Term wird je Anker addiert, und `|A|` kürzt sich allein aus dem
+  Restart-Term heraus (D51, `02b-abnahme.md` §C.1).
+- Ein Vektor für `α` in **nicht gekürzter** Form: `(a,b) = (1,2)` und `(2,4)` liefern
+  verschiedene `Δ` und verschiedene `u`, aber denselben Bruch `u/Δ`. Nachgerechnet, ungetestet.
+- Ein Vektor für `trust()` mit leerem Ankerset auf Variante A: `OVERCOMMITTED_AUTHOR` entsteht
+  in Schritt 4 von `derive()`, vor der BFS, und muss auch ohne Anker erscheinen (INV-8). Nur
+  `SUBGRANULAR_VOUCH` darf wegfallen (D44).
