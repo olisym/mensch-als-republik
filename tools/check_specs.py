@@ -18,21 +18,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-SPECS = [
-    "00-nucleus-genesis-constitution.md",
-    "01-claim-atom.md",
-    "02-trust-flow.md",
-    "03-profiles.md",
-    "04-governance.md",
-    "05-enforcement.md",
-    "06-services.md",
-    "07-decisions.md",
-    "02-golden-anchors.md",
-    "02-spec-nachzug.md",
-    "02a-maxflow-prompt.md",
-    "VISION.md",
-    "README.md",
-]
+SPECS = sorted(
+    (q.name for q in ROOT.glob("*.md")),
+    key=lambda n: (not n[0].isdigit(), n),
+)
 
 # Escapes, die legitim vorkommen: als Fußnotenmarker und in grep-/Regex-Ausdrücken
 # sowie in Markdown-Tabellenzellen. Alles andere ist Editor-Schaden.
