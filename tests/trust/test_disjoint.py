@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from mensch_als_republik.trust import TrustParams, trust
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, PARAMS, T_EXP, build
 
 

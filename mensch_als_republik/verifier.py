@@ -31,6 +31,7 @@ from mensch_als_republik.errors import (
     UnsupportedVersion,
     VerifierError,
 )
+from mensch_als_republik.policy import NucleusPolicy, is_irrevocable
 from mensch_als_republik.predicates import check_scope_binding, is_core_predicate, parse_predicate
 
 _SUPPORTED_VERSION = 1
@@ -285,12 +286,21 @@ def _is_in_equivocation_pair(claim: Claim, store: ClaimStore) -> bool:
     return False
 
 
-def classify(claim: Claim, store: ClaimStore, now: int | None = None) -> Classification:
+def classify(
+    claim: Claim,
+    store: ClaimStore,
+    now: int | None = None,
+    policy: NucleusPolicy | None = None,
+) -> Classification:
     """
-    Zustandsmaschine aus Anhang B.
+    Zustandsmaschine aus Anhang B, optional mit Nukleus-Policy-Override (§5.4).
 
     Voraussetzung: claim ist strukturell gültig (structural_check bestanden).
     """
+    # Scope-Prüfung (§5.4): eine Policy fremden Scopes wird nie still ignoriert.
+    if policy is not None and claim.p.startswith("nuc:") and claim.N != policy.scope:
+        raise ValueError("policy scope does not match claim scope")
+
     # FOREIGN_LIFECYCLE bei bekannter Ziel-Identity
     if is_core_predicate(claim):
         target = store.get(claim.J[1])
@@ -306,13 +316,15 @@ def classify(claim: Claim, store: ClaimStore, now: int | None = None) -> Classif
 
     temporal = _is_temporally_valid(claim, now)
 
-    if _find_superseding_claim(claim, store) is not None:
+    protected = is_irrevocable(claim.p, policy)
+
+    if not protected and _find_superseding_claim(claim, store) is not None:
         return Classification(
             state=State.SUPERSEDED,
             trust_usable=False,
         )
 
-    if _find_revoking_claim(claim, store) is not None:
+    if not protected and _find_revoking_claim(claim, store) is not None:
         return Classification(
             state=State.REVOKED,
             trust_usable=False,

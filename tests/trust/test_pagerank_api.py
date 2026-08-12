@@ -6,7 +6,7 @@ import pytest
 
 from mensch_als_republik.trust import RelaxParams, TrustResult, rank
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 from .pr02 import RP
 from .tp02 import NOW, PARAMS, T_EXP, build
 

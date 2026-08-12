@@ -93,6 +93,19 @@ class Identity:
         p = f"nuc:{scope.hex()}/vouch@1"
         return self._append(J=(1, subject.pub), p=p, t=t, v=v, N=scope, t_exp=t_exp)
 
+    def claim(
+        self,
+        *,
+        p: str,
+        J: tuple[int, bytes],
+        t: int,
+        v: bytes | None = None,
+        N: bytes | None = None,
+        t_exp: int | None = None,
+    ) -> Claim:
+        """Generischer Anhänger für Prädikate jenseits von vouch@1."""
+        return self._append(J=J, p=p, t=t, v=v, N=N, t_exp=t_exp)
+
     def revoke(self, target: Claim, *, t: int) -> Claim:
         return self._append(J=(2, claim_id(target)), p="core/revoke@1", t=t)
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from mensch_als_republik.trust import RelaxParams, TrustParams, rank
 
-from .helpers import Identity, scope_id, store_with
+from tests.helpers import Identity, scope_id, store_with
 
 PARAMS = TrustParams(C0=16, gamma_num=1, gamma_den=2, D=24)
 RP = RelaxParams(base=PARAMS, alpha_num=1, alpha_den=2, rounds=20)
