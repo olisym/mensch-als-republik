@@ -72,7 +72,13 @@ Abhängigkeiten zeigen nach unten: `profiles/*` benutzt `atom`, `cbor_canon`, `p
 
 `Finding` ist dieselbe Bauform wie in `trust/findings.py` — `@dataclass(frozen=True,
 slots=True, order=True)` mit `kind: ProfileFinding` und `subject: bytes`. Eigener Enum, gleiche
-Form. `findings` ist überall sortiert und dedupliziert.
+Form. `findings` ist überall sortiert und dedupliziert, und **jeder** der vier Ergebnistypen
+trägt sie.
+
+`subject` ist in der Regel eine `claim_id`. Wo kein Claim betroffen ist, ist es das Objekt, um
+das es geht — bei `CONSTITUTION_UNAVAILABLE` und `CONSTITUTION_HASH_MISMATCH` der im Genesis
+**deklarierte** `constitution_hash` (`genesis_obj[4]`), nicht der berechnete Hash des
+übergebenen Objekts und nie ein Leerwert.
 
 ---
 
@@ -255,11 +261,12 @@ die beim ersten abbricht, hat die richtige Wirkung und die falsche Diagnose.
 ```python
 def verdict_status(store, *, verdict: Claim, scope: bytes,
                    arbitrators: frozenset[bytes], now: int,
-                   policy: NucleusPolicy | None = None) -> VerdictStatus
+                   policy: NucleusPolicy | None = None) -> VerdictResult
 ```
 
-Rückgabe ist `BINDING` oder `ATTRIBUTED_OPINION` — zwei Werte, kein dritter. Vermerke tragen den
-Grund.
+`VerdictResult` trägt `status: VerdictStatus` und `findings: tuple[Finding, ...]`.
+`VerdictStatus` hat zwei Werte, `BINDING` und `ATTRIBUTED_OPINION` — kein dritter. Die Vermerke
+tragen den Grund; `VS-7`, `VS-8` und `VS-9` wären ohne diesen Kanal nicht prüfbar.
 
 ```
 BINDING  gdw.  verdict aktiv  und  ( (i) oder (ii) )
@@ -307,9 +314,21 @@ Die Scopes dieser Schicht sind **echte Genesis-Hashes**, nicht `scope_id(label)`
   nicht mit den dokumentierten überein, ist die Kodierung falsch, und alles Weitere wäre
   Selbstbestätigung.
 
-Prüfe zuerst, dass `Identity("…")` für ALICE und BOB die Schlüssel aus `00 §3.1` liefert. Die
-Seeds dort sind `01×32`/`02×32`, `helpers.Identity` leitet aus einem Label ab — falls beides
-nicht zusammenfällt, ist das eine **Rückfrage**, keine stille Anpassung der Ankerwerte.
+`helpers.Identity` leitet den Schlüssel bisher aus dem **Label** ab und trifft die normativen
+Seeds `01×32`/`02×32` damit nicht. Der Konstruktor bekommt deshalb einen optionalen Seed:
+
+```python
+class Identity:
+    def __init__(self, label: str, *, seed: bytes | None = None) -> None:
+```
+
+Bei `seed is None` bleibt alles, wie es war; bestehende Aufrufe ändern sich nicht. Kein zweiter
+Identity-Typ für `tests/profiles/` — zwei Implementierungen von Kettenfortführung und Signatur
+driften, aus demselben Grund, aus dem `classify_all` geteilt und nicht kopiert wird.
+
+**Die drei Seeds bekommen genau eine Definition.** Erzeugt `tests/vectors/gen.py` sie heute
+selbst, kommen sie ab jetzt aus `tests/helpers.py`. Zwei Stellen mit denselben Konstanten sind
+die Bauform, die in dieser Sitzung viermal einen Befund erzeugt hat.
 
 Claims jenseits von `vouch@1` baut `Identity.claim(p=…, J=…, t=…, v=…, N=…, t_exp=…)`, das
 bereits existiert. `store_with(*claims)` wie gehabt.

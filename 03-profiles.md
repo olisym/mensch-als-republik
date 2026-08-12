@@ -237,8 +237,14 @@ Fortbestehen ist dafür nicht die konservative Lesart (Atom-Spec §5.4.3 b).
 
 ```python
 def verdict_status(store, *, verdict, scope, arbitrators, now,
-                   policy=None) -> VerdictStatus     # BINDING | ATTRIBUTED_OPINION
+                   policy=None) -> VerdictResult
 ```
+
+`VerdictResult` trägt `status: VerdictStatus` und `findings: tuple[Finding, ...]`.
+`VerdictStatus` hat **zwei** Werte, `BINDING` und `ATTRIBUTED_OPINION` — die Zweiwertigkeit ist
+eine Aussage über den Status, nicht über den Rückgabetyp. Ohne Vermerk-Kanal wäre nicht
+unterscheidbar, *warum* ein Verdikt nicht bindet, und §2.4.4 macht diesen Unterschied
+normativ.
 
 `arbitrators` ist **Parameter**, kein Auflösungsergebnis: es ist `arbitration.arbitrators` aus
 der Verfassung (Nukleus-Spec §5.1), und welche Verfassungsversion gilt, entscheidet die
@@ -594,7 +600,7 @@ mensch_als_republik/profiles/
                  NucleusPolicy selbst liegt in Layer 01 — sonst wird der Import zyklisch
   membership.py  membership()     -> MembershipResult
   credit.py      settlement()     -> SettlementResult
-  verdict.py     verdict_status() -> VerdictStatus
+  verdict.py     verdict_status() -> VerdictResult
   findings.py    ProfileFinding, Finding(kind, subject)
 ```
 
@@ -619,7 +625,10 @@ Schuldner widerrufene Obligation als `revoked`, und `settlement()` bekäme einen
 `classify_all(store, now, policy)[cid] == classify(c, store, now, policy)` für alle `c`.
 
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
-*etwas* nicht stimmte, nicht *was*. `findings` ist sortiert und dedupliziert. `ProfileFinding`
+*etwas* nicht stimmte, nicht *was*. `subject` ist in der Regel eine `claim_id`; wo kein Claim
+betroffen ist, ist es das Objekt, um das es geht: bei `CONSTITUTION_UNAVAILABLE` und
+`CONSTITUTION_HASH_MISMATCH` der im Genesis **deklarierte** `constitution_hash` — nicht der
+berechnete Hash des übergebenen Objekts, der mit jedem falschen Objekt wechselt, und nie `b""`. `findings` ist sortiert und dedupliziert. `ProfileFinding`
 ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben Defekt bezeichnet wie in einer
 anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
 

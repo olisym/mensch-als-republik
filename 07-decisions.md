@@ -2199,3 +2199,67 @@ Begründung im damaligen Kontext trug und im nächsten nicht mehr. Bei D87 war d
 sogar wörtlich richtig — sie sagte „Layer 02", und niemand las mit, dass sie damit ihren eigenen
 Geltungsbereich benannte. Konsequenz für den Sitzungsabschluss vorgemerkt, nicht hier
 entschieden.
+
+---
+
+## T. Aus den Rückfragen zum `03`-Lauf
+
+Drei Befunde aus dem Implementierungsfenster, alle zurückgegeben statt entschieden. Der erste
+ist eine echte Lücke, der zweite ein Widerspruch in derselben Datei, der dritte eine
+Unbestimmtheit.
+
+### D88 — Testidentitäten kommen aus festen Seeds, der Helfer bekommt einen Konstruktionspfad dazu
+
+`tests/helpers.py::Identity` leitet den Schlüssel aus einem **Label** ab. Die Anker in
+`00 §3.1` und `03-golden-anchors.md §3.1` stammen aus den Seeds `01×32`, `02×32`, `03×32`. Beide
+treffen sich nicht — `Identity("ALICE")` liefert `3e18794e…`, die Spec verlangt `8a88e3dd…`.
+
+**Verworfen — das Ankerdokument auf Label-Seeds umstellen.** Die Seeds sind normativ: sie stehen
+in `00 §3.1`, und `tests/vectors/vectors_01.json` trägt `8a88e3dd…` und `8139770e…` bereits als
+Bytes. Es bräche einen eingefrorenen Vektorsatz.
+
+**Verworfen — ein eigener Fixture-Helfer für `tests/profiles/`.** Das wäre eine zweite
+Implementierung von Kettenfortführung, Signatur und `h_prev`. Zwei Implementierungen desselben
+Dings driften — dieselbe Begründung, mit der D86 `classify_all` teilt statt kopiert.
+
+**Beschluss:** `Identity.__init__(self, label, *, seed=None)`. Bei `seed is None` bleibt die
+Label-Ableitung; bestehende Aufrufe ändern sich nicht. Ein Konstruktionspfad, ein Label für die
+Lesbarkeit, ein optionaler Seed für die Fälle, in denen der Schlüssel normativ ist.
+
+**Die drei Seeds bekommen genau eine Definition** — in `tests/helpers.py`. Wo sie heute ein
+zweites Mal stehen (`tests/vectors/gen.py`), kommen sie von dort. Konstanten an zwei Stellen
+sind die Bauform, die in dieser Sitzung viermal einen Befund erzeugt hat.
+
+### D89 — `verdict_status()` gibt `VerdictResult` zurück, nicht den Enum
+
+`03 §2.4.2` schrieb `-> VerdictStatus` mit zwei Werten; `03 §11` (`PR-INV-9`) verlangte
+`findings` in **allen vier** Ergebnistypen. Zwei Sätze derselben Datei, die sich widersprechen —
+gefunden nicht durch Nachdenken, sondern beim Versuch, beide gleichzeitig zu erfüllen.
+
+**Beschluss:** `VerdictResult(status: VerdictStatus, findings: tuple[Finding, ...])`.
+`VerdictStatus` bleibt zweiwertig — die Zweiwertigkeit ist eine Aussage über den **Status**, nicht
+über den Rückgabetyp (D67 hält).
+
+Der Widerspruch war folgenreich und nicht kosmetisch: `VS-7` (`SCOPE_MISMATCH`), `VS-8`
+(`UNRESOLVED_ACCUSED`) und `VS-9` (`INACTIVE_VERDICT`) liefern alle `ATTRIBUTED_OPINION` und
+unterscheiden sich **ausschließlich** im Vermerk. Ohne Kanal wären drei Vektoren nicht prüfbar,
+und `03 §2.4.4` — „Teilwissen senkt, was ich behaupten kann" — bliebe unbelegbar.
+
+### D90 — `subject` ohne Claim ist der deklarierte `constitution_hash`
+
+`CONSTITUTION_UNAVAILABLE` und `CONSTITUTION_HASH_MISMATCH` betreffen keinen Claim. `03 §6`
+verlangt trotzdem ein Subjekt (D74).
+
+**Beschluss:** `subject = genesis_obj[4]`, der im Genesis **deklarierte** `constitution_hash`.
+
+Nicht der **berechnete** Hash des übergebenen Objekts: der ist eine Eigenschaft dessen, was der
+Aufrufer gereicht hat, und wechselt mit jedem falschen Objekt. Der deklarierte Hash ist der
+stabile Bezeichner und der, unter dem ein Betreiber suchen würde.
+
+Nicht `scope`: der steht bereits im Aufruf, und ein Subjekt, das für alle Vermerke desselben
+Aufrufs gleich ist, trägt keine Information. Nie ein Leerwert — das war der Befund, der D74
+ausgelöst hat.
+
+**Allgemeine Regel, hier zum ersten Mal ausgeschrieben:** `subject` ist in der Regel eine
+`claim_id`; wo kein Claim betroffen ist, ist es das **Objekt, um das es geht**, in der Form, in
+der der Betreiber es benennen würde.
