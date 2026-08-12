@@ -1225,3 +1225,35 @@ Zwei Eigenschaften erledigen den Fall stattdessen:
 **Getragene Grenze:** `§5` ist gegen einen über-committeten Autor bei `include_flagged = True`
 nicht konservativ. Das ist die dokumentierte Grenze der Relaxation und gehört in `§9` zu den
 bewusst getragenen v1-Grenzen.
+
+### D54 — Die Massenschranke exakt und profilunabhängig
+
+Die Schranke aus D45 lautet `Σt ≤ 1 − (1−α)^K`. `02b-golden-anchors.md` Rev 1 gab dafür keine
+ganzzahlige Form an, und die naheliegende Umsetzung `Δ − Δ // 2^K` ist **profilabhängig**: sie
+ist nur exakt, wenn `2^K` den Nenner `Δ = |A|·(b·D)^K` teilt — also genau für `α = ½`.
+
+Der Implementierer hat das in der `02b`-Abnahme gemeldet. Die allgemeine Form ist exakt und
+für jedes `α` ganzzahlig, weil sich `b^K` vollständig gegen `Δ` kürzt:
+
+```
+Delta * (1-alpha)^K  =  |A| * (b*D)^K * (b-a)^K / b^K  =  |A| * D^K * (b-a)^K
+
+mass  <=  Delta - |A| * D^K * (b-a)^K
+```
+
+Ein Produkt aus Ganzzahlen, ohne Division und ohne Fallunterscheidung.
+
+Nachgerechnet bei `TP-02` (`|A| = 1, D = 4, K = 20, b−a = 1`): `2⁶⁰ − 2⁴⁰ =
+1152920405095219200`, identisch zur profilabhängigen Form, und Variante F erreicht die
+Schranke mit **Gleichheit**. Gegenprobe an einem Profil, in dem die alte Form bricht
+(`α = 1/3, D = 6, K = 7, |A| = 2`): `Δ = 1224440064`, Schranke `1152776448`; `Δ // 2^K` ist
+dort bedeutungslos, weil `(1−α)^K` den Nenner `3^7` trägt.
+
+**Dieselbe Klasse wie D41/D42:** eine Zahl in den Vorgaben, die der kanonische Testgraph nicht
+widerlegen konnte, weil das Profil der Sonderfall ist. `α = ½` ist der einzige Wert, unter dem
+der Fehler unsichtbar bleibt — und es ist der Default (D48). Ein Profil mit `α = 1/3` hätte
+ihn sofort gezeigt; genau deshalb steht ein solcher Vektor jetzt als offener Punkt in
+`02b-golden-anchors.md §11`.
+
+Normativ ist die Produktform. Sie ersetzt jede Fassung mit `//`, auch dort, wo die Division
+zufällig aufgeht.
