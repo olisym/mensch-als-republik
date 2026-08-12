@@ -67,6 +67,14 @@ def resolve_policy(*, scope, genesis_obj, constitution_obj=None) -> PolicyResolu
 
 `PolicyResolution` trägt `policy: NucleusPolicy` und `findings: tuple[Finding, ...]`.
 
+**`findings` trägt ausschließlich Befunde der Auflösung** — fehlendes oder nicht passendes
+Verfassungsobjekt. Die **unsichere Deklaration** (ein trust-gewährendes Prädikat in
+`irrevocable_predicates`) wird nicht hierher übersetzt: sie entsteht bereits im Konstruktor von
+`NucleusPolicy` als `PolicyNote` in `policy.warnings` (Atom-Spec §5.4.3 b) und wird von dort
+gelesen. Eine Diagnose, ein Produzent. Zwei Kanäle für denselben Befund tragen verschiedene
+Subjekte — `PolicyNote` ein Prädikat, `Finding` eine `claim_id` — und laufen auseinander,
+sobald einer von beiden gepflegt wird.
+
 **Der Resolver rechnet nach, statt zu glauben** (Nukleus-Spec §3): er prüft
 `scope == SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj))` und, falls ein Verfassungsobjekt vorliegt,
 `genesis_obj.constitution_hash == SHA-256(cbor(constitution_obj))`. Sonst wäre die
@@ -392,22 +400,33 @@ in §5.
 | `SETTLED` | Obligation aktiv, passende aktive Quittung ohne Key `0` |
 | `OPEN` | Obligation aktiv, keine passende Quittung — oder eine, die nicht tilgt |
 | `EXPIRED` | Obligation durch `t_exp` erloschen |
-| `INDETERMINATE` | Obligation `pending` oder unverlinkt — Teilwissen |
+| `INDETERMINATE` | der Zustand der Obligation erlaubt keine Aussage |
 
 **Kein `bool`.** `EXPIRED` ist nicht kosmetisch: da `obligation@1` nach Nukleus-Spec §5.2
 **immer** irrevocable ist, ist `t_exp` der einzige Weg, auf dem eine Obligation inaktiv wird —
 der Fall ist nicht selten, sondern der einzige, und er verlangt vom Gläubiger etwas anderes als
-`OPEN`. `INDETERMINATE` folgt derselben Linie wie Trust-Flow-Spec §7: auf Teilwissen `OPEN` zu
-behaupten hieße, eine Schuld zu behaupten, die es vielleicht nicht gibt — die
-Falschbeschuldigungsrichtung.
+`OPEN`.
+
+**`INDETERMINATE` ist mehr als Teilwissen.** Es deckt jeden Zustand ab, der weder Aktivität noch
+Ablauf ist, und davon gibt es zwei mit gegensätzlicher Ursache:
+
+| Zustand der Obligation | Vermerk | warum keine Aussage |
+|---|---|---|
+| `pending` — Vorgänger unbekannt | `OBLIGATION_PENDING` | ich weiß zu **wenig** |
+| `equivocation_flagged` — der Autor hat gegabelt | `OBLIGATION_AUTHOR_FLAGGED` | ich weiß zu **viel** |
+
+Bei einer Gabelung existiert die Obligation womöglich in zwei Fassungen mit verschiedenen
+Konditionen; `OPEN` zu behaupten hieße, eine bestimmte davon zu behaupten. In beiden Fällen wäre
+die Aussage eine Schuldbehauptung ohne Deckung — die Falschbeschuldigungsrichtung, dieselbe
+Linie wie Trust-Flow-Spec §7.
 
 Ist `obligation` kein aktiver oder inaktiver `obligation@1`-Claim im Scope — falsches Prädikat,
 falsches `N`, gar kein Claim —, wirft die Funktion `ValueError`. Das ist keine unvollständige
 Lage, sondern eine falsche Zuordnung, und dafür gibt es keine sichere Voreinstellung.
 
-**Die Zustände `revoked` und `superseded` sind für `obligation@1` unerreichbar**, weil der Boden
-aus Nukleus-Spec §5.2 unbedingt gilt. Das ist keine Semantik, die getestet werden kann, sondern
-eine Unmöglichkeit, die zugesichert wird — ein `assert` im Modul, kein Vektor.
+**Zwei Zustände sind unerreichbar und werden zugesichert, nicht getestet** (`assert` im Modul):
+`revoked` und `superseded`, weil der Boden aus Nukleus-Spec §5.2 unbedingt gilt; und `linked`,
+weil es nur bei `now is None` entsteht und `now` in dieser Schicht immer ein `int` ist.
 
 **Die Quittung bleibt widerrufbar, Tilgung ist nicht monoton.** Siehe §5.
 
@@ -582,8 +601,22 @@ mensch_als_republik/profiles/
 Drei getrennte Funktionen statt einer, weil §1 drei getrennte Cluster behauptet und die
 Trennung sonst nur in der Prosa steht.
 
-`classify_all` aus der Trust-Flow-Schicht wird **geteilt, nicht kopiert**. Zwei Definitionen von
-„aktiv" driften; eine geteilte kann es nicht.
+**`classify_all` wird geteilt, nicht kopiert** — zwei Definitionen von „aktiv" driften, eine
+geteilte kann es nicht. Sie liegt dafür in `mensch_als_republik/index.py`, nicht unter
+`trust/`: ihre Invariante ist die Übereinstimmung mit `verifier.classify` aus Layer 01 und hat
+mit dem Trust-Solver nichts zu tun. Beide Schichten importieren von dort; `trust/` re-exportiert
+sie weiterhin, damit die bestehende Oberfläche unverändert bleibt.
+
+```python
+def classify_all(store, now, policy=None) -> dict[bytes, Classification]
+```
+
+**Der `policy`-Parameter ist für diese Schicht Pflicht der Sache nach.** Layer 02 ruft ohne auf,
+weil `vouch@1` nach Atom-Spec §5.4.3 b nie irrevocable sein kann und der Parameter dort keine
+Wirkung hätte. Für `settlement()` ist er die Sache selbst: ohne ihn klassifiziert eine vom
+Schuldner widerrufene Obligation als `revoked`, und `settlement()` bekäme einen Zustand, für den
+§3.3.2 keine Antwort vorsieht. Die Kopplungsinvariante gilt mit Parameter:
+`classify_all(store, now, policy)[cid] == classify(c, store, now, policy)` für alle `c`.
 
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
 *etwas* nicht stimmte, nicht *was*. `findings` ist sortiert und dedupliziert. `ProfileFinding`
@@ -600,8 +633,9 @@ anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht 
 | `SCOPE_MISMATCH` | zwei in Beziehung gesetzte Claims mit verschiedenem `N` (§1.4) |
 | `CONSTITUTION_UNAVAILABLE` | Verfassungsobjekt lokal unbekannt (§1.2) |
 | `CONSTITUTION_HASH_MISMATCH` | Verfassungsobjekt passt nicht zum `constitution_hash` (§1.2) |
-| `UNSAFE_IRREVOCABLE_PREDICATE` | trust-gewährendes Prädikat in `irrevocable_predicates` (Atom-Spec §5.4.3 b) |
 | `EXPIRING_OBLIGATION` | `obligation@1` mit `t_exp` (§3.3.1) |
+| `OBLIGATION_PENDING` | Obligation `pending` (§3.3.2) |
+| `OBLIGATION_AUTHOR_FLAGGED` | Autor der Obligation hat gegabelt (§3.3.2) |
 | `PARTIAL_RECEIPT_UNSUPPORTED` | `receipt.v` trägt oder könnte Key `0` tragen (§3.3.2) |
 | `CONSTITUTION_VERSION_MISMATCH` | `accept-rules` auf einen anderen Hash (§4) |
 | `UNAUTHORIZED_GRANT_AUTHOR` | `grant-membership.I ∉ authorized_keys` (§4) |
@@ -611,3 +645,8 @@ anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht 
 
 Kein Vermerk erzeugt einen Reject. Das Atom hat den Claim akzeptiert; diese Schicht wird nicht
 nachträglich strenger, sie sagt nur, was sie sieht.
+
+**`UNSAFE_IRREVOCABLE_PREDICATE` steht bewusst nicht in dieser Tabelle.** Er entsteht im
+Konstruktor von `NucleusPolicy` und lebt als `PolicyNote` in `policy.warnings` (§1.2). Ihn hier
+zu spiegeln hieße, dieselbe Diagnose zweimal zu erzeugen — mit verschiedenen Subjekten und
+absehbarem Auseinanderlaufen.

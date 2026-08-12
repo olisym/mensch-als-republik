@@ -139,7 +139,7 @@ brauchen kein eigenes Verfassungsobjekt.
 | ID | Eingabe | wirksame Menge | Vermerke |
 |---|---|---|---|
 | `P-A` | Profil A vollständig | `{obligation@1}` | — |
-| `P-B` | Profil B vollständig | `{obligation@1}` | `UNSAFE_IRREVOCABLE_PREDICATE(vouch@1)` |
+| `P-B` | Profil B vollständig | `{obligation@1}` | — · `policy.warnings` trägt `UNSAFE_IRREVOCABLE_PREDICATE(vouch@1)` |
 | `P-C` | Profil C vollständig | `{obligation@1}` | — |
 | `P-D` | Genesis A, `constitution_obj=None` | `{obligation@1}` | `CONSTITUTION_UNAVAILABLE` |
 | `P-E` | Genesis A, Verfassung **B** | `{obligation@1}` | `CONSTITUTION_HASH_MISMATCH` |
@@ -275,17 +275,18 @@ ALICE, sofern nicht anders vermerkt.
 | `SE-6` | `O.J.tag = claim-ref` statt `identity` | `OPEN` | — |
 | `SE-7` | `R` aktiv, dann von BOB **widerrufen** | `OPEN` | — |
 | `SE-8` | `O` mit `t_exp`, `now > t_exp` | `EXPIRED` | `EXPIRING_OBLIGATION` |
-| `SE-9` | `O` `pending` (Vorgänger unbekannt) | `INDETERMINATE` | — |
-| `SE-10` | `O` aktiv, ALICE widerruft `O` | `OPEN` | — |
-| `SE-11` | wie `SE-10`, aber `scope = N_B`, `policy = P-B` | `OPEN` | — |
+| `SE-9` | `O` `pending` (Vorgänger unbekannt) | `INDETERMINATE` | `OBLIGATION_PENDING` |
+| `SE-10` | Schuldner hat gegabelt, `O` `equivocation_flagged` | `INDETERMINATE` | `OBLIGATION_AUTHOR_FLAGGED` |
+| `SE-11` | `O` aktiv, ALICE widerruft `O` | `OPEN` | — |
+| `SE-12` | wie `SE-11`, aber `scope = N_B`, `policy = P-B` | `OPEN` | — |
 
-**`SE-10` ist der Kernvektor der ganzen Schicht.** Ohne Policy wäre `O` widerrufen und die
+**`SE-11` ist der Kernvektor der ganzen Schicht.** Ohne Policy wäre `O` widerrufen und die
 Schuld verschwunden; unter der Policy bleibt sie stehen. Das ist das Schulden-Lösch-Loch, und
 dieser eine Vektor ist der Grund, warum Layer 01 für `01a-policy` aufgetaut wurde.
 
-**`SE-11` ist derselbe Vektor unter Profil B** — einer Verfassung, die `obligation@1` **nicht**
+**`SE-12` ist derselbe Vektor unter Profil B** — einer Verfassung, die `obligation@1` **nicht**
 nennt und stattdessen `vouch@1` deklariert. Das Ergebnis muss identisch sein. Eine
-Implementierung, die den Boden aus D70 nur bei Schweigen setzt, ist hier rot und bei `SE-10`
+Implementierung, die den Boden aus D70 nur bei Schweigen setzt, ist hier rot und bei `SE-11`
 grün.
 
 **`SE-7` hält die Nicht-Monotonie fest** (D64): die Quittung ist widerrufbar, die Schuld lebt
@@ -294,9 +295,10 @@ wieder auf. Getragen, nicht repariert.
 **`SE-4` und `SE-6` prüfen die zweite Bedingung aus D63** von beiden Seiten: einmal stimmt der
 Autor der Quittung nicht, einmal ist die Obligation gar nicht auf eine Identität ausgestellt.
 
-**Nicht als Vektor, sondern als `assert`:** `O` im Zustand `revoked` oder `superseded` ist unter
-jeder Policy unerreichbar, weil der Boden aus D70 unbedingt gilt. Die Unmöglichkeit wird
-zugesichert, die Semantik nicht getestet (D75).
+**Nicht als Vektor, sondern als `assert`** (D75): `O` im Zustand `revoked` oder `superseded` ist
+unter jeder Policy unerreichbar, weil der Boden aus D70 unbedingt gilt; `linked` ist es, weil es
+nur bei `now is None` entsteht und `now` hier immer ein `int` ist. Die Unmöglichkeit wird
+zugesichert, die Semantik nicht getestet.
 
 ---
 
@@ -366,6 +368,7 @@ keiner der drei Fälle ein Fehler.
 | `PR-INV-8` | `BINDING` ⟹ das Verdikt ist aktiv (D67 + `INACTIVE_VERDICT`). |
 | `PR-INV-9` | `findings` ist in allen vier Ergebnistypen sortiert und dedupliziert. |
 | `PR-INV-10` | `classify_all` ist in `profiles/` **dasselbe Funktionsobjekt** wie in `trust/` — Identitätsvergleich, wie `PR-INV-4` in `02b` für `derive()`. |
+| `PR-INV-11` | Kopplung mit Policy: `∀ c ∈ store: classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, policy)` — die Erweiterung von `T-02.4` um den Parameter. |
 
 `PR-INV-1` ist als Eigenschaftstest über alle drei Profile plus die fehlende Verfassung zu
 führen, nicht als vierter Einzelvektor: der Boden gilt unbedingt, und „unbedingt" ist eine

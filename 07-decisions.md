@@ -2102,3 +2102,100 @@ Platzierung mit *einem* Fehlermodus; es gab zwei.
 **Betroffene Dateien:** `02-trust-flow.md §3.1`, `03-profiles.md §1.3`, `02c-canon-v-prompt.md`
 §3 und §5 (alle drei vollständig geliefert). `01 §7.1` bleibt unberührt — dort steht keine
 Reihenfolgeaussage.
+
+---
+
+## S. Aus dem Abgleich mit dem tatsächlichen Code vor `03-prompt`
+
+Vier Befunde, alle aus dem Lesen von fünf Bestandsdateien (`policy.py`, `trust/__init__.py`,
+`trust/index.py`, `trust/derive.py`, `tests/helpers.py`) vor dem Schreiben des Prompts. Keiner
+davon wäre beim Schreiben aufgefallen; alle vier hätten im Implementierungsfenster als Rückfrage
+oder — schlimmer — als stille Umdeutung geendet.
+
+### D84 — Eine Diagnose, ein Produzent
+
+`03 §6.1` führte `UNSAFE_IRREVOCABLE_PREDICATE` im `ProfileFinding`-Katalog. Der Vermerk
+existiert aber schon: `NucleusPolicy.__post_init__` erzeugt ihn als
+`PolicyNote(PolicyWarning.UNSAFE_IRREVOCABLE_PREDICATE, predicate)` in `policy.warnings`.
+
+**Beschluss:** Der Eintrag fällt aus dem `ProfileFinding`-Katalog. `PolicyResolution.findings`
+trägt ausschließlich Befunde der **Auflösung** (`CONSTITUTION_UNAVAILABLE`,
+`CONSTITUTION_HASH_MISMATCH`); die unsichere Deklaration liest der Aufrufer aus
+`policy.warnings`.
+
+Zwei Kanäle für denselben Befund tragen verschiedene Subjekte — `PolicyNote` ein Prädikat,
+`Finding` eine `claim_id` — und laufen auseinander, sobald einer gepflegt wird. Die Übersetzung
+wäre außerdem verlustbehaftet: es gibt keine `claim_id`, an der eine unsichere
+Verfassungsdeklaration hinge.
+
+### D85 — `INDETERMINATE` deckt auch Gabelung, nicht nur Teilwissen
+
+D79 nannte für `INDETERMINATE` nur `pending`. `State` hat mehr: eine Obligation, deren Autor
+equivokiert hat, steht in `EQUIVOCATION_FLAGGED` und ist weder aktiv noch abgelaufen noch
+schwebend.
+
+**Beschluss:** `INDETERMINATE` heißt nicht mehr „Teilwissen", sondern **„der Zustand der
+Obligation erlaubt keine Aussage"**, mit zwei Ursachen und je eigenem Vermerk:
+
+| Zustand | Vermerk | Grund |
+|---|---|---|
+| `pending` | `OBLIGATION_PENDING` | ich weiß zu **wenig** |
+| `equivocation_flagged` | `OBLIGATION_AUTHOR_FLAGGED` | ich weiß zu **viel** |
+
+Die zweite Zeile ist die interessantere: bei einer Gabelung existiert die Obligation womöglich
+in zwei Fassungen mit verschiedenen Konditionen, und `OPEN` behauptete eine bestimmte davon.
+Beide Male ist die Alternative eine Schuldbehauptung ohne Deckung — D3.
+
+`LINKED` kommt hinzu und ist unerreichbar: es entsteht nur bei `now is None`, und `now` ist in
+dieser Schicht immer ein `int`. D75-Behandlung, `assert` statt Vektor — wie `revoked` und
+`superseded` unter dem Boden aus D70.
+
+### D86 — `classify_all` wandert nach `mensch_als_republik/index.py`
+
+`03` teilt `classify_all`, statt es zu kopieren (D69). Der Helfer lag in `trust/index.py`, was
+`profiles/ → trust/` erzwungen hätte — eine Abhängigkeit quer zur Schichtung zwischen zwei
+Geschwistern, von denen das eine vom anderen nichts braucht.
+
+**Beschluss:** `classify_all` liegt in `mensch_als_republik/index.py`. Beide Schichten
+importieren von dort; `trust/` re-exportiert weiter, damit die bestehende Oberfläche
+unverändert bleibt.
+
+Das Argument ist nicht Ästhetik. Der Kopplungstest `T-02.4` sichert, dass `classify_all` und
+`verifier.classify` nicht auseinanderlaufen — eine Aussage über Layer 01 und ihren schnellen
+Zwilling, nicht über den Trust-Solver. Der Helfer gehört dorthin, wo seine Invariante hingehört.
+
+### D87 — `classify_all` bekommt den `policy`-Parameter ⚠️
+
+`01a-policy-prompt.md §4` schloss ihn ausdrücklich aus: „Layer 02 wertet ausschließlich
+`vouch@1` aus, und `vouch@1` kann nach D58 nie irrevocable sein — der Parameter hätte dort keine
+Wirkung. Nicht anfassen."
+
+**Der Satz stimmt für Layer 02 und trägt für Layer 03 nicht.** `settlement()` steht und fällt
+damit, dass `obligation@1` **unter der Policy** klassifiziert wird. Ohne Parameter liefert
+`classify_all` für den Kernvektor `SE-11` — Schuldner widerruft seine eigene Obligation — den
+Zustand `REVOKED`, und `settlement()` bekäme einen Zustand, für den D79 keine Antwort vorsieht.
+Das Schulden-Lösch-Loch wäre auf dem Umweg über den Helfer wieder offen.
+
+**Beschluss:** `classify_all(store, now, policy=None)`. Layer 02 ruft weiterhin ohne auf,
+Verhalten dort unverändert. Die Kopplungsinvariante erweitert sich mit:
+
+```
+∀ c ∈ store:  classify_all(store, now, policy)[claim_id(c)] == classify(c, store, now, policy)
+```
+
+**Verworfen — `03` ruft `classify()` je Claim.** Gibt die geteilte Definition von „aktiv" auf,
+für die D69 und `PR-INV-10` gerade eingerichtet wurden.
+
+**Verworfen — `03` rechnet den Irrevocable-Fall nach.** Die Regel stünde zweimal da. Genau die
+Duplikation, gegen die `T-02.4` gebaut wurde.
+
+D86 und D87 sind derselbe Eingriff: die Verschiebung ist damit keine Aufräumarbeit, sondern
+notwendig.
+
+---
+
+**Muster, vierter Fall.** D74, D75, D83 und jetzt D87 haben dieselbe Form: eine Bedingung, deren
+Begründung im damaligen Kontext trug und im nächsten nicht mehr. Bei D87 war die Begründung
+sogar wörtlich richtig — sie sagte „Layer 02", und niemand las mit, dass sie damit ihren eigenen
+Geltungsbereich benannte. Konsequenz für den Sitzungsabschluss vorgemerkt, nicht hier
+entschieden.
