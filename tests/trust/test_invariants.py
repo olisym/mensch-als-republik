@@ -17,8 +17,8 @@ from mensch_als_republik.trust.graph import (
     node_in,
     node_out,
 )
+from mensch_als_republik.index import classify_all
 from mensch_als_republik.trust.groups import build_groups
-from mensch_als_republik.trust.index import classify_all
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, PARAMS, T_EXP, build, build_A_prime

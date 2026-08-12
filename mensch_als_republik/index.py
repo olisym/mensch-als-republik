@@ -1,16 +1,18 @@
-"""classify_all: schneller Zwilling von verifier.classify (02a §3, classify_all).
+"""classify_all: schneller Zwilling von verifier.classify (02a §3, classify_all; D86/D87).
 
 structural_check läuft genau einmal pro core/revoke@1- bzw. core/supersede@1-Claim
 (Index-Aufbau), statt einmal pro Kandidat-Suche innerhalb jedes classify()-Aufrufs.
 classify() aus Layer 01 bleibt die normative Wahrheit; dieses Modul dupliziert ihre
 Logik absichtlich 1:1, mit den beiden linearen Kandidatensuchen durch Index-Lookups
-ersetzt. Der Kopplungstest (T-02.4) stellt sicher, dass beide nie auseinanderlaufen.
+ersetzt. Der Kopplungstest (T-02.4 / PR-INV-11) stellt sicher, dass beide nie
+auseinanderlaufen.
 """
 
 from __future__ import annotations
 
 from mensch_als_republik.atom import Claim, claim_id, signed_bytes
 from mensch_als_republik.errors import ForeignLifecycle, VerifierError
+from mensch_als_republik.policy import NucleusPolicy, is_irrevocable
 from mensch_als_republik.predicates import is_core_predicate, parse_predicate
 from mensch_als_republik.verifier import (
     Classification,
@@ -56,7 +58,12 @@ def _classify_one(
     now: int | None,
     revokes_by_target: dict[bytes, list[Claim]],
     supersedes_by_target: dict[bytes, list[Claim]],
+    policy: NucleusPolicy | None,
 ) -> Classification:
+    # Scope-Prüfung (§5.4): dieselbe Stelle wie in verifier.classify.
+    if policy is not None and claim.p.startswith("nuc:") and claim.N != policy.scope:
+        raise ValueError("policy scope does not match claim scope")
+
     if is_core_predicate(claim):
         target = store.get(claim.J[1])
         if target is not None and target.I != claim.I:
@@ -71,14 +78,16 @@ def _classify_one(
 
     temporal = _is_temporally_valid(claim, now)
 
+    protected = is_irrevocable(claim.p, policy)
+
     cid = claim_id(claim)
 
     superseding = [c for c in supersedes_by_target.get(cid, []) if c.I == claim.I]
-    if superseding:
+    if not protected and superseding:
         return Classification(state=State.SUPERSEDED, trust_usable=False)
 
     revoking = [c for c in revokes_by_target.get(cid, []) if c.I == claim.I]
-    if revoking:
+    if not protected and revoking:
         return Classification(state=State.REVOKED, trust_usable=False)
 
     if temporal is None:
@@ -90,14 +99,18 @@ def _classify_one(
     return Classification(state=State.ACTIVE, trust_usable=True)
 
 
-def classify_all(store: ClaimStore, now: int) -> dict[bytes, Classification]:
-    """Ein Durchlauf über den Store; klassifiziert jeden Claim (02a §3)."""
+def classify_all(
+    store: ClaimStore,
+    now: int,
+    policy: NucleusPolicy | None = None,
+) -> dict[bytes, Classification]:
+    """Ein Durchlauf über den Store; klassifiziert jeden Claim (02a §3, D87)."""
     claims = store.all_claims()
     revokes_by_target, supersedes_by_target = _build_lifecycle_index(claims)
 
     result: dict[bytes, Classification] = {}
     for claim in claims:
         result[claim_id(claim)] = _classify_one(
-            claim, store, now, revokes_by_target, supersedes_by_target
+            claim, store, now, revokes_by_target, supersedes_by_target, policy
         )
     return result

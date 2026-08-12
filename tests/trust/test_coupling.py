@@ -1,4 +1,7 @@
-"""T-02.4 — Kopplung an Layer 01: classify_all == classify, trust_usable == (state == ACTIVE)."""
+"""T-02.4 — Kopplung an Layer 01: classify_all == classify, trust_usable == (state == ACTIVE).
+
+PR-INV-11: derselbe Kopplungsfall mit policy-Parameter (03-prompt §0 / D87).
+"""
 
 from __future__ import annotations
 
@@ -6,6 +9,7 @@ import json
 from pathlib import Path
 
 from mensch_als_republik.atom import claim_from_bytes, claim_id
+from mensch_als_republik.policy import NucleusPolicy
 from mensch_als_republik.trust import classify_all
 from mensch_als_republik.verifier import InMemoryStore, State, classify
 
@@ -27,11 +31,15 @@ def _layer01_store() -> InMemoryStore:
     return store
 
 
-def _assert_coupled(store: InMemoryStore, now: int) -> None:
-    fast = classify_all(store, now)
+def _assert_coupled(
+    store: InMemoryStore,
+    now: int,
+    policy: NucleusPolicy | None = None,
+) -> None:
+    fast = classify_all(store, now, policy)
     for c in store.all_claims():
         cid = claim_id(c)
-        slow = classify(c, store, now)
+        slow = classify(c, store, now, policy)
         assert fast[cid] == slow, cid.hex()
         assert slow.trust_usable == (slow.state == State.ACTIVE)
 
@@ -65,3 +73,20 @@ def test_coupling_trust_flow_graph_with_lifecycle_claims() -> None:
     store = store_with(*claims)
     _assert_coupled(store, now=1000)
     _assert_coupled(store, now=2001)
+
+    # PR-INV-11 / T-02.4 mit Policy (03-prompt §0)
+    policy = NucleusPolicy(scope=scope)
+    _assert_coupled(store, now=1000, policy=policy)
+    _assert_coupled(store, now=2001, policy=policy)
+
+    # Zusätzlich: irrevocable-Pfad (obligation@1 bleibt ACTIVE trotz revoke)
+    obl_scope = scope_id("T-02.4-policy")
+    alice, bob = Identity("cpl-pol-A"), Identity("cpl-pol-B")
+    obl = alice.claim(
+        p=f"nuc:{obl_scope.hex()}/obligation@1", J=(1, bob.pub), t=1, N=obl_scope,
+    )
+    rev = alice.revoke(obl, t=2)
+    obl_store = store_with(obl, rev)
+    obl_policy = NucleusPolicy(scope=obl_scope)
+    _assert_coupled(obl_store, now=100, policy=obl_policy)
+    _assert_coupled(obl_store, now=100, policy=None)
