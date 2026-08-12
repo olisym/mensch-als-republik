@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: test check-specs check clean
+.PHONY: test check-specs check-tree check clean
 
 test:
 	find . -name __pycache__ -type d -exec rm -rf {} +
@@ -9,7 +9,10 @@ test:
 check-specs:
 	$(PY) tools/check_specs.py
 
-check: check-specs test
+check-tree:
+	$(PY) tools/check_tree.py
+
+check: check-tree check-specs test
 
 clean:
 	find . -name __pycache__ -type d -exec rm -rf {} +
