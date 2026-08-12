@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, _dedupe_sort
+from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,12 +36,14 @@ def resolve_policy(
     if scope != computed_scope:
         raise ValueError("genesis_obj does not match scope")
 
-    declared_hash: bytes = genesis_obj[4]
+    declared_hash = genesis_obj.get(4)
+    if not isinstance(declared_hash, bytes) or len(declared_hash) != 32:
+        raise ValueError("genesis_obj missing or invalid constitution_hash (key 4)")
 
     if constitution_obj is None:
         return PolicyResolution(
             policy=NucleusPolicy(scope, declared=frozenset()),
-            findings=_dedupe_sort(
+            findings=dedupe_sort(
                 [
                     Finding(
                         kind=ProfileFinding.CONSTITUTION_UNAVAILABLE,
@@ -55,7 +57,7 @@ def resolve_policy(
     if declared_hash != computed_hash:
         return PolicyResolution(
             policy=NucleusPolicy(scope, declared=frozenset()),
-            findings=_dedupe_sort(
+            findings=dedupe_sort(
                 [
                     Finding(
                         kind=ProfileFinding.CONSTITUTION_HASH_MISMATCH,

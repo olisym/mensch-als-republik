@@ -197,3 +197,19 @@ def test_SE_12() -> None:
     assert result.state == SettlementState.OPEN
     assert result.receipt_claim_id is None
     assert result.findings == ()
+
+
+def test_SE_13() -> None:
+    """Aktive Obligation mit t_exp in der Zukunft → OPEN + EXPIRING_OBLIGATION (03a B2)."""
+    alice, bob = fresh_alice(), fresh_bob()
+    O = alice.claim(
+        p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A, t_exp=5000
+    )
+    result = settlement(
+        store_with(O), obligation=O, scope=N_A, now=NOW, policy=_policy_a()
+    )
+    assert result.state == SettlementState.OPEN
+    assert result.receipt_claim_id is None
+    assert result.findings == (
+        Finding(ProfileFinding.EXPIRING_OBLIGATION, claim_id(O)),
+    )

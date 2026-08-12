@@ -8,7 +8,7 @@ from enum import Enum
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.policy import NucleusPolicy
 from mensch_als_republik.predicates import parse_predicate
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, _dedupe_sort
+from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.profiles.payload import read_v
 from mensch_als_republik.verifier import ClaimStore, State
@@ -47,9 +47,13 @@ def _is_valid_uint(value: object) -> bool:
 
 
 def _obligation_v_findings(obligation: Claim) -> list[Finding]:
-    """Typprüfung reservierter Keys von obligation.v (03-profiles.md §1.3, TV-T1)."""
+    """Typprüfung und EXPIRING_OBLIGATION (03-profiles.md §1.3, §3.3.1; B2)."""
     cid = claim_id(obligation)
     findings: list[Finding] = []
+    if obligation.t_exp is not None:
+        findings.append(
+            Finding(kind=ProfileFinding.EXPIRING_OBLIGATION, subject=cid)
+        )
     obj, kinds = read_v(obligation.v)
     for kind in kinds:
         findings.append(Finding(kind=kind, subject=cid))
@@ -88,14 +92,10 @@ def settlement(
     o_state = by_cid[o_cid].state
 
     if o_state == State.EXPIRED:
-        if obligation.t_exp is not None:
-            findings.append(
-                Finding(kind=ProfileFinding.EXPIRING_OBLIGATION, subject=o_cid)
-            )
         return SettlementResult(
             state=SettlementState.EXPIRED,
             receipt_claim_id=None,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     if o_state == State.PENDING:
@@ -105,7 +105,7 @@ def settlement(
         return SettlementResult(
             state=SettlementState.INDETERMINATE,
             receipt_claim_id=None,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     if o_state == State.EQUIVOCATION_FLAGGED:
@@ -115,7 +115,7 @@ def settlement(
         return SettlementResult(
             state=SettlementState.INDETERMINATE,
             receipt_claim_id=None,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     assert o_state not in (
@@ -183,11 +183,11 @@ def settlement(
         return SettlementResult(
             state=SettlementState.SETTLED,
             receipt_claim_id=receipt_claim_id,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     return SettlementResult(
         state=SettlementState.OPEN,
         receipt_claim_id=receipt_claim_id,
-        findings=_dedupe_sort(findings),
+        findings=dedupe_sort(findings),
     )

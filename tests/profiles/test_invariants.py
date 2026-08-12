@@ -329,3 +329,52 @@ def test_PR_INV_12() -> None:
         scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
     ).policy
     classify_all(store, NOW, pol)
+
+
+def test_PR_INV_13() -> None:
+    """settlement und verdict_status: ValueError bei falschem Prädikat/N/Store (03a B1/B4)."""
+    import pytest
+
+    alice, bob = fresh_alice(), fresh_bob()
+    pol = resolve_policy(
+        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+    ).policy
+    O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A)
+    store = store_with(O)
+
+    with pytest.raises(ValueError):
+        settlement(store, obligation=O, scope=N_B, now=NOW, policy=pol)
+    wrong_p = alice.claim(p=nuc(N_A, "receipt"), J=(2, claim_id(O)), t=2, N=N_A)
+    with pytest.raises(ValueError):
+        settlement(
+            store_with(O, wrong_p), obligation=wrong_p, scope=N_A, now=NOW, policy=pol
+        )
+    with pytest.raises(ValueError):
+        settlement(
+            store_with(), obligation=O, scope=N_A, now=NOW, policy=pol
+        )
+
+    accusation = alice.claim(
+        p=nuc(N_B, "accusation"), J=(1, bob.pub), t=3, N=N_B
+    )
+    verdict = alice.claim(
+        p=nuc(N_B, "verdict"), J=(2, claim_id(accusation)), t=4, N=N_B
+    )
+    vstore = store_with(accusation, verdict)
+    with pytest.raises(ValueError):
+        verdict_status(
+            vstore, verdict=verdict, scope=N_A,
+            arbitrators=frozenset({alice.pub}), now=NOW,
+        )
+    with pytest.raises(ValueError):
+        verdict_status(
+            store_with(accusation),
+            verdict=verdict, scope=N_B,
+            arbitrators=frozenset({alice.pub}), now=NOW,
+        )
+    with pytest.raises(ValueError):
+        verdict_status(
+            store_with(accusation),
+            verdict=accusation, scope=N_B,
+            arbitrators=frozenset({alice.pub}), now=NOW,
+        )

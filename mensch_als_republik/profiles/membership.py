@@ -8,7 +8,7 @@ from enum import Enum
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.policy import NucleusPolicy
 from mensch_als_republik.predicates import parse_predicate
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, _dedupe_sort
+from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.verifier import ClaimStore, State
 
@@ -120,5 +120,5 @@ def membership(
         state=state,
         accept_claim_id=accept_claim_id,
         grant_claim_id=grant_claim_id,
-        findings=_dedupe_sort(findings),
+        findings=dedupe_sort(findings),
     )

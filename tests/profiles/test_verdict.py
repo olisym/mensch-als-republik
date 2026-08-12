@@ -1,6 +1,8 @@
-"""VS-1 … VS-11 — Verdikt-Status (03-golden-anchors.md §9)."""
+"""VS-1 … VS-14 — Verdikt-Status (03-golden-anchors.md §9)."""
 
 from __future__ import annotations
+
+import pytest
 
 from mensch_als_republik.atom import claim_id
 from mensch_als_republik.profiles import (
@@ -302,3 +304,66 @@ def test_VS_11() -> None:
     assert result.findings == (
         Finding(ProfileFinding.UNKNOWN_ACCUSATION, claim_id(verdict)),
     )
+
+
+def test_VS_12() -> None:
+    """Anklage mit fremdem N → SCOPE_MISMATCH, nicht UNKNOWN_ACCUSATION (03a B3)."""
+    alice, bob, carol = fresh_alice(), fresh_bob(), fresh_carol()
+    accusation = alice.claim(
+        p=nuc(N_A, "accusation"), J=(1, bob.pub), t=1, N=N_A
+    )
+    sub_a = alice.claim(
+        p=nuc(N_B, "submit-arbitration"), J=(1, carol.pub), t=2, N=N_B
+    )
+    sub_b = bob.claim(
+        p=nuc(N_B, "submit-arbitration"), J=(1, carol.pub), t=3, N=N_B
+    )
+    verdict = carol.claim(
+        p=nuc(N_B, "verdict"), J=(2, claim_id(accusation)), t=4, N=N_B
+    )
+    result = verdict_status(
+        store_with(accusation, sub_a, sub_b, verdict),
+        verdict=verdict,
+        scope=N_B,
+        arbitrators=ARBITRATORS,
+        now=NOW,
+    )
+    assert result.status == VerdictStatus.ATTRIBUTED_OPINION
+    assert result.findings == (
+        Finding(ProfileFinding.SCOPE_MISMATCH, claim_id(accusation)),
+    )
+
+
+def test_VS_13() -> None:
+    """Verdikt mit fremdem N bei scope=N_B → ValueError (03a B1)."""
+    alice, bob = fresh_alice(), fresh_bob()
+    accusation = alice.claim(
+        p=nuc(N_A, "accusation"), J=(1, bob.pub), t=1, N=N_A
+    )
+    verdict = alice.claim(
+        p=nuc(N_A, "verdict"), J=(2, claim_id(accusation)), t=2, N=N_A
+    )
+    with pytest.raises(ValueError):
+        verdict_status(
+            store_with(accusation, verdict),
+            verdict=verdict,
+            scope=N_B,
+            arbitrators=ARBITRATORS,
+            now=NOW,
+        )
+
+
+def test_VS_14() -> None:
+    """Falsches Prädikat (accusation statt verdict) → ValueError (03a B1)."""
+    alice, bob = fresh_alice(), fresh_bob()
+    fake = alice.claim(
+        p=nuc(N_B, "accusation"), J=(1, bob.pub), t=1, N=N_B
+    )
+    with pytest.raises(ValueError):
+        verdict_status(
+            store_with(fake),
+            verdict=fake,
+            scope=N_B,
+            arbitrators=ARBITRATORS,
+            now=NOW,
+        )

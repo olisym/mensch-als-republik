@@ -9,7 +9,7 @@ from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy
 from mensch_als_republik.predicates import parse_predicate
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, _dedupe_sort
+from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.verifier import Classification, ClaimStore, State
 
 
@@ -75,12 +75,17 @@ def verdict_status(
     policy: NucleusPolicy | None = None,
 ) -> VerdictResult:
     """Entscheidet BINDING vs. ATTRIBUTED_OPINION (03-profiles.md §2.4.2, 03-prompt.md §7)."""
+    if not _is_nuc_name(verdict, "verdict") or verdict.N != scope:
+        raise ValueError("verdict must be verdict@1 in scope")
     if policy is not None and policy.scope != scope:
         raise ValueError("policy scope does not match scope")
 
+    v_cid = claim_id(verdict)
+    if store.get(v_cid) is None:
+        raise ValueError("verdict not in store")
+
     by_cid = classify_all(store, now, policy)
     findings: list[Finding] = []
-    v_cid = claim_id(verdict)
     verdict_active = by_cid[v_cid].state == State.ACTIVE
 
     path_i = verdict.I in arbitrators
@@ -99,7 +104,7 @@ def verdict_status(
         elif accusation.N != scope:
             findings.append(
                 Finding(
-                    kind=ProfileFinding.UNKNOWN_ACCUSATION,
+                    kind=ProfileFinding.SCOPE_MISMATCH,
                     subject=claim_id(accusation),
                 )
             )
@@ -152,16 +157,16 @@ def verdict_status(
         )
         return VerdictResult(
             status=VerdictStatus.ATTRIBUTED_OPINION,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     if path_i or path_ii:
         return VerdictResult(
             status=VerdictStatus.BINDING,
-            findings=_dedupe_sort(findings),
+            findings=dedupe_sort(findings),
         )
 
     return VerdictResult(
         status=VerdictStatus.ATTRIBUTED_OPINION,
-        findings=_dedupe_sort(findings),
+        findings=dedupe_sort(findings),
     )

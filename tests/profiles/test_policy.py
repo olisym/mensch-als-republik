@@ -79,3 +79,28 @@ def test_P_E() -> None:
 def test_P_F() -> None:
     with pytest.raises(ValueError):
         resolve_policy(scope=N_A, genesis_obj=GENESIS_B, constitution_obj=CONSTITUTION_B)
+
+
+def test_P_G() -> None:
+    """Genesis ohne Key 4 — ValueError (03a B6)."""
+    import hashlib
+
+    from mensch_als_republik import cbor_canon
+    from mensch_als_republik.domains import DOM_NUC_GEN
+
+    broken = {
+        0: 1,
+        1: [bytes.fromhex(
+            "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c"
+        )],
+        2: 0,
+        3: [bytes.fromhex(
+            "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c"
+        )],
+        5: 2,
+        6: 1,
+        7: 0,
+    }
+    scope = hashlib.sha256(DOM_NUC_GEN + cbor_canon.encode(broken)).digest()
+    with pytest.raises(ValueError):
+        resolve_policy(scope=scope, genesis_obj=broken, constitution_obj=None)

@@ -32,6 +32,6 @@ class Finding:
     subject: bytes
 
 
-def _dedupe_sort(findings: list[Finding] | tuple[Finding, ...]) -> tuple[Finding, ...]:
+def dedupe_sort(findings: list[Finding] | tuple[Finding, ...]) -> tuple[Finding, ...]:
     """Findings sortiert und dedupliziert (PR-INV-9)."""
     return tuple(sorted(set(findings)))
