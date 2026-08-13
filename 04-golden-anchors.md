@@ -48,13 +48,18 @@ P2 (Epoche 2 und 3, n = 5)  =  EVE, BOB, ALICE, DAVE, CAROL
 
 Ein Vektor, der die Sortierung nach Namen statt nach Bytes vornimmt, erzeugt einen anderen
 `constitution_hash` und damit eine andere Epoche. Das ist Absicht: die Reihenfolge ist Teil der
-Identität.
+Identität. Dasselbe gilt für `irrevocable_predicates`, das hier in der Reihenfolge
+`["obligation@1", "vote@1"]` steht.
+
+**`vote@1` steht in `irrevocable_predicates` aller drei Verfassungen.** Ohne diesen Eintrag wäre
+Profil D nach `04 §3.5` nicht auszählbar (`VOTE_REVOCABLE`). Deshalb weichen alle Hashes dieses
+Profils von einer Fassung ab, die nur `obligation@1` führt.
 
 ### 2.2 Die drei Verfassungen
 
 ```
 C1 = {
-  irrevocable_predicates: ["obligation@1"],
+  irrevocable_predicates: ["obligation@1", "vote@1"],
   thresholds:             { ordinary: [1,2], membership: [2,3], amendment: [3,4] },
   arbitration:            { arbitrators: [ALICE] },
   participants:           [BOB, ALICE, DAVE, CAROL]
@@ -66,9 +71,9 @@ C3 = C2, aber arbitration = { arbitrators: [BOB, ALICE] }        (zweiter Arbitr
 ```
 
 ```
-constitution_hash_1 = 5a1db51257084870e541c0e6f0aef99af4e2331eba86f1cd26c6308120792d5e
-constitution_hash_2 = 8bc6be3556cb867066d2adac795c01e67403d6d9a38210a37e31b6ba6789607b
-constitution_hash_3 = c5111d414c3c2e73404a5c26ba0bd336ec6c4b0b95a2e1b8d65ff674f5fa1b04
+constitution_hash_1 = 5e288ec9fd69c7e9ba60d1df0f19a42afe591a5eed96d5b66014ade376f5b8d0
+constitution_hash_2 = fa05f3fec910c7855456bac9f456c6d81b972e66428647d5dd25a728bfd9166f
+constitution_hash_3 = a6c8e5a5639234663fd977e1fcbdd1756eac2885ce1932d2a6d44694695fea9a
 ```
 
 `C1` nach `C2` unterscheidet sich ausschließlich in `participants` — Klasse **`membership`**,
@@ -83,7 +88,7 @@ genesis_D = {
   1 root_keys         : [ALICE]
   2 key_mode          : 0
   3 anchor_set        : [ALICE]
-  4 constitution_hash : 5a1db512…
+  4 constitution_hash : 5e288ec9…
   5 amendment_rule    : 2
   6 weight_mode       : 0            ; Kopfzahl (D98)
   7 vote_mode         : 0            ; Epochenpfad
@@ -92,11 +97,11 @@ genesis_D = {
 cbor(genesis_D) =
   a80001018158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c
   0200038158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c
-  0458205a1db51257084870e541c0e6f0aef99af4e2331eba86f1cd26c6308120792d5e
+  0458205e288ec9fd69c7e9ba60d1df0f19a42afe591a5eed96d5b66014ade376f5b8d0
   050206000700
 
 N_D = SHA-256(DOM_NUC_GEN || cbor(genesis_D))
-    = 7794d26f7f4d45634aa1f08bfba8763e16eaf9d64f88fcbb36aae8b756fc388b
+    = 5c4e2eb3d74b39a832f92e4e33730178ffe7f72745a63db028b2937a8fdf909f
 ```
 
 Gegenüber `00 §3.1` unterscheidet sich `genesis_D` in zwei Bytes des Endes — `06 00` statt
@@ -116,24 +121,24 @@ proposal_hash = SHA-256( DOM_NUC_PROPOSAL || cbor({0: N, 1: predecessor, 2: cons
 ```
 
 ```
-epoch_id_1      = b22eba4020aafbd9932e0835675561671b29f240ba8d2b6fc901bd6a2c4b5d84
+epoch_id_1      = 1ea17b300281d24ce37f887db1a3218d54d32140031f816812a004e93be7e4ec
                   ( [N_D, 1, constitution_hash_1] — der Genesis ist Epoche 1 )
 
-proposal_hash_1 = 2a6055011f8886f4d25faa2f9292b195f5a9351b0c5c7a695c9df6b807212b46
+proposal_hash_1 = 81e8d796a7a7edee1d1c4e864fe521117d89020bee97d84d2ba7e9f5264fd2dc
                   ( predecessor = epoch_id_1, Ziel = constitution_hash_2 )
 
-epoch_id_2      = b64d51ca9be9976c55bb6380dc28ad1b77970db3def8dbc0d819041e64cc8bb4
+epoch_id_2      = 380779c1b68d030e3d3cc2c943e68d31caf3b24bfd3e713315cf70cf4b952d89
                   ( [N_D, 2, constitution_hash_2] )
 
-proposal_hash_2 = c941cc1e5968a1aeeee8f2397949217225e1ff085ea1b371e9fee1dc872f3c9b
+proposal_hash_2 = 33c8c6f3fde1a319cb1077d71d8efcfa3fd68d67cb0140ea3f0c3f1d245b792d
                   ( predecessor = epoch_id_2, Ziel = constitution_hash_3 )
 
-epoch_id_3      = 2e93ad45c32b11cd7c3dad35ccafc77cb0487a09a87db3f3583ebfba2cb3fd4e
+epoch_id_3      = bba15f4047e104747ee24a359396e3517ffe1465c69c67241e4404e1f80143c7
                   ( [N_D, 3, constitution_hash_3] )
 ```
 
 **Vektor `GV-1`.** Zwei `ratify@1`-Claims für `proposal_hash_1`, von verschiedenen Autoren, mit
-verschiedenen Zeugenmengen. Beide liefern `epoch_id_2 = b64d51ca…`. Kein Widerspruch, keine
+verschiedenen Zeugenmengen. Beide liefern `epoch_id_2 = 380779c1…`. Kein Widerspruch, keine
 zweite Epoche. Das ist D99 in einer Zahl.
 
 **Vektor `GV-2`.** Ein `ratify@1` mit `v[0]` als Zeugenmenge, die einen zusätzlichen, nicht
@@ -283,9 +288,20 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-22` | Verfassung ohne `participants` | `PARTICIPANTS_UNDECLARED`, Zustand `UNEVALUABLE` |
 | `GV-23` | `participants` unsortiert oder mit Duplikat | `MALFORMED_PARTICIPANTS`, Zustand `UNEVALUABLE` |
 | `GV-24` | `genesis[6] = 1` | `UNSUPPORTED_WEIGHT_MODE`, Zustand `UNEVALUABLE` |
+| `GV-25` | aktive Ja-Stimme auf einen lokal unbekannten Vorschlag; derselbe Autor hat ein zweites Ja | `UNKNOWN_PROPOSAL`, beide Ja zählen nicht |
+| `GV-26` | `vote.t_exp` gesetzt | `VOTE_WITH_EXPIRY`, die Stimme zählt nicht |
+| `GV-27` | Verfassung ohne `vote@1` in `irrevocable_predicates` | `VOTE_REVOCABLE`, Zustand `UNEVALUABLE` |
+| `GV-28` | ein widerrufener `vote@1` in einer Verfassung **mit** `vote@1` als irrevocable | kein Vermerk, die Stimme zählt weiter |
+| `GV-29` | `genesis[5] = 3` | `MALFORMED_THRESHOLD`, Zustand `UNEVALUABLE` |
 
 `GV-24` ist mit dem Bestandsnukleus aus `00 §3.1` unmittelbar prüfbar: `N = 65309fe2…` setzt
-`weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis.
+`weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis. Derselbe Nukleus trifft auch
+`GV-27`: seine Verfassung führt nur `obligation@1`.
+
+`GV-28` ist der Vektor gegen die naheliegende Fehlimplementierung. Wer `classify_all` ohne die
+scope-lokale Policy aufruft, bekommt für die widerrufene Stimme `REVOKED` und zählt sie nicht —
+die Auszählung schrumpft, und `INV-04.1` fällt. Der Vektor ist grün nur mit korrekt gereichter
+Policy (D91).
 
 ---
 
@@ -297,7 +313,8 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `INV-04.2` | `PASSED` und `FAILED` schließen einander aus, für jedes `n`, `num`, `den`, `Ja`, `Nein`. |
 | `INV-04.3` | Kein Teilwissen führt zu `PASSED`. Fehlt ein Objekt, ist der Zustand `UNEVALUABLE`. |
 | `INV-04.4` | Zwei `ratify@1` für denselben Vorschlag liefern denselben `epoch_id`. |
-| `INV-04.5` | Die Auszählung liest keine Uhr. Kein Pfad wertet `t` oder `t_exp` einer Stimme aus. |
+| `INV-04.5` | Die Auszählung liest keine Uhr. `t` wird nie ausgewertet; `t_exp` einer Stimme nur auf Anwesenheit, nie auf seinen Wert. |
+| `INV-04.7` | Die Menge der zählenden Stimmen wächst monoton: kein zusätzlicher Claim im Store entfernt je eine bereits zählende Stimme. |
 | `INV-04.6` | Bei `num/den > 1/2` gibt es zu einer Epoche höchstens einen Vorschlag im Zustand `PASSED`. |
 
 `INV-04.2` und `INV-04.6` sind als Eigenschaftstests über einem Bereich zu prüfen, nicht an
@@ -306,6 +323,10 @@ Einzelvektoren: `n` von 1 bis 12, `[num,den]` über allen gekürzten Brüchen mi
 
 `INV-04.5` ist negativ zu prüfen: ein Lauf mit zwei verschiedenen `now`-Werten muss byte-identische
 Ergebnisse liefern.
+
+`INV-04.7` ist die Invariante, auf der D96, D101 und D102 gemeinsam stehen. Sie ist über zufällige
+Claim-Folgen zu prüfen: Store schrittweise füllen, nach jedem Schritt auszählen, und sicherstellen,
+dass die Menge der zählenden `claim_id` nie kleiner wird.
 
 ---
 

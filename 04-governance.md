@@ -45,6 +45,19 @@ byte-identisch bleibt. Ein Nukleus ohne deklariertes `participants` ist nicht au
 Teilwissen unter-bekannt; ein zu kleiner Nenner macht jede Schwelle leichter erreichbar, und das
 ist die Über-Ratifizierungsrichtung (D96).
 
+**`irrevocable_predicates` MUSS `vote@1` enthalten.** Ohne diesen Eintrag greifen Widerruf und
+Supersede nach `01 §5.4` auch auf Stimmen, die Stimmenmenge schrumpft, und die Auszählung ist
+nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ein Nukleus ohne diese Deklaration
+ist nicht auszählbar (`§3.5`).
+
+Die Unwiderruflichkeit wird damit **nicht in dieser Schicht definiert**, sondern über den bereits
+bestehenden Schutz aus D70/D72 erreicht. Es gibt keine zweite Lesart von „aktiv" neben
+`classify()` und `classify_all()`; die Drift, gegen die `T-02.4` gebaut wurde, entsteht hier nicht.
+
+Die Aufnahme von `vote@1` widerspricht D58 nicht. Die Negativliste dort nennt `vouch@1`, und das
+Kriterium lautet, ob Fortbestehen die konservative Lesart ist. Eine Stimme gewährt keine
+fortdauernde Autorität; sie ist ein einmaliger Akt an einem einzelnen Objekt (D97).
+
 **Epoche (abgeleitet).** Kein Objekt, sondern eine Identität:
 
 ```
@@ -153,8 +166,20 @@ Eine `vote@1`-Stimme zählt für einen Vorschlag genau dann, wenn alle Bedingung
 3. `proposal.predecessor == epoch_id` der Epoche, in der ausgezählt wird — sonst Vermerk
    `STALE_EPOCH_VOTE`
 4. `vote.I` ist Element von `P` — sonst Vermerk `NON_MEMBER_VOTE`
-5. Der Claim ist `ACTIVE` nach `classify_all` unter der scope-lokalen Policy (D91)
+5. Der Claim ist `ACTIVE` nach `classify_all` unter der scope-lokalen Policy (D91). Weil
+   `vote@1` nach `§2.1` geschützt ist, führen Widerruf und Supersede hier nie aus `ACTIVE`
+   heraus; die Bedingung schließt damit fehlenden Vorgänger, Equivocation und Ablauf aus, nicht
+   den Widerruf.
 6. `vote.v[0]` ist `0` oder `1` — sonst Vermerk `UNKNOWN_VOTE_CHOICE`
+7. `vote.t_exp` ist nicht gesetzt — sonst Vermerk `VOTE_WITH_EXPIRY`
+
+Zu Bedingung 7: eine Stimme mit Ablaufdatum wäre eine Stimme, die durch Zeitablauf aus der Menge
+verschwindet, und genau das darf nicht sein (D97). Sie wird deshalb **ungültig**, nicht still
+umgedeutet. Ein Feld, dessen Wert wortlos ignoriert wird, ist die Stummheit, die D95 gekostet hat.
+
+Der Ablauf aus Bedingung 5 bleibt trotzdem erreichbar, wenn ein Nukleus `t_exp` über eine
+Policy-Maximallaufzeit erzwingt (`02 §6.2`). Ein solcher Nukleus kann keine Stimmen führen; das
+ist eine Verfassungsfrage und keine Protokollfrage.
 
 **Zwei aktive Stimmen desselben Autors auf denselben Vorschlag zählen nicht** — weder die eine
 noch die andere. Vermerk `AMBIGUOUS_VOTE`, Subjekt sind beide `claim_id`. Die Parallele ist
@@ -213,6 +238,18 @@ Vorschlagenden gewählt:
 Die Klasse `ordinary` ist in v1 unbenutzt und für nicht-verfassungsbezogene Entscheidungen
 reserviert; die Protokollschicht kennt keine.
 
+**Die Reihenfolge der Klassen ist normativ** und bindet `genesis[5]` an einen Namen in
+`thresholds`:
+
+| Index | Klasse |
+|---|---|
+| `0` | `ordinary` |
+| `1` | `membership` |
+| `2` | `amendment` |
+
+Fehlt der benannte Schlüssel in `thresholds`, ist der Vorschlag nicht auszählbar (`§3.5`). Ein
+Index über `2` ist ebenfalls nicht auszählbar; er wird nicht auf `amendment` zurückgeführt.
+
 **Selbstbezügliche Sperre.** Ändert ein Vorschlag die Schwelle der Klasse, die er selbst aufruft,
 gilt das **Maximum** aus alter und neuer Schwelle:
 
@@ -238,7 +275,8 @@ h-Regel für den binären Fall.
 | Verfassung der Epoche lokal unbekannt | `CONSTITUTION_UNAVAILABLE` |
 | `participants` nicht deklariert | `PARTICIPANTS_UNDECLARED` |
 | `participants` formwidrig (kein Array, Eintrag nicht 32 B, unsortiert, Duplikate) | `MALFORMED_PARTICIPANTS` |
-| Schwellenklasse fehlt oder ist formwidrig | `MALFORMED_THRESHOLD` |
+| `irrevocable_predicates` führt `vote@1` nicht | `VOTE_REVOCABLE` |
+| Schwellenklasse fehlt, formwidrig, oder `genesis[5] > 2` | `MALFORMED_THRESHOLD` |
 | `genesis[6] != 0` (Gewichtungsmodus nicht Kopfzahl) | `UNSUPPORTED_WEIGHT_MODE` |
 | neues Verfassungsobjekt lokal unbekannt | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
 
@@ -302,6 +340,17 @@ das Raft bei nebenläufigen Konfigurationswechseln beschreibt (D102).
 
 Niemand muss Nein zu A sagen, um Ja zu B sagen zu können, und ein Ja zu A wird B **nicht** als
 Nein angerechnet.
+
+**Wenn die Epoche einer fremden Ja-Stimme nicht auflösbar ist.** Die Zugehörigkeit eines
+Vorschlags zu einer Epoche steht in `proposal[1]`; ist das Vorschlagsobjekt lokal unbekannt, kann
+sie nicht bestimmt werden. Eine aktive Ja-Stimme auf einen unbekannten Vorschlag gilt dann als
+**möglicherweise epochengleich** und blockiert die andere Ja-Stimme desselben Autors; Vermerk
+`UNKNOWN_PROPOSAL`, Subjekt die `claim_id` der unauflösbaren Stimme.
+
+Die Richtung ist erzwungen, nicht gewählt: die Gegenannahme lässt bei Teilwissen zwei Nachfolger
+derselben Epoche entstehen, und das ist die Über-Ratifizierungsrichtung. Geheilt wird der Fall,
+indem jemand das Vorschlagsobjekt nachreicht — es ist content-adressiert und damit nicht
+fälschbar (D103).
 
 ---
 
@@ -422,6 +471,11 @@ Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentati
 - **Agenda-Macht bleibt, ist aber klein.** Der Vorschlagende wählt den Inhalt. Er wählt weder die
   Wählerschaft noch einen Kantenschnitt noch einen Zweckkontext; all das ist mit dem Snapshot
   entfallen (D96). Wer vorschlagen darf, begrenzt die Verfassung, nicht das Protokoll.
+
+- **Ein zurückgehaltenes Vorschlagsobjekt kann ein Mitglied vorübergehend aussetzen.** Wer eine
+  Ja-Stimme auf einen Vorschlag abgibt, dessen Objekt nie verbreitet wird, zählt in dieser Epoche
+  nirgends mit (`§4.4`). Das ist die sichere Richtung und heilt, sobald jemand das Objekt
+  nachreicht; verhindern kann das Mitglied es nicht.
 
 - **Kein Rechtsweg gegen die eigene Mehrheit.** Wer in `P` überstimmt wird, hat innerhalb des
   Nukleus keine Instanz über sich. Das Ventil ist Austritt und, wenn die Verfassung es vorsieht,
