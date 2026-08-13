@@ -1,173 +1,432 @@
 # Governance-Schicht — Spezifikation v1
 
-Status: Entwurf · Protokollversion: 1 · Layer: Governance (über Trust-Flow & Profile)
+Status: Entwurf · Protokollversion: 1 · Layer: Governance (über Trust-Flow und Profile)
 
-Diese Schicht macht aus Regelannahmen (Profil `accept-rules@1`) plus Trust-Flow die
-**Konsens-Stufe 1** eines Nukleus und die Föderation darüber. Der zentrale Satz:
+Diese Schicht regelt, wie ein Nukleus seine eigenen Regeln ändert, ohne dass jemand befragt
+werden muss, der über ihm steht. Sie fügt kein Atom-Feld hinzu. Vorschläge und Verfassungen sind
+content-adressierte Objekte, auf die Claims zeigen; die Stimmen sind die Claims.
 
-> **Der Nukleus ist ein rekursives Primitiv.** Mensch → Nukleus → Föderation ist dreimal
-> dieselbe Struktur. Und: **Governance = Vorschlag + Abstimmung + Auszählung.** Eine
-> Verfassungsänderung ist nur der Spezialfall mit der höchsten Schwelle.
+Zwei Sätze tragen die ganze Schicht:
 
-Kein neues Atom-Feld. Vorschläge und Verfassungen sind **content-adressierte Objekte** (wie
-schon die Verfassung in Profil 7.2), auf die Claims zeigen; die Stimmen sind die Claims.
+> **Ein Nukleus lebt in Epochen.** Jede Epoche beginnt mit einer ratifizierten Verfassung; diese
+> Verfassung sagt, wer stimmberechtigt ist und wie hoch die Schwelle liegt. Der Genesis ist
+> Epoche 1.
+>
+> **Es gibt genau einen Loop.** Vorschlag, Stimme, Auszählung, Materialisierung. `§6` und `§7`
+> sind Belegungen seiner Parameter, keine eigenen Verfahren.
 
----
-
-## 1. Nukleus-Objekte
-
-Zwei Objekte, getrennt nach Lebensdauer:
-
-**Genesis (unveränderlich).** Definiert:
-- `N` = Hash des Genesis-Objekts = der **stabile Scope** (für immer, auch wenn sich Regeln ändern);
-- die Gründungs-Charta und das **initiale Ankerset** (der Nukleus-Seed, §4);
-- die **Änderungsregel** (wie die Verfassung geändert werden darf, §5);
-- den **Gewichtungsmodus** (Kopfzahl **oder** zweck-gescopt gewichtet — hier: gewichtet, §4);
-- den **Stimmmodus** (Komposition-Default **oder** FROST-Opt-in, §3).
-
-**Verfassung (versioniert).** Die aktuellen inhaltlichen Regeln, content-adressiert, geändert
-per Supersede über den Governance-Prozess. `accept-rules@1` zeigt auf die *aktuelle Version*
-(Re-Akzeptanz bei Änderung). Mitgliedschaft und Trust bleiben auf `N` = Genesis-Hash gescoped,
-der **stabil bleibt** — die Regeln wandeln sich, ohne dass der Nukleus seine Identität verliert.
+Was diese Schicht **nicht** tut, steht in `08 §3`: sie verteilt keine Macht. Schwellen,
+Mitgliederkreis, Amtsdauern und Losverfahren sind Verfassungsinhalt eines konkreten Nukleus, nicht
+Protokoll.
 
 ---
 
-## 2. Vorschlag · Stimme · Auszählung (der Kern-Loop)
+## 1. Objekte und Epochen
 
-| Profil | Belegung |
-|--------|----------|
-| `nuc:N/propose@1` | `I` = ein Mitglied; `J = [object-hash, vorschlag_obj]`; führt einen Vorschlag ein. |
-| `nuc:N/vote@1`    | `I` = ein Mitglied; `J = [object-hash, vorschlag_obj]`; `v` = Wahl. |
+### 1.1 Die drei Objekte
 
-**Vorschlags-Objekt** (content-adressiert, kein Claim) enthält: die Entscheidung/Änderung,
-den **Zweck-Kontext `π`** für die Gewichtung, die **Snapshot-Bindung** (§4.2) und die
-**Schwellenklasse**, die er aufruft.
+**Genesis (unveränderlich).** Definiert `N` als stabilen Scope, die Wurzelschlüssel, das initiale
+Ankerset, den Hash der initialen Verfassung, die Änderungsklasse, den Gewichtungsmodus und den
+Stimmmodus (`00 §4`). Der Genesis ändert sich nie; wer ihn ändern will, gründet einen anderen
+Nukleus.
 
-**Schwellenklassen** (Policy, in der Verfassung deklariert): z. B. gewöhnliche Entscheidung,
-Mitgliedschaft, Verfassungsänderung — jede mit eigenem Quorum. Änderung = höchste Klasse.
+**Verfassung (versioniert).** Die inhaltlichen Regeln, content-adressiert. Sie trägt in dieser
+Schicht zwei zusätzliche Felder gegenüber `00 §5`:
 
----
+| Feld | Typ | Pflicht | Bedeutung |
+|---|---|---|---|
+| `participants` | array of bstr (32 B), sortiert, duplikatfrei | optional | Die stimmberechtigte Menge `P` der Epoche |
+| `thresholds` | map text zu `[num, den]` | Pflicht | Schwellen je Klasse, exakte Integer |
 
-## 3. Die Stimme des Nukleus
+`participants` ist **optional**, damit das kanonische Beispiel aus `00 §3.1` es weglässt und `N`
+byte-identisch bleibt. Ein Nukleus ohne deklariertes `participants` ist nicht auszählbar (`§3.5`).
 
-Ein **Nukleus-Akt** (`grant-membership@1`, `verdict@1`, Föderationsstimme, Ratifizierung) ist
-gültig gdw.:
+`P` wird **deklariert, nie abgeleitet.** Eine aus dem Bestand abgeleitete Menge wäre unter
+Teilwissen unter-bekannt; ein zu kleiner Nenner macht jede Schwelle leichter erreichbar, und das
+ist die Über-Ratifizierungsrichtung (D96).
 
-- **(Komposition, Default)** eine Menge aktiver `vote@1`/`accept-rules@1`-Claims für den Akt
-  die deklarierte Schwelle unter der kanonischen gewichteten Auszählung (§4) überschreitet —
-  jeder Verifizierer tallyt selbst, maximal lokal, keine in Krypto gegossene Autorität; **oder**
-- **(FROST, Opt-in)** der Akt **eine** Gruppensignatur unter dem Nukleus-Schlüssel trägt —
-  billiger zu prüfen, Preis: Re-Keying bei Mitgliederwechsel; die Off-Protocol-Einigung ersetzt
-  die On-Protocol-Auszählung.
-
-Das folgt exakt dem Flow/PageRank-Metamuster: Komposition ist Fundament, FROST erlaubte Optimierung.
-
----
-
-## 4. Zweck-gescopte gewichtete Auszählung
-
-### 4.1 Gewicht
-
-Für einen Vorschlag mit Zweck-Kontext `π`:
+**Epoche (abgeleitet).** Kein Objekt, sondern eine Identität:
 
 ```
-gewicht(wähler) = trust_flow(nukleus_seed → wähler, im Zweck-π-Graphen)
+DOM_NUC_EPOCH = "claim-atom/v1/nucleus-epoch"
+
+epoch_id = SHA-256( DOM_NUC_EPOCH || cbor_deterministic([N, i, constitution_hash]) )
 ```
 
-- **Nicht** roher globaler Nukleus-Flow (der misst allgemeines Standing und läuft beim Gründer
-  zusammen, egal ob er an der Sache beteiligt war). **Zweck-gescopt:** wer für `π` gevoucht/
-  beigetragen hat, wiegt bei `π`-Entscheidungen schwer, bei fremden Themen leicht. Das trifft
-  „Expertise + Investment an der konkreten Sache" und entschärft die Gründer-Zementierung.
-- **Vom Nukleus-Seed**, nie vom eigenen Seed — man kann sich nicht selbst hochvouchen.
-- **Geldblind** (Trust-Flow-Spec §6.1) — gewichtetes ≠ geld-gewichtetes Abstimmen. Keine
-  Plutokratie durch die Hintertür.
+`i` ist die Epochennummer, beginnend bei 1. Epoche 1 ist der Genesis:
 
-**Zweischichtiges Tor:** *ob* man abstimmt → Mitgliedschaft (`grant-membership`, Konsens der
-Bestehenden; hier sitzt der Sybil-Schutz). *Wie schwer* die Stimme wiegt → zweck-gescopter Flow.
+```
+epoch_id_1 = SHA-256( DOM_NUC_EPOCH || cbor_deterministic([N, 1, genesis[4]]) )
+```
 
-### 4.2 Kanonischer Seed + Snapshot (Determinismus)
+Die Identität hasht das **Ergebnis**, nie den Beleg (D99). Zwei Mitglieder, die dieselbe
+Entscheidung unabhängig materialisieren, erzeugen damit zwei Claims über **dieselbe** Epoche und
+keinen Widerspruch.
 
-Gewichtetes Abstimmen **verlangt** eine kanonische Auszählung, sonst rechnet jeder ein anderes
-Gewicht:
+### 1.2 Was eine Epoche festlegt
 
-- Tallies laufen gegen den **genesis-deklarierten Nukleus-Seed** → alle bekommen denselben
-  Startpunkt.
-- Der Vorschlag committet sich auf einen **Graph-Snapshot**: eine Merkle-Wurzel über die
-  sortierten `claim_id` der in-scope (Zweck-`π`, aktiven) Vouch-Kanten zum Zeitpunkt der
-  Vorschlagserstellung. Gewichte werden **gegen diesen eingefrorenen Kantensatz** gerechnet.
-- Ergebnis: die Auszählung ist **deterministisch gegeben den Snapshot**. Uneinigkeit reduziert
-  sich auf „hast du die Snapshot-Claims" (eventually consistent), nicht auf „rechnen wir gleich".
+Für die Dauer einer Epoche stehen fest: `P`, alle Schwellen, `irrevocable_predicates`, die
+Arbitratorenliste — der gesamte Verfassungsinhalt. Eine Auszählung in Epoche `i` rechnet
+ausschließlich gegen die Verfassung von `i`.
 
-**Ehrlicher Preis:** gewichtetes Abstimmen ist **partitions-fragiler** als Kopfzahl (die nur die
-Stimm-Claims braucht). Der Snapshot fängt das ab; ohne ihn lösen sich divergente Tallies über
-dasselbe Fork-und-Exit-Ventil wie ein Verfassungs-Fork (§6) — Backstop, nicht Alltag.
+**Getragene Grenze.** Wer nach der Ratifizierung einer Epoche aufgenommen wird, stimmt erst in der
+folgenden Epoche mit. Die Epochenverfassung ist ein Stand, kein Livewert.
 
 ---
 
-## 5. Verfassungsänderung (Spezialfall)
+## 2. Profile
 
-- **Vorschlag** einer neuen Verfassungsversion via `propose@1`.
-- **Stimme** = `accept-rules@1` auf den **neuen** Verfassungs-Hash (die Ratifizierung *ist* die
-  Re-Akzeptanz — kein separater Mechanismus).
-- Überschreitet die gewichtete Ratifizierung die **Amendment-Schwelle** (höchste Klasse), gilt
-  die neue Verfassung als angenommen und **supersediert** die alte (Nukleus-Akt §3).
-- **Die Änderungsregel selbst ist in v1 unveränderlich.** Wer die Meta-Regeln ändern will,
-  **forkt** einen neuen Nukleus und nimmt Mitglieder per Re-Akzeptanz mit. Das ist konsistent mit
-  Exit/Fork als ultimativem Ventil und verhindert **Governance-Capture** (eine Fraktion senkt die
-  Hürde und übernimmt). Trade-off: weniger Flexibilität, dafür keine Capture-Fläche.
+Drei Prädikate. Alle drei sind `nuc:`-gescoped und tragen `N` als Pflichtfeld.
+
+### 2.1 `nuc:N/propose@1`
+
+| Feld | Belegung |
+|---|---|
+| `I` | ein Element von `P` der laufenden Epoche |
+| `N` | `N` des Nukleus |
+| `J` | `[object-hash, proposal_hash]` (Tag 3) |
+| `v` | leer |
+
+Führt einen Vorschlag ein. Erzeugt für sich keinen Zustand und verdrängt nichts.
+
+### 2.2 `nuc:N/vote@1`
+
+| Feld | Belegung |
+|---|---|
+| `I` | ein Element von `P` der laufenden Epoche |
+| `N` | `N` des Nukleus |
+| `J` | `[object-hash, proposal_hash]` (Tag 3) |
+| `v` | `{0: choice}` |
+
+`v` Key `0` ist **typ-normativ**: `choice` ist ein `uint`, `0` bedeutet Nein, `1` bedeutet Ja.
+Andere Werte sind unbekannt und zählen weder als Ja noch als Nein; sie erzeugen den Vermerk
+`UNKNOWN_VOTE_CHOICE`. Weitere Keys sind für spätere Durchgänge reserviert und werden ignoriert.
+
+Es gibt **keinen dritten Wert** für Enthaltung. Wer sich nicht äußert, gibt keine Stimme ab; das
+ist von einer Nein-Stimme in der Wirkung nicht unterschieden (`§3.2`), aber in der Diagnose (D94).
+
+### 2.3 `nuc:N/ratify@1`
+
+| Feld | Belegung |
+|---|---|
+| `I` | ein Element von `P` der laufenden Epoche |
+| `N` | `N` des Nukleus |
+| `J` | `[object-hash, proposal_hash]` (Tag 3) |
+| `v` | `{0: [claim_id, ...]}` — die zählenden Ja-Stimmen |
+
+Materialisiert eine gesättigte Entscheidung (`§4`). Die Zeugenmenge in `v` Key `0` ist ein
+**austauschbarer Beleg**, kein Teil der Epochenidentität.
+
+### 2.4 Das Vorschlagsobjekt
+
+Content-adressiert, kein Claim:
+
+```
+DOM_NUC_PROPOSAL = "claim-atom/v1/nucleus-proposal"
+
+proposal = {
+  0 scope             : N
+  1 predecessor       : epoch_id der Vorepoche
+  2 constitution_hash : SHA-256(cbor_deterministic(constitution_neu))
+}
+
+proposal_hash = SHA-256( DOM_NUC_PROPOSAL || cbor_deterministic(proposal) )
+```
+
+Ein Vorschlag ist damit eine **vollständige Verfassungsversion**, nicht eine einzelne
+Regeländerung. Das Verfassungsobjekt selbst reist neben dem Vorschlag; wer es nicht hat, kann den
+Vorschlag nicht bewerten (`§3.5`).
+
+Der eigene Domänen-Separator verhindert, dass ein `proposal_hash` je mit einem
+`constitution_hash`, einer `claim_id` oder einem `epoch_id` kollidiert.
 
 ---
 
-## 6. Konstitutioneller Fork (abgeleitet, kein neuer Mechanismus)
+## 3. Der Kern-Loop
 
-Erreichen in einer Partition zwei konkurrierende Amendments je das Quorum, hat der Nukleus über
-seine Verfassung **equivociert** — beweisbar wie jede Equivocation (Atom-Spec §4). Auflösung über
-dasselbe Detect-und-Exit-Ventil: der Nukleus **spaltet sich**. Konstitutionelle Forks reduzieren
-auf Fork-Erkennung + Exit, die wir schon haben.
+### 3.1 Welche Stimmen zählen
+
+Eine `vote@1`-Stimme zählt für einen Vorschlag genau dann, wenn alle Bedingungen gelten:
+
+1. `vote.N == scope`
+2. `vote.J == (3, proposal_hash)`
+3. `proposal.predecessor == epoch_id` der Epoche, in der ausgezählt wird — sonst Vermerk
+   `STALE_EPOCH_VOTE`
+4. `vote.I` ist Element von `P` — sonst Vermerk `NON_MEMBER_VOTE`
+5. Der Claim ist `ACTIVE` nach `classify_all` unter der scope-lokalen Policy (D91)
+6. `vote.v[0]` ist `0` oder `1` — sonst Vermerk `UNKNOWN_VOTE_CHOICE`
+
+**Zwei aktive Stimmen desselben Autors auf denselben Vorschlag zählen nicht** — weder die eine
+noch die andere. Vermerk `AMBIGUOUS_VOTE`, Subjekt sind beide `claim_id`. Die Parallele ist
+`02 §2`: trägt kein Gruppenmitglied eine gültige Belegung, entsteht keine Kante.
+
+> **Abgrenzung zu `03`, ausdrücklich.** `membership()` löst mehrere aktive `accept-rules` mit
+> `min(claim_id)` auf. Das ist dort richtig, weil alle dasselbe sagen. Zwei Stimmen sagen
+> Verschiedenes. Wer das Muster aus `03` überträgt, erzeugt ein Ergebnis aus einer Aussage, die
+> niemand gemacht hat (D101).
+
+### 3.2 Die Auszählung
+
+Sei `n = |P|`, sei `[num, den]` die anzuwendende Schwelle (`§3.4`), seien `Ja` und `Nein` die
+Mengen der zählenden Stimmen je Wahl. Alles exakte Integer, keine Division:
+
+```
+durchgekommen:   |Ja| * den        >   num * n
+gescheitert:     (n - |Nein|) * den   <=   num * n
+```
+
+Der Nenner ist `n`, nie `|Ja| + |Nein|`. Wer nicht abstimmt, senkt den Nenner nicht;
+Nichtteilnahme wirkt wie Ablehnung. Die Schwelle gilt gegenüber den **Berechtigten**, nicht
+gegenüber den Erschienenen.
+
+Beide Mengen wachsen nur (D97), beide Bedingungen sind einmal wahr für immer wahr, und sie
+schließen einander aus. Ein Vorschlag scheitert daran, dass genug Berechtigte ihn ausdrücklich
+ablehnen — nicht daran, dass eine Frist abgelaufen ist.
+
+### 3.3 Zustände
+
+| Zustand | Bedingung |
+|---|---|
+| `PASSED` | `durchgekommen` |
+| `FAILED` | `gescheitert` |
+| `PENDING` | weder noch |
+| `UNEVALUABLE` | die Auszählung kann nicht laufen (`§3.5`) |
+
+`PASSED` und `FAILED` sind absorbierend. `PENDING` ist die Voreinstellung und bedeutet, dass
+weiteres Wissen das Ergebnis noch drehen kann.
+
+Es gibt **kein Zeitfenster und keinen Abschluss**. Eine Abstimmung wird geschlossen, indem eine
+Entscheidung materialisiert wird und damit die Epoche wechselt (`§4.3`), nicht indem ein Datum
+vergeht. Die Begründung steht in D100: ein Stichtag verlangt Einigkeit darüber, welche Stimmen
+davor abgegeben wurden, und die gibt es zwischen zwei Autoren nicht (`01 §5.3`).
+
+### 3.4 Welche Schwelle gilt
+
+Die Klasse wird aus dem **Unterschied** zwischen alter und neuer Verfassung abgeleitet, nicht vom
+Vorschlagenden gewählt:
+
+| Unterschied | Klasse |
+|---|---|
+| ausschließlich `participants` | `membership` |
+| alles andere | `amendment` (Index aus `genesis[5]`) |
+
+Die Klasse `ordinary` ist in v1 unbenutzt und für nicht-verfassungsbezogene Entscheidungen
+reserviert; die Protokollschicht kennt keine.
+
+**Selbstbezügliche Sperre.** Ändert ein Vorschlag die Schwelle der Klasse, die er selbst aufruft,
+gilt das **Maximum** aus alter und neuer Schwelle:
+
+```
+angewandt = max( thresholds_alt[klasse], thresholds_neu[klasse] )
+
+Vergleich zweier Ratios exakt:   num_a * den_n   gegen   num_n * den_a
+```
+
+Anheben verlangt damit die neue, höhere Schwelle; Senken verlangt die alte, höhere. Eine Fraktion
+kann die Hürde nicht unter dem Niveau nehmen, das sie ohnehin überschreiten müsste. Das ist die
+h-Regel für den binären Fall.
+
+**Damit ist die Änderungsregel änderbar und trotzdem nicht kaperbar.** Der Satz aus der Vorfassung
+— die Änderungsregel sei in v1 unveränderlich, wer sie ändern wolle, forke — entfällt.
+
+### 3.5 Wann die Auszählung nicht läuft
+
+`UNEVALUABLE`, jeweils mit Vermerk, in dieser Reihenfolge geprüft:
+
+| Lage | Vermerk |
+|---|---|
+| Verfassung der Epoche lokal unbekannt | `CONSTITUTION_UNAVAILABLE` |
+| `participants` nicht deklariert | `PARTICIPANTS_UNDECLARED` |
+| `participants` formwidrig (kein Array, Eintrag nicht 32 B, unsortiert, Duplikate) | `MALFORMED_PARTICIPANTS` |
+| Schwellenklasse fehlt oder ist formwidrig | `MALFORMED_THRESHOLD` |
+| `genesis[6] != 0` (Gewichtungsmodus nicht Kopfzahl) | `UNSUPPORTED_WEIGHT_MODE` |
+| neues Verfassungsobjekt lokal unbekannt | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
+
+`UNEVALUABLE` ist **nie** `PASSED`. Kein Teilwissen führt zu einer Ratifizierung.
+
+Zur letzten Zeile: `00 §4` Key 6 lässt `weight_mode = 1` weiterhin zu, aber v1 wertet es nicht
+aus (D98). Ein Nukleus, der es setzt, bekommt kein Ergebnis statt eines falschen.
 
 ---
 
-## 7. Föderation & Rechtsweg
+## 4. Materialisierung und Epochenwechsel
 
-**Eine Föderation *ist* ein Nukleus, dessen Mitglieder Nuklei sind.** Dasselbe Primitiv, eine
-Ebene höher:
+### 4.1 Prüfung eines `ratify@1`
 
-- eigene Genesis `N_fed`, eine **kleinere gemeinsame Verfassung** (nur die Regeln, die die
-  Konstituenten gemeinsam halten wollen);
-- „Mitglieder" sind Nuklei; jeder stimmt über **seine** Stimme (Komposition/FROST, §3);
-- Ratifizierung auf Föderationsebene = die **Nuklei** akzeptieren die gemeinsame Teilmenge, nicht
-  die einzelnen Menschen.
+Ein `ratify@1`-Claim etabliert die Folgeepoche genau dann, wenn:
 
-Damit fällt der Subsidiaritätsturm heraus — Mensch → Nukleus → Föderation → Föderation-von-
-Föderationen, ein rekursives Objekt auf jeder Ebene (Ostroms „nested enterprises").
+1. `ratify.N == scope`, `ratify.J == (3, proposal_hash)`, `ratify.I` ist Element von `P`
+2. der Claim ist `ACTIVE`
+3. jede `claim_id` in `v[0]` bezeichnet eine Stimme, die nach `§3.1` zählt, mit `choice == 1`
+4. keine zwei bezeichnen Stimmen desselben Autors
+5. die Anzahl überschreitet die Schwelle nach `§3.2` und `§3.4`
 
-**Standing & Appeal (Nicht-Monopol-Ventil).** Standing fließt durch den eigenen Nukleus
-(Subsidiarität). Aber reine Subsidiarität würde ein Individuum einsperren, dessen eigener Nukleus
-der Bad Actor ist. Deshalb **eingebauter Appeal-Pfad nach oben**: ein Mensch kann eine Entscheidung
-seines Nukleus auf die Föderationsebene eskalieren, wo **andere** Nuklei urteilen (ein `verdict@1`
-im Föderations-Scope). Das ist genau die Antwort auf „privater Schutz ohne Monopol — man muss sich
-an jemanden wenden können".
+Trifft eine Bedingung nicht zu, etabliert der Claim keine Epoche. Er ist deshalb kein Angriff und
+kein Protokollverstoß, sondern eine Behauptung, die sich nicht bestätigt — Vermerk
+`UNSUPPORTED_RATIFICATION`.
+
+Die Prüfung ist **offline und vollständig lokal**: wer den Vorschlag, das neue Verfassungsobjekt
+und die zitierten Stimmen hat, rechnet das Ergebnis nach, ohne jemanden zu fragen und ohne eine
+Uhr zu lesen.
+
+### 4.2 Die Folgeepoche
+
+```
+i_neu             = i + 1
+constitution_neu  = das Objekt zu proposal[2]
+epoch_id_neu      = SHA-256( DOM_NUC_EPOCH || cbor_deterministic([N, i_neu, proposal[2]]) )
+```
+
+Zwei `ratify@1`-Claims für denselben Vorschlag ergeben denselben `epoch_id_neu`. Sie sind zwei
+Belege für dieselbe Tatsache.
+
+### 4.3 Was der Wechsel erledigt
+
+Mit der Etablierung von `i+1` sind alle Stimmen und alle Vorschläge, deren `predecessor` auf `i`
+zeigt, gegenstandslos. Ein Vorschlag, der in `i` nicht durchkam, muss in `i+1` neu eingebracht
+werden und behauptet sich dort gegen den geänderten Status quo.
+
+### 4.4 Höchstens ein Ja je Mitglied je Epoche
+
+Ein Mitglied darf in einer Epoche höchstens einen Vorschlag mit `choice == 1` bedenken. Zwei
+aktive Ja-Stimmen desselben Autors auf **verschiedene** Vorschläge derselben Epoche zählen beide
+nicht; Vermerk `CONFLICTING_APPROVAL`, Subjekt sind alle beteiligten `claim_id`.
+
+Nein-Stimmen sind unbeschränkt. Gegen mehrere Vorschläge gleichzeitig zu sein ist kohärent; zwei
+verschiedene Dokumente gleichzeitig als das geltende zu benennen ist es nicht.
+
+**Diese Regel ist sicherheitstragend, nicht ordnungspolitisch.** Aus ihr folgt, dass zwei
+rivalisierende Nachfolger derselben Epoche arithmetisch unmöglich sind: bei einer Schwelle über
+der Hälfte müssten sich ihre Ja-Mengen überschneiden. Ohne sie entstünde genau das Split Brain,
+das Raft bei nebenläufigen Konfigurationswechseln beschreibt (D102).
+
+Niemand muss Nein zu A sagen, um Ja zu B sagen zu können, und ein Ja zu A wird B **nicht** als
+Nein angerechnet.
 
 ---
 
-## 8. Bewusst getragene Grenzen & Designentscheidungen
+## 5. Der Nukleus-Akt
 
-- **Snapshot als Merkle-Commitment** über den in-scope Kantensatz ist eine *gewählte* Form
-  (deterministisch, prüfbar). Zeit-Cutoffs wären untauglich (Wall-Clock ist über Mesh wertlos,
-  Atom-Spec §5.3).
-- **Agenda-Setting-Fläche (offen benannt).** Der Vorschlagende stellt Snapshot **und** `π`
-  zusammen — das ist Agenda-Macht (welche Kanten/welcher Zweck zählen). Mitigation: der Snapshot
-  ist ein **prüfbares** Commitment — Wähler verifizieren Vollständigkeit gegen ihre eigene Sicht
-  und **verwerfen** einen gerrymanderten/unvollständigen Vorschlag; die Verfassung kann
-  einschränken, wer vorschlägt und wie `π` auf Entscheidungs-Domänen abbildet. **Residual:**
-  „Vollständigkeit" ist in einer Partition sicht-relativ. Agenda-Macht ist keine Eigenheit dieses
-  Entwurfs, aber sie ist da und wird von der Verfassung begrenzt, nicht vom Protokoll eliminiert.
-- **Quantifizierter Einfluss (ehrlicher Preis deiner Wahl).** Es bleibt ein reputationsgewichteter
-  Einfluss — aber **lokal, zweck-gescopt, per-Nukleus, nie global**. Kein Mensch wird auf *eine*
-  öffentliche Zahl reduziert; es gibt nur kontextuelle Stimmgewichte pro Thema pro Nukleus.
-  Größenordnungen milder als ein globaler Social-Score, aber bewusst zu tragen.
-- **Gründer-Zementierung reduziert, nicht null.** Die Gründer seeden die Zweck-Graphen anfangs;
-  zweck-gebundenes Vertrauen ist aber *pro Domäne verdienbar* und verschiebt sich über Beiträge.
-- **Partitions-Fragilität** von gewichtetem vs. Kopfzahl-Abstimmen (§4.2) — akzeptiert, per
-  Snapshot abgefedert.
-- **FROST-Re-Keying** bei Mitgliederwechsel ist der Preis des Stimmmodus-Opt-ins (§3).
+Ein Nukleus-Akt ist eine Handlung, die dem Nukleus selbst zugerechnet wird und nicht einem
+Menschen. `00 §7` zählt sie auf: `grant-membership@1`, das Verdikt eines Panels, die
+Föderationsstimme, die Ratifizierung, `rotate-key@1`.
+
+Es gibt **zwei Pfade**, und `00 §4` Key 7 wählt zwischen ihnen. Beide Pfade waren bisher an drei
+Stellen verschieden formuliert; die folgende Zuordnung ist die normative:
+
+| `vote_mode` | Pfad | Autorisierung | Normiert in |
+|---|---|---|---|
+| `0` | Epochenpfad | die Verfassung der Epoche trägt die Wirkung; jedes Mitglied darf materialisieren | `04 §4` |
+| `1` | Schlüsselpfad | `akt.I` ist Element von `resolve_current_key(akt.N)` | `00 §7`, umgesetzt in `03 §4` |
+
+`03 §4` implementiert damit den **Schlüsselpfad**: sein Parameter `authorized_keys` ist die Menge
+aus `resolve_current_key`. Das war nie ausgeschrieben und ist der Grund, aus dem `03 §5` eine
+Lücke melden musste.
+
+`resolve_current_key` selbst bleibt vertagt (`00a-rotate-key`, D62).
+
+---
+
+## 6. Mitgliedschaft
+
+### 6.1 Im Epochenpfad
+
+Mitgliedschaft ist weiterhin die Konjunktion aus fremder Aufnahme und eigener Annahme (D60). Nur
+die Herkunft der Aufnahme ändert sich: sie ist kein Claim, sondern ein Eintrag im
+Verfassungsobjekt, das der `constitution_hash` adressiert.
+
+```
+MEMBER  gdw.  subject ist Element von constitution.participants
+        und   eine aktive accept-rules@1 des subject auf genau diesen constitution_hash
+```
+
+Beide Konjunkte zeigen damit auf **dasselbe** content-adressierte Objekt. Die vier Zustände aus
+`03 §4` bleiben unverändert: fehlt die Annahme, ist der Zustand `GRANT_ONLY`; fehlt die Aufnahme,
+`APPLICANT`.
+
+Die eigene Annahme ist keine Formalie. Sie verhindert, dass eine Mehrheit jemandem eine
+Mitgliedschaft samt Pflichten zuschreibt, die er nicht eingegangen ist.
+
+### 6.2 Anschluss an `03`
+
+`membership()` bekommt einen zusätzlichen optionalen Parameter:
+
+```
+participants: frozenset[bytes] | None = None
+```
+
+Ist er gesetzt, gilt `subject in participants` als zweite Aufnahmequelle neben einer aktiven
+`grant-membership@1`. Die `accept-rules`-Strecke bleibt unverändert.
+
+Kein neues Prädikat, kein neuer Zustand, keine zweite Mitgliedschaftsfunktion. Zwei Funktionen,
+die dasselbe tun, waren die Fehlerform der `03`-Abnahme (D92).
+
+### 6.3 Aufnahme als Verfassungsänderung
+
+Eine Aufnahme ist damit ein Vorschlag, dessen neue Verfassung sich von der alten ausschließlich in
+`participants` unterscheidet — Klasse `membership` nach `§3.4`. Es gibt in v1 kein eigenes
+Aufnahmeverfahren.
+
+---
+
+## 7. Verfassungsänderung und Föderation als Belegungen
+
+### 7.1 Verfassungsänderung
+
+Der Loop aus `§3` mit Klasse `amendment` und der selbstbezüglichen Sperre aus `§3.4`. Kein eigener
+Mechanismus, keine eigene Prosa. Die Ratifizierung ist `ratify@1`; die Re-Akzeptanz der Mitglieder
+ist ihre `accept-rules@1` auf den neuen Hash und entscheidet über ihre eigene Mitgliedschaft in
+der Folgeepoche (`§6.1`), nicht über das Zustandekommen der Änderung.
+
+### 7.2 Föderation
+
+Eine Föderation ist ein Nukleus, dessen Mitglieder Nuklei sind: eigener Genesis `N_fed`, eigene,
+kleinere Verfassung, derselbe Loop.
+
+Ein Nukleus ist allerdings **kein Graphknoten** — Knoten sind Ed25519-Schlüssel (`02 §2`), ein
+Nukleus ist ein Genesis-Hash. Für eine Kopfzahl-Auszählung ist das gleichgültig: `participants`
+einer Föderationsverfassung enthält die aktuellen Schlüssel der konstituierenden Nuklei, und deren
+Stimme entsteht bei jedem von ihnen über `§5`.
+
+**Der Appeal-Pfad ist Opt-in, nicht eingebaut.** Ein Verdikt aus dem Föderations-Scope ist im
+Kind-Scope scope-fremd und bindet dort nicht (D81, D92). Es bindet genau dann, wenn die Verfassung
+des Kindes das Föderationspanel in `arbitration.arbitrators` führt. Das ist die freiwillige Form
+und die einzige, die mit `03` ausdrückbar ist. Die Vorfassung behauptete einen eingebauten Pfad;
+das war nicht einlösbar.
+
+Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentationsfairness, Rechtsweg
+über mehrere Ebenen — ist Verfassungsinhalt nach `08 §3` und nicht Gegenstand dieser Schicht.
+
+---
+
+## 8. Bewusst getragene Grenzen
+
+- **Ein Vorschlag ist ein Bündel.** Wer nur die Arbitratorenliste ändern will, reicht eine
+  vollständige Verfassungsversion ein. Der feinere Weg — Änderungen je Feld mit unabhängiger
+  Geltung — bringt Parallelität, erlaubt aber die Teilannahme eines Pakets und braucht eine
+  Zerlegung, die niemand gerechnet hat. Grob gebündelt und fein zerlegt sind beide sicher;
+  gefährlich ist das Mischen (D101).
+
+- **Vorschläge scheitern oder kommen durch; sie laufen nicht ab.** In einer Epoche, in der nichts
+  durchgeht, hängt ein Vorschlag unbegrenzt. Eine Entscheidung bildet damit gesetzte Zustimmung ab
+  und nicht, wer an einem bestimmten Tag besser mobilisiert hat.
+
+- **Eine hohe Schwelle bei lauer Beteiligung macht die Verfassung faktisch unveränderlich.** Der
+  Nenner ist `|P|`, nicht die Zahl der Abstimmenden. Die Schwelle ist gegen realistische
+  Beteiligung zu wählen; das gehört in `example-nucleus.md`, nicht ins Protokoll.
+
+- **Eine Stimme lässt sich nicht zurücknehmen.** Ohne Frist gibt es kein Fenster, nach dem es
+  gleichgültig wäre; ohne Unwiderruflichkeit gibt es keine Monotonie (D97). Wer seine Meinung
+  ändert, hilft dem einmal bedachten Vorschlag weiter — und nur ihm.
+
+- **Agenda-Macht bleibt, ist aber klein.** Der Vorschlagende wählt den Inhalt. Er wählt weder die
+  Wählerschaft noch einen Kantenschnitt noch einen Zweckkontext; all das ist mit dem Snapshot
+  entfallen (D96). Wer vorschlagen darf, begrenzt die Verfassung, nicht das Protokoll.
+
+- **Kein Rechtsweg gegen die eigene Mehrheit.** Wer in `P` überstimmt wird, hat innerhalb des
+  Nukleus keine Instanz über sich. Das Ventil ist Austritt und, wenn die Verfassung es vorsieht,
+  das Föderationspanel (`§7.2`).
+
+- **Vertagt und ausdrücklich nicht in v1:** gewichtete Auszählung (D98), Zweck-Tag am Vouch
+  (D56, `02d`), `resolve_current_key` (D62), Kettenbindung von Ämtern nach VR-04.1 (D26), das
+  Zeugenquorum für Fristen (D100).
