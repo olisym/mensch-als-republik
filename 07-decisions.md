@@ -2660,3 +2660,105 @@ lag außerhalb des Registers. Das ist eine andere Bauart als D74 bis D92, wo die
 Ordnung oder Schwellen betrifft, wird gefragt, unter welchem Namen dieses Problem außerhalb des
 Projekts gelöst ist. Die beiden Fälle hier haben je eine Runde gekostet; ohne die Recherche
 hätten sie eine Abnahme gekostet.
+
+---
+
+## W. Nachzug zu Layer 04 — Auflösbarkeit, Klassen, Unwiderruflichkeit
+
+Drei Beschlüsse aus dem Entwurf des Modulschnitts. Alle drei sind Lücken, die beim Schreiben von
+`04-governance.md` nicht sichtbar waren und erst auftraten, als die Signaturen der Funktionen
+neben den Zustandsautomaten aus Layer 01 gelegt wurden.
+
+### D103 — Unauflösbare Epochenzugehörigkeit einer fremden Ja-Stimme
+
+`04 §4.4` verlangt, dass zwei aktive Ja-Stimmen desselben Autors auf verschiedene Vorschläge
+**derselben Epoche** beide nicht zählen. Aus dieser Regel folgt D102: bei einer Schwelle über der
+Hälfte können zwei rivalisierende Nachfolger keine getrennten Ja-Mengen haben.
+
+Eine Stimme trägt aber nur `J = (3, proposal_hash)`. Die Epochenzugehörigkeit steht in
+`proposal[1]`. Ist das Vorschlagsobjekt lokal unbekannt, ist die Bedingung nicht auswertbar, und
+`04 §4.4` sagte dazu nichts.
+
+**Beschluss:** Eine aktive Ja-Stimme auf einen lokal unbekannten Vorschlag gilt als
+**möglicherweise epochengleich** und blockiert die andere Ja-Stimme desselben Autors. Vermerk
+`UNKNOWN_PROPOSAL`, Subjekt die `claim_id` der unauflösbaren Stimme.
+
+Die Richtung ist erzwungen: die Gegenannahme — unbekannt heißt fremde Epoche, also kein Konflikt —
+lässt bei Teilwissen zwei gültige Nachfolger derselben Epoche entstehen. Das ist die
+Über-Ratifizierungsrichtung, die `INV-04.3` ausschließt.
+
+**Getragene Grenze.** Eine Ja-Stimme auf einen Vorschlag, dessen Objekt nie verbreitet wurde,
+setzt ihren Autor für diese Epoche aus. Heilbar, indem jemand das Objekt nachreicht — es ist
+content-adressiert und nicht fälschbar. Verhindern kann das Mitglied es nicht.
+
+**Verworfen — die Epoche in der Stimme führen.** `vote.v` könnte einen Key `1` mit dem `epoch_id`
+tragen; dann wäre die Zugehörigkeit ohne das Vorschlagsobjekt auswertbar. Verworfen, weil es eine
+zweite Darstellung desselben Zustands neben `proposal[1]` schafft, die ihr widersprechen kann.
+Zwei Darstellungen desselben Zustands haben in diesem Projekt viermal einen Befund erzeugt; bei
+Widerspruch zählte die Stimme dann ohnehin nicht, und der Fall wäre nur verschoben.
+
+### D104 — Die Reihenfolge der Schwellenklassen ist normativ
+
+`04 §3.4` verweist für die Klasse eines allgemeinen Vorschlags auf `genesis[5]`, einen `uint`. Das
+Beispiel in `00 §3.1` trägt den Wert `2` und eine Verfassung mit drei benannten Schlüsseln in
+`thresholds`. Welcher Index welchen Namen bezeichnet, stand nirgends — die Zuordnung war
+offensichtlich und unaufgeschrieben.
+
+**Beschluss:** `0 = ordinary`, `1 = membership`, `2 = amendment`.
+
+Fehlt der benannte Schlüssel in `thresholds`, ist der Vorschlag nicht auszählbar. Ein Index über
+`2` ist ebenfalls nicht auszählbar und wird **nicht** auf `amendment` zurückgeführt: ein unbekannter
+Index ist ein unbekannter Wille, und die sichere Richtung ist, keine Ratifizierung zu erzeugen.
+
+### D105 — `vote@1` ist irrevocable; `t_exp` macht eine Stimme ungültig ⚠️
+
+D97 verlangt, dass eine Stimme innerhalb einer Epoche unwiderruflich ist und ihr `t_exp` nicht
+ausgewertet wird. `04 §3.1` Bedingung 5 verlangte, dass eine zählende Stimme nach `classify_all`
+`ACTIVE` ist.
+
+**Beides zusammen geht nicht.** `_classify_one` liefert für eine widerrufene Stimme `REVOKED` und
+für eine abgelaufene `EXPIRED`. Wer Bedingung 5 wörtlich umsetzt, hat eine schrumpfende
+Stimmenmenge — und damit fallen D96, D101 und D102 gemeinsam, weil alle drei auf der Monotonie der
+Ja- und Nein-Mengen stehen.
+
+Der naheliegende Ausweg wäre eine eigene Aktivitätsdefinition in `04`. Er ist versperrt: eine
+zweite Lesart von „aktiv" neben `classify()` und `classify_all()` ist genau die Drift, gegen die
+`T-02.4` gebaut wurde.
+
+**Beschluss, dreiteilig:**
+
+1. **`irrevocable_predicates` MUSS `vote@1` enthalten.** Damit greift der bestehende Schutz aus
+   D70/D72 — `is_irrevocable` setzt `protected`, und Widerruf wie Supersede laufen ins Leere. Kein
+   neuer Mechanismus, keine Sonderregel in `04`.
+2. **Eine `vote@1` mit gesetztem `t_exp` ist keine gültige Stimme.** Sie zählt weder als Ja noch
+   als Nein; Vermerk `VOTE_WITH_EXPIRY`. Nicht still ignoriert: `protected` schützt nicht vor
+   Ablauf, und ein Feld, dessen Wert wortlos übergangen wird, ist die Stummheit, die D95 gekostet
+   hat.
+3. **Ein Nukleus, dessen Verfassung `vote@1` nicht führt, ist nicht auszählbar.** Vermerk
+   `VOTE_REVOCABLE`, Zustand `UNEVALUABLE`. Seine Auszählung wäre nicht monoton, und dann darf sie
+   kein Ergebnis liefern statt eines fragilen.
+
+**Verhältnis zu D58.** Die Negativliste dort nennt `vouch@1`, und das Kriterium lautet, ob
+Fortbestehen die konservative Lesart ist. Eine Stimme gewährt keine fortdauernde Autorität; sie ist
+ein einmaliger Akt an einem einzelnen, content-adressierten Objekt. D97 hatte die Begründung
+bereits geschrieben, ohne den Mechanismus zu benennen.
+
+**Kosten.** Profil D in `04-golden-anchors.md` wurde vollständig neu gerechnet: alle drei
+`constitution_hash`, `N_D`, alle drei `epoch_id` und beide `proposal_hash` ändern sich. Die
+Schwellenarithmetik ist davon unberührt. Die Bestandsanker aus `00 §3.1` bleiben unangetastet;
+Profil D ist ein eigener Nukleus.
+
+**Nebenbefund.** Der Bestandsnukleus `65309fe2…` führt nur `obligation@1` und trifft damit
+zusätzlich zu `weight_mode = 1` auch diese Bedingung. Er bleibt nicht auszählbar, jetzt aus zwei
+unabhängigen Gründen.
+
+---
+
+**Zur Fehlerform dieses Abschnitts.** D105 ist die Parallelenprüfung, die diese Sitzung zweimal
+selbst empfohlen und beim Schreiben von `04 §3.1` unterlassen hat: die Bedingung wurde formuliert,
+ohne den Zustandsautomaten aus `01` Anhang B danebenzulegen. D103 und D104 sind Lücken, die erst
+beim Entwerfen der Funktionssignaturen sichtbar wurden.
+
+**Konsequenz — Signaturprüfung:** Der Modulschnitt wird entworfen, **bevor** der Prompt geschrieben
+wird, nicht als sein erster Abschnitt. Drei der Befunde dieser Runde lagen zwischen zwei
+Funktionen, nicht in einer.
