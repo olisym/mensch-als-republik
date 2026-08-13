@@ -2379,3 +2379,284 @@ müssen. `§3.3.2` hat sie ausgeschrieben, `§2.4.2` nicht, weil beim Schreiben 
 Bindungsfrage im Vordergrund stand und nicht die Eingangsprüfung.
 
 Drei der sechs Abnahmebefunde waren Asymmetrien zwischen genau diesen beiden Funktionen.
+
+---
+
+## V. Vor Layer 04 — Verfassungsdefekte, Epochen, Auszählung
+
+Acht Beschlüsse. D95 stammt aus dem `03a`-Lauf; D96 bis D102 entstehen aus der Forkanalyse für
+Layer 04 und aus einer Recherche zum Stand der Technik, die zwei eigene Vorschläge widerlegt hat.
+
+### D95 — Formwidriger Eintrag in `irrevocable_predicates`
+
+Gemessen im `03a`-Lauf: eine Verfassung, die statt eines Arrays den Text `"obligation@1"` trägt,
+wird in `resolve_policy` über `frozenset(raw)` still zu einer Menge von zwölf Einzelzeichen. Der
+Hash stimmt, das Objekt ist richtig zugeordnet, die Wirkung ist heute harmlos — Müll trifft
+keinen echten Prädikatnamen, und der Boden `obligation@1` (D70) hält unabhängig davon.
+
+Die Harmlosigkeit ist allerdings zufällig: sie beruht darauf, dass kein Prädikatname aus einem
+Zeichen besteht. Sie ist keine zugesicherte Eigenschaft.
+
+**Kein `ValueError`.** D92 lässt werfen, wenn ein gereichtes Objekt **fehlzugeordnet** ist. Hier
+ist die Zuordnung korrekt und der Defekt liegt im Inhalt. Also die D37/D70-Bewegung: der defekte
+Teil fällt weg, der Rest gilt.
+
+**Beschluss:**
+
+- Formkriterium, bedeutungsblind: ein Eintrag ist wohlgeformt, wenn er ein `str` ist, genau ein
+  `@` enthält, beidseits davon nicht leer ist und weder `/` noch `:` trägt. Alles andere fällt
+  heraus.
+- Vermerk `PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY`, Subjekt ist der Eintrag selbst, bei
+  Nicht-`str` als `repr`. **Nicht** in `PolicyResolution.findings` und **nicht** mit dem
+  `constitution_hash` als Subjekt: D84 hat für den strukturgleichen Fall in derselben Liste
+  bereits `policy.warnings` mit dem Eintrag als Subjekt festgelegt. Zwei Defekte einer Liste über
+  zwei Kanäle zu führen wäre die D92-Asymmetrie.
+- Ort ist `NucleusPolicy.__post_init__`, nicht `resolve_policy`. D72 hat Boden und Filter genau
+  deshalb in den Konstruktor gelegt: ein Aufrufer, der die Klasse von Hand baut, darf keine
+  unsichere Menge erzeugen können. Läge die Prüfung im Resolver, umginge sie jeder Testaufbau —
+  derselbe Umgehungsvorwurf, mit dem D57 den Wrapper verworfen hat.
+- `resolve_policy` reicht den gelesenen Wert **unverändert** weiter und zwingt ihn nicht mehr
+  vorab in ein `frozenset`. Der Konstruktor nimmt ein `Iterable[object]` entgegen. Ist der Wert
+  gar nicht iterierbar, gilt die Liste als vollständig ausgefallen: leere Menge plus ein Vermerk.
+
+Damit hat die Liste drei Ausschlussgründe mit drei Behandlungen: `core/*` still ignoriert (D71),
+unsicher mit Vermerk (D58), formwidrig mit Vermerk (D95). Wirkung gleich, Diagnose verschieden —
+D94.
+
+**Vektoren:** `P-7` Zeichenmenge aus einem Textwert; `P-8` Eintrag, der kein `str` ist; `P-9`
+Eintrag mit Scope-Präfix, etwa `nuc:N/obligation@1`. Der dritte ist der wichtigste: `01 §5.4.2`
+verlangt Profilnamen **ohne** Präfix, der Fehler ist der wahrscheinlichste echte Betreiberfehler,
+und heute schützt so ein Eintrag lautlos niemanden.
+
+**Nebenbefund.** `frozenset(42)` wirft heute einen unbehandelten `TypeError`. Nach D92 hätte ein
+gereichtes defektes Objekt einen definierten Ausgang; er fehlte. Der Beschluss oben schließt das
+mit ein.
+
+### D96 — Epochenkette statt Snapshot ⚠️
+
+`04 §4.2` band die Auszählung an einen Snapshot: eine Merkle-Wurzel über die `claim_id` der zum
+Zeitpunkt der Vorschlagserstellung aktiven Vouch-Kanten, mit der Behauptung, die Auszählung sei
+damit deterministisch und Uneinigkeit reduziere sich auf fehlende Claims.
+
+**Die Behauptung hält aus drei unabhängigen Gründen nicht.**
+
+1. Die Wurzel bindet `claim_id`, nicht Aktivität. Aktivität ist eine Funktion von Bytes, Store,
+   `now` und Policy. Nach E-A trägt jeder Vouch in einem Budget-Scope ein `t_exp`, und `01 §6`
+   erklärt genau den Ablauf zum einzigen legitimen Uneinigkeitsfall. Zwei Beobachter mit
+   identischem Snapshot und identischem Bestand rechnen verschiedene Kantensätze. Wegen
+   `C = C0 * gamma^d` verschiebt eine ablaufende Brückenkante die Kapazität eines ganzen
+   Teilbaums exponentiell.
+2. Der Seed ist selbst `now`-abhängig. `§4.2` nannte ihn genesis-deklariert; D23 verlangt
+   `t_exp` und Neuerklärung, und der Ablauf fällt nach `02 §6.3` auf das **persönliche**
+   Ankerset zurück. Läuft die Nukleus-Linse während einer Abstimmung ab, divergiert die
+   Auszählung nicht, sie wird pro Beobachter beliebig.
+3. Der Snapshot deckt die falsche Menge. Der Nenner einer Schwelle ist die stimmberechtigte
+   Menge; die steht nicht darin und ist unter Teilwissen unter-bekannt. Ein zu kleiner Nenner
+   macht die Schwelle **leichter** erreichbar — die Über-Ratifizierungsrichtung, also die
+   Umkehrung von `02 §7`.
+
+**Die Folge reicht über `04` hinaus.** D72 hält fest, abweichende Verfassungen für dasselbe `N`
+seien kein legitimer Uneinigkeitsfall, weil die Ratifizierung selbst prüfbar ist, und schließt
+daraus, `expired` bleibe der einzige Zustand, in dem zwei korrekte Verifizierer uneins sein
+dürfen. Ist die Auszählung `now`-abhängig, wandert `expired` durch die Ratifizierung in die
+Policy, und `01` Anhang B ist nicht mehr deterministisch gegeben dieselben Bytes und dieselbe
+Policy, sondern gegeben dieselbe Uhr.
+
+**Der erste Reparaturversuch war falsch und wird mitprotokolliert.** Vorgeschlagen war, den
+Snapshot total zu machen: zwei Merkle-Wurzeln, `t_exp` innerhalb der Auszählung nicht
+ausgewertet. Das funktioniert formal, verschiebt die Koordination aber auf den Vorschlagenden,
+der damit auch die Wählerschaft aussucht. Nach dem CALM-Theorem hat ein Problem genau dann eine
+konsistente koordinationsfreie Implementierung, wenn es monoton ist; ein nicht-monotones Problem
+wird nicht dadurch monoton, dass man seine Eingabemenge einfriert — die Koordination taucht an
+anderer Stelle wieder auf. Hier tauchte sie als Agenda-Macht auf.
+
+**Beschluss:** Der Snapshot entfällt ersatzlos. `§4.2` wird gestrichen.
+
+An seiner Stelle steht die **Epochenkette**:
+
+- Eine Epoche beginnt mit einem ratifizierten Verfassungsobjekt. Der Genesis ist Epoche 1.
+- Die stimmberechtigte Menge `P` und die Schwelle stehen in der Verfassung der laufenden Epoche.
+  `P` wird deklariert, nie aus dem Bestand abgeleitet: eine abgeleitete Menge wäre unter
+  Teilwissen unter-bekannt, und das ist die gefährliche Richtung.
+- Eine Stimme ist ein Claim, gebunden an Instanz, Epoche und Vorschlag.
+- Eine Entscheidung ist ein Claim, der die zählenden Stimmen mitführt. Jeder Beobachter prüft
+  ihn offline gegen die Epochenverfassung. Kein `now`, keine Merkle-Wurzel über Vouch-Kanten.
+
+`P` als Verfassungsfeld ist **optional**, damit das kanonische Beispiel es weglässt und `N`
+byte-identisch bleibt (`65309fe2…`). Ein Nukleus ohne deklariertes `P` ist nicht auszählbar; die
+Anker für `04` brauchen deshalb ein eigenes Profil.
+
+**Getragene Grenze.** Die Epochenverfassung ist ein Stand, kein Livewert. Wer nach ihrer
+Ratifizierung aufgenommen wird, stimmt erst in der nächsten Epoche mit.
+
+### D97 — Stimmen sind innerhalb einer Epoche unwiderruflich
+
+Damit die Auszählung monoton bleibt, darf die Stimmenmenge nur wachsen. Ein Widerruf oder ein
+ausgewertetes `t_exp` lässt sie schrumpfen und macht das Prädikat nicht-monoton — womit D96
+wieder aufgehoben wäre.
+
+**Beschluss:** Eine Stimme in einer laufenden Epoche ist unwiderruflich. Ihr `t_exp` wird nicht
+ausgewertet; trägt sie eines, bleibt es folgenlos. Die Verhältnismäßigkeit zu E-A ist beim
+Schreiben von `04` gegen `02 §6.2` zu prüfen: bindet `vote@1` kein Budget, greift E-A nicht.
+
+**Verhältnis zu D58.** Dem Wortlaut nach kollidiert das mit dem Verbot unwiderruflicher
+vertrauensgewährender Prädikate; dem Kriterium nach nicht. D58 fragt, ob **Fortbestehen** die
+konservative Lesart ist. In einem Verfahren, in dem der Status quo der Default ist und eine
+Stimme sich nur von ihm weg bewegen kann, hält Fortbestehen eine getroffene Entscheidung, statt
+Vertrauen künstlich am Leben zu erhalten. Eine Stimme gewährt zudem keine fortdauernde Autorität,
+sondern ist ein einmaliger Akt — anders als `vouch@1` und `submit-arbitration@1`.
+
+**Was an die Stelle des Ablaufs tritt.** Ein `t_exp` darf auf dem **Vorschlag** stehen und wird
+von den Abstimmenden gelesen, nicht vom Protokoll ausgewertet. Uhren informieren Verhalten, nie
+Gültigkeit.
+
+### D98 — Auszählung nach Kopfzahl; `weight_mode = 1` vertagt
+
+`04 §4` sah eine gewichtete Auszählung über dem Vertrauensgraphen vor. Sie fällt für v1 aus drei
+Gründen, von denen der dritte allein trägt.
+
+1. Gewichte aus dem Graphen sind keine Eigenschaft der Epoche; an ihnen hing die ganze
+   `now`-Kette aus D96.
+2. Der Zweckbegriff aus `§4.1` verlangt den Vouch-Zweck-Tag, der mit D56 vertagt ist. `§4` war
+   in seiner bisherigen Form nicht implementierbar.
+3. Ein Stimmgewicht ist eine übertragbare, akkumulierbare Größe, sobald jemand bemerkt, dass es
+   sich lohnt. Vertrauen ist in diesem Protokoll ein Flussverstärker und kein Zahlungsmittel
+   (`08 §4`); die gewichtete Auszählung verwandelt es in genau das, was es nicht sein darf. Das
+   ist derselbe Einwand, mit dem D25 Ansehen von Torwächterschaft trennt.
+
+**Beschluss:** Auszählung nach Kopfzahl über deklariertem `P`. `weight_mode = 1` bleibt im
+Genesis-Schema zulässig, ist in v1 aber nicht ausgewertet; ein Nukleus, der es setzt, bekommt
+kein Ergebnis, sondern den unentschiedenen Zustand.
+
+**Was dabei nicht verloren geht.** `04 §4` verortet den Sybil-Schutz bei der **Mitgliedschaft**,
+nicht beim Gewicht. Der Vertrauensgraph bleibt in voller Wirkung als das, was Mitglieder bei der
+Aufnahmeentscheidung lesen. Er ist nur nicht mehr das, was das Protokoll multipliziert.
+
+**Getragene Grenze.** Die zweck-gescopte Gewichtung war eine eigenständige Idee des Entwurfs. Sie
+wird nicht widerlegt, sondern aus der Schicht genommen: sie ist Policy und keine Infrastruktur.
+
+### D99 — Epochenidentität über dem Ergebnis, nicht über dem Beleg
+
+Zwei ehrliche Mitglieder können dieselbe gesättigte Entscheidung unabhängig materialisieren, mit
+verschiedenen Zeugenmengen — beide gültige Supermajoritäten, beide auf dasselbe Ergebnis. Steckt
+die Zeugenmenge im gehashten Objekt, sind das zwei Identitäten für eine Entscheidung, und die
+Verfassungskette spaltet sich ohne jedes Fehlverhalten.
+
+**Beschluss:** Die Epochenidentität hasht das Ergebnis, nicht den Beleg.
+
+```
+epoch_id = SHA-256( DOM_NUC_EPOCH || cbor_deterministic([N, i, constitution_hash_neu]) )
+```
+
+Die Zeugenmenge reist daneben als austauschbarer Beleg. Zwei Materialisierungen desselben
+Ergebnisses sind damit zwei Claims über dieselbe Epoche, und wer beide sieht, sieht keinen
+Widerspruch.
+
+Dieselbe Fehlerform wie D92 — zwei Wege, die dasselbe tun sollen, und nur einer trägt die Regel.
+Diesmal vor der Abnahme gefunden.
+
+### D100 — Die Stimme bindet an das Vorschlagsobjekt; Schließung durch Epochenwechsel
+
+Ein Stichtag setzt voraus, dass zwei Beobachter sich einig sind, welche Stimmen davor abgegeben
+wurden. Das `t`-Feld setzt der Autor selbst, und `01 §5.3` nimmt die Ordnung ausschließlich aus
+der Autorenkette. Eine Frist würde von genau der Person durchgesetzt, die sie binden soll; und
+selbst bei ehrlichen Uhren ist „zu spät abgegeben" von „zu spät zugestellt" nicht unterscheidbar,
+womit die Frist zur Waffe dessen wird, der Zustellung verzögern kann. Ein Wahllokal ist eine
+Autorität in Konventionsform. Mit ihr fällt die Frist.
+
+**Beschluss:**
+
+- Eine Stimme gilt einem **konkreten Vorschlagsobjekt**, nie einer Sachfrage. Wer seine Meinung
+  ändert, holt seine Zustimmung zu diesem Objekt nicht zurück — sie hilft aber auch nur diesem
+  Objekt.
+- Eine Abstimmung wird nicht durch Zeit geschlossen, sondern durch den **Epochenwechsel**:
+  Stimmen sind an Instanz, Epoche und Vorschlag gebunden, und mit der Materialisierung einer
+  Entscheidung sind alle Stimmen der alten Epoche erledigt.
+- Wer nicht abstimmt, senkt den Nenner nicht. Nichtteilnahme wirkt wie Ablehnung. Die Schwelle
+  gilt gegenüber den **Berechtigten**, nicht gegenüber den Erschienenen.
+
+**Getragene Grenze.** In einer Epoche, in der nichts durchgeht, hängt ein Vorschlag unbegrenzt.
+Eine Entscheidung bildet damit gesetzte Zustimmung ab und nicht, wer an einem bestimmten Tag
+besser mobilisiert hat. Für `example-nucleus.md`: eine hohe Schwelle bei lauer Beteiligung macht
+die Verfassung faktisch unveränderlich; die Schwelle ist gegen realistische Beteiligung zu wählen.
+
+**Verworfen — Zeugenquorum für Fristen.** Die Verfassung könnte `k` Zeugen benennen, die Stimmen
+mit ihrer beobachteten Zeit gegenzeichnen; rechtzeitig wäre, was ein Zeugenquorum bestätigt.
+Scope-lokal, also kein Bruch von „nie global", und additiv nachrüstbar. Für v1 verworfen: es
+schafft eine Rolle mit Verfügbarkeitsanforderung und einen neuen Fehlermodus, denn kolludierende
+Zeugen können Stimmen ausschließen. Zensur ist schlimmer als Hängenbleiben.
+
+### D101 — Nein ist arithmetisch neutral und trotzdem ausgezeichnet
+
+Würde die Schwelle gegen `Ja + Nein` gerechnet, könnte eine hinzukommende Nein-Stimme ein bereits
+wahres Ergebnis wieder falsch machen. Der feste Nenner `n = |P|` ist es, der es überhaupt
+erlaubt, das Nein aufzuschreiben: **wir können es uns leisten, weil es nicht mitzählt.**
+
+**Beschluss:** Drei Antworten — Ja, Nein, keine Äußerung. Nein und Nichtteilnahme wirken gleich;
+sie werden getrennt geführt, weil die Diagnose verschieden ist (D94). Mit `n = |P|` und der
+Schwelle `num/den` gilt, in exakter Integer-Form ohne Division:
+
+```
+durchgekommen:   |Ja| * den   >  num * n
+gescheitert:     (n - |Nein|) * den   <=   num * n
+```
+
+Beide Mengen wachsen nur, beide Bedingungen sind einmal wahr für immer wahr, und sie schließen
+einander aus. Drei Zustände, zwei davon absorbierend, ohne jede Frist. Ein Vorschlag scheitert
+daran, dass genug Berechtigte ihn ausdrücklich ablehnen — nicht daran, dass ein Tag vorbei ist.
+
+**Höchstens ein Ja je Mitglied je Epoche. Neins beliebig viele.** Gegen mehrere Vorschläge
+gleichzeitig zu sein ist kohärent; zwei verschiedene Dokumente gleichzeitig als das geltende zu
+benennen ist es nicht. Niemand muss Nein zu A sagen, um Ja zu B sagen zu können, und ein Ja zu A
+wird B **nicht** als Nein angerechnet.
+
+**Abgrenzung zu `03`.** `membership()` löst mehrere aktive `accept-rules` mit `min(claim_id)` auf,
+weil alle dasselbe sagen. Zwei aktive Stimmen desselben Autors sagen Verschiedenes: dann zählt
+**keine**, plus Vermerk — die Parallele ist `02 §2`, wo ohne gültige Belegung keine Kante
+entsteht. Wer `03` als Vorbild liest, harmonisiert das falsch; der Prompt muss es ausschreiben.
+
+**Getragene Grenze.** Ein Vorschlag ist damit ein Bündel — eine ganze Verfassungsversion, nicht
+eine einzelne Regeländerung. Der feinere Weg, Änderungen je Slot mit unabhängiger Geltung, bringt
+Parallelität, erlaubt aber die Teilannahme eines Pakets und braucht eine Slot-Zerlegung. Grob
+gebündelt und fein zerlegt sind beide sicher; gefährlich ist das Mischen.
+
+### D102 — Rivalisierende Nachfolger sind arithmetisch unmöglich ⚠️
+
+**Dieser Eintrag ersetzt einen eigenen Fehler.** Zunächst war beschlossen worden, bei zwei
+Entscheidungen auf derselben Epoche setze sich die **erste Materialisierung** durch. Beim
+Nachlesen von Rafts Konfigurationswechsel fiel auf, dass „zuerst" hier keine Bedeutung hat: zwei
+Materialisierungen sind Claims verschiedener Autoren, und zwischen ihnen gibt es keine Ordnung.
+
+Es ist derselbe Fehler, den Ongaro 2015 für Rafts Einzelserver-Wechsel dokumentiert hat: zwei
+nebenläufige konkurrierende Konfigurationsänderungen können Quoren haben, die sich nicht
+überschneiden, und erzeugen Split Brain. Die Produktionsantwort dort ist Serialisierung — höchstens
+eine uncommittete Konfiguration zur Zeit —, die theoretische ist Joint Consensus, bei dem je zwei
+konkurrierende Konfigurationen eine gemeinsame haben und sich deshalb überschneiden.
+
+**Geprüft und verworfen: kleinster `epoch_id` gewinnt.** Deterministisch, uhrenfrei und sogar
+konvergent, weil das Minimum über einer wachsenden Menge einen Halbverband bildet. Aber ein
+Beobachter, der unter A gehandelt hat und später ein kleineres B lernt, muss zurückrollen. Das ist
+Fork Choice mit Reorg und steht quer zu allem, wofür dieses Protokoll gebaut ist.
+
+**Beschluss:** Es braucht keine Auflösung, weil der Fall nicht eintreten kann. Aus D101 folgt
+höchstens ein Ja je Mitglied je Epoche; bei einer Schwelle über der Hälfte müssten sich die
+Ja-Mengen zweier rivalisierender Versionen überschneiden, und niemand hat zweimal Ja gesagt. Zwei
+gültig ratifizierte Nachfolger derselben Epoche sind arithmetisch unmöglich, solange kein Mitglied
+doppelt gestimmt hat — und Doppelstimmen sind nach D101 nicht bloß verboten, sondern zählen nicht.
+
+Das ist das Überschneidungsargument aus Joint Consensus, nur aus dem Stimmverhalten geholt statt
+aus der Konfiguration. Damit entfällt auch der Fall, um dessentwillen der Eintrag begonnen wurde:
+einen unterlegenen Vorschlag mit echter Supermajorität kann es nicht geben.
+
+---
+
+**Zur Fehlerform dieses Abschnitts.** D96 und D102 sind beide eigene Vorschläge, die an
+Bestandsliteratur gescheitert sind — der erste am CALM-Theorem, der zweite an einem zehn Jahre
+alten Raft-Befund. Beide Male war der Vorschlag intern stimmig und die widerlegende Eigenschaft
+lag außerhalb des Registers. Das ist eine andere Bauart als D74 bis D92, wo die Begründung beim
+Übertragen ihren Geltungsbereich verlor.
+
+**Konsequenz — Standprüfung:** Bevor ein Mechanismus normiert wird, der Nebenläufigkeit,
+Ordnung oder Schwellen betrifft, wird gefragt, unter welchem Namen dieses Problem außerhalb des
+Projekts gelöst ist. Die beiden Fälle hier haben je eine Runde gekostet; ohne die Recherche
+hätten sie eine Abnahme gekostet.
