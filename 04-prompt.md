@@ -171,8 +171,14 @@ def decide(
 ```
 
 `TallyResult` trägt `state: TallyState`, `yes: tuple[bytes, ...]`, `no: tuple[bytes, ...]`,
-`n: int | None`, `threshold: tuple[int, int] | None`, `findings: tuple[Finding, ...]`.
+`participants: frozenset[bytes] | None`, `threshold: tuple[int, int] | None`,
+`findings: tuple[Finding, ...]`. `n` ist **kein Feld**, sondern eine Eigenschaft:
+`len(participants)`, oder `None`, wenn `participants` `None` ist.
 `TallyState` hat vier Werte: `PASSED`, `FAILED`, `PENDING`, `UNEVALUABLE`.
+
+`participants` ist genau dann `None`, wenn `state is UNEVALUABLE`. Das Feld ist der einzige Ort,
+an dem die Wählerschaft nach der Auszählung steht; `verify_ratification` liest sie von dort und
+bekommt sie nicht als eigenen Parameter (D106).
 
 `yes` und `no` sind die sortierten `claim_id` der **zählenden** Stimmen.
 
@@ -294,13 +300,24 @@ def verify_ratification(
 
 Dann ist `next_epoch = Epoch(scope, epoch.index + 1, proposal.constitution_hash)`.
 
-Vermerke: `UNKNOWN_WITNESS_VOTE`, wenn eine zitierte `claim_id` nicht in `tally.yes` steht —
-getrennt von `UNSUPPORTED_RATIFICATION` für alles Übrige. Die Trennung ist die Diagnose: das eine
-heißt „mir fehlt ein Claim", das andere „die Behauptung stimmt nicht" (D94).
+Bedingung 2 liest `participants` aus `tally`, nicht aus einem eigenen Parameter. Ist
+`tally.state is UNEVALUABLE`, ist `tally.participants` gleich `None` und `next_epoch` gleich
+`None`.
 
-Bedingung 3 heißt beides zugleich, und das ist Absicht. Ein Beobachter, dem eine zitierte Stimme
-fehlt, etabliert die Epoche **nicht** — sichere Richtung —, bekommt aber gesagt, welche `claim_id`
-ihm fehlt, und kann sie holen.
+Zwei Vermerke, nach der Lage der zitierten `claim_id` (D106):
+
+| Lage | Vermerk |
+|---|---|
+| `store.get(cid) is None` | `UNKNOWN_WITNESS_VOTE` |
+| Claim vorhanden, steht aber nicht in `tally.yes` | `UNSUPPORTED_RATIFICATION` |
+
+Die Trennung ist die Diagnose: das eine heißt „mir fehlt ein Claim", das andere „die Behauptung
+stimmt nicht" (D94). Beide führen dazu, dass keine Epoche entsteht — sichere Richtung —, aber nur
+im ersten Fall nützt es, den Claim zu holen. Vektoren `GV-30` und `GV-2`.
+
+Aus den Bedingungen 3 und 4 folgt, dass `verify_ratification` nur dann eine Epoche liefern kann,
+wenn `tally.state is PASSED`. Ein expliziter Test darauf ist überflüssig, ein Test **dagegen**
+gehört in die Suite.
 
 Die Zeugenmenge ist **nicht** Teil der Epochenidentität. Zwei `ratify@1` mit verschiedenen
 Zeugenmengen für denselben Vorschlag liefern denselben `epoch_id` (`GV-1`, D99).
