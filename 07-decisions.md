@@ -2814,3 +2814,70 @@ Fall.
 (a) zwischen einer Spec-Bedingung und einer Prompt-Signatur, (b) zwischen einer Spec-Vermerkliste
 und einer Prompt-Vermerkliste. Die Signaturprüfung aus Abschnitt W hätte (a) gefunden, wenn sie
 auch die zweite Funktion erfasst hätte statt nur die erste.
+
+---
+
+## Y. Symmetrie an der Epochengrenze
+
+### D107 — `ratify@1` ist irrevocable; `propose@1` ist ungeprüft ⚠️
+
+Aus der Parallelenprüfung, die D106 als Konsequenz aufgeschrieben hatte: `decide()` und
+`verify_ratification()` nebeneinandergelegt statt nacheinander gelesen.
+
+**Der Befund.** `04 §4.1` Bedingung 2 verlangt, dass der `ratify@1`-Claim `ACTIVE` ist. D105 hat
+`vote@1` in `irrevocable_predicates` gezwungen; `ratify@1` stand dort nicht.
+
+Folge: eine bereits etablierte Epoche kann wieder verschwinden. Wer als Einziger materialisiert
+hat, widerruft seinen `ratify@1`, und für jeden Beobachter, der nur diesen einen Beleg kennt,
+fällt der Nukleus auf die alte Verfassung zurück — bei unveränderter Stimmenlage im Store.
+
+Das ist derselbe Monotoniebruch, den D105 eine Ebene tiefer geschlossen hat, nur an der
+Epochengrenze statt an der Stimme. `INV-04.7` sichert die Stimmenmenge; darüber war nichts
+gesichert. Kein Angriff — die Tatsache bleibt nachrechenbar und jedes Mitglied kann neu
+materialisieren —, aber ein Hebel in einer Hand, die ihn nicht haben sollte: nicht die Änderung
+rückgängig machen, sondern sie aussetzen, bis jemand tätig wird.
+
+**Beschluss, in der Form von D105:**
+
+1. **`irrevocable_predicates` MUSS `ratify@1` enthalten.** Der Schutz entsteht über `is_irrevocable`
+   (D70/D72), nicht über eine Sonderregel in `04`.
+2. **Eine `ratify@1` mit gesetztem `t_exp` etabliert keine Epoche.** Vermerk
+   `RATIFY_WITH_EXPIRY`. `protected` schützt nicht vor Ablauf, und ein still übergangenes Feld ist
+   die Stummheit aus D95.
+3. **Ein Nukleus, dessen Verfassung `ratify@1` nicht führt, ist nicht auszählbar.** Vermerk
+   `RATIFY_REVOCABLE`, Zustand `UNEVALUABLE`.
+
+Zu D58 verhält es sich wie bei D105: eine Materialisierung gewährt keine fortdauernde Autorität.
+Sie bezeugt eine unabhängig nachrechenbare Tatsache an einem content-adressierten Objekt, und
+Fortbestehen ist die konservative Lesart.
+
+**Die Gegenrichtung, im selben Zug festgestellt.** `propose@1` wird von der Auszählung **nie
+gelesen**. Eine Stimme zeigt auf den `proposal_hash`, nicht auf den `propose@1`-Claim; dieser
+dient allein der Auffindbarkeit. Er braucht deshalb keinen Schutz, und eine Aktivitätsprüfung auf
+ihn wäre ein Fehler — sie gäbe dem Vorschlagenden nachträglich Macht über eine Abstimmung, die
+ohne ihn weiterläuft. Das stand bisher nirgends und ist die Sorte Selbstverständlichkeit, die im
+Implementierungsfenster still zu einer Zeile wird.
+
+**Verworfen — die Aktivitätsprüfung auf `ratify@1` streichen.** Billiger, aber es wäre eine
+Sonderregel neben `classify_all` statt der bestehenden Mechanik, und Equivocation des
+Materialisierenden bliebe ungeprüft.
+
+**Verworfen — als getragene Grenze stehen lassen.** Selbstheilend, sobald jemand neu
+materialisiert. Verworfen, weil „selbstheilend, sobald jemand tätig wird" bei einer Verfassung
+etwas anderes bedeutet als bei einem Vouch: bis dahin gilt für einen Teil des Nukleus eine andere
+Verfassung, und `03` bindet `constitution_hash` daran (D61).
+
+**Kosten.** Profil D zum zweiten Mal in dieser Sitzung neu gerechnet: alle drei
+`constitution_hash`, `N_D`, alle drei `epoch_id`, beide `proposal_hash`. Die Arithmetik ist
+unberührt. Neue Vektoren `GV-31` bis `GV-34` und die Invariante `INV-04.8`. Der Prompt wurde vor
+dem Losschicken des Werkzeugs korrigiert; es hat nie gegen die alten Zahlen gebaut.
+
+**Zur Fehlerform.** D105 und D107 sind dieselbe Lücke auf zwei Ebenen. D105 entstand, weil `§3.1`
+ohne den Zustandsautomaten aus `01` Anhang B danebengelegt geschrieben wurde; D107, weil die
+Korrektur danach nur auf `vote@1` angewandt und nicht auf jedes Prädikat dieser Schicht geprüft
+wurde. Eine Reparatur ist selbst eine Regel und braucht dieselbe Übertragungsprüfung wie die
+Bedingung, die sie ersetzt.
+
+**Konsequenz — Prädikatendurchgang:** Wird ein Prädikat einer Schicht mit einer
+Zustandsbedingung belegt, werden **alle** Prädikate derselben Schicht daraufhin durchgegangen,
+und die, die keine bekommen, werden ausdrücklich als ungeprüft benannt.

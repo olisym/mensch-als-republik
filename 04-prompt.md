@@ -56,8 +56,9 @@ Vektoren: `P-7` Zeichenmenge aus einem Textwert, `P-8` Eintrag ohne `str`, `P-9`
 ## 1. Was diese Schicht **nicht** ist
 
 - **Kein zweites `classify`.** „Aktiv" kommt aus Layer 01 über `classify_all`. Die
-  Unwiderruflichkeit einer Stimme entsteht **nicht** hier, sondern dadurch, dass `vote@1` in
-  `irrevocable_predicates` steht und `is_irrevocable` greift (D105). Wer in `governance/` eine
+  Unwiderruflichkeit einer Stimme und einer Ratifizierung entsteht **nicht** hier, sondern dadurch,
+  dass `vote@1` und `ratify@1` in `irrevocable_predicates` stehen und `is_irrevocable` greift
+  (D105, D107). Wer in `governance/` eine
   eigene Aktivitätsregel schreibt, ist rot.
 - **Keine Uhr.** `now` wird durchgereicht, weil `classify_all` es braucht. Kein Pfad dieser
   Schicht vergleicht `t`, und `t_exp` wird ausschließlich auf **Anwesenheit** geprüft, nie auf
@@ -194,6 +195,7 @@ Implementierung verschiedene Diagnosen erzeugt.
 | `participants` fehlt | `PARTICIPANTS_UNDECLARED` |
 | `participants` kein Array, Eintrag nicht 32 B, unsortiert, oder Duplikat | `MALFORMED_PARTICIPANTS` |
 | `vote@1` nicht in `irrevocable_predicates` | `VOTE_REVOCABLE` |
+| `ratify@1` nicht in `irrevocable_predicates` | `RATIFY_REVOCABLE` |
 | Klasse nicht bestimmbar, Schwelle fehlt oder formwidrig, `genesis[5] > 2` | `MALFORMED_THRESHOLD` |
 | `genesis_obj[6] != 0` | `UNSUPPORTED_WEIGHT_MODE` |
 | `target_constitution_obj is None` oder Hash passt nicht zu `proposal.constitution_hash` | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
@@ -294,7 +296,8 @@ def verify_ratification(
 `next_epoch` ist gesetzt genau dann, wenn:
 
 1. `ratify.N == epoch.scope`, `ratify.J == (3, proposal.proposal_hash)`
-2. `ratify.I` steht in `participants`, und `ratify` ist `ACTIVE`
+2. `ratify.I` steht in `participants`, `ratify.t_exp is None` — sonst `RATIFY_WITH_EXPIRY` —, und
+   `ratify` ist `ACTIVE`
 3. jede `claim_id` in `ratify.v[0]` steht in `tally.yes`
 4. `reached(len(zitierte), n, num, den)`
 
@@ -371,7 +374,7 @@ nicht die Governance.
 
 ### 8.2 Vektoren
 
-`GV-1` bis `GV-29` aus `04-golden-anchors.md`, je ein Test. Zwei davon sind
+`GV-1` bis `GV-34` aus `04-golden-anchors.md`, je ein Test. Zwei davon sind
 **Gegenbilder** und müssen als solche benannt sein:
 
 - `GV-12` — drei von fünf senken die Änderungsschwelle, **wenn** `ratio_max` fehlt.
@@ -386,7 +389,7 @@ bekommt `REVOKED` und ist hier rot (D91).
 
 ### 8.3 Invarianten
 
-`INV-04.1` bis `INV-04.7` aus `§8` der Anker. Drei davon sind Eigenschaftstests über einem
+`INV-04.1` bis `INV-04.8` aus `§8` der Anker. Drei davon sind Eigenschaftstests über einem
 Bereich, nicht Einzelfälle:
 
 - `INV-04.2` — `n` von 1 bis 12, alle gekürzten `[num, den]` mit `den <= 8` und
@@ -398,6 +401,10 @@ Bereich, nicht Einzelfälle:
   stehen.
 
 `INV-04.5` negativ: zwei Läufe mit verschiedenen `now` liefern byte-identische Ergebnisse.
+
+`INV-04.8` wie `INV-04.7`, eine Ebene höher: nach einem gültigen `ratify@1` darf kein zusätzlicher
+Claim im Store `next_epoch` wieder auf `None` bringen. `GV-32` ist der Einzelfall dazu, `GV-34` die
+Gegenprobe für `propose@1`.
 
 ---
 
