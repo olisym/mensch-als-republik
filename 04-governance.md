@@ -45,10 +45,15 @@ byte-identisch bleibt. Ein Nukleus ohne deklariertes `participants` ist nicht au
 Teilwissen unter-bekannt; ein zu kleiner Nenner macht jede Schwelle leichter erreichbar, und das
 ist die Über-Ratifizierungsrichtung (D96).
 
-**`irrevocable_predicates` MUSS `vote@1` enthalten.** Ohne diesen Eintrag greifen Widerruf und
+**`irrevocable_predicates` MUSS `vote@1` und `ratify@1` enthalten.** Ohne den ersten greifen Widerruf und
 Supersede nach `01 §5.4` auch auf Stimmen, die Stimmenmenge schrumpft, und die Auszählung ist
-nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ein Nukleus ohne diese Deklaration
-ist nicht auszählbar (`§3.5`).
+nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ohne den zweiten kann eine bereits
+etablierte Epoche wieder verschwinden, weil ihr einziger Beleg widerrufbar bleibt (D107). Ein
+Nukleus ohne beide Deklarationen ist nicht auszählbar (`§3.5`).
+
+**`propose@1` ist ausdrücklich nicht geschützt und wird nicht geprüft.** Eine Stimme zeigt auf den
+`proposal_hash`, nie auf den `propose@1`-Claim; dieser dient allein der Auffindbarkeit. Sein
+Zustand hat auf keine Auszählung Einfluss, und eine Aktivitätsprüfung auf ihn wäre ein Fehler.
 
 Die Unwiderruflichkeit wird damit **nicht in dieser Schicht definiert**, sondern über den bereits
 bestehenden Schutz aus D70/D72 erreicht. Es gibt keine zweite Lesart von „aktiv" neben
@@ -276,6 +281,7 @@ h-Regel für den binären Fall.
 | `participants` nicht deklariert | `PARTICIPANTS_UNDECLARED` |
 | `participants` formwidrig (kein Array, Eintrag nicht 32 B, unsortiert, Duplikate) | `MALFORMED_PARTICIPANTS` |
 | `irrevocable_predicates` führt `vote@1` nicht | `VOTE_REVOCABLE` |
+| `irrevocable_predicates` führt `ratify@1` nicht | `RATIFY_REVOCABLE` |
 | Schwellenklasse fehlt, formwidrig, oder `genesis[5] > 2` | `MALFORMED_THRESHOLD` |
 | `genesis[6] != 0` (Gewichtungsmodus nicht Kopfzahl) | `UNSUPPORTED_WEIGHT_MODE` |
 | neues Verfassungsobjekt lokal unbekannt | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
