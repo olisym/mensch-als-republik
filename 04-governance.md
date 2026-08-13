@@ -300,8 +300,17 @@ Ein `ratify@1`-Claim etabliert die Folgeepoche genau dann, wenn:
 5. die Anzahl überschreitet die Schwelle nach `§3.2` und `§3.4`
 
 Trifft eine Bedingung nicht zu, etabliert der Claim keine Epoche. Er ist deshalb kein Angriff und
-kein Protokollverstoß, sondern eine Behauptung, die sich nicht bestätigt — Vermerk
-`UNSUPPORTED_RATIFICATION`.
+kein Protokollverstoß, sondern eine Behauptung, die sich nicht bestätigt.
+
+Zwei Vermerke, weil die Diagnose verschieden ist (D94, D106):
+
+| Lage | Vermerk |
+|---|---|
+| eine zitierte `claim_id` ist lokal nicht vorhanden | `UNKNOWN_WITNESS_VOTE` |
+| alles Übrige — der Claim ist da und trägt nicht | `UNSUPPORTED_RATIFICATION` |
+
+Die Wirkung ist in beiden Fällen dieselbe: keine Epoche. Im ersten Fall weiß der Beobachter, welche
+`claim_id` er holen muss; im zweiten weiß er, dass Holen nichts nützt.
 
 Die Prüfung ist **offline und vollständig lokal**: wer den Vorschlag, das neue Verfassungsobjekt
 und die zitierten Stimmen hat, rechnet das Ergebnis nach, ohne jemanden zu fragen und ohne eine

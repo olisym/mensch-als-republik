@@ -2762,3 +2762,55 @@ beim Entwerfen der Funktionssignaturen sichtbar wurden.
 **Konsequenz — Signaturprüfung:** Der Modulschnitt wird entworfen, **bevor** der Prompt geschrieben
 wird, nicht als sein erster Abschnitt. Drei der Befunde dieser Runde lagen zwischen zwei
 Funktionen, nicht in einer.
+
+---
+
+## X. Aus dem Layer-04-Lauf
+
+### D106 — `participants` auf `TallyResult`; zwei Vermerke für die Zeugenmenge
+
+Zwei Rückfragen aus dem Implementierungslauf, beide korrekt zurückgegeben statt umgedeutet.
+
+**(a) Woher kennt `verify_ratification` die Wählerschaft?** `04 §4.1` Bedingung 2 verlangt
+`ratify.I` in `P`. Die Signatur im Prompt reichte `store`, `ratify`, `epoch`, `proposal`, `tally`,
+`now` und `policy` — `P` war in keinem davon enthalten. Aus `tally.yes` und `tally.no` ist es nicht
+rekonstruierbar: `P` wird deklariert, nie abgeleitet (D96), und ein Mitglied, das nicht abgestimmt
+hat, darf materialisieren.
+
+**Beschluss:** `TallyResult` trägt `participants: frozenset[bytes] | None`. Das bisherige Feld `n`
+entfällt und wird eine abgeleitete Eigenschaft. Die Signatur von `verify_ratification` bleibt
+unverändert.
+
+Ein zusätzlicher Parameter an `verify_ratification` ist verworfen: er erlaubte, die Ratifizierung
+gegen eine andere Wählerschaft zu prüfen als die, mit der ausgezählt wurde. `n` neben
+`participants` wäre derselbe Fehler eine Ebene tiefer — zwei Darstellungen desselben Zustands, die
+einander widersprechen können.
+
+Folgesatz: ist `tally.state` gleich `UNEVALUABLE`, ist `participants` gleich `None`, und
+`verify_ratification` liefert nie eine Epoche.
+
+**(b) Zwei Vermerke, nicht einer.** Eine in `ratify.v[0]` zitierte `claim_id` kann auf zwei
+verschiedene Weisen nicht tragen, und die Diagnose ist verschieden (D94):
+
+| Lage | Vermerk | Bedeutung |
+|---|---|---|
+| Claim im Store nicht vorhanden | `UNKNOWN_WITNESS_VOTE` | mir fehlt ein Claim |
+| Claim vorhanden, zählt aber nicht | `UNSUPPORTED_RATIFICATION` | die Behauptung stimmt nicht |
+
+Beide führen dazu, dass keine Epoche entsteht — die Wirkung ist gleich, die Diagnose entscheidet.
+Im ersten Fall weiß der Beobachter, welche `claim_id` er holen muss; im zweiten weiß er, dass
+Holen nichts nützt.
+
+`04-prompt.md §5` hatte `UNKNOWN_WITNESS_VOTE` auf jede `claim_id` außerhalb von `tally.yes`
+angewandt und damit beide Lagen zusammengezogen. `04-governance.md §4.1` nannte nur
+`UNSUPPORTED_RATIFICATION` und stellte den zweiten Vermerk nie daneben. Der Lauf hat die Lücke
+zwischen beiden gefunden.
+
+Neuer Vektor `GV-30`: `ratify@1` zitiert eine `claim_id`, die im Store nicht vorhanden ist.
+Erwartung `UNKNOWN_WITNESS_VOTE`, keine Epoche. `GV-2` bleibt unverändert und deckt den zweiten
+Fall.
+
+**Zur Form dieser Runde.** Beide Punkte sind zwischen zwei Artefakten entstanden, nicht in einem:
+(a) zwischen einer Spec-Bedingung und einer Prompt-Signatur, (b) zwischen einer Spec-Vermerkliste
+und einer Prompt-Vermerkliste. Die Signaturprüfung aus Abschnitt W hätte (a) gefunden, wenn sie
+auch die zweite Funktion erfasst hätte statt nur die erste.

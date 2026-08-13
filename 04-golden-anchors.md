@@ -141,9 +141,12 @@ epoch_id_3      = bba15f4047e104747ee24a359396e3517ffe1465c69c67241e4404e1f80143
 verschiedenen Zeugenmengen. Beide liefern `epoch_id_2 = 380779c1…`. Kein Widerspruch, keine
 zweite Epoche. Das ist D99 in einer Zahl.
 
-**Vektor `GV-2`.** Ein `ratify@1` mit `v[0]` als Zeugenmenge, die einen zusätzlichen, nicht
-zählenden Claim enthält. Der `epoch_id` ändert sich nicht; die Ratifizierung scheitert an
-`04 §4.1` Bedingung 3, Vermerk `UNSUPPORTED_RATIFICATION`.
+**Vektor `GV-2`.** Ein `ratify@1` mit `v[0]` als Zeugenmenge, die einen zusätzlichen Claim
+enthält, der **vorhanden ist, aber nicht zählt**. Der `epoch_id` ändert sich nicht; die
+Ratifizierung scheitert an `04 §4.1` Bedingung 3, Vermerk `UNSUPPORTED_RATIFICATION`.
+
+`GV-2` und `GV-30` sind das Paar: derselbe Ausgang, zwei Diagnosen. Ein Lauf, der beide auf
+denselben Vermerk abbildet, ist rot (D106).
 
 ---
 
@@ -293,6 +296,7 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-27` | Verfassung ohne `vote@1` in `irrevocable_predicates` | `VOTE_REVOCABLE`, Zustand `UNEVALUABLE` |
 | `GV-28` | ein widerrufener `vote@1` in einer Verfassung **mit** `vote@1` als irrevocable | kein Vermerk, die Stimme zählt weiter |
 | `GV-29` | `genesis[5] = 3` | `MALFORMED_THRESHOLD`, Zustand `UNEVALUABLE` |
+| `GV-30` | `ratify@1` zitiert eine `claim_id`, die im Store fehlt | `UNKNOWN_WITNESS_VOTE`, keine Epoche |
 
 `GV-24` ist mit dem Bestandsnukleus aus `00 §3.1` unmittelbar prüfbar: `N = 65309fe2…` setzt
 `weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis. Derselbe Nukleus trifft auch
