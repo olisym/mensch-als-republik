@@ -1,4 +1,4 @@
-"""Schwellenarithmetik und threshold_for (04-golden-anchors.md §4–§5)."""
+"""Schwellenarithmetik, threshold_class und applied_threshold (04-golden-anchors.md §4–§5)."""
 
 from __future__ import annotations
 
@@ -6,10 +6,11 @@ import math
 
 from mensch_als_republik.governance.tally import (
     TallyState,
+    applied_threshold,
     hopeless,
     ratio_max,
     reached,
-    threshold_for,
+    threshold_class,
 )
 
 from .fixtures import (
@@ -46,25 +47,29 @@ def test_ratio_max_raise_takes_new() -> None:
 
 
 def test_threshold_for_membership_only_participants() -> None:
-    klass, applied = threshold_for(C1, C2, GENESIS_D)
+    klass = threshold_class(C1, C2, GENESIS_D)
+    applied = applied_threshold(C1, C2, klass)
     assert klass == "membership"
     assert applied == (2, 3)
 
 
 def test_threshold_for_amendment_from_genesis() -> None:
-    klass, applied = threshold_for(C2, C3, GENESIS_D)
+    klass = threshold_class(C2, C3, GENESIS_D)
+    applied = applied_threshold(C2, C3, klass)
     assert klass == "amendment"
     assert applied == (3, 4)
 
 
 def test_threshold_for_ratio_max_on_lower() -> None:
-    klass, applied = threshold_for(C2, C2_LOWER, GENESIS_D)
+    klass = threshold_class(C2, C2_LOWER, GENESIS_D)
+    applied = applied_threshold(C2, C2_LOWER, klass)
     assert klass == "amendment"
     assert applied == (3, 4)
 
 
 def test_threshold_for_ratio_max_on_raise() -> None:
-    klass, applied = threshold_for(C2_HALF, C2_HIGH, GENESIS_D)
+    klass = threshold_class(C2_HALF, C2_HIGH, GENESIS_D)
+    applied = applied_threshold(C2_HALF, C2_HIGH, klass)
     assert klass == "amendment"
     assert applied == (4, 5)
 
