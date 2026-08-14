@@ -168,19 +168,24 @@ Eine `vote@1`-Stimme zählt für einen Vorschlag genau dann, wenn alle Bedingung
 
 1. `vote.N == scope`
 2. `vote.J == (3, proposal_hash)`
-3. `proposal.predecessor == epoch_id` der Epoche, in der ausgezählt wird — sonst Vermerk
-   `STALE_EPOCH_VOTE`
-4. `vote.I` ist Element von `P` — sonst Vermerk `NON_MEMBER_VOTE`
-5. Der Claim ist `ACTIVE` nach `classify_all` unter der scope-lokalen Policy (D91). Weil
+3. `vote.I` ist Element von `P` — sonst Vermerk `NON_MEMBER_VOTE`
+4. `vote.t_exp` ist nicht gesetzt — sonst Vermerk `VOTE_WITH_EXPIRY`
+5. `vote.v[0]` ist `0` oder `1` — sonst Vermerk `UNKNOWN_VOTE_CHOICE`
+6. Der Claim ist `ACTIVE` nach `classify_all` unter der scope-lokalen Policy (D91). Weil
    `vote@1` nach `§2.1` geschützt ist, führen Widerruf und Supersede hier nie aus `ACTIVE`
    heraus; die Bedingung schließt damit fehlenden Vorgänger, Equivocation und Ablauf aus, nicht
    den Widerruf.
-6. `vote.v[0]` ist `0` oder `1` — sonst Vermerk `UNKNOWN_VOTE_CHOICE`
-7. `vote.t_exp` ist nicht gesetzt — sonst Vermerk `VOTE_WITH_EXPIRY`
 
-Zu Bedingung 7: eine Stimme mit Ablaufdatum wäre eine Stimme, die durch Zeitablauf aus der Menge
+Die Formprüfungen 4 und 5 stehen **vor** der Zustandsprüfung 6. Wirkung identisch, Diagnose
+besser: eine abgelaufene Stimme mit gesetztem `t_exp` bekommt so `VOTE_WITH_EXPIRY`, statt lautlos
+zu verschwinden (D94, D110).
+
+Zu Bedingung 4: eine Stimme mit Ablaufdatum wäre eine Stimme, die durch Zeitablauf aus der Menge
 verschwindet, und genau das darf nicht sein (D97). Sie wird deshalb **ungültig**, nicht still
 umgedeutet. Ein Feld, dessen Wert wortlos ignoriert wird, ist die Stummheit, die D95 gekostet hat.
+
+Die Zugehörigkeit des Vorschlags zur Epoche ist **keine Stimmbedingung**, sondern eine Eigenschaft
+des Paares aus Epoche und Vorschlag. Sie wird einmal vorweg geprüft (`§3.5`), nicht je Stimme.
 
 Der Ablauf aus Bedingung 5 bleibt trotzdem erreichbar, wenn ein Nukleus `t_exp` über eine
 Policy-Maximallaufzeit erzwingt (`02 §6.2`). Ein solcher Nukleus kann keine Stimmen führen; das
@@ -273,18 +278,66 @@ h-Regel für den binären Fall.
 
 ### 3.5 Wann die Auszählung nicht läuft
 
-`UNEVALUABLE`, jeweils mit Vermerk, in dieser Reihenfolge geprüft:
+`UNEVALUABLE`, jeweils mit Vermerk, in dieser Reihenfolge geprüft. Die Reihenfolge ist normativ:
+sonst erzeugt dieselbe Lage je nach Umsetzung verschiedene Diagnosen.
+
+**Vorweg, vor jeder inhaltlichen Prüfung — die Paarprüfung.**
 
 | Lage | Vermerk |
 |---|---|
-| Verfassung der Epoche lokal unbekannt | `CONSTITUTION_UNAVAILABLE` |
+| `proposal.predecessor != epoch.epoch_id` | `STALE_EPOCH_VOTE`, Subjekt `proposal_hash` |
+
+Ein nicht zusammengehöriges Paar aus Epoche und Vorschlag ist kein Stimmenproblem, und es darf
+nicht davon abhängen, ob überhaupt jemand abgestimmt hat: stünde die Prüfung in der Stimmschleife,
+liefe eine Auszählung über ein unpassendes Paar **ohne** Stimmen glatt durch und meldete `PENDING`.
+
+**Dann die Objektidentitäten, vor jedem Zugriff auf ihren Inhalt.**
+
+| Lage | Vermerk |
+|---|---|
+| Verfassung der Epoche fehlt oder ihr Hash passt nicht zu `epoch.constitution_hash` | `CONSTITUTION_UNAVAILABLE` |
+| neues Verfassungsobjekt fehlt oder sein Hash passt nicht zu `proposal.constitution_hash` | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
+
+**Dann der Inhalt.**
+
+| Lage | Vermerk |
+|---|---|
 | `participants` nicht deklariert | `PARTICIPANTS_UNDECLARED` |
-| `participants` formwidrig (kein Array, Eintrag nicht 32 B, unsortiert, Duplikate) | `MALFORMED_PARTICIPANTS` |
+| `participants` formwidrig: kein Array, leer, Eintrag nicht 32 B, unsortiert, Duplikate | `MALFORMED_PARTICIPANTS` |
 | `irrevocable_predicates` führt `vote@1` nicht | `VOTE_REVOCABLE` |
 | `irrevocable_predicates` führt `ratify@1` nicht | `RATIFY_REVOCABLE` |
-| Schwellenklasse fehlt, formwidrig, oder `genesis[5] > 2` | `MALFORMED_THRESHOLD` |
 | `genesis[6] != 0` (Gewichtungsmodus nicht Kopfzahl) | `UNSUPPORTED_WEIGHT_MODE` |
-| neues Verfassungsobjekt lokal unbekannt | `PROPOSAL_CONSTITUTION_UNAVAILABLE` |
+| `genesis[5] > 2`, Schwellenklasse fehlt, oder Schwelle nicht wohlgeformt | `MALFORMED_THRESHOLD` |
+
+**Eine leere `participants`-Liste ist formwidrig.** Sie ist sortiert und duplikatfrei und käme
+sonst durch; mit `n = 0` wäre jeder Vorschlag sofort `FAILED`, und die Diagnose sagte „abgelehnt",
+wo „niemand konnte abstimmen" gemeint ist.
+
+**Wohlgeformtheit einer Schwelle** (D108). Sei `[num, den]` die Schwelle der **angewandten**
+Klasse, in beiden Verfassungen geprüft:
+
+```
+den >= 1     0 <= num <= den     2 * num >= den
+```
+
+Die letzte Bedingung ist die tragende. Seien `A` und `B` disjunkte Ja-Mengen, die beide
+durchkommen; dann gilt `|A| * den > num * n` und `|B| * den > num * n`, und mit `|A| + |B| <= n`:
+
+```
+n * den   >=   (|A| + |B|) * den   >   2 * num * n        ->        den > 2 * num
+```
+
+Zwei disjunkte Ja-Mengen sind also genau dann unmöglich, wenn `2 * num >= den`. Die Grenze ist
+nicht strikt — `[1,2]` bleibt zulässig, `[1,3]` nicht. Ohne diese Bedingung fällt D102: zwei
+rivalisierende Nachfolger derselben Epoche könnten beide durchkommen, ohne dass jemand doppelt
+gestimmt hat.
+
+Die übrigen Bedingungen sind nicht bloß Hygiene: bei `num < 0` vergleicht `reached(0, n, num, den)`
+den Ausdruck `0 > num * n` und ist **wahr** — ein Vorschlag wäre `PASSED`, ohne dass eine einzige
+Stimme abgegeben wurde.
+
+Geprüft wird ausschließlich die **angewandte** Klasse, nie der gesamte `thresholds`-Eintrag: eine
+Verfassung soll nicht daran scheitern, dass ein in v1 unbenutzter Eintrag unglücklich gesetzt ist.
 
 `UNEVALUABLE` ist **nie** `PASSED`. Kein Teilwissen führt zu einer Ratifizierung.
 
@@ -299,6 +352,11 @@ aus (D98). Ein Nukleus, der es setzt, bekommt kein Ergebnis statt eines falschen
 
 Ein `ratify@1`-Claim etabliert die Folgeepoche genau dann, wenn:
 
+0. die Auszählung gehört zu **dieser** Epoche und **diesem** Vorschlag. Weicht `tally.epoch_id`
+   von `epoch.epoch_id` oder `tally.proposal_hash` von `proposal.proposal_hash` ab, ist das ein
+   **`ValueError`**, kein Vermerk: ein fehlzugeordnetes Objekt ist ein Aufruferfehler und keine
+   Lage der Welt (D82, D92, D109). Ist `tally.state` gleich `UNEVALUABLE`, entsteht keine Epoche;
+   Vermerk `TALLY_UNEVALUABLE` — „ich konnte nicht auswerten", nicht „die Behauptung stimmt nicht".
 1. `ratify.N == scope`, `ratify.J == (3, proposal_hash)`, `ratify.I` ist Element von `P`
 2. der Claim ist `ACTIVE`
 3. jede `claim_id` in `v[0]` bezeichnet eine Stimme, die nach `§3.1` zählt, mit `choice == 1`
@@ -416,11 +474,17 @@ Mitgliedschaft samt Pflichten zuschreibt, die er nicht eingegangen ist.
 `membership()` bekommt einen zusätzlichen optionalen Parameter:
 
 ```
-participants: frozenset[bytes] | None = None
+constitution_obj: dict | None = None
 ```
 
-Ist er gesetzt, gilt `subject in participants` als zweite Aufnahmequelle neben einer aktiven
+Ist er gesetzt, prüft die Funktion zuerst `constitution_hash(constitution_obj)` gegen den bereits
+vorhandenen Parameter `constitution_hash` und wirft bei Abweichung `ValueError` (D111). Danach
+gilt `subject in constitution_obj["participants"]` als zweite Aufnahmequelle neben einer aktiven
 `grant-membership@1`. Die `accept-rules`-Strecke bleibt unverändert.
+
+Die Teilnehmerliste wird **nicht** getrennt gereicht. Beide Konjunkte der Mitgliedschaft zeigen so
+auf dasselbe content-adressierte Objekt; eine Liste aus einer anderen Epoche kann nicht mit dem
+Hash dieser verbunden werden.
 
 Kein neues Prädikat, kein neuer Zustand, keine zweite Mitgliedschaftsfunktion. Zwei Funktionen,
 die dasselbe tun, waren die Fehlerform der `03`-Abnahme (D92).

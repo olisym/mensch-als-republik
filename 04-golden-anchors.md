@@ -218,7 +218,8 @@ Alle Fälle in Epoche 2, `n = 5`. `angewandt = max(alt, neu)`, Vergleich über
 
 ### 5.1 Senken — der tragende Fall
 
-Ein Vorschlag setzt `thresholds.amendment` von `[3,4]` auf `[1,2]`.
+Ein Vorschlag setzt `thresholds.amendment` von `[3,4]` auf `[1,2]`. Der Zielwert ist nach D108
+zulässig: `2*1 = 2` erreicht `den = 2`, die Grenze ist nicht strikt.
 
 ```
 max([3,4], [1,2]):   3*2 = 6   >=   1*4 = 4   ->   angewandt = [3,4]
@@ -252,6 +253,28 @@ Einstimmigkeit. Eine Minderheit kann der Mehrheit keine strengere Regel auferleg
 
 Die Ausgangsschwelle `[1,2]` in `5.2` gehört zu keiner der drei Verfassungen aus `2.2`; der
 Vektor prüft die Regel, nicht die Kette.
+
+### 5.3 Formwidrige Schwellen (D108)
+
+Alle in Epoche 2, `n = 5`, Klasse `amendment`. Erwartung durchgehend `UNEVALUABLE` mit
+`MALFORMED_THRESHOLD` — **nie** ein Ergebnis.
+
+| Vektor | Zielschwelle | Verletzte Bedingung | Was ohne die Prüfung geschähe |
+|---|---|---|---|
+| `GV-35` | `[1,3]` | `2*num >= den` | zwei Vorschläge mit je 2 von 5 Ja, ohne Überschneidung — D102 fällt |
+| `GV-36` | `[2,5]` | `2*num >= den` | dasselbe, knapp unterhalb der Grenze |
+| `GV-37` | `[-1,2]` | `0 <= num` | `0 > -1 * 5` ist wahr: `PASSED` ohne eine einzige Stimme |
+| `GV-38` | `[5,4]` | `num <= den` | dauerhaft unerreichbar, ohne Diagnose |
+| `GV-39` | `[1,0]` | `den >= 1` | dauerhaft `FAILED`, ohne Diagnose |
+
+`GV-37` ist der schärfste: er wird ohne die Prüfung nicht bloß falsch, sondern liefert eine
+ratifizierte Verfassung aus einem leeren Store.
+
+**`[1,2]` ist zulässig** und muss es bleiben. Bei `n = 5` verlangt es drei Ja; zwei disjunkte
+Dreiermengen passen nicht in fünf Mitglieder. Ein Vektor, der `[1,2]` zurückweist, ist rot.
+
+Die Prüfung betrifft nur die **angewandte** Klasse. Die Verfassung aus `00 §3.1` führt
+`ordinary: [1,2]` — zulässig, und in v1 ohnehin unbenutzt.
 
 ---
 
@@ -302,6 +325,12 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-32` | widerrufener `ratify@1` in einer Verfassung **mit** `ratify@1` als irrevocable | kein Vermerk, die Epoche steht weiter |
 | `GV-33` | `ratify.t_exp` gesetzt | `RATIFY_WITH_EXPIRY`, keine Epoche |
 | `GV-34` | widerrufener `propose@1` bei unveränderten Stimmen | kein Vermerk, das Ergebnis ändert sich nicht |
+| `GV-40` | `participants` ist ein leeres Array | `MALFORMED_PARTICIPANTS`, Zustand `UNEVALUABLE` |
+| `GV-41` | `proposal.predecessor` zeigt auf eine andere Epoche, **kein** Stimmclaim im Store | `STALE_EPOCH_VOTE` mit `proposal_hash` als Subjekt, Zustand `UNEVALUABLE` — **nicht** `PENDING` |
+| `GV-42` | Verfassungsobjekt vorhanden, Hash passt nicht zu `epoch.constitution_hash` | `CONSTITUTION_UNAVAILABLE`; keine Prüfung liest vorher seinen Inhalt |
+| `GV-43` | `verify_ratification` mit `tally.state = UNEVALUABLE` | `TALLY_UNEVALUABLE`, keine Epoche |
+| `GV-44` | `verify_ratification` mit einer Auszählung zu einem **anderen** Vorschlag oder einer **anderen** Epoche | `ValueError` (D109) — kein Vermerk |
+| `GV-45` | `membership()` mit `constitution_obj`, dessen Hash nicht zum Parameter passt | `ValueError` (D111) |
 
 `GV-24` ist mit dem Bestandsnukleus aus `00 §3.1` unmittelbar prüfbar: `N = 65309fe2…` setzt
 `weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis. Derselbe Nukleus trifft auch
