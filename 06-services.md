@@ -290,6 +290,13 @@ radiale Prinzip bleibt intakt.
   Squatting-Frage und bekommt eine eigene Behandlung, nicht hier.
 - **Miet-Verschachtelung** (§2.2): ein Dienst auf einem gemieteten Dienst ist eine Ebene
   Indirektion. Bewusst getragen — es ist dasselbe radiale Muster, keine Sondermechanik.
+- **Mieten trägt eine Annahme über den Hoster (D123).** „Identität und Autorität bleiben beim
+  Mieter" (§2.2) gilt auf Protokollebene und ist auf Betriebsebene unbelegt: wer die Maschine
+  betreibt, hat Zugriff auf den Speicher, in dem der Schlüssel liegt. Für **Dienste** ist das
+  tragbar — eine falsche Attestierung ist über VR-06.1 mechanisch überführbar. Für die
+  **persönliche Schreibautorität** ist es nicht tragbar: mit dem Schlüssel gehen Obligationen im
+  Namen des Mieters, und der Beweis zeigt auf ihn. Ein gemieteter Ort taugt für Dienste, nicht
+  für die eigene Kette.
 - **`validation@1`-Ergebnis-Kodierung** (`v`) ist eine *vorgeschlagene* Form (`{0:1}`); die konkrete
   Check-Granularität ist ein Policy-Knopf. Das Atom parst `v` nie.
 ## Anhang — Test-Vektoren (real gerechnet, geteiltes Nukleus `N = 6530…5557`)

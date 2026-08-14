@@ -3453,3 +3453,178 @@ gilt sie zunächst nur für die **letzte** Stufe. Jede Stufe davor — Filter, B
 Zustandsauswertung, Kanonizitätsprüfung — wird einzeln daraufhin geprüft, ob sie monoton ist, und
 das Ergebnis wird im Text benannt. Max-Flow ist monoton; der Weg dorthin ist es an zwei Stellen
 nicht.
+
+## AC. Autorschaft, Werkzeug und Schreibautorität
+
+### D119 — `02 §6.2` bekommt einen Leser
+
+`02 §6.2` verlangt: in Scopes mit Budgetregel MUSS ein Vouch `t_exp` tragen, oder die Policy
+setzt eine Maximallaufzeit als Default. `§8` macht `Σw ≤ 1` zum Default, ein schweigender
+Nukleus trägt die Regel also, und `check_overcommit` rechnet sie im Beispiel durch.
+
+**Beide Zweige sind im Bestand unausdrückbar.** `_Author.claim()` hat keinen `t_exp`-Parameter,
+und das Verfassungsschema hat kein Feld für eine Maximallaufzeit. Schwerer wiegt: **niemand
+liest die Pflicht.** `§3.1` sagt ausdrücklich, fehlendes `t_exp` binde unbegrenzt; es fällt kein
+Vermerk, nichts wird abgelehnt. Der Satz hat zwei Layer überdauert, weil seine einzige Wirkung
+darin bestand, dass ein wohlerzogener Autor etwas hinschreibt.
+
+**Beschluss:**
+
+- Vermerk `TrustFinding.VOUCH_WITHOUT_TEXP`, Subjekt die `claim_id` des Vouch, wenn ein Vouch
+  in einem Scope mit Budgetregel kein `t_exp` trägt.
+- **Ohne Wirkung.** Der Vouch bleibt im Budget-Set und bindet weiter unbegrenzt. Ihn
+  auszuschließen gäbe Budget frei, und `§3.1` schließt das aus: kein Akt außer der Uhr gibt
+  Budget frei. Diagnose verschieden, Wirkung gleich — D94.
+- `claim()` bekommt `t_exp`, `vouch()` reicht durch, der Beispielnukleus setzt eine Laufzeit.
+
+**Warum kein Verfassungsfeld.** Der zweite Zweig aus `§6.2` verlangte ein neues Feld, damit einen
+neuen `constitution_hash`, ein neues `N` und die Neuberechnung von `00 §3.1`. Kosten am gesamten
+Bestand für einen Knopf, den kein Nukleus bisher braucht. Der Zweig bleibt möglich und bekommt
+einen eigenen Durchgang, falls er je gebraucht wird.
+
+**Kein Ankerbruch.** Geprüft: keine Ankerdatei fixiert eine Vouch-`claim_id`. `02` und `02b`
+führen keine, `03` und `04` nennen `claim_id` nur in strukturellen Invarianten, `example-nucleus.md`
+gar nicht. Die Zahlen der Trust-Schicht hängen an `n`, `D`, `C₀`, `γ` und der Graphform. Ein
+`t_exp > now` lässt Aktiv-Set und Budget-Set unverändert. Es ändern sich die `claim_id` der
+Vouches und das `h_prev` ihrer Kettennachfolger — beides nirgends festgeschrieben.
+
+**Nebenertrag.** Derselbe Parameter macht den Grenzwertvektor `now = t_exp` in Layer 01 baubar.
+Die Vektorlücke folgte aus einer Erzeugerlücke: nicht geprüft werden kann, was nicht erzeugt
+werden kann.
+
+**Konsequenz — Leserprüfung.** Trägt ein normativer Satz eine Pflicht an den **Autor** von
+Claims, wird bei seiner Formulierung benannt, welche Funktion die Erfüllung liest. Gibt es keine,
+ist der Satz entweder auf SOLL zurückzunehmen oder mit einem Vermerk zu versehen. Die
+Feldinventur (D114) fragt nach dem Leser eines Feldes; diese Regel fragt nach dem Leser einer
+Pflicht.
+
+### D120 — Absturzordnung, und die Monotonie ist eine Beobachtereigenschaft
+
+`_Author.claim()` rückt die Spitze bei der Konstruktion vor, unabhängig davon, ob der Claim je
+gespeichert oder ausgesandt wird. In einem Prozess harmlos, für ein dauerhaftes Werkzeug nicht.
+
+| Ordnung | Absturz dazwischen | Folge |
+|---|---|---|
+| signieren, dann persistieren | Spitze veraltet | nächster Claim auf dasselbe `h_prev` ⇒ Equivocation, beweisbar, dauerhaft |
+| Spitze festschreiben, dann signieren | Spitze zeigt auf einen nie ausgesandten Claim | alle Nachfolger bleiben bei jedem Beobachter `pending`, unheilbar |
+| Core festschreiben, signieren, aussenden, Spitze festschreiben | Core liegt vor | Wiederaufnahme erzeugt denselben Claim |
+
+Die dritte trägt, weil Ed25519 deterministisch signiert (RFC 8032): aus denselben Core-Bytes
+entsteht dieselbe Signatur, also derselbe Claim, byteweise. Die Wiederaufnahme ist **idempotent**
+und nicht bloß möglich. Das ist der Unterschied zwischen einer Rettung und einer Gabelung.
+
+**Beschluss:** Core-Redo-Eintrag festschreiben, signieren, aussenden, Spitze festschreiben. Beim
+Start wird ein offener Redo-Eintrag **fortgesetzt**, nie neu gebaut. Die Zustandsmaschine der
+Spitze hat fünf Ausgänge:
+
+1. leer ⇒ Genesis, `h_prev = id_genesis_anchor(I)`
+2. gesetzt, Claim im eigenen Store ⇒ Normalfall
+3. gesetzt, Redo-Eintrag offen ⇒ fortsetzen
+4. gesetzt, Store kennt sie nicht ⇒ **anhalten**
+5. zwei eigene Claims auf dieselbe Spitze ⇒ selbst equivociert, **anhalten**
+
+Drei davon halten an. Anhalten und nicht warnen: Weiterschreiben ist in beiden Fällen genau der
+Fehler, den die Prüfung erkannt hat.
+
+**Der allgemeine Satz.** Die Monotonie aus `08 §2.2` und `02 §7` — fehlendes Wissen senkt ein
+Ergebnis nur — ist eine **Beobachtereigenschaft**. Für den Autor über seine eigene Kette gilt sie
+nicht: fehlt ihm sein letzter Claim, senkt das nichts, es erzeugt einen Fork gegen ihn selbst.
+Das ist die dritte gefährliche Richtung neben den beiden aus `02 §7`, und sie ist die einzige,
+in der der Schaden beim Wissenden selbst entsteht.
+
+**Wiederherstellung ist Migration, nicht Vervielfältigung.** Ein Sicherungsblob trägt Seed **und**
+Spitze. Wer ihn zweimal einspielt, läuft in Ausgang 5. Ein Seed allein ist keine Sicherung,
+sondern die Waffe.
+
+**Verworfen: die Spitze aus dem Netz rekonstruieren.** Aus fremden Stores lässt sich der letzte
+bekannte Claim eines Autors lesen, aber nicht, dass es der letzte ist. Teilwissen wählt eine zu
+frühe Spitze — und das ist exakt der Fork, den die Rekonstruktion verhindern sollte.
+
+### D121 — Einlesepfad: ein Ausgang statt vier, und ein unsigniertes Bündel
+
+`claim_from_bytes` dekodiert und baut direkt. Für fremde Bytes wirft es `KeyError`, `IndexError`,
+`TypeError` oder `ValueError` und prüft keine Kanonizität. Es ist damit kein Einlesepfad: wer
+Empfangenes darüber liest, umgeht die elf Reject-Codes aus `01 Anhang B`.
+
+**Beschluss:**
+
+- Fremde Bytes gehen durch eine Funktion, die **nie wirft** und entweder einen Claim oder einen
+  Reject-Code liefert. Die Kanonizitätsprüfung liegt im selben `try` wie das Dekodieren (D83).
+- Die Abgrenzung zu D92: dessen `ValueError` gilt für ein vom **Programmierer** fehlzugeordnetes
+  Objekt. Fremde Bytes sind eine Lage der Welt und folgen der D95-Bewegung — der defekte Teil
+  fällt weg, der Vermerk bleibt.
+- Ein Bündel ist ein **unsigniertes** CBOR-Array aus Claim-Bytes plus eine Map
+  `object-hash → Objektbytes`. Keine Ordnungsgarantie, Duplikate harmlos, Import idempotent.
+  Jedes Element wird einzeln geprüft; dem Container wird nie geglaubt.
+
+**Warum unsigniert.** Nach `08 §3` senkt ein Container keine Feststellungskosten — jeder Claim
+ist nach A1 selbstenthalten und trägt seine Signatur schon. Ein signiertes Bündel wäre eine
+Aussage über eine **Menge**, also Bedeutung, und ein zweites Ding, das verifiziert werden müsste.
+Werkzeugkonvention, kein Transport-Profil.
+
+### D122 — Bauform gegen Feldverlust, und der Modulschnitt der Autorschaft
+
+Weil `Claim` frozen ist, baut `_Author.claim()` zweimal und zählt acht Felder von Hand auf.
+`t_exp` ist der Beweis, dass die Aufzählung unvollständig sein kann, ohne dass es auffällt: es
+steht in der Kopie und ist trotzdem tot.
+
+Die Fehlerform ist das Gefährliche. Ein vergessenes Feld erzeugt keinen defekten Claim, sondern
+einen **in sich stimmigen und gültigen** mit anderem `claim_id` und korrekter Signatur über genau
+das, was dasteht. Kein Verifizierer findet das. Der Autor hat etwas anderes gesagt, als er sagen
+wollte, und nichts zeigt es an.
+
+**Beschluss:** `dataclasses.replace(unsigned, sigma=...)`, normativ für alles, was Claims erzeugt.
+Der zugehörige Test iteriert über `Claim.__dataclass_fields__` und nicht über eine Liste im Test
+— sonst trägt die Prüfung dieselbe Schwäche wie die Sache, die sie prüft.
+
+**Modulschnitt.** `_Author` verschmilzt drei Dinge; nur eines ist protokollbestimmt.
+
+| Teil | Ort | Grund |
+|---|---|---|
+| Bau und Signatur | Paket | `core_bytes`, `DOM_SIG`, Feldsatz sind `01`; zwei Kodierwege driften |
+| Kettenspitze | Werkzeug, mit Persistenz | braucht Dauerhaftigkeit und die Zustandsmaschine aus D120 |
+| Schlüsselverwahrung | Werkzeug | Betriebsfrage, nach `08 §3` nicht Protokoll |
+
+**Oberflächenregel.** Keine Operation gibt den Schlüssel oder die Spitze heraus. Es gibt genau
+eine: gib mir einen signierten Claim zu diesem Inhalt. Überquert der Schlüssel die Grenze nie,
+ist ein späterer entfernter Aufruf (D123) eine Transportfrage und kein Umbau.
+
+### D123 — Ein Schreiber, ein Ort; Geräte sind Endpunkte
+
+**Nicht der Claim lebt an einem Ort, die Schreibautorität.** Claims sind selbstenthalten und
+müssen überall hinreisen (A1) — Kollision entsteht durch Verbreitung. Singulär sind Schlüssel und
+Spitze. Speicher ist repliziert, Autorschaft ist es nie.
+
+**Der Ort ist der Sequenzer.** `h_prev` ordnet, und zwei gleichzeitige Schreiber verlangten eine
+Einigung darüber, wer die Spitze fortschreibt — Konsens, unabhängig davon, wie klein die Menge
+ist. Auch FROST löst das nicht: ein Gruppenschlüssel gibt eine Identität und eine Kette, aber er
+**ordnet nichts**; zwei Signiersitzungen können dieselbe Spitze greifen. FROST löst Verlust und
+Diebstahl, nicht Nebenläufigkeit.
+
+**Geräte signieren die Anfrage, nicht den Claim.** Ein Gerät hält ein eigenes Schlüsselpaar und
+autorisiert damit eine Anfrage; der Ort signiert den Claim. Die Gerätesignatur betritt das
+Protokoll **nie** — kein Atom-Feld, keine zweite Kette, keine zweite Identität im Trust-Graph.
+Nach außen eine Identität, nach innen eine kleine Hierarchie, die niemanden angeht. Das ist die
+Stelle, an der Matrix' Cross-Signing passt: unterhalb des Protokolls, nicht darüber. Oberhalb
+löste es das falsche Problem — es beantwortet „gehört dieses Gerät zu Alice", während `08 §2.1`
+„hat Alice anderswo etwas anderes gesagt" beantwortet, und parallele Geräteketten machen
+Equivocation zu einer freien Handlung.
+
+**Schlüsselträger ist nicht Schreiber.** Ein Secure Element oder NFC-Träger darf den Schlüssel
+halten, solange die Spitze am selben Ort geführt wird. Wandert der Träger ohne die Spitze zu
+einem zweiten Ort, gibt es zwei Schreiber. Als reines Transportmittel ist NFC ohnehin gedeckt.
+
+**Getragene Grenze: Autorschaft ist erreichbarkeitsabhängig, Lesen nicht.** Wer seinen Ort nicht
+erreicht, kann nicht bürgen, nicht abstimmen, keine Obligation eingehen. Verifikation bleibt
+offline vollständig. Die Milderung für längere Trennung ist **Migration** der Kette (D62), nicht
+Delegation. Der Alltagsfall trägt sich selbst über die selektive Stille aus `01 §7`: was keinen
+Claim erzeugt, braucht keinen Ort — und die Akte, die einen erzeugen, sind die, die warten können.
+
+**Der Trust-Score offline ist über-vertrauend.** Ein alter Store hat weder den fehlenden Widerruf
+(`02 §7`) noch den fehlenden über-zeichnenden Vouch (D118); beide zeigen nach oben. Als Gate für
+Hochrisiko ist er damit ungeeignet — dieselbe Linie, die `02 §5` zwischen Relaxation und harter
+Sicht zieht. D119 mildert es: abgelaufene Vouches fallen gegen die lokale Uhr weg, auch ohne Netz.
+
+**Zur Reihenfolge:** D62 (`00a-rotate-key`, `resolve_current_key`) wird damit zur Voraussetzung
+des ersten echten Nukleus und nicht zur Nacharbeit. Ein zweiter Ort ist eine Rotation, und der
+Fall tritt beim ersten Gerätewechsel ein.

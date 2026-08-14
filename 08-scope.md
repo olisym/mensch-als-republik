@@ -102,9 +102,18 @@ Anwendung auf den Bestand:
 | Gewichtete Auszählung | verteilt Macht | Policy, in v1 nicht vorhanden |
 | Losverfahren, Amtszeiten, Appeal-Pfade | verteilen Macht | Policy |
 | Schwellenwerte, Arbitratorenlisten, Ressourcengrenzen | verteilen Macht | Policy |
+| Werkzeug: Schlüssel halten, Claims bauen, Empfangenes einlesen | erzeugt Claims, senkt nichts | Werkzeug, weder Protokoll noch Policy |
+| Ort der Schreibautorität, Geräte als Endpunkte | Betrieb | Werkzeug (D123) |
 
 Die Prüftabelle ist bei jedem neuen Mechanismus fortzuschreiben. Ein Eintrag in der rechten
 Spalte "Protokoll" verlangt eine Begründung in der mittleren.
+
+**Wohin vertagt wird.** Mehrere Schichten schieben Offenes an „die Anwendungsschicht" (`03 §3.4`
+atomarer Tausch, `06 §8` Prüfung externer Beweise, `01` A1 Transportbindung). Das ist **kein**
+Empfänger, sondern mindestens zwei: ein **Werkzeug**, das Claims erzeugt und einliest, und eine
+**Wertschicht**, die es nicht gibt. Keine der drei Vertagungen fällt an das Werkzeug. Wer künftig
+vertagt, benennt den Empfänger — sonst wächst die erste Schicht, die gebaut wird, um fremde
+Verpflichtungen.
 
 ---
 
