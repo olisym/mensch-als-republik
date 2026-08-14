@@ -332,6 +332,10 @@ Geprüft wird auf den **Rohwerten** beider Verfassungen, bevor irgendeine Umwand
 Eine Schwelle mit Textwerten muss `MALFORMED_THRESHOLD` ergeben und darf den Aufruf nicht
 abreißen (D112).
 
+Die Klasse wird für diese Prüfung gebraucht und **einmal** bestimmt, vor der Validierung. Die
+Ableitung der Klasse und die Ermittlung der angewandten Schwelle sind zwei getrennte Schritte;
+keiner von beiden wird wiederholt (D113).
+
 Die letzte Bedingung ist die tragende. Seien `A` und `B` disjunkte Ja-Mengen, die beide
 durchkommen; dann gilt `|A| * den > num * n` und `|B| * den > num * n`, und mit `|A| + |B| <= n`:
 
