@@ -3262,3 +3262,55 @@ Die Reichweite folgt daraus und ist keine Wahl mehr, sondern eine Rechnung:
 Ein Reichweitenparameter entscheidet, wie weit jemand wirken kann, und verteilt damit Macht —
 nach `08 §3` gehört er in die Verfassung eines konkreten Nukleus und nicht in die Schicht. Das
 Genesis ist hier nur der **Ort der Festlegung**, nicht der Ort der Wahl.
+
+---
+
+## AE. Wer entscheidet und wer gebunden ist
+
+### D116 — `participants` und Mitgliedschaft sind zwei Fragen
+
+Aufgefallen beim Vervollständigen des Beispielnukleus, also an einem gerechneten Fall und nicht
+beim Lesen.
+
+**Zwei Abschnitte derselben Datei definieren „gehört dazu" verschieden.** `04 §2.1` macht die
+Stimmberechtigung an `vote.I ∈ P` fest — der deklarierten Liste, mehr nicht. `04 §6.1` macht
+Mitgliedschaft an der Konjunktion aus `participants` und einer aktiven `accept-rules` auf genau
+diesen `constitution_hash` fest (D60).
+
+Nach jeder Ratifizierung fallen beide auseinander: der Hash ist neu, die alten Annahmen zeigen auf
+den vorigen, und `03 §4` zählt sie für die neue Version ausdrücklich **gar nicht**
+(`CONSTITUTION_VERSION_MISMATCH`).
+
+**Folge: unmittelbar nach jeder Verfassungsänderung ist niemand mehr `MEMBER`.** Alle sind
+`GRANT_ONLY`, bis jede und jeder einzeln die neue Fassung annimmt — und zugleich dürfen alle
+weiter abstimmen, weil `participants` unverändert gilt. Es stimmt also jemand unter einer
+Verfassung ab, der ihr ausdrücklich nicht zugestimmt hat.
+
+**Beschluss: keine Mechanikänderung.** Die Mechanik ist richtig, die Spec war stumm.
+
+Die Alternative wäre schlechter: verlangte die Stimmberechtigung `MEMBER`, könnte eine
+Ratifizierung den Nukleus einfrieren — niemand dürfte abstimmen, bis alle angenommen haben, und
+wer nie annimmt, blockiert dauerhaft. Das ist die Sackgasse aus dem Zwei-Personen-Fall, nur mit
+einem zusätzlichen Schritt davor.
+
+Normativ in `04 §6`:
+
+> `participants` und Mitgliedschaft beantworten zwei verschiedene Fragen. Die Liste bestimmt,
+> **wer entscheidet**; die Annahme bestimmt, **wer gebunden ist**. Nach einer Ratifizierung ist
+> jedes Mitglied `GRANT_ONLY`, bis es die neue Fassung annimmt; die Stimmberechtigung bleibt davon
+> unberührt. Wer eine Änderung ablehnt, behält damit die Mittel, sie rückgängig zu machen.
+
+Getragene Grenze in `04 §8` und Betriebswarnung in `example-nucleus.md`: **eine
+Verfassungsänderung entzieht allen still den `MEMBER`-Status.** Alles, was auf `MEMBER` prüft,
+hört auf zu wirken, bis neu signiert ist. Kein Fehler, aber eine Rechnung, die ein Betreiber vor
+der ersten Änderung kennen muss.
+
+**Zur Fehlerform.** Kein Durchgang hat das gefunden — weder die Parallelenprüfung noch die
+Feldinventur, weil beide Definitionen für sich richtig sind und erst über einen **Epochenwechsel**
+hinweg auseinanderlaufen. Sichtbar wurde es, als ein Beispiel mit echten Zahlen zwei Epochen
+durchlaufen musste.
+
+**Konsequenz — Zustandsübergang statt Zustand:** Wo zwei Begriffe denselben Sachverhalt
+beschreiben, werden sie nicht nur nebeneinandergelegt, sondern über den Übergang geführt, der
+beide berührt. Nebeneinander waren `§2.1` und `§6.1` widerspruchsfrei; erst die Ratifizierung
+zwischen ihnen zeigt die Lücke.
