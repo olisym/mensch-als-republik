@@ -3222,3 +3222,43 @@ richtig ist — nicht von einem Feld und ob es überhaupt gelesen wird.
 benannt, welche Funktion es liest. Felder ohne Leser sind entweder zu streichen oder als
 deklarativ zu kennzeichnen; sie schweigend stehen zu lassen erzeugt eine Erwartung, die niemand
 einlöst.
+
+---
+
+## AD. Trust-Parameter bekommen einen Ort
+
+### D115 — Optionaler Genesis-Key 9 `trust_params`
+
+`C₀`, `γ` und `D` haben seit Layer 02 keinen deklarierten Ort. `02 §8` nennt sie „Policy-Knöpfe",
+ohne zu sagen wo; die acht Genesis-Keys und die vier Verfassungsfelder tragen sie nicht. Für
+Layer 04 war das folgenlos, seit D98 die Gewichtung herausgenommen hat. Für einen **rechenbaren**
+Nukleus ist es das nicht: ohne festen Ort rechnen zwei Betreiber verschiedene Kapazitäten, und
+`trust()` ist nicht reproduzierbar.
+
+**Beschluss:** Optionaler Genesis-Key `9`.
+
+```
+9 trust_params : { 0: C₀, 1: γ_num, 2: γ_den, 3: D }     ; alle uint
+```
+
+**Genesis, nicht Verfassung.** `D` steckt über `n/D` in signierten Vouches; eine änderbare
+Deklaration würde Bestandssignaturen still umbewerten. D35 verlangt genau deshalb
+Unveränderlichkeit über die Lebensdauer eines Scopes, und unveränderlich ist nur das Genesis.
+`C₀` und `γ` reisen mit, weil sie zur selben Kalibrierung gehören und ein Nukleus, der die eine
+Hälfte festlegt und die andere nicht, keine reproduzierbare Kapazität hat.
+
+**Optional.** Fehlt der Key, gilt Bestandsverhalten: die Parameter sind out-of-band und
+`trust()`/`rank()` verlangen sie weiterhin als Aufruferargument. Damit bleibt der Bestandsanker
+`65309fe2…` unberührt — das kanonische Beispiel aus `00 §3.1` lässt den Key weg.
+
+**Wohlgeformtheit**, geprüft bei Anwesenheit: `C₀ >= 1`, `D >= 1`, `1 <= γ_num < γ_den`. Dazu die
+Empfehlung aus `02 §8` als SHOULD: `D >= C₀`, damit stets `C(I)` bindet und nicht `D`.
+
+Die Reichweite folgt daraus und ist keine Wahl mehr, sondern eine Rechnung:
+`r_max = ⌊log_{1/γ} C₀⌋`. Bei `C₀ = 100` und `γ = 1/2` sind das sechs Hops — jenseits davon ist
+`⌊C₀γ^d⌋ = 0`, und kein Vouch trägt mehr.
+
+**Was das nicht ist.** Ein Nukleus darf jeden Wert wählen; das Protokoll fixiert keinen Default.
+Ein Reichweitenparameter entscheidet, wie weit jemand wirken kann, und verteilt damit Macht —
+nach `08 §3` gehört er in die Verfassung eines konkreten Nukleus und nicht in die Schicht. Das
+Genesis ist hier nur der **Ort der Festlegung**, nicht der Ort der Wahl.

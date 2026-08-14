@@ -138,6 +138,7 @@ Nukleus). Pflichtfelder:
 | 6 | `weight_mode` | uint | `0` = Kopfzahl, `1` = zweck-gescopt gewichtet (Gov-Spec §4). |
 | 7 | `vote_mode` | uint | `0` = Komposition (Default), `1` = FROST-Opt-in (Gov-Spec §3). Löst DR-015. |
 | 8 | `parent_scope` | bytes32 (optional) | **Rein deklarativ.** Behauptete Zugehörigkeit oder Nachfolge; ohne mechanische Folge (§4.1, D114). |
+| 9 | `trust_params` | map (optional) | `{0: C₀, 1: γ_num, 2: γ_den, 3: D}`, alle uint. Kalibrierung des Trust-Flow (Trust-Flow-Spec §8, D115). Fehlt der Key, sind die Parameter out-of-band. |
 
 - `root_keys` trennt **Identität** (= `N`, aus dem *ganzen* Genesis) von **Autorität** (= die
   Schlüssel, die *innerhalb* stehen). Genau diese Trennung erlaubt Rotation ohne Identitätsverlust.
@@ -145,6 +146,23 @@ Nukleus). Pflichtfelder:
   ersten Abstimmung fest und prüfbar — kein „Modus-Wechsel mittendrin" ohne Amendment.
 - Die Änderungsregel ist **nicht** unveränderlich, aber nicht kaperbar: die anzuwendende Schwelle
   ist das Maximum aus alter und neuer (Gov-Spec §3.4). Anheben verlangt die neue, Senken die alte.
+
+### 4.0 `trust_params` — warum im Genesis
+
+`D` steckt über `n/D` in jedem signierten Vouch. Läge es in der änderbaren Verfassung, würde ein
+Amendment Bestandssignaturen still umbewerten; D35 verlangt deshalb Unveränderlichkeit über die
+Lebensdauer eines Scopes, und unveränderlich ist nur das Genesis. `C₀` und `γ` reisen mit, weil ein
+Nukleus, der die eine Hälfte der Kalibrierung festlegt und die andere nicht, keine reproduzierbare
+Kapazität hat.
+
+Wohlgeformt bei Anwesenheit: `C₀ >= 1`, `D >= 1`, `1 <= γ_num < γ_den`. SHOULD: `D >= C₀`
+(Trust-Flow-Spec §8), damit stets `C(I)` bindet und nicht `D`.
+
+Die harte Reichweite folgt: `r_max = ⌊log_{1/γ} C₀⌋`. Jenseits davon ist `⌊C₀γ^d⌋ = 0`, und kein
+Vouch trägt mehr — die quantitative Fassung von „maximal lokal".
+
+Das Protokoll fixiert **keinen Default**. Ein Reichweitenparameter verteilt Macht und ist damit
+Verfassungsinhalt (`08 §3`); das Genesis ist nur der Ort der Festlegung, nicht der Ort der Wahl.
 
 ### 4.1 `parent_scope` ist eine Behauptung, keine Beziehung
 
