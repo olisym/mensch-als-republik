@@ -3049,3 +3049,55 @@ ergänzt, von denen einer (`warnings` ohne feste Reihenfolge) ein Determinismusb
 **Konsequenz — Voraussetzungsprüfung:** Trägt eine Invariante eine Voraussetzung, gehört diese in
 dieselbe normative Tabelle wie die Invariante, nie in ihren Begründungstext. D108 wäre sonst erst
 an einem echten Nukleus aufgefallen.
+
+---
+
+## AA. Zugehörigkeit aller Felder
+
+### D112 — `proposal.scope` wird geprüft; Schwellenvalidierung vor Umwandlung ⚠️
+
+Zwei Befunde aus der zweiten Abnahme (`impl/04a-korrektur`, `e576663`). Beide sind klein, beide
+gehören zu derselben Regel, und der erste ist die **vierte** Wiederholung derselben Form.
+
+**(a) `proposal.scope` wird nirgends geprüft.** `Proposal` trägt ein eigenes `scope`-Feld. Weder
+`decide()` noch `verify_ratification()` vergleichen es mit `epoch.scope`. Ein Vorschlagsobjekt
+eines fremden Nukleus, dessen `predecessor` zufällig oder absichtlich auf diese Epoche zeigt, wird
+ausgezählt; die daraus entstehende Epoche trägt `scope = epoch.scope` und eine Verfassung, die für
+einen anderen Nukleus geschrieben wurde.
+
+Das ist wörtlich der Satz, den D110 normativ gemacht hat: kein Vermerk und kein Zustand aus einem
+Objekt, dessen Zugehörigkeit nicht vorher bestätigt wurde. D109 hat `epoch_id` und
+`proposal_hash` gebunden; das dritte Feld desselben Objekts blieb ungeprüft.
+
+**Beschluss:** `proposal.scope != epoch.scope` ist ein **`ValueError`**, geprüft als erste
+Bedingung in `decide()` und in `verify_ratification()`, vor der Paarprüfung. Kein Vermerk: ein
+fehlzugeordnetes Objekt ist ein Aufruferfehler und keine Lage der Welt (D82, D92, D109).
+
+**(b) Die Schwellenvalidierung läuft nach der Umwandlung.** `threshold_for()` coerciert mit
+`int(old_th[0])`, bevor `_is_ratio` je aufgerufen wird. Bei `thresholds.amendment = ["a","b"]`
+wirft `int("a")` einen `ValueError`, der in der `except (KeyError, TypeError, IndexError)`-Liste
+von `decide()` nicht steht: eine formwidrige Verfassung reißt den Aufruf ab, statt
+`MALFORMED_THRESHOLD` zu liefern.
+
+**Beschluss:** `_is_ratio` läuft auf den Rohwerten beider Verfassungen, **bevor** `threshold_for`
+sie anfasst. `threshold_for` coerciert nicht mehr; sie bekommt bereits geprüfte Integer-Paare.
+
+Vektoren: `GV-46` fremder `proposal.scope` → `ValueError`; `GV-47` `thresholds` mit Textwerten →
+`MALFORMED_THRESHOLD`, kein Abbruch.
+
+**Zur Fehlerform — vierte Wiederholung.** D105 schützte `vote@1` und vergaß `ratify@1` (→ D107).
+D106 zog `participants` nach `TallyResult` und ließ `epoch_id` und `proposal_hash` draußen
+(→ D109). D109 band beide und übersah `membership()` (→ D111). D111 band die Teilnehmerliste und
+übersah `proposal.scope` (→ D112). Jedes Mal war die Reparatur richtig und unvollständig auf die
+Geschwister ihrer eigenen Art.
+
+Die bisherigen Konsequenzen — Prädikatendurchgang (D107) und die Eingabenprüfung aus der Abnahme —
+setzen beide beim **Beheben** an. Das ist zu spät: wer einen Befund behebt, sieht die Geschwister
+des Befunds, nicht die Geschwister des Feldes.
+
+**Konsequenz — Zugehörigkeitsliste am Datentyp:** Trägt ein Datentyp Felder, die seine
+Zugehörigkeit zu einem Kontext behaupten, wird die vollständige Liste dieser Felder **bei seiner
+Definition** aufgeschrieben, zusammen mit dem Kontext, gegen den jedes zu prüfen ist. Für
+`Proposal` sind es drei: `scope`, `predecessor`, `constitution_hash`. Die Liste wird nicht beim
+Beheben eines Befunds angelegt, sondern beim Schreiben des Typs — sonst wächst sie immer nur um
+das eine Feld, das gerade wehgetan hat.

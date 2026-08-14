@@ -281,7 +281,15 @@ h-Regel für den binären Fall.
 `UNEVALUABLE`, jeweils mit Vermerk, in dieser Reihenfolge geprüft. Die Reihenfolge ist normativ:
 sonst erzeugt dieselbe Lage je nach Umsetzung verschiedene Diagnosen.
 
-**Vorweg, vor jeder inhaltlichen Prüfung — die Paarprüfung.**
+**Ganz vorweg — die Scope-Zugehörigkeit.** Weicht `proposal.scope` von `epoch.scope` ab, ist das
+ein **`ValueError`**, kein Vermerk: ein Vorschlagsobjekt eines fremden Nukleus ist ein
+Aufruferfehler und keine Lage der Welt (D82, D92, D112). Dasselbe gilt in `§4.1`.
+
+`Proposal` behauptet mit drei Feldern eine Zugehörigkeit, und alle drei werden geprüft: `scope`
+gegen `epoch.scope`, `predecessor` gegen `epoch.epoch_id`, `constitution_hash` gegen das gereichte
+Zielobjekt.
+
+**Dann die Paarprüfung.**
 
 | Lage | Vermerk |
 |---|---|
@@ -320,6 +328,10 @@ Klasse, in beiden Verfassungen geprüft:
 den >= 1     0 <= num <= den     2 * num >= den
 ```
 
+Geprüft wird auf den **Rohwerten** beider Verfassungen, bevor irgendeine Umwandlung stattfindet.
+Eine Schwelle mit Textwerten muss `MALFORMED_THRESHOLD` ergeben und darf den Aufruf nicht
+abreißen (D112).
+
 Die letzte Bedingung ist die tragende. Seien `A` und `B` disjunkte Ja-Mengen, die beide
 durchkommen; dann gilt `|A| * den > num * n` und `|B| * den > num * n`, und mit `|A| + |B| <= n`:
 
@@ -352,7 +364,8 @@ aus (D98). Ein Nukleus, der es setzt, bekommt kein Ergebnis statt eines falschen
 
 Ein `ratify@1`-Claim etabliert die Folgeepoche genau dann, wenn:
 
-0. die Auszählung gehört zu **dieser** Epoche und **diesem** Vorschlag. Weicht `tally.epoch_id`
+0. `proposal.scope == epoch.scope`, sonst **`ValueError`** (D112). Die Auszählung gehört zu
+   **dieser** Epoche und **diesem** Vorschlag. Weicht `tally.epoch_id`
    von `epoch.epoch_id` oder `tally.proposal_hash` von `proposal.proposal_hash` ab, ist das ein
    **`ValueError`**, kein Vermerk: ein fehlzugeordnetes Objekt ist ein Aufruferfehler und keine
    Lage der Welt (D82, D92, D109). Ist `tally.state` gleich `UNEVALUABLE`, entsteht keine Epoche;

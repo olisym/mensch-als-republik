@@ -331,6 +331,8 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-43` | `verify_ratification` mit `tally.state = UNEVALUABLE` | `TALLY_UNEVALUABLE`, keine Epoche |
 | `GV-44` | `verify_ratification` mit einer Auszählung zu einem **anderen** Vorschlag oder einer **anderen** Epoche | `ValueError` (D109) — kein Vermerk |
 | `GV-45` | `membership()` mit `constitution_obj`, dessen Hash nicht zum Parameter passt | `ValueError` (D111) |
+| `GV-46` | `proposal.scope` gehört zu einem anderen Nukleus, `predecessor` passt | `ValueError` (D112) — in `decide` **und** in `verify_ratification` |
+| `GV-47` | `thresholds[klasse]` trägt Textwerte statt Integer | `MALFORMED_THRESHOLD`, Zustand `UNEVALUABLE` — kein Abbruch |
 
 `GV-24` ist mit dem Bestandsnukleus aus `00 §3.1` unmittelbar prüfbar: `N = 65309fe2…` setzt
 `weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis. Derselbe Nukleus trifft auch
