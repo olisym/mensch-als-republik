@@ -73,9 +73,10 @@ def verify_ratification(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109)."""
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112)."""
     if (
-        tally.epoch_id != epoch.epoch_id
+        proposal.scope != epoch.scope
+        or tally.epoch_id != epoch.epoch_id
         or tally.proposal_hash != proposal.proposal_hash
     ):
         raise ValueError("tally does not match epoch and proposal")

@@ -77,7 +77,7 @@ def threshold_for(
         klass = _CLASS_BY_INDEX[genesis_obj[5]]
     old_th = old_obj["thresholds"][klass]
     new_th = new_obj["thresholds"][klass]
-    applied = ratio_max((int(old_th[0]), int(old_th[1])), (int(new_th[0]), int(new_th[1])))
+    applied = ratio_max((old_th[0], old_th[1]), (new_th[0], new_th[1]))
     return klass, applied
 
 
@@ -160,7 +160,9 @@ def decide(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> TallyResult:
-    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3)."""
+    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112)."""
+    if proposal.scope != epoch.scope:
+        raise ValueError("proposal scope does not match epoch scope")
     if proposal.predecessor != epoch.epoch_id:
         return _unevaluable(
             GovernanceFinding.STALE_EPOCH_VOTE,
@@ -249,17 +251,12 @@ def decide(
             epoch=epoch,
             proposal=proposal,
         )
-    try:
-        klass, threshold = threshold_for(
-            constitution_obj, target_constitution_obj, genesis_obj
-        )
-    except (KeyError, TypeError, IndexError):
-        return _unevaluable(
-            GovernanceFinding.MALFORMED_THRESHOLD,
-            epoch.constitution_hash,
-            epoch=epoch,
-            proposal=proposal,
-        )
+    old_rest = {k: v for k, v in constitution_obj.items() if k != "participants"}
+    new_rest = {k: v for k, v in target_constitution_obj.items() if k != "participants"}
+    if cbor_canon.encode(old_rest) == cbor_canon.encode(new_rest):
+        klass = "membership"
+    else:
+        klass = _CLASS_BY_INDEX[idx]
     for obj in (constitution_obj, target_constitution_obj):
         thresholds = obj.get("thresholds")
         if not isinstance(thresholds, dict) or klass not in thresholds:
@@ -276,6 +273,17 @@ def decide(
                 epoch=epoch,
                 proposal=proposal,
             )
+    try:
+        klass, threshold = threshold_for(
+            constitution_obj, target_constitution_obj, genesis_obj
+        )
+    except (KeyError, TypeError, IndexError):
+        return _unevaluable(
+            GovernanceFinding.MALFORMED_THRESHOLD,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
     participants = frozenset(ordered)
     by_cid = classify_all(store, now, policy)
     findings: list[Finding] = []

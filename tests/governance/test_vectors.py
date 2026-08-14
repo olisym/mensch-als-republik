@@ -13,7 +13,7 @@ from mensch_als_republik.governance import (
     verify_ratification,
 )
 from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import TallyState, reached
+from mensch_als_republik.governance.tally import TallyResult, TallyState, reached
 from mensch_als_republik.policy import constitution_hash
 from mensch_als_republik.profiles import MembershipState, membership
 from tests.helpers import Identity, store_with
@@ -104,7 +104,7 @@ def _paired(constitution: dict, target: dict = C3, *, index: int = 2):
     return epoch, proposal
 
 
-def _c2_amendment(pair: list[int]) -> dict:
+def _c2_amendment(pair: list) -> dict:
     obj = dict(C2)
     obj["thresholds"] = dict(C2["thresholds"])
     obj["thresholds"]["amendment"] = pair
@@ -700,7 +700,7 @@ def test_GV_34() -> None:
     assert before.findings == after.findings
 
 
-def _malformed_amendment(pair: list[int]):
+def _malformed_amendment(pair: list):
     target = _c2_amendment(pair)
     proposal = Proposal(
         scope=N_D,
@@ -843,3 +843,50 @@ def test_GV_45() -> None:
             authorized_keys=frozenset(),
             constitution_obj=C1,
         )
+
+
+def test_GV_46_decide() -> None:
+    foreign = Proposal(
+        scope=bytes(32),
+        predecessor=EPOCH_1.epoch_id,
+        constitution_hash=CONSTITUTION_HASH_2,
+    )
+    with pytest.raises(ValueError):
+        _tally(store_with(), proposal=foreign, constitution=C1, target=C2)
+
+
+def test_GV_46_verify_ratification() -> None:
+    alice, _bob, _carol, _dave = fresh_p1()
+    foreign = Proposal(
+        scope=bytes(32),
+        predecessor=EPOCH_1.epoch_id,
+        constitution_hash=CONSTITUTION_HASH_2,
+    )
+    tally = TallyResult(
+        state=TallyState.PASSED,
+        yes=(),
+        no=(),
+        participants=frozenset(),
+        threshold=(2, 3),
+        findings=(),
+        epoch_id=EPOCH_1.epoch_id,
+        proposal_hash=foreign.proposal_hash,
+    )
+    r = ratify_claim(alice, foreign, witnesses=[], t=10)
+    with pytest.raises(ValueError):
+        verify_ratification(
+            store_with(r),
+            ratify=r,
+            epoch=EPOCH_1,
+            proposal=foreign,
+            tally=tally,
+            now=NOW,
+            policy=policy_of(C1),
+        )
+
+
+def test_GV_47() -> None:
+    for pair in (["3", "4"], ["a", "b"]):
+        result = _malformed_amendment(pair)
+        assert result.state is TallyState.UNEVALUABLE
+        assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
