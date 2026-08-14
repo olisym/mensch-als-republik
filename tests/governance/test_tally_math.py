@@ -5,13 +5,26 @@ from __future__ import annotations
 import math
 
 from mensch_als_republik.governance.tally import (
+    TallyState,
     hopeless,
     ratio_max,
     reached,
     threshold_for,
 )
 
-from .fixtures import C1, C2, C2_HALF, C2_HIGH, C2_LOWER, C3, GENESIS_D
+from .fixtures import (
+    C1,
+    C2,
+    C2_HALF,
+    C2_HIGH,
+    C2_LOWER,
+    C3,
+    EPOCH_2_HALF,
+    GENESIS_D,
+    NOW,
+    PROPOSAL_HIGH,
+    policy_of,
+)
 
 
 def test_reached_strict_greater() -> None:
@@ -84,3 +97,36 @@ def test_INV_04_6_at_most_one_passed_if_yes_disjoint() -> None:
                         assert not (
                             reached(yes_a, n, num, den) and reached(yes_b, n, num, den)
                         )
+
+
+def test_D108_disjoint_yes_iff_below_majority() -> None:
+    """Zwei disjunkte Ja-Mengen erfüllen reached genau dann, wenn 2*num < den."""
+    for den in range(1, 13):
+        for num in range(0, den + 1):
+            exists = False
+            for n in range(1, 13):
+                for yes_a in range(n + 1):
+                    for yes_b in range(n - yes_a + 1):
+                        if reached(yes_a, n, num, den) and reached(yes_b, n, num, den):
+                            exists = True
+            assert exists is (2 * num < den), (num, den)
+
+
+def test_ratio_one_half_is_admissible() -> None:
+    """[1,2] ist zulässig (D108, Grenze nicht strikt)."""
+    from mensch_als_republik.governance import decide
+    from tests.helpers import store_with
+
+    result = decide(
+        store_with(),
+        epoch=EPOCH_2_HALF,
+        proposal=PROPOSAL_HIGH,
+        genesis_obj=GENESIS_D,
+        constitution_obj=C2_HALF,
+        target_constitution_obj=C2_HIGH,
+        known_proposals={PROPOSAL_HIGH.proposal_hash: PROPOSAL_HIGH},
+        now=NOW,
+        policy=policy_of(C2_HALF),
+    )
+    assert result.state is TallyState.PENDING
+    assert result.threshold == (4, 5)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import claim_id
 from mensch_als_republik.governance import (
@@ -10,7 +12,7 @@ from mensch_als_republik.governance import (
     decide,
     verify_ratification,
 )
-from mensch_als_republik.governance.objects import Epoch
+from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.governance.tally import TallyState, reached
 from mensch_als_republik.policy import constitution_hash
 from mensch_als_republik.profiles import MembershipState, membership
@@ -88,6 +90,25 @@ def _tally(
 
 def _kinds(result) -> set[GovernanceFinding]:
     return {f.kind for f in result.findings}
+
+
+def _paired(constitution: dict, target: dict = C3, *, index: int = 2):
+    epoch = Epoch(
+        scope=N_D, index=index, constitution_hash=constitution_hash(constitution)
+    )
+    proposal = Proposal(
+        scope=N_D,
+        predecessor=epoch.epoch_id,
+        constitution_hash=constitution_hash(target),
+    )
+    return epoch, proposal
+
+
+def _c2_amendment(pair: list[int]) -> dict:
+    obj = dict(C2)
+    obj["thresholds"] = dict(C2["thresholds"])
+    obj["thresholds"]["amendment"] = pair
+    return obj
 
 
 def test_GV_1() -> None:
@@ -212,7 +233,7 @@ def test_GV_8() -> None:
         constitution_hash=CONSTITUTION_HASH_2,
         now=NOW,
         authorized_keys=frozenset(),
-        participants=frozenset(P2),
+        constitution_obj=C2,
     )
     assert member.state is MembershipState.GRANT_ONLY
     assert member.grant_claim_id is None
@@ -389,21 +410,17 @@ def test_GV_17() -> None:
 def test_GV_18() -> None:
     alice, _bob, _carol, _dave, _eve = fresh_p2()
     stale = vote(alice, PROPOSAL_1, choice=1, t=1)
-    store = store_with(stale)
     result = _tally(
-        store,
+        store_with(stale),
         epoch=EPOCH_2,
-        proposal=PROPOSAL_2,
+        proposal=PROPOSAL_1,
         constitution=C2,
-        target=C3,
-        known={
-            PROPOSAL_2.proposal_hash: PROPOSAL_2,
-            PROPOSAL_1.proposal_hash: PROPOSAL_1,
-        },
+        target=C2,
     )
-    assert result.state is TallyState.PENDING
-    assert GovernanceFinding.STALE_EPOCH_VOTE in _kinds(result)
-    assert result.yes == ()
+    assert result.state is TallyState.UNEVALUABLE
+    assert result.findings == (
+        Finding(GovernanceFinding.STALE_EPOCH_VOTE, PROPOSAL_1.proposal_hash),
+    )
 
 
 def test_GV_19() -> None:
@@ -451,11 +468,11 @@ def test_GV_21() -> None:
 
 def test_GV_22() -> None:
     bare = {k: v for k, v in C2.items() if k != "participants"}
-    epoch = Epoch(scope=N_D, index=2, constitution_hash=constitution_hash(bare))
+    epoch, proposal = _paired(bare)
     result = _tally(
         store_with(),
         epoch=epoch,
-        proposal=PROPOSAL_2,
+        proposal=proposal,
         constitution=bare,
         target=C3,
     )
@@ -466,11 +483,11 @@ def test_GV_22() -> None:
 def test_GV_23() -> None:
     unsorted = dict(C2)
     unsorted["participants"] = list(reversed(P2))
-    epoch = Epoch(scope=N_D, index=2, constitution_hash=constitution_hash(unsorted))
+    epoch, proposal = _paired(unsorted)
     result = _tally(
         store_with(),
         epoch=epoch,
-        proposal=PROPOSAL_2,
+        proposal=proposal,
         constitution=unsorted,
         target=C3,
     )
@@ -534,11 +551,11 @@ def test_GV_26() -> None:
 def test_GV_27() -> None:
     stripped = dict(C2)
     stripped["irrevocable_predicates"] = ["obligation@1", "ratify@1"]
-    epoch = Epoch(scope=N_D, index=2, constitution_hash=constitution_hash(stripped))
+    epoch, proposal = _paired(stripped)
     result = _tally(
         store_with(),
         epoch=epoch,
-        proposal=PROPOSAL_2,
+        proposal=proposal,
         constitution=stripped,
         target=C3,
     )
@@ -604,11 +621,11 @@ def test_GV_30() -> None:
 def test_GV_31() -> None:
     stripped = dict(C2)
     stripped["irrevocable_predicates"] = ["obligation@1", "vote@1"]
-    epoch = Epoch(scope=N_D, index=2, constitution_hash=constitution_hash(stripped))
+    epoch, proposal = _paired(stripped)
     result = _tally(
         store_with(),
         epoch=epoch,
-        proposal=PROPOSAL_2,
+        proposal=proposal,
         constitution=stripped,
         target=C3,
     )
@@ -681,3 +698,148 @@ def test_GV_34() -> None:
     assert before.yes == after.yes
     assert before.no == after.no
     assert before.findings == after.findings
+
+
+def _malformed_amendment(pair: list[int]):
+    target = _c2_amendment(pair)
+    proposal = Proposal(
+        scope=N_D,
+        predecessor=EPOCH_2.epoch_id,
+        constitution_hash=constitution_hash(target),
+    )
+    return _tally(
+        store_with(),
+        epoch=EPOCH_2,
+        proposal=proposal,
+        constitution=C2,
+        target=target,
+    )
+
+
+def test_GV_35() -> None:
+    result = _malformed_amendment([1, 3])
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+
+
+def test_GV_36() -> None:
+    result = _malformed_amendment([2, 5])
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+
+
+def test_GV_37() -> None:
+    result = _malformed_amendment([-1, 2])
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+    assert result.state is not TallyState.PASSED
+
+
+def test_GV_38() -> None:
+    result = _malformed_amendment([5, 4])
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+
+
+def test_GV_39() -> None:
+    result = _malformed_amendment([1, 0])
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+
+
+def test_GV_40() -> None:
+    empty = dict(C2)
+    empty["participants"] = []
+    epoch, proposal = _paired(empty)
+    result = _tally(
+        store_with(),
+        epoch=epoch,
+        proposal=proposal,
+        constitution=empty,
+        target=C3,
+    )
+    assert result.state is TallyState.UNEVALUABLE
+    assert GovernanceFinding.MALFORMED_PARTICIPANTS in _kinds(result)
+
+
+def test_GV_41() -> None:
+    result = _tally(
+        store_with(),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_1,
+        constitution=C2,
+        target=C2,
+    )
+    assert result.state is TallyState.UNEVALUABLE
+    assert result.findings == (
+        Finding(GovernanceFinding.STALE_EPOCH_VOTE, PROPOSAL_1.proposal_hash),
+    )
+    assert result.epoch_id == EPOCH_2.epoch_id
+    assert result.proposal_hash == PROPOSAL_1.proposal_hash
+
+
+def test_GV_42() -> None:
+    result = _tally(
+        store_with(),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C1,
+        target=C3,
+    )
+    assert result.state is TallyState.UNEVALUABLE
+    assert result.findings == (
+        Finding(GovernanceFinding.CONSTITUTION_UNAVAILABLE, EPOCH_2.constitution_hash),
+    )
+
+
+def test_GV_43() -> None:
+    alice, _bob, _carol, _dave = fresh_p1()
+    tally = _tally(store_with(), constitution=None, proposal=PROPOSAL_1, target=C2)
+    assert tally.state is TallyState.UNEVALUABLE
+    r = ratify_claim(alice, PROPOSAL_1, witnesses=[], t=10)
+    result = verify_ratification(
+        store_with(r),
+        ratify=r,
+        epoch=EPOCH_1,
+        proposal=PROPOSAL_1,
+        tally=tally,
+        now=NOW,
+        policy=policy_of(C1),
+    )
+    assert result.next_epoch is None
+    assert GovernanceFinding.TALLY_UNEVALUABLE in _kinds(result)
+    assert GovernanceFinding.UNSUPPORTED_RATIFICATION not in _kinds(result)
+
+
+def test_GV_44() -> None:
+    alice, bob, carol, _dave = fresh_p1()
+    votes = [
+        vote(alice, PROPOSAL_1, choice=1, t=1),
+        vote(bob, PROPOSAL_1, choice=1, t=1),
+        vote(carol, PROPOSAL_1, choice=1, t=1),
+    ]
+    tally = _tally(store_with(*votes))
+    r = ratify_claim(alice, PROPOSAL_2, witnesses=[claim_id(v) for v in votes], t=10)
+    with pytest.raises(ValueError):
+        verify_ratification(
+            store_with(*votes, r),
+            ratify=r,
+            epoch=EPOCH_2,
+            proposal=PROPOSAL_2,
+            tally=tally,
+            now=NOW,
+            policy=policy_of(C2),
+        )
+
+
+def test_GV_45() -> None:
+    with pytest.raises(ValueError):
+        membership(
+            store_with(),
+            subject=EVE.pub,
+            scope=N_D,
+            constitution_hash=CONSTITUTION_HASH_2,
+            now=NOW,
+            authorized_keys=frozenset(),
+            constitution_obj=C1,
+        )

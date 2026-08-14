@@ -73,9 +73,36 @@ def verify_ratification(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106)."""
-    if tally.state is TallyState.UNEVALUABLE or tally.participants is None:
-        return _unsupported(ratify)
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109)."""
+    if (
+        tally.epoch_id != epoch.epoch_id
+        or tally.proposal_hash != proposal.proposal_hash
+    ):
+        raise ValueError("tally does not match epoch and proposal")
+    if tally.state is TallyState.UNEVALUABLE:
+        return RatificationResult(
+            next_epoch=None,
+            findings=dedupe_sort(
+                [
+                    Finding(
+                        kind=GovernanceFinding.TALLY_UNEVALUABLE,
+                        subject=claim_id(ratify),
+                    )
+                ]
+            ),
+        )
+    if tally.participants is None:
+        return RatificationResult(
+            next_epoch=None,
+            findings=dedupe_sort(
+                [
+                    Finding(
+                        kind=GovernanceFinding.TALLY_UNEVALUABLE,
+                        subject=claim_id(ratify),
+                    )
+                ]
+            ),
+        )
     participants = tally.participants
     if ratify.N != epoch.scope or ratify.J != (3, proposal.proposal_hash):
         return _unsupported(ratify)
@@ -97,16 +124,16 @@ def verify_ratification(
     cited = _cited(ratify)
     if cited is None:
         return _unsupported(ratify)
-    if len(cited) != len(set(c for c in cited if isinstance(c, bytes))):
-        return _unsupported(ratify)
     witness_findings: list[Finding] = []
+    authors: list[bytes] = []
     for cid in cited:
         if not isinstance(cid, bytes):
             witness_findings.append(
                 Finding(kind=GovernanceFinding.UNSUPPORTED_RATIFICATION, subject=rid)
             )
             continue
-        if store.get(cid) is None:
+        present = store.get(cid)
+        if present is None:
             witness_findings.append(
                 Finding(kind=GovernanceFinding.UNKNOWN_WITNESS_VOTE, subject=cid)
             )
@@ -114,10 +141,14 @@ def verify_ratification(
             witness_findings.append(
                 Finding(kind=GovernanceFinding.UNSUPPORTED_RATIFICATION, subject=cid)
             )
+        else:
+            authors.append(present.I)
     if witness_findings:
         return RatificationResult(
             next_epoch=None, findings=dedupe_sort(witness_findings)
         )
+    if len(authors) != len(set(authors)):
+        return _unsupported(ratify)
     if tally.threshold is None or tally.n is None:
         return _unsupported(ratify)
     num, den = tally.threshold

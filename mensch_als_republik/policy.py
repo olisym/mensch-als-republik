@@ -26,10 +26,15 @@ class PolicyWarning(str, Enum):
     MALFORMED_IRREVOCABLE_ENTRY = "MALFORMED_IRREVOCABLE_ENTRY"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, order=True)
 class PolicyNote:
     code: PolicyWarning
     predicate: str
+
+
+def dedupe_sort(notes: list[PolicyNote] | tuple[PolicyNote, ...]) -> tuple[PolicyNote, ...]:
+    """Warnings sortiert und dedupliziert (04a, D95-Nachzug)."""
+    return tuple(sorted(set(notes)))
 
 
 def constitution_hash(constitution_obj: dict) -> bytes:
@@ -64,31 +69,37 @@ class NucleusPolicy:
         raw = self.declared
         notes: list[PolicyNote] = []
         kept: list[str] = []
-        try:
-            entries = list(raw)
-        except TypeError:
+        if isinstance(raw, str):
             notes.append(
                 PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, repr(raw))
             )
         else:
-            for entry in entries:
-                if _well_formed_irrevocable_entry(entry):
-                    kept.append(entry)
-                else:
-                    subject = entry if isinstance(entry, str) else repr(entry)
-                    notes.append(
-                        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, subject)
-                    )
-        declared = frozenset(kept)
-        object.__setattr__(self, "declared", declared)
-        irrevocable = (PROTOCOL_IRREVOCABLE | declared) - TRUST_GRANTING - _CORE_ENTRIES
-        unsafe = declared & TRUST_GRANTING
+            try:
+                entries = list(raw)
+            except TypeError:
+                notes.append(
+                    PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, repr(raw))
+                )
+            else:
+                for entry in entries:
+                    if _well_formed_irrevocable_entry(entry):
+                        kept.append(entry)
+                    else:
+                        subject = entry if isinstance(entry, str) else repr(entry)
+                        notes.append(
+                            PolicyNote(
+                                PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, subject
+                            )
+                        )
+        well_formed = frozenset(kept)
+        irrevocable = (PROTOCOL_IRREVOCABLE | well_formed) - TRUST_GRANTING - _CORE_ENTRIES
+        unsafe = well_formed & TRUST_GRANTING
         notes.extend(
             PolicyNote(PolicyWarning.UNSAFE_IRREVOCABLE_PREDICATE, predicate)
             for predicate in sorted(unsafe)
         )
         object.__setattr__(self, "irrevocable", frozenset(irrevocable))
-        object.__setattr__(self, "warnings", tuple(notes))
+        object.__setattr__(self, "warnings", dedupe_sort(notes))
 
 
 def is_irrevocable(predicate: str, policy: NucleusPolicy | None) -> bool:
@@ -109,5 +120,6 @@ __all__ = [
     "PolicyNote",
     "PolicyWarning",
     "constitution_hash",
+    "dedupe_sort",
     "is_irrevocable",
 ]
