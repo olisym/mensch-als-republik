@@ -2881,3 +2881,171 @@ Bedingung, die sie ersetzt.
 **Konsequenz — Prädikatendurchgang:** Wird ein Prädikat einer Schicht mit einer
 Zustandsbedingung belegt, werden **alle** Prädikate derselben Schicht daraufhin durchgegangen,
 und die, die keine bekommen, werden ausdrücklich als ungeprüft benannt.
+
+---
+
+## Z. Aus der Layer-04-Abnahme
+
+Drei Beschlüsse. Alle drei betreffen Zeilen, die die Umsetzung korrekt befolgt hat — es sind
+Spec-Fehler, keine Implementierungsfehler.
+
+### D108 — Eine Schwelle unterhalb der Mehrheit ist nicht auswertbar ⚠️
+
+D102 begründet die Eindeutigkeit einer Epoche damit, dass sich die Ja-Mengen zweier rivalisierender
+Vorschläge überschneiden müssen. Diese Aussage gilt nicht für jede Schwelle. Bei
+`amendment: [1,3]` können zwei disjunkte Ja-Mengen von je mehr als einem Drittel entstehen — zwei
+gültig ratifizierte Nachfolger derselben Epoche, und die Argumentation aus D102 fällt vollständig.
+
+Weder `04-governance.md` noch die Anker noch der Code prüften es. **Die Voraussetzung stand in D102
+in einem Nebensatz der Begründung und in keiner prüfbaren Zeile.** Das ist die Bauform aus D74 und
+D87: eine Begründung, die in ihrem Ursprungskontext trug und beim Übertragen ihren Geltungsbereich
+verlor — hier beim Übertragen von der Begründung in die Norm.
+
+**Die Rechnung.** Seien `A` und `B` disjunkte Ja-Mengen, die beide durchkommen. Dann gilt
+`|A| * den > num * n` und `|B| * den > num * n`; addiert und mit `|A| + |B| <= n`:
+
+```
+n * den   >=   (|A| + |B|) * den   >   2 * num * n        ->        den > 2 * num
+```
+
+Zwei disjunkte Ja-Mengen sind also genau dann unmöglich, wenn **`2 * num >= den`**. Die Grenze ist
+nicht strikt: `[1,2]` bleibt zulässig, `[1,3]` und `[2,5]` nicht. Erschöpfend nachgeprüft über alle
+`n` bis 60.
+
+Weil `[1,2]` zulässig bleibt, betrifft die Bedingung `ordinary: [1,2]` aus `00 §3.1` nicht, und der
+Bestandsanker `890b21e7…` bleibt gültig. Geprüft wird trotzdem nur die **angewandte** Klasse — eine
+Verfassung soll nicht daran scheitern, dass ein in v1 unbenutzter Eintrag unglücklich gesetzt ist.
+
+**Beschluss:** Die angewandte Schwelle einer Auszählung MUSS `2 * num >= den` erfüllen. Andernfalls
+ist der Vorschlag nicht auswertbar: Zustand `UNEVALUABLE`, Vermerk `THRESHOLD_BELOW_MAJORITY`. Die
+Prüfung gilt der **angewandten** Schwelle nach der Maximum-Regel (`04 §3.4`), also nach
+`ratio_max`.
+
+**Zur Auswertungszeit, nicht zum Inkrafttreten.** Geprüft wird beim Auszählen, nicht bei der
+Ratifizierung der Verfassung, die die Schwelle setzt. Die Alternative wäre sauberer — eine
+Verfassung mit zu niedriger Schwelle träte gar nicht erst in Kraft —, greift aber beim Genesis
+nicht, dessen Verfassung ohne Abstimmung gilt. Die Regel stünde dann an zwei Stellen, und zwei
+Darstellungen derselben Regel sind in diesem Projekt die häufigste Fehlerquelle.
+
+Folge, offen getragen: ein Nukleus kann eine Verfassung mit zu niedriger Schwelle in Kraft haben.
+Er kann dann nichts mehr ändern, weil jede Auszählung `UNEVALUABLE` liefert. Das ist eine
+Sackgasse, aber eine sichtbare mit eigenem Vermerk — und die sichere Richtung gegenüber einer
+Verfassung, die sich in zwei Nachfolger spaltet.
+
+### D109 — `TallyResult` bindet sich an Epoche und Vorschlag
+
+`verify_ratification` nahm `epoch`, `proposal` und `tally` als unabhängige Argumente und prüfte
+nie, ob die Auszählung zu diesem Paar gehört. Ein Aufrufer mit einem fremden `TallyResult` bekam
+die Zeugenmenge gegen eine fremde `yes`-Menge validiert und konnte eine Epoche etablieren, die
+niemand beschlossen hat.
+
+Das ist D106 eine Ebene höher. Dort wurde `participants` als Parameter gestrichen, damit die
+Wählerschaft nicht auseinanderlaufen kann; dabei blieb unbemerkt, dass das ganze `tally` genauso
+frei gereicht wird.
+
+**Beschluss:** `TallyResult` trägt `epoch_id: bytes` und `proposal_hash: bytes`.
+`verify_ratification` vergleicht beide mit `epoch.epoch_id` und `proposal.proposal_hash` und wirft
+bei Abweichung `ValueError`.
+
+`ValueError` und kein Vermerk: nach D82 und D92 ist ein fehlzugeordnetes Objekt ein Aufruferfehler.
+Ein Vermerk hieße, der Fall sei eine Lage der Welt; er ist ein Programmierfehler.
+
+### D110 — Kein Urteil aus einem Objekt mit ungeprüfter Zugehörigkeit
+
+Zwei Befunde derselben Regel.
+
+**(a) `STALE_EPOCH_VOTE` ist eine Paar-Eigenschaft, keine Stimmbedingung.** `04 §3.1` führte
+`proposal.predecessor == epoch_id` als Bedingung 3 unter den Stimmen auf. Die Bedingung betrifft
+das Paar `(epoch, proposal)` und ist einmal zu prüfen, nicht je Stimme. Wörtlich umgesetzt entsteht
+Rauschen über Stimmen fremder Epochen — und, schwerer, bei einem nicht passenden Paar **ohne**
+Stimmen wird die Bedingung nie erreicht: die Auszählung läuft durch und liefert `PENDING` statt
+eines Fehlers.
+
+**(b) Die Identitätsprüfung des Zielobjekts kam zu spät.** `04 §3.5` führte
+`PROPOSAL_CONSTITUTION_UNAVAILABLE` als letzte Zeile, während die Klassen- und Schwellenprüfung
+darüber das Zielobjekt bereits las. Passt dessen Hash nicht, wird eine Diagnose aus einem Objekt
+gezogen, das nicht das gemeinte ist.
+
+**Beschluss:**
+
+1. Die Paarprüfung wandert an den Anfang von `decide()`, **vor** die Abbruchtabelle. Abweichung
+   ergibt `UNEVALUABLE` mit `STALE_EPOCH_VOTE`, Subjekt der `proposal_hash`. Innerhalb der
+   Stimmschleife entfällt die Bedingung ersatzlos.
+2. Die Identitätsprüfung beider Verfassungsobjekte steht **vor** jeder Prüfung, die ihren Inhalt
+   liest.
+
+Die gemeinsame Regel, ab hier normativ für alle Schichten: **kein Vermerk und kein Zustand wird aus
+einem Objekt abgeleitet, dessen Zugehörigkeit nicht vorher bestätigt wurde.**
+
+### Nachzug ohne eigene Nummer
+
+Aus derselben Abnahme, ohne Fork und deshalb hier statt als eigener Eintrag:
+
+- **Schwellenform.** `_is_ratio` prüfte zwei Integer. Bei `den = 0` ist jeder Vorschlag lautlos
+  sofort `FAILED`, bei `num < 0` ist er ohne eine einzige Stimme `PASSED` — `reached(0, n, -1, 2)`
+  vergleicht `0 > -n`. Verlangt sind `den >= 1`, `num >= 0`, `num <= den`, dazu `2 * num >= den`
+  aus D108; sonst `MALFORMED_THRESHOLD`.
+- **Doppelte Klassenbestimmung.** `decide()` leitet die Klasse inline ab und ruft danach
+  `threshold_for()` auf, das dieselbe Ableitung wiederholt. Zwei Implementierungen einer Regel in
+  einer Datei, mit der Driftgefahr, gegen die `T-02.4` gebaut wurde. `decide()` benutzt
+  `threshold_for()`.
+- **`§4.1` Bedingung 4 ist impliziert, nicht geprüft.** Die Spec verlangt, dass keine zwei
+  zitierten `claim_id` Stimmen desselben Autors bezeichnen; der Code prüft doppelte `claim_id`.
+  Das genügt nur, weil `tally.yes` je Autor höchstens eine Stimme führt — eine Invariante trägt
+  eine Bedingung, statt dass sie geprüft wird.
+- **`SCOPE_MISMATCH` für jede fremde Stimme.** Jede `vote@1` eines beliebigen anderen Nukleus im
+  Store erzeugt einen Vermerk. `membership()` vergibt ihn erst, nachdem Subjekt und Prädikat
+  passen; in einem Multi-Nukleus-Store schwemmt die Liste sonst über.
+- **`NucleusPolicy.declared` wird überschrieben.** Der Konstruktor ersetzt das Feld durch die
+  gefilterte Menge. Nach der Konstruktion ist nicht mehr feststellbar, was die Verfassung erklärt
+  hat; der Vergleich „erklärt gegen wirksam" ist verloren. Entweder bleibt `declared` unangetastet
+  oder es tritt ein zweites Feld daneben.
+- **`NucleusPolicy.warnings` ist nicht sortiert und nicht dedupliziert.** Die Malformed-Notizen
+  werden in Eingabereihenfolge angehängt. Bekommt der Konstruktor ein `frozenset` — was
+  `resolve_policy` in zwei von drei Rückgabepfaden tut —, ist die Reihenfolge nicht bestimmt:
+  **zwei Läufe über dieselbe Verfassung liefern verschiedene Tupel.** Jede andere Vermerkliste im
+  Projekt geht durch `dedupe_sort`; diese muss es auch.
+- **Leere `participants`.** Eine leere Liste ist sortiert und duplikatfrei und passiert die
+  Formprüfung. Mit `n = 0` ist jeder Vorschlag sofort `FAILED`, und die Diagnose sagt „abgelehnt",
+  wo „niemand konnte abstimmen" gemeint ist. Mindestens ein Eintrag, sonst
+  `MALFORMED_PARTICIPANTS`.
+- **`TALLY_UNEVALUABLE`.** `verify_ratification` meldete bei nicht auswertbarer Auszählung
+  `UNSUPPORTED_RATIFICATION` — „die Behauptung stimmt nicht", wo „ich konnte nicht auswerten"
+  gemeint ist. Eigener Vermerk nach D94.
+- **Bedingungsreihenfolge in `04 §3.1`.** Die Umsetzung prüft `t_exp` und `choice` vor `ACTIVE`.
+  Wirkung identisch, Diagnose besser: eine abgelaufene Stimme mit gesetztem `t_exp` bekommt
+  `VOTE_WITH_EXPIRY` statt lautlos zu verschwinden. **Die Spec wird auf die Implementierung
+  nachgezogen**, wie bei `Derivation(bfs, findings)` in Layer 02.
+- **Textwert in `irrevocable_predicates`.** Ein `str` ist iterierbar; `list("obligation@1")` liefert
+  zwölf Einzelzeichen und damit zwölf Vermerke auf Symptome statt einen auf die Ursache. Ein `str`
+  wird wie ein nicht iterierbarer Wert behandelt: ein Vermerk mit `repr`, Liste vollständig
+  ausgefallen. Präzisierung zu D95.
+
+### D111 — `membership()` prüft die Zugehörigkeit seiner Teilnehmerliste
+
+Dieselbe Regel wie D109, eine Schicht tiefer. `membership()` nimmt `constitution_hash` und
+`participants` als unabhängige Argumente entgegen und prüft nie, dass die Liste zu genau dieser
+Verfassungsversion gehört. Ein Aufrufer kann `participants` aus Epoche 3 mit dem
+`constitution_hash` aus Epoche 2 verbinden und bekommt `MEMBER`.
+
+Die Lücke stammt aus `04-prompt.md §7`, nicht aus der Umsetzung: dort steht der Parameter genau so.
+
+**Beschluss:** `membership()` nimmt statt `participants` ein `constitution_obj: dict | None`. Ist
+es gesetzt, prüft die Funktion `constitution_hash(constitution_obj)` gegen den Parameter
+`constitution_hash` und wirft bei Abweichung `ValueError` (D82, D92, D109); die Teilnehmerliste
+wird daraus gelesen, nicht separat gereicht.
+
+Damit zeigen beide Konjunkte der Mitgliedschaft auf **dasselbe** content-adressierte Objekt, wie
+`04 §6.1` es beschreibt. Die vier Zustände und die `accept-rules`-Strecke bleiben unverändert.
+
+**Zur Fehlerform.** Von siebzehn Abnahmebefunden aus zwei unabhängigen Durchgängen lagen elf
+**zwischen** zwei Stellen, nicht in einer. Vier der fünf Blocker beschreiben Zeilen, die die
+Umsetzung korrekt befolgt hat.
+
+Der zweite Durchgang war die Kontrolle wert: er hat D108 korrigiert — die dort zunächst behauptete
+Grenze `2 * num > den` war zu streng und ohne Herleitung aufgeschrieben — und sechs Befunde
+ergänzt, von denen einer (`warnings` ohne feste Reihenfolge) ein Determinismusbruch ist.
+
+**Konsequenz — Voraussetzungsprüfung:** Trägt eine Invariante eine Voraussetzung, gehört diese in
+dieselbe normative Tabelle wie die Invariante, nie in ihren Begründungstext. D108 wäre sonst erst
+an einem echten Nukleus aufgefallen.
