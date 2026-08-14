@@ -3150,3 +3150,75 @@ sie dann kommt. Die Umsetzung war die einzige, die ohne Signaturänderung mögli
 geändert, wird für jede Größe, die in der alten Reihenfolge nebenbei entstand, ausdrücklich
 benannt, woher sie in der neuen kommt. Fehlt der Satz, wählt die Umsetzung den kürzesten Weg — und
 der ist Duplikation.
+
+---
+
+## AC. Trennung, Nachfolge und der Schnitt bei der Gründung
+
+### D114 — `parent_scope` ist deklarativ; Governance und Substanz gehören getrennt
+
+Ausgelöst durch eine Frage, die kein Randfall ist: zwei Gründer zerstreiten sich. Aldi und
+Vapiano sind die bekannten Fälle, und in beiden war die Auflösung nicht eine Abstimmung, sondern
+eine Trennung.
+
+**Die Ausgangslage ist unparametrierbar.** Bei `n = 2` verlangt **jede** nach D108 zulässige
+Schwelle Einstimmigkeit — das folgt direkt aus `2 * num >= den`: was zwei disjunkte Ja-Mengen
+ausschließt, ist mit einer von zwei Stimmen nicht erreichbar. Es gibt keinen Wert, der hilft. Bei
+`n = 3` gibt es Klassen ohne Einstimmigkeit, aber nur mit `num/den` nahe der Hälfte; ab `2/3`
+fällt es zurück. Der neutrale Dritte ist damit ausdrückbar — als **Mitglied** unter Gleichen, nie
+als Instanz darüber, denn die gibt es in MaR nicht (`04 §8`).
+
+Bleibt die Frage, was eine Trennung kostet. Und die entscheidet sich bei der Gründung.
+
+**(a) `parent_scope` ist eine Behauptung, keine Beziehung.** Das Feld steht seit `00 §4` im
+Genesis-Schema, wird aber von **keiner** Funktion gelesen — nicht in `02`, nicht in `03`, nicht in
+`04`. Sein Name suggeriert eine Über-/Unterordnung, die es nicht gibt und nach `02 §2` auch nicht
+geben kann: es gibt einen Graphen je `N`, Vertrauen fließt nicht über Scope-Grenzen, und D92
+verbietet scope-fremde Verdikte.
+
+**Beschluss:** Das Feld ist rein deklarativ und bekommt in `00 §4.1` einen ausdrücklichen Satz
+dazu. Es begründet keine Autorität, keine Übertragung, keinen Vorrang. Es behauptet eine
+Zugehörigkeit oder Nachfolge, prüfbar über die Genesis-Kette, bewertet vom Leser — das Protokoll
+erzwingt Zurechenbarkeit, nicht Wahrheit (`08 §2.1`).
+
+Ausdrücklich zugelassen: **mehrere Nuklei dürfen dieselbe Elternschaft behaupten.** Spaltet sich
+eine Gemeinschaft, berufen sich beide Hälften auf denselben Vorgänger, und keine kann die andere
+daran hindern. Welche als Fortsetzung gilt, entscheiden die Beteiligten. Das Protokoll bildet den
+Streit ab, statt ihn zu entscheiden.
+
+**(b) Governance und Substanz gehören in getrennte Scopes.** Empfehlung, keine Prüfung, in
+`00 §4.2`. Vouches, Obligationen und Quittungen gehören nicht in den Scope, dessen `participants`
+abgestimmt werden. Der Governance-Scope regiert genau eine Sache: sich selbst. Die Substanz lebt
+daneben, in einem Scope ohne `participants` — er ist damit nach `04 §3.5` nicht auszählbar und
+braucht es nicht, weil Bürgen, Verpflichten und Quittieren zweiseitige Akte ohne Kollektivbeschluss
+sind.
+
+Damit kostet ein Zerwürfnis das Regelwerk und nicht die Substanz: die Kanten tragen ein anderes
+`N` und bleiben unberührt, egal wie fest der Governance-Scope steckt. Wer beide Hälften trennen
+will, gründet zwei neue Governance-Scopes und bleibt im gemeinsamen Substanz-Scope — verschiedene
+Regelwerke, dieselbe Wirtschaft.
+
+**Der Preis, offen benannt:** ein Scope ohne Governance hat **unveränderliche Arbitratoren**, weil
+`03 §2.4` sie aus der Verfassung des eigenen Scopes nimmt. Mit zwei Personen bekommt man nicht
+beides — änderbare Regeln und unangreifbare Substanz —, ohne einen dritten Scope oder einen der
+beiden Nachteile.
+
+Und der teure Fall bleibt teuer: wollen die Hälften auch getrennte Wirtschaften, beginnt eine bei
+null. Das folgt aus der Kontextbindung in `02 §2` und lässt sich für den Trennungsfall nicht
+aussetzen, ohne die Eigenschaft aufzugeben, wegen der das Ganze funktioniert.
+
+**(c) Keine Stilllegungsmarkierung.** Ein Nukleus, in dem niemand mehr signiert, ist stillgelegt;
+das erkennt jeder Beobachter an seinem eigenen Bestand. Eine Markierung wäre eine globale Aussage
+über etwas, das nur lokal beobachtbar ist.
+
+**Nebenbei korrigiert.** `00 §4` Key 5 trug noch „in v1 selbst unveränderlich" — überholt durch
+die Maximum-Regel aus `04 §3.4`, und die Klassenzuordnung aus D104 fehlte. Beides nachgezogen.
+
+**Zur Fehlerform.** `parent_scope` stand seit Layer 00 im Schema und hatte nie eine Wirkung. Kein
+Durchgang hat es gefunden, weil alle Prüfungen von einer Funktion ausgingen und fragten, ob sie
+richtig ist — nicht von einem Feld und ob es überhaupt gelesen wird.
+
+**Konsequenz — Feldinventur:** Vor der Abnahme einer Schicht wird für jedes Feld ihrer Schemata
+benannt, welche Funktion es liest. Felder ohne Leser sind entweder zu streichen oder als
+deklarativ zu kennzeichnen; sie schweigend stehen zu lassen erzeugt eine Erwartung, die niemand
+einlöst.
