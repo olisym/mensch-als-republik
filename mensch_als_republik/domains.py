@@ -6,3 +6,7 @@ DOM_ID_GEN = b"claim-atom/v1/id-genesis"
 
 # Nur für Vektor-Reproduktion (Governance-Schicht 00), nicht im Atom-Code verwenden.
 DOM_NUC_GEN = b"claim-atom/v1/nucleus-genesis"
+
+# Epochen- und Vorschlagsidentität (04-governance.md §1.1, §2.4).
+DOM_NUC_EPOCH = b"claim-atom/v1/nucleus-epoch"
+DOM_NUC_PROPOSAL = b"claim-atom/v1/nucleus-proposal"

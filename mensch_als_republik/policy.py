@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum
+
+from mensch_als_republik import cbor_canon
 
 PROTOCOL_IRREVOCABLE = frozenset({"obligation@1"})  # Boden, D70 / 00 §5.2
 TRUST_GRANTING = frozenset({"vouch@1"})  # Negativliste, D58 / 01 §5.4.3 b
@@ -19,6 +23,7 @@ assert not (PROTOCOL_IRREVOCABLE & _CORE_ENTRIES), (
 
 class PolicyWarning(str, Enum):
     UNSAFE_IRREVOCABLE_PREDICATE = "UNSAFE_IRREVOCABLE_PREDICATE"
+    MALFORMED_IRREVOCABLE_ENTRY = "MALFORMED_IRREVOCABLE_ENTRY"
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,24 +32,63 @@ class PolicyNote:
     predicate: str
 
 
+def constitution_hash(constitution_obj: dict) -> bytes:
+    """SHA-256 der kanonischen Kodierung (00 §3, 04-prompt.md §0.2)."""
+    return hashlib.sha256(cbor_canon.encode(constitution_obj)).digest()
+
+
+def _well_formed_irrevocable_entry(entry: object) -> bool:
+    """Formkriterium aus D95: Profilname, bedeutungsblind."""
+    if not isinstance(entry, str):
+        return False
+    if entry.count("@") != 1:
+        return False
+    left, right = entry.split("@")
+    if not left or not right:
+        return False
+    if "/" in entry or ":" in entry:
+        return False
+    return True
+
+
 @dataclass(frozen=True, slots=True)
 class NucleusPolicy:
     """Policy eines Nukleus: welche Prädikate in ihrem Scope irrevocable sind."""
 
     scope: bytes
-    declared: frozenset[str] = frozenset()
+    declared: Iterable[object] = frozenset()
     irrevocable: frozenset[str] = field(init=False, default=frozenset())
     warnings: tuple[PolicyNote, ...] = field(init=False, default=())
 
     def __post_init__(self) -> None:
-        irrevocable = (PROTOCOL_IRREVOCABLE | self.declared) - TRUST_GRANTING - _CORE_ENTRIES
-        unsafe = self.declared & TRUST_GRANTING
-        warnings = tuple(
+        raw = self.declared
+        notes: list[PolicyNote] = []
+        kept: list[str] = []
+        try:
+            entries = list(raw)
+        except TypeError:
+            notes.append(
+                PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, repr(raw))
+            )
+        else:
+            for entry in entries:
+                if _well_formed_irrevocable_entry(entry):
+                    kept.append(entry)
+                else:
+                    subject = entry if isinstance(entry, str) else repr(entry)
+                    notes.append(
+                        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, subject)
+                    )
+        declared = frozenset(kept)
+        object.__setattr__(self, "declared", declared)
+        irrevocable = (PROTOCOL_IRREVOCABLE | declared) - TRUST_GRANTING - _CORE_ENTRIES
+        unsafe = declared & TRUST_GRANTING
+        notes.extend(
             PolicyNote(PolicyWarning.UNSAFE_IRREVOCABLE_PREDICATE, predicate)
             for predicate in sorted(unsafe)
         )
         object.__setattr__(self, "irrevocable", frozenset(irrevocable))
-        object.__setattr__(self, "warnings", warnings)
+        object.__setattr__(self, "warnings", tuple(notes))
 
 
 def is_irrevocable(predicate: str, policy: NucleusPolicy | None) -> bool:
@@ -64,5 +108,6 @@ __all__ = [
     "NucleusPolicy",
     "PolicyNote",
     "PolicyWarning",
+    "constitution_hash",
     "is_irrevocable",
 ]

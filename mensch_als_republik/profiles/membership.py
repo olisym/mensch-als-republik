@@ -51,6 +51,7 @@ def membership(
     now: int,
     authorized_keys: frozenset[bytes],
     policy: NucleusPolicy | None = None,
+    participants: frozenset[bytes] | None = None,
 ) -> MembershipResult:
     """Wertet accept-rules ∧ grant-membership aus (03-profiles.md §4, 03-prompt.md §5)."""
     if policy is not None and policy.scope != scope:
@@ -105,7 +106,9 @@ def membership(
     accept_claim_id = min(accept_ids) if accept_ids else None
     grant_claim_id = min(grant_ids) if grant_ids else None
     has_accept = accept_claim_id is not None
-    has_grant = grant_claim_id is not None
+    has_grant = grant_claim_id is not None or (
+        participants is not None and subject in participants
+    )
 
     if has_accept and has_grant:
         state = MembershipState.MEMBER

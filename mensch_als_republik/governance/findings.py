@@ -1,0 +1,41 @@
+"""Governance-Findings: eigener Enum, kein Claim-Reject (04-governance.md §3.5, §4.1)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+
+
+class GovernanceFinding(str, Enum):
+    CONSTITUTION_UNAVAILABLE = "CONSTITUTION_UNAVAILABLE"
+    PARTICIPANTS_UNDECLARED = "PARTICIPANTS_UNDECLARED"
+    MALFORMED_PARTICIPANTS = "MALFORMED_PARTICIPANTS"
+    VOTE_REVOCABLE = "VOTE_REVOCABLE"
+    RATIFY_REVOCABLE = "RATIFY_REVOCABLE"
+    MALFORMED_THRESHOLD = "MALFORMED_THRESHOLD"
+    UNSUPPORTED_WEIGHT_MODE = "UNSUPPORTED_WEIGHT_MODE"
+    PROPOSAL_CONSTITUTION_UNAVAILABLE = "PROPOSAL_CONSTITUTION_UNAVAILABLE"
+    STALE_EPOCH_VOTE = "STALE_EPOCH_VOTE"
+    NON_MEMBER_VOTE = "NON_MEMBER_VOTE"
+    UNKNOWN_VOTE_CHOICE = "UNKNOWN_VOTE_CHOICE"
+    VOTE_WITH_EXPIRY = "VOTE_WITH_EXPIRY"
+    AMBIGUOUS_VOTE = "AMBIGUOUS_VOTE"
+    CONFLICTING_APPROVAL = "CONFLICTING_APPROVAL"
+    UNKNOWN_PROPOSAL = "UNKNOWN_PROPOSAL"
+    SCOPE_MISMATCH = "SCOPE_MISMATCH"
+    UNKNOWN_WITNESS_VOTE = "UNKNOWN_WITNESS_VOTE"
+    UNSUPPORTED_RATIFICATION = "UNSUPPORTED_RATIFICATION"
+    RATIFY_WITH_EXPIRY = "RATIFY_WITH_EXPIRY"
+
+
+@dataclass(frozen=True, slots=True, order=True)
+class Finding:
+    """Vermerk mit Subjekt — in der Regel eine claim_id (04-governance.md §3, D94)."""
+
+    kind: GovernanceFinding
+    subject: bytes
+
+
+def dedupe_sort(findings: list[Finding] | tuple[Finding, ...]) -> tuple[Finding, ...]:
+    """Findings sortiert und dedupliziert (04-prompt.md §2)."""
+    return tuple(sorted(set(findings)))
