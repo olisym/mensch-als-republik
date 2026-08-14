@@ -24,6 +24,7 @@ from mensch_als_republik.governance.tally import threshold_class
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from mensch_als_republik.profiles import MembershipState, membership
 from mensch_als_republik.trust.derive import derive
+from mensch_als_republik.trust.findings import TrustFinding
 from mensch_als_republik.trust.graph import capacity
 from mensch_als_republik.trust.params import TrustParams
 from mensch_als_republik.verifier import InMemoryStore
@@ -612,6 +613,56 @@ def check_trust_flow(ex: ExampleNucleus) -> None:
         raise AssertionError(f"CHRIS d={d_chris} C={c_chris}, expected d=1 C=50")
 
 
+def check_overcommit(ex: ExampleNucleus) -> None:
+    """Vier Vouches mit n=100: beide Autoren OVERCOMMITTED, alle Kanten aus (example-nucleus.md §8.1)."""
+    anna, bruno, chris, _dora = people()
+    store = _store(
+        anna.vouch(bruno, n=100, scope=ex.N_res, t=1),
+        anna.vouch(chris, n=100, scope=ex.N_res, t=2),
+        bruno.vouch(anna, n=100, scope=ex.N_res, t=1),
+        bruno.vouch(chris, n=100, scope=ex.N_res, t=2),
+    )
+    derivation = derive(
+        store,
+        anchors=frozenset({anna.pub, bruno.pub}),
+        scope=ex.N_res,
+        now=NOW,
+        params=ex.params,
+    )
+    overcommitted = {
+        f.subject
+        for f in derivation.findings
+        if f.kind is TrustFinding.OVERCOMMITTED_AUTHOR
+    }
+    if overcommitted != {anna.pub, bruno.pub}:
+        raise AssertionError(f"OVERCOMMITTED_AUTHOR subjects: {overcommitted!r}")
+    if derivation.bfs.edges:
+        raise AssertionError(f"overcommit left {len(derivation.bfs.edges)} edges")
+    if ex.chris.pub in derivation.bfs.distance or ex.chris.pub in derivation.bfs.node_capacity:
+        raise AssertionError("CHRIS reachable after overcommit")
+
+
+def check_edge_capacity(ex: ExampleNucleus) -> None:
+    """Kantenkapazität doppelt gerundet: Anker 50, CHRIS→DORA 25 (example-nucleus.md §7, 02 §8)."""
+    cs = claim_set(ex)
+    extra = cs.chris.vouch(cs.dora, n=50, scope=ex.N_res, t=3)
+    store = _store(*cs.claims.values(), extra)
+    derivation = derive(
+        store,
+        anchors=frozenset({ex.bruno.pub, ex.anna.pub}),
+        scope=ex.N_res,
+        now=NOW,
+        params=ex.params,
+    )
+    by_pair = {(e.author, e.subject): e for e in derivation.bfs.edges}
+    from_anchor = by_pair.get((ex.anna.pub, ex.chris.pub))
+    if from_anchor is None or from_anchor.cap != 50:
+        raise AssertionError(f"anchor edge cap: {from_anchor}")
+    onward = by_pair.get((ex.chris.pub, ex.dora.pub))
+    if onward is None or onward.cap != 25:
+        raise AssertionError(f"CHRIS→DORA cap: {onward}")
+
+
 def check_scope_separation(ex: ExampleNucleus) -> None:
     """Kein Claim des einen Scopes wirkt im anderen (example-nucleus.md §7)."""
     store = _store(*claim_set(ex).claims.values())
@@ -697,6 +748,8 @@ def verify_all() -> ExampleNucleus:
     check_ratification(ex)
     check_membership_epoch2(ex)
     check_trust_flow(ex)
+    check_overcommit(ex)
+    check_edge_capacity(ex)
     check_scope_separation(ex)
     check_malformed_appended_dora(ex)
     return ex

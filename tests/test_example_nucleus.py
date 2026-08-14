@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from tools.example_nucleus import (
     build,
+    check_edge_capacity,
     check_malformed_appended_dora,
     check_membership_epoch1,
     check_membership_epoch2,
+    check_overcommit,
     check_ratification,
     check_scope_separation,
     check_tally,
@@ -42,6 +44,14 @@ def test_membership_epoch2() -> None:
 
 def test_trust_flow() -> None:
     check_trust_flow(build())
+
+
+def test_overcommit() -> None:
+    check_overcommit(build())
+
+
+def test_edge_capacity() -> None:
+    check_edge_capacity(build())
 
 
 def test_scope_separation() -> None:
