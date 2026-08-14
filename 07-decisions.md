@@ -3101,3 +3101,52 @@ Definition** aufgeschrieben, zusammen mit dem Kontext, gegen den jedes zu prüfe
 `Proposal` sind es drei: `scope`, `predecessor`, `constitution_hash`. Die Liste wird nicht beim
 Beheben eines Befunds angelegt, sondern beim Schreiben des Typs — sonst wächst sie immer nur um
 das eine Feld, das gerade wehgetan hat.
+
+---
+
+## AB. Reihenfolge und Abhängigkeit
+
+### D113 — `threshold_for` wird geteilt
+
+Befund aus der dritten Abnahme (`impl/04b-korrektur`, `5714bbc`). Klein, aber es ist die
+Wiederkehr eines bereits behobenen Befunds, und der Grund dafür ist lehrreich.
+
+**Was passiert ist.** D112 verlangte, dass `_is_ratio` auf den Rohwerten läuft, **bevor**
+`threshold_for` sie anfasst. `threshold_for` liefert aber zugleich die Klasse, und die
+`_is_ratio`-Schleife braucht sie. Ohne Umbau der Signatur gab es genau einen Weg: die
+Klassenableitung wurde ein zweites Mal inline in `decide()` eingesetzt, und `threshold_for`
+bestimmt sie danach erneut.
+
+Damit ist **B-3 der ersten Abnahme wiederhergestellt** — zwei Implementierungen derselben Regel in
+derselben Datei, in `04a` behoben, in `04b` zurück. Laufen sie je auseinander, wird die Schwelle
+einer anderen Klasse validiert als angewandt.
+
+Zusätzlich ist das `try/except (KeyError, TypeError, IndexError)` um `threshold_for` seit der
+vorgezogenen Validierung **unerreichbar**. Unerreichbarer Code, der einen Fehlerfall vortäuscht,
+ist die stille Variante des Problems: er suggeriert eine Absicherung, die nichts absichert.
+
+**Beschluss:** `threshold_for` wird in zwei Funktionen geteilt.
+
+```
+threshold_class(old_obj, new_obj, genesis_obj) -> str
+applied_threshold(old_obj, new_obj, klass)     -> tuple[int, int]
+```
+
+`decide()` ruft `threshold_class` **einmal**, validiert beide Schwellen mit `_is_ratio`, ruft dann
+`applied_threshold`. Das `try/except` entfällt. Eine Implementierung der Regel, kein unerreichbarer
+Zweig, und die Reihenfolge aus D112 bleibt.
+
+Keine neue Bedingung, keine neue Zahl: die Testzahl bleibt unverändert.
+
+**Zur Fehlerform — eine neue.** Die Kette D105 bis D112 war viermal dieselbe Unvollständigkeit auf
+Geschwister. Dies hier ist etwas anderes: eine Reparatur hat eine **Reihenfolge** vorgeschrieben,
+ohne zu sagen, wie die Abhängigkeit aufzulösen ist, die in der alten Reihenfolge miterledigt wurde.
+Die einzig mögliche Auflösung hat einen früheren Befund zurückgebracht.
+
+Der Korrekturprompt schrieb „die Klassenbestimmung darf vorher laufen" und ließ offen, **woher**
+sie dann kommt. Die Umsetzung war die einzige, die ohne Signaturänderung möglich war.
+
+**Konsequenz — Abhängigkeitssatz bei Reihenfolgeänderungen:** Wird eine Reihenfolge normativ
+geändert, wird für jede Größe, die in der alten Reihenfolge nebenbei entstand, ausdrücklich
+benannt, woher sie in der neuen kommt. Fehlt der Satz, wählt die Umsetzung den kürzesten Weg — und
+der ist Duplikation.
