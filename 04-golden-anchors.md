@@ -354,8 +354,8 @@ Policy (D91).
 | `INV-04.3` | Kein Teilwissen führt zu `PASSED`. Fehlt ein Objekt, ist der Zustand `UNEVALUABLE`. |
 | `INV-04.4` | Zwei `ratify@1` für denselben Vorschlag liefern denselben `epoch_id`. |
 | `INV-04.5` | Die Auszählung liest keine Uhr. `t` wird nie ausgewertet; `t_exp` einer Stimme nur auf Anwesenheit, nie auf seinen Wert. |
-| `INV-04.7` | Die Menge der zählenden Stimmen wächst monoton: kein zusätzlicher Claim im Store entfernt je eine bereits zählende Stimme. |
-| `INV-04.8` | Eine einmal etablierte Epoche bleibt etabliert: kein zusätzlicher Claim im Store nimmt einem gültigen `ratify@1` seine Wirkung. |
+| `INV-04.7` | Die Menge der zählenden Stimmen wächst monoton: kein zusätzlicher Claim im Store entfernt je eine bereits zählende Stimme. **Vorbehalt:** gilt, solange kein Mitglied equivociert (D117). |
+| `INV-04.8` | Eine einmal etablierte Epoche bleibt etabliert: kein zusätzlicher Claim im Store nimmt einem gültigen `ratify@1` seine Wirkung. **Vorbehalt:** derselbe (D117). |
 | `INV-04.6` | Bei `num/den > 1/2` gibt es zu einer Epoche höchstens einen Vorschlag im Zustand `PASSED`. |
 
 `INV-04.2` und `INV-04.6` sind als Eigenschaftstests über einem Bereich zu prüfen, nicht an
@@ -364,6 +364,14 @@ Einzelvektoren: `n` von 1 bis 12, `[num,den]` über allen gekürzten Brüchen mi
 
 `INV-04.5` ist negativ zu prüfen: ein Lauf mit zwei verschiedenen `now`-Werten muss byte-identische
 Ergebnisse liefern.
+
+**Zum Vorbehalt.** Equivocation ist der dritte Ausgang aus `ACTIVE` neben Widerruf und Ablauf, und
+der einzige, gegen den `is_irrevocable` nicht schützt — er soll es nicht, denn ein solcher Schutz
+schützte den Doppelzüngigen. Trifft der Zwilling einer zählenden Stimme ein, fällt sie weg; ein
+erreichtes `PASSED` kann dadurch auf `PENDING` zurückkippen und eine materialisierte Epoche
+verfallen. Die Richtung ist stets abwärts, und der Vorgang hinterlässt einen selbst signierten
+Beweis (D117). Ein Eigenschaftstest zu `INV-04.7` und `INV-04.8` muss Equivocation deshalb
+ausschließen — oder sie gezielt erzeugen und den Rückfall als **erwartet** prüfen.
 
 `INV-04.8` ist `INV-04.7` eine Ebene höher: die Stimmenmenge zu sichern nützt nichts, wenn die
 Materialisierung darüber zurückgenommen werden kann (D107). `GV-34` prüft die Gegenrichtung —
