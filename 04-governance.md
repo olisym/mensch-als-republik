@@ -506,7 +506,22 @@ Hash dieser verbunden werden.
 Kein neues Prädikat, kein neuer Zustand, keine zweite Mitgliedschaftsfunktion. Zwei Funktionen,
 die dasselbe tun, waren die Fehlerform der `03`-Abnahme (D92).
 
-### 6.3 Aufnahme als Verfassungsänderung
+### 6.3 Zwei Fragen, nicht eine
+
+`participants` und Mitgliedschaft beantworten **verschiedene** Fragen. Die Liste bestimmt, **wer
+entscheidet** (`§2.1`, `§3.1`); die Annahme bestimmt, **wer gebunden ist** (`§6.1`, D60).
+
+Nach einer Ratifizierung zeigen alle bestehenden `accept-rules@1` auf den **vorigen**
+`constitution_hash`, und `03 §4` zählt sie für die neue Version gar nicht. Jedes Mitglied ist
+damit `GRANT_ONLY`, bis es die neue Fassung annimmt. **Die Stimmberechtigung bleibt davon
+unberührt.**
+
+Das ist beabsichtigt. Verlangte die Stimmberechtigung `MEMBER`, könnte eine Ratifizierung den
+Nukleus einfrieren: niemand dürfte abstimmen, bis alle angenommen haben, und wer nie annimmt,
+blockierte dauerhaft. Wer eine Änderung ablehnt, behält so die Mittel, sie rückgängig zu machen
+(D116).
+
+### 6.4 Aufnahme als Verfassungsänderung
 
 Eine Aufnahme ist damit ein Vorschlag, dessen neue Verfassung sich von der alten ausschließlich in
 `participants` unterscheidet — Klasse `membership` nach `§3.4`. Es gibt in v1 kein eigenes
@@ -572,6 +587,11 @@ Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentati
   Ja-Stimme auf einen Vorschlag abgibt, dessen Objekt nie verbreitet wird, zählt in dieser Epoche
   nirgends mit (`§4.4`). Das ist die sichere Richtung und heilt, sobald jemand das Objekt
   nachreicht; verhindern kann das Mitglied es nicht.
+
+- **Eine Verfassungsänderung entzieht allen still den `MEMBER`-Status.** Bis jede und jeder die
+  neue Fassung angenommen hat, liefert `membership()` `GRANT_ONLY`; alles, was auf `MEMBER` prüft,
+  hört so lange auf zu wirken. Kein Fehler, aber eine Rechnung, die vor der ersten Änderung
+  bekannt sein muss (D116, `§6.3`).
 
 - **Kein Rechtsweg gegen die eigene Mehrheit.** Wer in `P` überstimmt wird, hat innerhalb des
   Nukleus keine Instanz über sich. Das Ventil ist Austritt und, wenn die Verfassung es vorsieht,

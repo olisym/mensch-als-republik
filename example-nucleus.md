@@ -36,11 +36,21 @@ BRUNO = 204040e364c10f2bec9c1fe500a1cd4c247c89d650a01ed7e82caba867877c21
 CHRIS = 66cd608b928b88e50e0efeaa33faf1c43cefe07294b0b87e9fe0aba6a3cf7633
 ```
 
+Dazu die Kandidatin aus `§5`, Seed `0x14×32`:
+
+```
+DORA  = 20828bf5c5bdcacb684863336c202fb5599da48be5596615742170705beca9f7
+```
+
 Byteweise sortiert — und die Reihenfolge ist **nicht** die der Namen:
 
 ```
-sortiert = BRUNO (2040…), CHRIS (66cd…), ANNA (d04a…)
+Gründungsmenge:   BRUNO (2040…), CHRIS (66cd…), ANNA (d04a…)
+nach der Aufnahme: BRUNO (2040…), DORA (2082…), CHRIS (66cd…), ANNA (d04a…)
 ```
+
+DORA sortiert zwischen BRUNO und CHRIS ein, nicht ans Ende. Wer die Liste anhängt statt sie zu
+sortieren, erzeugt `MALFORMED_PARTICIPANTS` und einen nicht auszählbaren Nukleus.
 
 Das ist Teil der Objektidentität. Wer nach Namen sortiert, bekommt einen anderen
 `constitution_hash` und damit einen anderen Nukleus.
@@ -179,10 +189,23 @@ braucht dort Bürgen.
 
 ## 5. Der Konfliktfall, durchgerechnet
 
-Anna will jemanden aufnehmen. Bruno ist dagegen.
+Anna will DORA aufnehmen. Bruno ist dagegen.
 
-Der Vorschlag ändert ausschließlich `participants` — Klasse **`membership`** nach `04 §3.4`,
-Schwelle `[1,2]`.
+Die Zielverfassung ist `constitution_gov` mit einem einzigen Unterschied — `participants` enthält
+zusätzlich DORA:
+
+```
+constitution_hash_2 = 6cbcd33f2f82257153517d565a821d6d069129826efbfe1b737ff2c3a80f6f1b
+
+proposal = { 0: N_gov, 1: epoch_id_1, 2: constitution_hash_2 }
+proposal_hash = 7dfb88e9a6b2b9b8ef5a2e5b6b5e8e429033da12274fa4480e5a1a42f8a1b089
+
+epoch_id_2 = bfcf27681adf4bbadc71f0e04238cee9a58bc7b3ff22ff12a940b007b5771eef
+```
+
+Weil sich beide Verfassungen **ausschließlich** in `participants` unterscheiden, ist die Klasse
+**`membership`** nach `04 §3.4`, Schwelle `[1,2]`. Wäre auch nur ein weiteres Feld berührt, wäre
+es `amendment` — hier dieselbe Zahl, aber nicht dieselbe Regel.
 
 ```
 n = 3,  [num, den] = [1, 2]
@@ -202,7 +225,10 @@ Zeitablauf, kein Widerruf, keine Instanz darüber. Mit ihr fällt eine Entscheid
 Richtungen, und ohne dass jemand über den anderen gestellt wird.
 
 Materialisiert wird sie durch ein `ratify@1` eines Mitglieds mit der Zeugenmenge der zählenden
-Ja-Stimmen. Zwei Mitglieder dürfen unabhängig materialisieren; sie erzeugen denselben `epoch_id`,
+Ja-Stimmen. Danach beginnt Epoche 2 mit `constitution_hash_2` und vier Mitgliedern. **DORA ist
+damit noch nicht Mitglied** — sie steht in `participants`, aber ohne ihre eigene `accept-rules` auf
+`6cbcd33f…` ist ihr Zustand `GRANT_ONLY` (D60). Eine Mehrheit kann niemandem eine Mitgliedschaft
+samt Pflichten zuschreiben, die er nicht eingegangen ist. Zwei Mitglieder dürfen unabhängig materialisieren; sie erzeugen denselben `epoch_id`,
 weil dessen Identität das Ergebnis hasht und nicht den Beleg (D99).
 
 ---
@@ -255,9 +281,12 @@ prüft sie gegen die Objekt-Hashes oben — damit belegt derselbe Lauf, dass Dok
 | 6 | BRUNO | `vote@1` | `[3, proposal_hash]` | `{0: 0}` |
 | 7 | CHRIS | `vote@1` | `[3, proposal_hash]` | `{0: 1}` |
 | 8 | ANNA | `ratify@1` | `[3, proposal_hash]` | `{0: [cid₅, cid₇]}` |
+| 9 | DORA | `accept-rules@1` | `[3, constitution_hash_2]` | — |
 
 Nach 1–3 sind alle drei `MEMBER`: in `participants` **und** mit aktiver `accept-rules` auf genau
-diesen Hash (D60, `04 §6.1`). Fehlt eines von beidem, ist der Zustand `GRANT_ONLY` oder
+diesen Hash (D60, `04 §6.1`). Nach 8 ist DORA `GRANT_ONLY`, nach 9 `MEMBER` — aber gegen
+`constitution_hash_2`, nicht gegen den ersten. Die drei Gründer sind in Epoche 2 ihrerseits
+`GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand `GRANT_ONLY` oder
 `APPLICANT` — nie `MEMBER`.
 
 **Im Ressourcen-Scope** (`N = N_res`): wechselseitige `vouch@1` zwischen ANNA und BRUNO, je ein
@@ -280,7 +309,19 @@ Implementierung, sondern `02 §2`.
 | `D` | 100 | `D ≥ C₀` erfüllt; feinste Vouch-Abstufung ein Hundertstel |
 | Scopes | 2 | der Schnitt entscheidet, was eine Trennung kostet (D114) |
 
-Was **nicht** gewählt wurde, weil Layer 05 es noch nicht trägt: `k_slash`, die Cure-Kurve,
+### 8.1 Betriebswarnung
+
+**Jede Verfassungsänderung entzieht allen still den `MEMBER`-Status.** Nach der Ratifizierung in
+`§5` zeigen die `accept-rules` der drei Gründer auf `f5cddafc…`, die geltende Verfassung ist aber
+`6cbcd33f…`. `membership()` liefert für alle drei `GRANT_ONLY`, bis jede und jeder einzeln neu
+annimmt. Abstimmen dürfen sie weiter — `participants` gilt unverändert (D116, `04 §6.3`).
+
+Wer eine Anwendung auf `MEMBER` gründet, muss das einplanen: nach jeder Änderung braucht es eine
+Runde Signaturen, bevor der Zustand wieder trägt.
+
+### 8.2 Was nicht gewählt wurde
+
+Weil Layer 05 es noch nicht trägt: `k_slash`, die Cure-Kurve,
 `unit_ref` und die terminalen Fehler. Sie gehören in `enforcement_policy` und kommen mit `05`.
 
 ---
