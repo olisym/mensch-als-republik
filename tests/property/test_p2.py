@@ -13,7 +13,6 @@ from __future__ import annotations
 from hypothesis import given
 
 from tests.property.welten import (
-    HYP,
     hoeheres_vertrauen,
     speicher,
     teilmengen,
@@ -22,7 +21,6 @@ from tests.property.welten import (
 
 
 @given(welten(erlaube_ueberzeichnung=False, erlaube_equivocation=False))
-@HYP
 def test_p2_subset_never_higher_trust(welt) -> None:
     claims = welt.claims
     voll = speicher(*claims)

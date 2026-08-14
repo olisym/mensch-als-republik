@@ -10,7 +10,6 @@ from __future__ import annotations
 from hypothesis import given
 
 from tests.property.welten import (
-    HYP,
     fingerprint_classify,
     fingerprint_decide,
     fingerprint_derive,
@@ -21,7 +20,6 @@ from tests.property.welten import (
 
 
 @given(welten())
-@HYP
 def test_p1_derive_and_trust_ignore_insertion_order(welt) -> None:
     claims = welt.claims
     a = speicher(*claims)
@@ -31,7 +29,6 @@ def test_p1_derive_and_trust_ignore_insertion_order(welt) -> None:
 
 
 @given(welten())
-@HYP
 def test_p1_decide_and_classify_ignore_insertion_order(welt) -> None:
     claims = welt.claims
     a = speicher(*claims)

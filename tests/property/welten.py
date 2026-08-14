@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from hypothesis import settings, strategies as st
+from hypothesis import strategies as st
 
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id, id_genesis_anchor, sign
@@ -22,8 +22,6 @@ EX = build()
 GOV_POLICY = NucleusPolicy(
     EX.N_gov, declared=EX.constitution_gov["irrevocable_predicates"]
 )
-
-HYP = settings(max_examples=20, deadline=None)
 
 # Seeds 0x11… aus example-nucleus.md §2, fortgesetzt für bis zu sechs Identitäten.
 _SEEDS = tuple(bytes([0x11 + i] * 32) for i in range(6))
