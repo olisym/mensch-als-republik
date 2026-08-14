@@ -444,7 +444,17 @@ Toleranz.
   **Untergrenze** des wahren Flusses. Im Zweifel wird **unter**-vertraut — die sichere
   Richtung für Sybil-Resistenz. (Distanz analog: fehlende Kanten ⇒ geschätzte Distanz ≥ wahre
   ⇒ wieder Unter-Vertrauen.)
-- **Die einzige gefährliche Richtung:** ein fehlender *Widerruf* (nicht eine fehlende
+- **⚠️ Monotonie gilt für den Graphen, nicht für den Claim-Bestand (D118).** Zwischen beiden
+  liegt die Budgetprüfung `Σ n ≤ D` aus §3.1, und die ist **nicht** monoton: ein hinzukommender
+  Vouch kann `Σ n` über `D` heben, und dann fallen **alle** Kanten dieses Autors aus — nicht die
+  letzte, nicht anteilig. Wer weniger weiß, sieht dann **mehr** Vertrauen.
+  Kleinstes Gegenbeispiel: zwei Vouches mit `n = 51` bei `D = 100`.
+  Das ist die **zweite** gefährliche Richtung, und die drei Abwehren unten greifen gegen sie
+  nicht — der fehlende Claim ist hier eine Bürgschaft und kein Widerruf. Sie heilt beim
+  Zustellen: sobald der überzeichnende Vouch eintrifft, fällt alles, und die Richtung ist danach
+  dauerhaft konservativ. Der Autor verliert dabei sein gesamtes Budget und hinterlässt einen
+  signierten Beweis; die Folge regelt Layer 05 (D40).
+- **Die andere gefährliche Richtung:** ein fehlender *Widerruf* (nicht eine fehlende
   Bürgschaft). Hast du den Vouch, aber sein `revoke` steckt in einer Partition, dann
   **über**-vertraust du. Drei gestaffelte Abwehren:
   1. `t_exp` — strukturelle harte Decke (§6.2).
