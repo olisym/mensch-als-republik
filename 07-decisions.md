@@ -3388,3 +3388,68 @@ Gedächtnis.
 **Konsequenz — getrennte Sicht:** Eigenschaften über Wissenszuwachs werden mit **mehreren**
 Beobachtern geprüft, die verschiedene Teilmengen halten. Ein einzelner Store kann Konvergenz nicht
 widerlegen, weil in ihm nichts auseinanderläuft.
+
+---
+
+## AG. Monotonie gilt für den Graphen, nicht für den Bestand
+
+### D118 — Die Budgetprüfung ist die zweite gefährliche Richtung ⚠️
+
+Gefunden beim Durchrechnen einer Fuzzing-Eigenschaft, **bevor** sie aufgeschrieben wurde. Die
+Eigenschaft lautete zunächst „eine Teilmenge des Claim-Bestands liefert nie höheres Vertrauen als
+der volle Bestand". Sie ist falsch.
+
+**Was `02 §7` zusagt.** Max-Flow ist monoton in den Kanten; fehlende Vouch-Kanten können den
+Fluss nur senken, das Ergebnis ist eine konservative Untergrenze, im Zweifel wird
+unter-vertraut. Und: „Die einzige gefährliche Richtung: ein fehlender *Widerruf*."
+
+**Was tatsächlich gilt.** Der Satz stimmt für den **Graphen**. Zwischen Claim-Bestand und Graph
+sitzt aber die Budgetprüfung `Σ n ≤ D`, und die ist **nicht monoton**: ein hinzukommender Vouch
+kann `Σ n` über `D` heben, und dann fallen nach `02 §3.1` **alle** Kanten dieses Autors aus —
+nicht die letzte, nicht anteilig.
+
+Gerechnet, `D = 100`, Anna bürgt dreimal mit `n = 50`:
+
+| Beobachter kennt | `Σ n` | Kanten von Anna |
+|---|---|---|
+| einen Vouch | 50 | zählt |
+| zwei Vouches | 100 | beide zählen |
+| alle drei | 150 | **alle drei fallen aus** — `OVERCOMMITTED_AUTHOR` |
+
+**Wer weniger weiß, sieht mehr Vertrauen.** Das ist Über-Vertrauen bei Teilwissen, also die
+gefährliche Richtung — und der fehlende Claim ist eine **Bürgschaft**, die `02 §7` ausdrücklich
+als harmlos führt.
+
+Die drei dort genannten Abwehren greifen nicht: `t_exp` ist eine Decke gegen alte Kanten, nicht
+gegen unbekannte; Priorität beim Widerruf betrifft ein anderes Prädikat; frische positive Evidenz
+hilft nicht, wenn gerade die Evidenz das Problem ist.
+
+Kleinstes Gegenbeispiel: **zwei Vouches mit `n = 51`** bei `D = 100`. Zwei Claims genügen.
+
+**Beschluss: keine Mechanikänderung.** Die Mechanik ist richtig, `02 §7` war zu stark.
+
+Richtig, weil der Ausfall aller Kanten die einzige Antwort ist, die nicht interpretiert: welche
+zwei der drei Bürgschaften „gemeint" waren, kann niemand entscheiden, und eine anteilige Kürzung
+wäre eine Erfindung des Verifizierers. Und weil der Fall selbstheilend ist: sobald der dritte
+Vouch eintrifft, fällt alles, und die Richtung ist danach dauerhaft konservativ. Ein Angriff mit
+Gewinn ist es nicht — der Überzeichnende verliert sein gesamtes Budget und hinterlässt einen
+signierten Beweis. Die Folge gehört nach Layer 05 (D40), nicht in eine Sonderregel hier.
+
+Normativ in `02 §7`:
+
+> Die Monotonie gilt für den **Graphen**, nicht für den **Claim-Bestand**. Zwischen beiden liegt
+> die Budgetprüfung, und sie ist nicht monoton: ein hinzukommender Vouch kann `Σ n > D` auslösen
+> und damit alle Kanten seines Autors entfernen. Ein Beobachter mit Teilwissen kann deshalb
+> **über**-vertrauen. Das ist neben dem fehlenden Widerruf die zweite gefährliche Richtung; sie
+> heilt beim Zustellen und hinterlässt einen signierten Beweis.
+
+**Zur Fehlerform.** Dritte Wiederholung derselben Bauart nach D117 und D116: eine Zusage, die auf
+ihrer eigenen Stufe stimmt und beim Blick über die Stufengrenze nicht mehr. Bei D116 war es der
+Übergang zwischen zwei Epochen, bei D117 der dritte Ausgang aus einem Zustand, hier die Stufe
+zwischen Bestand und Graph.
+
+**Konsequenz — Monotonie stufenweise:** Wird eine Monotonieaussage über eine Ableitung gemacht,
+gilt sie zunächst nur für die **letzte** Stufe. Jede Stufe davor — Filter, Budgetprüfung,
+Zustandsauswertung, Kanonizitätsprüfung — wird einzeln daraufhin geprüft, ob sie monoton ist, und
+das Ergebnis wird im Text benannt. Max-Flow ist monoton; der Weg dorthin ist es an zwei Stellen
+nicht.
