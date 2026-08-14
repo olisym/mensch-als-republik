@@ -442,7 +442,7 @@ def claim_set(ex: ExampleNucleus) -> ClaimSet:
         v=cbor_canon.encode({0: [claim_id(v_anna), claim_id(v_chris)]}),
     )
     a9 = _accept(dora, ex.N_gov, ex.constitution_hash_2, t=1)
-    n = 100
+    n = 50
     return ClaimSet(
         claims={
             "accept_anna": a1,
@@ -588,7 +588,7 @@ def check_membership_epoch2(ex: ExampleNucleus) -> None:
 
 
 def check_trust_flow(ex: ExampleNucleus) -> None:
-    """Reichweitentabelle und C(CHRIS)=50 (example-nucleus.md §4.3)."""
+    """Reichweitentabelle und C(CHRIS)=50 bei n=50 (example-nucleus.md §4.3, §7)."""
     table = [capacity(ex.params, d) for d in range(8)]
     expected = [100, 50, 25, 12, 6, 3, 1, 0]
     if table != expected:
@@ -601,6 +601,11 @@ def check_trust_flow(ex: ExampleNucleus) -> None:
         now=NOW,
         params=ex.params,
     )
+    for founder in (ex.anna.pub, ex.bruno.pub):
+        if derivation.bfs.distance.get(founder) != 0:
+            raise AssertionError(f"founder {founder.hex()[:8]} not at d=0")
+        if derivation.bfs.node_capacity.get(founder) != 100:
+            raise AssertionError(f"founder {founder.hex()[:8]} C != 100")
     d_chris = derivation.bfs.distance.get(ex.chris.pub)
     c_chris = derivation.bfs.node_capacity.get(ex.chris.pub)
     if d_chris != 1 or c_chris != 50:
