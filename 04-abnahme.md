@@ -139,3 +139,50 @@ Registertext — nicht die Behauptung.
 Nach der Korrektur **mehr als 370 Tests**. Fällt die Zahl, ist etwas abgeschwächt worden. Neu
 mindestens: `GV-35` bis `GV-45`, die Herleitungsprobe zu D108 als Eigenschaftstest über allen
 `[num, den]` mit `den <= 12`, und ein Test, der `[1,2]` ausdrücklich als **zulässig** festhält.
+
+---
+
+## 7. Abschluss
+
+Drei Korrekturrunden, alle Befunde behoben.
+
+| Runde | Commit | Beschlüsse | Tests |
+|---|---|---|---|
+| Lauf | `7ed93cd` | — | 370 |
+| 04a | `e576663` | D108–D111 | 384 |
+| 04b | `5714bbc` | D112 | 387 |
+| 04c | `8c1f255` | D113 | 387 |
+
+Abgenommen mit `8c1f255`, gemergt als `c9e585c` — Layer 04 Governance (D96–D113). `make check`
+grün in drei Blöcken, Register D1–D113 lückenlos, 387 Tests.
+
+**Neunzehn Befunde, elf davon zwischen zwei Stellen statt in einer.** Kein einziger war eine
+Abweichung vom Prompt: das Werkzeug hat jedes Mal gebaut, was dastand, hat viermal zurückgefragt
+statt umzudeuten, und hat an der einen Stelle, an der die Spec keine Umsetzung zuließ (`§3.5`),
+die Prüfung konditionalisiert statt sie zu erfinden. Was gefehlt hat, hat in den Dokumenten
+gefehlt.
+
+**Vier Konsequenzen im Register, alle vor dem Beheben ansetzend:**
+
+- **Standprüfung** (D96, D102) — vor jedem Mechanismus zu Nebenläufigkeit, Ordnung oder Schwellen
+  fragen, unter welchem Namen das Problem außerhalb des Projekts gelöst ist. Zwei eigene
+  Vorschläge sind an CALM und an einem zehn Jahre alten Raft-Befund gescheitert, beide vor der
+  Implementierung.
+- **Prädikatendurchgang** (D107) — wird ein Prädikat mit einer Zustandsbedingung belegt, werden
+  alle Prädikate derselben Schicht durchgegangen.
+- **Zugehörigkeitsliste am Datentyp** (D112) — welche Felder eine Zugehörigkeit behaupten und
+  wogegen sie zu prüfen sind, wird bei der Definition des Typs aufgeschrieben, nicht beim Beheben
+  eines Befunds.
+- **Abhängigkeitssatz bei Reihenfolgeänderungen** (D113) — wird eine Reihenfolge normativ
+  geändert, wird für jede Größe, die in der alten nebenbei entstand, benannt, woher sie in der
+  neuen kommt.
+
+Die Kette D105 → D107 → D109 → D111 → D112 war viermal dieselbe Unvollständigkeit auf die
+Geschwister der eigenen Art. D113 ist eine neue Form. Die ersten beiden Konsequenzen haben sie
+nicht verhindert, weil sie beim Beheben ansetzen; die letzten beiden setzen beim Schreiben an.
+
+**Zur inhaltlichen Bilanz.** Die Schicht ist kleiner geworden, als sie geplant war: keine
+gewichtete Auszählung, kein Snapshot, kein Zweckgraph. Übrig blieb eine Kopfzahl über einer
+deklarierten Wählerschaft, zwei Ungleichungen und eine Kette von Verfassungen. Entschieden hat das
+nicht die Technik, sondern das Aufnahmekriterium aus `08 §3`: ein Mechanismus, der Macht verteilt,
+gehört in die Verfassung eines Nukleus, nicht ins Protokoll.
