@@ -14,7 +14,7 @@ from mensch_als_republik.atom import claim_id
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.verifier import State
 
-from tests.property.welten import EX, HYP, _SEEDS, _Signer, _nuc, _vouch_v, speicher
+from tests.property.welten import EX, _SEEDS, _Signer, _nuc, _vouch_v, speicher
 
 
 @st.composite
@@ -31,7 +31,6 @@ def _t_exp_und_now(draw: st.DrawFn) -> tuple[int, int]:
 
 
 @given(_t_exp_und_now())
-@HYP
 def test_p6_temporally_valid_iff_now_le_t_exp(grenzen: tuple[int, int]) -> None:
     t_exp, now = grenzen
     anna = _Signer(_SEEDS[0])

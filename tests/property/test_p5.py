@@ -11,11 +11,10 @@ from hypothesis import given
 
 from mensch_als_republik.governance.tally import TallyState
 
-from tests.property.welten import HYP, auszaehlung, speicher, teilmengen, welten
+from tests.property.welten import auszaehlung, speicher, teilmengen, welten
 
 
 @given(welten(erlaube_ueberzeichnung=False, erlaube_equivocation=False))
-@HYP
 def test_p5_partial_knowledge_never_passed_alone(welt) -> None:
     claims = welt.claims
     voll = auszaehlung(speicher(*claims), welt)

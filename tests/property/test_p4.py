@@ -10,7 +10,6 @@ from __future__ import annotations
 from hypothesis import given
 
 from tests.property.welten import (
-    HYP,
     fingerprint_classify,
     fingerprint_decide,
     fingerprint_derive,
@@ -21,7 +20,6 @@ from tests.property.welten import (
 
 
 @given(welten())
-@HYP
 def test_p4_same_stock_same_clock_same_result(welt) -> None:
     claims = welt.claims
     fingerprints = []

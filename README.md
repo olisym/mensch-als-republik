@@ -58,3 +58,15 @@ aufgegangen.
 Das Oracle-Problem (D1), der physische Vollzug (C2), die Seed-Integrität (D2) — und der
 irreduzible Rest: gegen eine hinreichend große fehlgeleitete Koalition hilft kein Protokoll.
 Kryptografie koordiniert, beweist, bindet und eskaliert; den Rest tragen Menschen.
+
+## Tests
+
+`make check` ist der schnelle Lauf während der Arbeit (Eigenschaftstests im Profil
+``schnell``). `make check-all` führt danach `make test-prop` aus — dieselben Eigenschaften
+mit mehreren hundert Beispielen.
+
+> **Ein Merge nach `main` verlangt `make check-all`, nicht `make check`.** Der schnelle Lauf zeigt,
+> dass nichts offensichtlich gebrochen ist; die Zusicherung der Eigenschaften entsteht erst bei
+> mehreren hundert Beispielen. Wird der schnelle Lauf zur Gewohnheit und der volle nie ausgeführt,
+> stehen 415 Tests da und sichern weniger als vorher — dieselbe Mechanik wie ein Wächter, der nur
+> eine Richtung kennt.
