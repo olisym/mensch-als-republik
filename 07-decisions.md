@@ -3498,6 +3498,40 @@ ist der Satz entweder auf SOLL zurückzunehmen oder mit einem Vermerk zu versehe
 Feldinventur (D114) fragt nach dem Leser eines Feldes; diese Regel fragt nach dem Leser einer
 Pflicht.
 
+**Nachzug: Reichweite.** Die erste Fassung dieses Eintrags nannte als Erzeuger nur
+`tools/example_nucleus.py`. Es sind **drei**, und alle drei bauen Vouches ohne `t_exp`:
+
+1. `tools/example_nucleus.py`
+2. die Fixtures unter `tests/`, die die Golden Anchors materialisieren
+3. `tools/sim/scenarios/`
+
+Sobald der Vermerk existiert, feuert er in allen dreien. Die Reparatur an einer Stelle wäre die
+sechste Wiederholung der Kette D105 bis D112 gewesen: richtig und nicht auf die Geschwister der
+eigenen Art durchgezogen.
+
+**Beschluss:** alle drei Stellen setzen `t_exp` weit jenseits ihres jeweiligen `now`, nie gleich
+`now` — der Grenzwert ist einem eigenen Vektor vorbehalten. Damit feuert der Vermerk in keiner
+bestehenden Prüfung, alle dokumentierten Finding-Mengen der Ankerdateien bleiben unverändert, und
+der Vermerk wird durch **neue** Tests belegt statt durch veränderte alte.
+
+**Verworfen:** die Fixtures unangetastet lassen und die Finding-Listen der Ankerdateien um einen
+universellen Zusatz erweitern. Das schriebe in jede Ankerzeile einen Vermerk, der über den Anker
+nichts aussagt.
+
+**Kein Feld in `TrustParams`.** „Scopes mit Budgetregel" aus `02 §6.2` hat im Code keine
+Entsprechung: `derive()` prüft `Σ n_budget > D` unbedingt, und nichts löst `TrustParams` aus einer
+Verfassung auf. Ein Feld dafür hätte weder Schreiber noch Leser — D114. Die Einschränkung des
+Satzes ist damit heute gegenstandslos, und der Vermerk gilt für jeden Vouch ohne `t_exp`.
+
+**Ort des Vermerks:** `build_groups`, nach `_decode_weight` und nur für Vouches, die einen
+Budget-Beitrag tragen. Ein Vouch mit defektem `v` trägt nach `02 §3.1` keinen Beitrag, bindet
+also nichts unbefristet; für ihn zu vermerken wäre Rauschen über ein Nichtproblem.
+
+**Erlaubte Abweichung.** `build_groups` bricht den Gleichstand über `sorted(...)` der `claim_id`.
+Ein zusätzliches `t_exp` ändert alle `claim_id` der Vouches, daher kann die gewählte
+`kante_claim_id` bei zwei aktiven Vouches derselben Gruppe mit gleichem `n` umspringen. `n_kante`,
+jede Kapazität und jeder Fluss bleiben unverändert. Eine Abweichung dort ist **kein** Fehler.
+
 ### D120 — Absturzordnung, und die Monotonie ist eine Beobachtereigenschaft
 
 `_Author.claim()` rückt die Spitze bei der Konstruktion vor, unabhängig davon, ob der Claim je
