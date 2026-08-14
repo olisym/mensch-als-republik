@@ -1,0 +1,225 @@
+{
+  "schritte": [
+    {
+      "art": "welt",
+      "pfad": "PLACEHOLDER/s5a",
+      "teilnehmer": [
+        {"name": "anna", "seed": "11", "now": 1000},
+        {"name": "bruno", "seed": "12", "now": 1000},
+        {"name": "chris", "seed": "13", "now": 1000}
+      ]
+    },
+    {"art": "genesis", "quelle": "beispielnukleus"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {
+      "art": "claim",
+      "autor": "bruno",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {
+      "art": "claim",
+      "autor": "chris",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {"art": "zustellen", "von": "bruno", "an": "alle"},
+    {"art": "zustellen", "von": "chris", "an": "alle"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "propose",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "t": 2
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 1,
+      "t": 3,
+      "fork": true,
+      "label": "vote_yes"
+    },
+    {"art": "zustellen", "von": "anna", "an": "bruno", "nur": ["vote_yes"]},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 0,
+      "t": 3,
+      "fork": true,
+      "label": "vote_no"
+    },
+    {"art": "zustellen", "von": "anna", "an": "chris", "nur": ["vote_no"]},
+    {
+      "art": "claim",
+      "autor": "chris",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 1,
+      "t": 2,
+      "label": "vote_chris"
+    },
+    {"art": "zustellen", "von": "chris", "an": "alle", "nur": ["vote_chris"]},
+    {
+      "art": "zeige",
+      "was": "tally",
+      "target": "aufnahme",
+      "ausgabe": false,
+      "erwarte": {
+        "anna": {"state": "PENDING", "yes": 1, "no": 0},
+        "bruno": {"state": "PASSED", "yes": 2, "no": 0},
+        "chris": {"state": "PENDING", "yes": 1, "no": 1}
+      }
+    },
+    {"art": "zustellen", "von": "bruno", "an": "chris"},
+    {"art": "zustellen", "von": "chris", "an": "bruno"},
+    {
+      "art": "zeige",
+      "was": "tally",
+      "target": "aufnahme",
+      "ausgabe": false,
+      "erwarte": {
+        "anna": {"state": "PENDING", "yes": 1, "no": 0},
+        "bruno": {"state": "PENDING", "yes": 1, "no": 0},
+        "chris": {"state": "PENDING", "yes": 1, "no": 0}
+      }
+    },
+    {
+      "art": "zeige",
+      "was": "classify",
+      "claim": "vote_yes",
+      "ausgabe": false,
+      "erwarte": {
+        "anna": "equivocation_flagged",
+        "bruno": "equivocation_flagged",
+        "chris": "equivocation_flagged"
+      }
+    },
+    {
+      "art": "welt",
+      "pfad": "PLACEHOLDER/s5b",
+      "teilnehmer": [
+        {"name": "anna", "seed": "11", "now": 1000},
+        {"name": "bruno", "seed": "12", "now": 1000},
+        {"name": "chris", "seed": "13", "now": 1000}
+      ]
+    },
+    {"art": "genesis", "quelle": "beispielnukleus"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {
+      "art": "claim",
+      "autor": "bruno",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {
+      "art": "claim",
+      "autor": "chris",
+      "praedikat": "accept-rules",
+      "scope": "gov",
+      "J": [3, "constitution_hash_gov"],
+      "t": 1
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {"art": "zustellen", "von": "bruno", "an": "alle"},
+    {"art": "zustellen", "von": "chris", "an": "alle"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "propose",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "t": 2
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 1,
+      "t": 3,
+      "fork": true,
+      "label": "vote_yes"
+    },
+    {"art": "zustellen", "von": "anna", "an": "bruno", "nur": ["vote_yes"]},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 0,
+      "t": 3,
+      "fork": true,
+      "label": "vote_no"
+    },
+    {"art": "zustellen", "von": "anna", "an": "chris", "nur": ["vote_no"]},
+    {
+      "art": "claim",
+      "autor": "chris",
+      "praedikat": "vote",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "choice": 1,
+      "t": 2,
+      "label": "vote_chris"
+    },
+    {"art": "zustellen", "von": "chris", "an": "alle", "nur": ["vote_chris"]},
+    {
+      "art": "claim",
+      "autor": "bruno",
+      "praedikat": "ratify",
+      "scope": "gov",
+      "J": [3, "proposal_hash"],
+      "witnesses": ["vote_yes", "vote_chris"],
+      "t": 5,
+      "label": "ratify_bruno"
+    },
+    {"art": "zustellen", "von": "bruno", "an": "alle"},
+    {"art": "zustellen", "von": "bruno", "an": "chris"},
+    {"art": "zustellen", "von": "chris", "an": "bruno"},
+    {
+      "art": "zeige",
+      "was": "ratify",
+      "claim": "ratify_bruno",
+      "ausgabe": false,
+      "erwarte": {
+        "anna": "UNSUPPORTED_RATIFICATION",
+        "bruno": "UNSUPPORTED_RATIFICATION",
+        "chris": "UNSUPPORTED_RATIFICATION"
+      }
+    }
+  ]
+}
