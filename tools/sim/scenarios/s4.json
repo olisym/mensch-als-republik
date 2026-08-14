@@ -17,6 +17,7 @@
       "scope": "res",
       "subject": "bruno",
       "n": 50,
+      "t_exp": 1001000,
       "t": 5
     },
     {
@@ -26,6 +27,7 @@
       "scope": "res",
       "subject": "anna",
       "n": 50,
+      "t_exp": 1001000,
       "t": 3
     },
     {
@@ -35,6 +37,7 @@
       "scope": "res",
       "subject": "chris",
       "n": 50,
+      "t_exp": 1001000,
       "t": 6
     },
     {
@@ -44,6 +47,7 @@
       "scope": "res",
       "subject": "chris",
       "n": 50,
+      "t_exp": 1001000,
       "t": 4
     },
     {"art": "zustellen", "von": "anna", "an": "alle"},
@@ -77,6 +81,7 @@
       "scope": "res",
       "subject": "bruno",
       "n": 100,
+      "t_exp": 1001000,
       "t": 1
     },
     {
@@ -86,6 +91,7 @@
       "scope": "res",
       "subject": "chris",
       "n": 100,
+      "t_exp": 1001000,
       "t": 2
     },
     {
@@ -95,6 +101,7 @@
       "scope": "res",
       "subject": "anna",
       "n": 100,
+      "t_exp": 1001000,
       "t": 1
     },
     {
@@ -104,6 +111,7 @@
       "scope": "res",
       "subject": "chris",
       "n": 100,
+      "t_exp": 1001000,
       "t": 2
     },
     {"art": "zustellen", "von": "anna", "an": "alle"},

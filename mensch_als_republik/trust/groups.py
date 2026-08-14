@@ -99,6 +99,10 @@ def build_groups(
         if finding_kind is not None:
             findings.append(Finding(kind=finding_kind, subject=cid))
             continue
+        if c.t_exp is None:
+            findings.append(
+                Finding(kind=TrustFinding.VOUCH_WITHOUT_TEXP, subject=cid)
+            )
         key = (c.I, c.J[1])
         members.setdefault(key, []).append((cid, n, classification.state))
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -76,19 +77,7 @@ def _sk(seed: bytes) -> Ed25519PrivateKey:
 
 
 def _finalize(claim: Claim, sk: Ed25519PrivateKey) -> Claim:
-    sig = sign(sk, claim)
-    return Claim(
-        version=claim.version,
-        I=claim.I,
-        J=claim.J,
-        p=claim.p,
-        t=claim.t,
-        h_prev=claim.h_prev,
-        v=claim.v,
-        N=claim.N,
-        t_exp=claim.t_exp,
-        sigma=sig,
-    )
+    return replace(claim, sigma=sign(sk, claim))
 
 
 def _vec(name: str, claim: Claim, *, expect_reject: str | None = None) -> dict:

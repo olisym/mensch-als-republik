@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from hypothesis import strategies as st
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id, id_genesis_anchor, sign
+from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
 from mensch_als_republik.governance import decide
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy
@@ -64,9 +64,8 @@ class _Signer:
         kette_fortschreiben: bool = True,
     ) -> Claim:
         self._t += 1
-        unsigned = Claim(
-            version=1,
-            I=self.pub,
+        signed = build_signed(
+            self._sk,
             J=J,
             p=p,
             t=self._t,
@@ -74,18 +73,6 @@ class _Signer:
             v=v,
             N=N,
             t_exp=t_exp,
-        )
-        signed = Claim(
-            version=unsigned.version,
-            I=unsigned.I,
-            J=unsigned.J,
-            p=unsigned.p,
-            t=unsigned.t,
-            h_prev=unsigned.h_prev,
-            v=unsigned.v,
-            N=unsigned.N,
-            t_exp=unsigned.t_exp,
-            sigma=sign(self._sk, unsigned),
         )
         if kette_fortschreiben:
             self._h_prev = claim_id(signed)
