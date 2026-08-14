@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.policy import NucleusPolicy, PolicyNote, PolicyWarning, is_irrevocable
+from mensch_als_republik.policy import (
+    NucleusPolicy,
+    PolicyNote,
+    PolicyWarning,
+    is_irrevocable,
+)
 from mensch_als_republik.verifier import State, classify
 from tests.helpers import Identity, scope_id, store_with
 
@@ -194,6 +199,57 @@ def test_c7_pending_unaffected_by_policy():
     result = classify(obl, store, now=100, policy=policy)
 
     assert result.state == State.PENDING
+
+
+def test_P_7_character_set_from_text() -> None:
+    """P-7: ein str ist kein Array — ein Vermerk, Liste ausgefallen (D95, 04a)."""
+    raw = "obligation@1"
+    policy = NucleusPolicy(scope=scope_id("p7"), declared=raw)
+    assert policy.declared == raw
+    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.warnings == (
+        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, repr(raw)),
+    )
+
+
+def test_P_8_non_str_entry() -> None:
+    """P-8: Eintrag, der kein str ist (D95)."""
+    raw = [42]
+    policy = NucleusPolicy(scope=scope_id("p8"), declared=raw)
+    assert policy.declared is raw
+    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.warnings == (
+        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "42"),
+    )
+
+
+def test_P_8_non_iterable_declared() -> None:
+    policy = NucleusPolicy(scope=scope_id("p8b"), declared=42)
+    assert policy.declared == 42
+    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.warnings == (
+        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "42"),
+    )
+
+
+def test_P_9_scope_prefix() -> None:
+    """P-9: Eintrag mit Scope-Präfix schützt niemanden (D95)."""
+    raw = ["nuc:N/obligation@1"]
+    policy = NucleusPolicy(scope=scope_id("p9"), declared=raw)
+    assert policy.declared is raw
+    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.warnings == (
+        PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "nuc:N/obligation@1"),
+    )
+
+
+def test_warnings_frozenset_deterministic() -> None:
+    raw = frozenset({"???", "not-a-predicate", "also::bad"})
+    a = NucleusPolicy(scope=scope_id("warn-a"), declared=raw)
+    b = NucleusPolicy(scope=scope_id("warn-b"), declared=raw)
+    assert a.warnings == b.warnings
+    assert len(a.warnings) == 3
+    assert all(w.code == PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY for w in a.warnings)
 
 
 def test_c8_scope_mismatch_raises():

@@ -1,0 +1,381 @@
+"""Auszählung einer Epoche (04-governance.md §3)."""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import Enum
+
+from mensch_als_republik import cbor_canon
+from mensch_als_republik.atom import Claim, claim_id
+from mensch_als_republik.governance.findings import (
+    Finding,
+    GovernanceFinding,
+    dedupe_sort,
+)
+from mensch_als_republik.governance.objects import Epoch, Proposal
+from mensch_als_republik.index import classify_all
+from mensch_als_republik.policy import NucleusPolicy, constitution_hash
+from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.verifier import ClaimStore, State
+
+_CLASS_BY_INDEX = {0: "ordinary", 1: "membership", 2: "amendment"}
+
+
+class TallyState(str, Enum):
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    PENDING = "PENDING"
+    UNEVALUABLE = "UNEVALUABLE"
+
+
+@dataclass(frozen=True, slots=True)
+class TallyResult:
+    """Ergebnis von ``decide`` (04-governance.md §3.3, D106, D109)."""
+
+    state: TallyState
+    yes: tuple[bytes, ...]
+    no: tuple[bytes, ...]
+    participants: frozenset[bytes] | None
+    threshold: tuple[int, int] | None
+    findings: tuple[Finding, ...]
+    epoch_id: bytes
+    proposal_hash: bytes
+
+    @property
+    def n(self) -> int | None:
+        if self.participants is None:
+            return None
+        return len(self.participants)
+
+
+def ratio_max(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, int]:
+    """Maximum zweier Verhältnisse über Kreuzmultiplikation (04-governance.md §3.4)."""
+    return a if a[0] * b[1] >= b[0] * a[1] else b
+
+
+def reached(yes: int, n: int, num: int, den: int) -> bool:
+    """``|Ja| * den > num * n`` — strikt (04-governance.md §3.2)."""
+    return yes * den > num * n
+
+
+def hopeless(no: int, n: int, num: int, den: int) -> bool:
+    """``(n - |Nein|) * den <= num * n`` (04-governance.md §3.2)."""
+    return (n - no) * den <= num * n
+
+
+def threshold_class(old_obj: dict, new_obj: dict, genesis_obj: dict) -> str:
+    """Klasse aus dem Verfassungsunterschied (04-governance.md §3.4, D113)."""
+    old_rest = {k: v for k, v in old_obj.items() if k != "participants"}
+    new_rest = {k: v for k, v in new_obj.items() if k != "participants"}
+    if cbor_canon.encode(old_rest) == cbor_canon.encode(new_rest):
+        return "membership"
+    return _CLASS_BY_INDEX[genesis_obj[5]]
+
+
+def applied_threshold(old_obj: dict, new_obj: dict, klass: str) -> tuple[int, int]:
+    """Angewandte Schwelle: ``ratio_max`` beider Verfassungen (04-governance.md §3.4, D113)."""
+    old_th = old_obj["thresholds"][klass]
+    new_th = new_obj["thresholds"][klass]
+    return ratio_max((old_th[0], old_th[1]), (new_th[0], new_th[1]))
+
+
+def _is_nuc_name(claim: Claim, name: str) -> bool:
+    try:
+        parsed = parse_predicate(claim.p)
+    except Exception:
+        return False
+    return (
+        parsed.namespace == "nuc"
+        and parsed.name == name
+        and parsed.version == "1"
+    )
+
+
+def _choice(vote: Claim) -> object:
+    if vote.v is None:
+        return None
+    try:
+        obj = cbor_canon.decode(vote.v)
+    except Exception:
+        return None
+    if not isinstance(obj, dict):
+        return None
+    return obj.get(0)
+
+
+def _is_yes_choice(value: object) -> bool:
+    return type(value) is int and value == 1
+
+
+def _is_known_choice(value: object) -> bool:
+    return type(value) is int and value in (0, 1)
+
+
+def _is_ratio(value: object) -> bool:
+    """Wohlgeformtheit einer Schwelle (04-governance.md §3.5, D108)."""
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return False
+    num, den = value
+    if type(num) is not int or type(den) is not int:
+        return False
+    if den < 1:
+        return False
+    if not (0 <= num <= den):
+        return False
+    if 2 * num < den:
+        return False
+    return True
+
+
+def _unevaluable(
+    kind: GovernanceFinding,
+    subject: bytes,
+    *,
+    epoch: Epoch,
+    proposal: Proposal,
+) -> TallyResult:
+    return TallyResult(
+        state=TallyState.UNEVALUABLE,
+        yes=(),
+        no=(),
+        participants=None,
+        threshold=None,
+        findings=dedupe_sort([Finding(kind=kind, subject=subject)]),
+        epoch_id=epoch.epoch_id,
+        proposal_hash=proposal.proposal_hash,
+    )
+
+
+def decide(
+    store: ClaimStore,
+    *,
+    epoch: Epoch,
+    proposal: Proposal,
+    genesis_obj: dict,
+    constitution_obj: dict | None,
+    target_constitution_obj: dict | None,
+    known_proposals: Mapping[bytes, Proposal],
+    now: int,
+    policy: NucleusPolicy | None = None,
+) -> TallyResult:
+    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112)."""
+    if proposal.scope != epoch.scope:
+        raise ValueError("proposal scope does not match epoch scope")
+    if proposal.predecessor != epoch.epoch_id:
+        return _unevaluable(
+            GovernanceFinding.STALE_EPOCH_VOTE,
+            proposal.proposal_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    if constitution_obj is None or constitution_hash(constitution_obj) != epoch.constitution_hash:
+        return _unevaluable(
+            GovernanceFinding.CONSTITUTION_UNAVAILABLE,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    if (
+        target_constitution_obj is None
+        or constitution_hash(target_constitution_obj) != proposal.constitution_hash
+    ):
+        return _unevaluable(
+            GovernanceFinding.PROPOSAL_CONSTITUTION_UNAVAILABLE,
+            proposal.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    if "participants" not in constitution_obj:
+        return _unevaluable(
+            GovernanceFinding.PARTICIPANTS_UNDECLARED,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    raw_p = constitution_obj["participants"]
+    if not isinstance(raw_p, (list, tuple)):
+        return _unevaluable(
+            GovernanceFinding.MALFORMED_PARTICIPANTS,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    seen: set[bytes] = set()
+    ordered: list[bytes] = []
+    malformed = False
+    for entry in raw_p:
+        if not isinstance(entry, bytes) or len(entry) != 32:
+            malformed = True
+            break
+        if entry in seen:
+            malformed = True
+            break
+        seen.add(entry)
+        ordered.append(entry)
+    if malformed or not ordered or ordered != sorted(ordered):
+        return _unevaluable(
+            GovernanceFinding.MALFORMED_PARTICIPANTS,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    raw_irr = constitution_obj.get("irrevocable_predicates", [])
+    if not isinstance(raw_irr, (list, tuple)) or "vote@1" not in raw_irr:
+        return _unevaluable(
+            GovernanceFinding.VOTE_REVOCABLE,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    if "ratify@1" not in raw_irr:
+        return _unevaluable(
+            GovernanceFinding.RATIFY_REVOCABLE,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    if genesis_obj.get(6) != 0:
+        return _unevaluable(
+            GovernanceFinding.UNSUPPORTED_WEIGHT_MODE,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    idx = genesis_obj.get(5)
+    if type(idx) is not int or idx not in _CLASS_BY_INDEX:
+        return _unevaluable(
+            GovernanceFinding.MALFORMED_THRESHOLD,
+            epoch.constitution_hash,
+            epoch=epoch,
+            proposal=proposal,
+        )
+    klass = threshold_class(constitution_obj, target_constitution_obj, genesis_obj)
+    for obj in (constitution_obj, target_constitution_obj):
+        thresholds = obj.get("thresholds")
+        if not isinstance(thresholds, dict) or klass not in thresholds:
+            return _unevaluable(
+                GovernanceFinding.MALFORMED_THRESHOLD,
+                epoch.constitution_hash,
+                epoch=epoch,
+                proposal=proposal,
+            )
+        if not _is_ratio(thresholds[klass]):
+            return _unevaluable(
+                GovernanceFinding.MALFORMED_THRESHOLD,
+                epoch.constitution_hash,
+                epoch=epoch,
+                proposal=proposal,
+            )
+    threshold = applied_threshold(constitution_obj, target_constitution_obj, klass)
+    participants = frozenset(ordered)
+    by_cid = classify_all(store, now, policy)
+    findings: list[Finding] = []
+    votes = [c for c in store.all_claims() if _is_nuc_name(c, "vote")]
+    candidates: list[Claim] = []
+    for vote in votes:
+        cid = claim_id(vote)
+        on_this = vote.J == (3, proposal.proposal_hash)
+        if not on_this:
+            continue
+        if vote.N != epoch.scope:
+            findings.append(Finding(kind=GovernanceFinding.SCOPE_MISMATCH, subject=cid))
+            continue
+        if vote.I not in participants:
+            findings.append(Finding(kind=GovernanceFinding.NON_MEMBER_VOTE, subject=cid))
+            continue
+        if vote.t_exp is not None:
+            findings.append(Finding(kind=GovernanceFinding.VOTE_WITH_EXPIRY, subject=cid))
+            continue
+        choice = _choice(vote)
+        if not _is_known_choice(choice):
+            findings.append(
+                Finding(kind=GovernanceFinding.UNKNOWN_VOTE_CHOICE, subject=cid)
+            )
+            continue
+        if by_cid[cid].state is not State.ACTIVE:
+            continue
+        candidates.append(vote)
+
+    by_author: dict[bytes, list[Claim]] = defaultdict(list)
+    for vote in candidates:
+        by_author[vote.I].append(vote)
+    counting: list[Claim] = []
+    for group in by_author.values():
+        if len(group) > 1:
+            for vote in group:
+                findings.append(
+                    Finding(kind=GovernanceFinding.AMBIGUOUS_VOTE, subject=claim_id(vote))
+                )
+        else:
+            counting.append(group[0])
+
+    excluded: set[bytes] = set()
+    for vote in counting:
+        if not _is_yes_choice(_choice(vote)):
+            continue
+        author = vote.I
+        for other in votes:
+            if other.I != author or other.N != epoch.scope:
+                continue
+            other_cid = claim_id(other)
+            if other.t_exp is not None:
+                continue
+            if by_cid[other_cid].state is not State.ACTIVE:
+                continue
+            if not _is_yes_choice(_choice(other)):
+                continue
+            if other.J == (3, proposal.proposal_hash):
+                continue
+            if other.J[0] == 3 and other.J[1] in known_proposals:
+                other_prop = known_proposals[other.J[1]]
+                if other_prop.predecessor == epoch.epoch_id:
+                    findings.append(
+                        Finding(
+                            kind=GovernanceFinding.CONFLICTING_APPROVAL,
+                            subject=claim_id(vote),
+                        )
+                    )
+                    findings.append(
+                        Finding(
+                            kind=GovernanceFinding.CONFLICTING_APPROVAL,
+                            subject=other_cid,
+                        )
+                    )
+                    excluded.add(author)
+            else:
+                findings.append(
+                    Finding(kind=GovernanceFinding.UNKNOWN_PROPOSAL, subject=other_cid)
+                )
+                excluded.add(author)
+
+    yes_ids: list[bytes] = []
+    no_ids: list[bytes] = []
+    for vote in counting:
+        if vote.I in excluded:
+            continue
+        if _is_yes_choice(_choice(vote)):
+            yes_ids.append(claim_id(vote))
+        else:
+            no_ids.append(claim_id(vote))
+    yes = tuple(sorted(yes_ids))
+    no = tuple(sorted(no_ids))
+    n = len(participants)
+    num, den = threshold
+    if reached(len(yes), n, num, den):
+        state = TallyState.PASSED
+    elif hopeless(len(no), n, num, den):
+        state = TallyState.FAILED
+    else:
+        state = TallyState.PENDING
+    return TallyResult(
+        state=state,
+        yes=yes,
+        no=no,
+        participants=participants,
+        threshold=threshold,
+        findings=dedupe_sort(findings),
+        epoch_id=epoch.epoch_id,
+        proposal_hash=proposal.proposal_hash,
+    )

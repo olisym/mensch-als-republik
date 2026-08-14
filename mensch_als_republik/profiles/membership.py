@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.policy import NucleusPolicy
+from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
 from mensch_als_republik.predicates import parse_predicate
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
@@ -51,10 +51,14 @@ def membership(
     now: int,
     authorized_keys: frozenset[bytes],
     policy: NucleusPolicy | None = None,
+    constitution_obj: dict | None = None,
 ) -> MembershipResult:
-    """Wertet accept-rules ∧ grant-membership aus (03-profiles.md §4, 03-prompt.md §5)."""
+    """Wertet accept-rules ∧ grant-membership aus (03-profiles.md §4, 04 §6.2, D111)."""
     if policy is not None and policy.scope != scope:
         raise ValueError("policy scope does not match scope")
+    if constitution_obj is not None:
+        if hash_constitution(constitution_obj) != constitution_hash:
+            raise ValueError("constitution_obj does not match constitution_hash")
 
     by_cid = classify_all(store, now, policy)
     findings: list[Finding] = []
@@ -104,8 +108,23 @@ def membership(
 
     accept_claim_id = min(accept_ids) if accept_ids else None
     grant_claim_id = min(grant_ids) if grant_ids else None
+    listed = False
+    if constitution_obj is not None:
+        raw_p = constitution_obj.get("participants")
+        if isinstance(raw_p, (list, tuple)) and len(raw_p) > 0:
+            seen: set[bytes] = set()
+            ordered: list[bytes] = []
+            well_formed = True
+            for entry in raw_p:
+                if not isinstance(entry, bytes) or len(entry) != 32 or entry in seen:
+                    well_formed = False
+                    break
+                seen.add(entry)
+                ordered.append(entry)
+            if well_formed and ordered == sorted(ordered):
+                listed = subject in seen
     has_accept = accept_claim_id is not None
-    has_grant = grant_claim_id is not None
+    has_grant = grant_claim_id is not None or listed
 
     if has_accept and has_grant:
         state = MembershipState.MEMBER

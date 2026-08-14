@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.policy import NucleusPolicy
+from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 
 
@@ -53,7 +53,7 @@ def resolve_policy(
             ),
         )
 
-    computed_hash = hashlib.sha256(cbor_canon.encode(constitution_obj)).digest()
+    computed_hash = constitution_hash(constitution_obj)
     if declared_hash != computed_hash:
         return PolicyResolution(
             policy=NucleusPolicy(scope, declared=frozenset()),
@@ -68,8 +68,7 @@ def resolve_policy(
         )
 
     raw = constitution_obj.get("irrevocable_predicates", [])
-    declared = frozenset(raw)
     return PolicyResolution(
-        policy=NucleusPolicy(scope, declared=declared),
+        policy=NucleusPolicy(scope, declared=raw),
         findings=(),
     )
