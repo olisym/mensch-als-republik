@@ -167,15 +167,23 @@ die harte Grenze aus `02 §8` und keine Panne.
 Bei `D = 100` und vollem Vouch trägt jede Kante genau die Kapazität ihres Ausgangsknotens. Die
 Out-Degree-Schranke `min(D, C(I))` liest sich dann als Satz:
 
-| Distanz zum Seed | kann bürgen für |
-|---|---|
-| 0 (Anker) | 100 Menschen |
-| 1 | 50 |
-| 2 | 25 |
-| 3 | 12 |
-| 4 | 6 |
-| 5 | 3 |
-| 6 | 1 |
+| Distanz zum Seed | `C(I)` | höchstens so viele Kanten — **bei `n = 1` je Kante** |
+|---|---|---|
+| 0 (Anker) | 100 | 100 |
+| 1 | 50 | 50 |
+| 2 | 25 | 25 |
+| 3 | 12 | 12 |
+| 4 | 6 | 6 |
+| 5 | 3 | 3 |
+| 6 | 1 | 1 |
+
+**Die eigentliche Schranke ist `Σ n ≤ D`, nicht die Kopfzahl.** Wer `D = 100` hat, kann für
+hundert Menschen mit `n = 1` bürgen, für zwei mit `n = 50`, oder für einen mit `n = 100` — nie für
+zwei mit je `100`. Die Spalte rechts ist der Grenzfall bei feinster Abstufung; `min(D, C(I))` aus
+`02 §3.1` ist eine Obergrenze für die **Zahl** der Kanten und wird nur dort erreicht.
+
+Wer sie überschreitet, wird als `OVERCOMMITTED_AUTHOR` vermerkt, und seine Kanten fallen aus —
+nicht anteilig gekürzt, sondern ganz. Vertrauen ist knapp, und die Knappheit ist die Wirkung.
 
 Das ist `02 §3.1`s Satz „die Zahl der Menschen, für die man bürgen kann, ist die eigene Position",
 in Zahlen, die man einem Gründer vorlegen kann.
@@ -289,8 +297,30 @@ diesen Hash (D60, `04 §6.1`). Nach 8 ist DORA `GRANT_ONLY`, nach 9 `MEMBER` —
 `GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand `GRANT_ONLY` oder
 `APPLICANT` — nie `MEMBER`.
 
-**Im Ressourcen-Scope** (`N = N_res`): wechselseitige `vouch@1` zwischen ANNA und BRUNO, je ein
-`vouch@1` beider auf CHRIS, `n = D = 100`. Ergebnis: CHRIS in Distanz 1, `C = 50`.
+**Im Ressourcen-Scope** (`N = N_res`, `p = nuc:4d78bcea…/vouch@1`), vier Kanten, jede mit
+`v = {0: 50}` — also `n = 50` nach `02 §3.1`:
+
+| # | Autor | `J` | `n` |
+|---|---|---|---|
+| 10 | ANNA | `[1, BRUNO]` | 50 |
+| 11 | ANNA | `[1, CHRIS]` | 50 |
+| 12 | BRUNO | `[1, ANNA]` | 50 |
+| 13 | BRUNO | `[1, CHRIS]` | 50 |
+
+**Warum 50 und nicht 100.** Das Budget `Σ n ≤ D` gilt je Autor. Bei `D = 100` und zwei Kanten
+bleibt jedem Gründer genau `50` je Kante; zwei volle Vouches à `100` ergäben `200` und damit
+`OVERCOMMITTED_AUTHOR` — beide Kanten fielen aus, und CHRIS hätte keine Distanz.
+
+Das ist kein Kunstgriff, um die Zahlen passend zu machen, sondern die Regel selbst: **wer für
+zwei bürgt, bürgt für jeden halb.**
+
+Ergebnis: ANNA und BRUNO sind Anker in Distanz 0 mit `C = 100`. CHRIS steht in Distanz 1 mit
+`C = 50`. Die Kantenkapazität von einem Anker ist `⌊50·100/100⌋ = 50`; würde CHRIS selbst mit
+`n = 50` weiterbürgen, trüge ihre Kante `⌊50·50/100⌋ = 25`.
+
+Die wechselseitigen Kanten 10 und 12 ändern **keine Distanz** — beide sind bereits Anker. Sie
+verbrauchen trotzdem Budget. Auch das ist Absicht: eine Bürgschaft kostet, ob sie etwas bewegt
+oder nicht.
 
 Kein Claim des einen Scopes ist im anderen sichtbar. Das ist keine Einschränkung der
 Implementierung, sondern `02 §2`.
@@ -309,7 +339,7 @@ Implementierung, sondern `02 §2`.
 | `D` | 100 | `D ≥ C₀` erfüllt; feinste Vouch-Abstufung ein Hundertstel |
 | Scopes | 2 | der Schnitt entscheidet, was eine Trennung kostet (D114) |
 
-### 8.1 Betriebswarnung
+### 8.1 Betriebswarnungen
 
 **Jede Verfassungsänderung entzieht allen still den `MEMBER`-Status.** Nach der Ratifizierung in
 `§5` zeigen die `accept-rules` der drei Gründer auf `f5cddafc…`, die geltende Verfassung ist aber
@@ -318,6 +348,12 @@ annimmt. Abstimmen dürfen sie weiter — `participants` gilt unverändert (D116
 
 Wer eine Anwendung auf `MEMBER` gründet, muss das einplanen: nach jeder Änderung braucht es eine
 Runde Signaturen, bevor der Zustand wieder trägt.
+
+**Ein Vouch zu viel entwertet alle Vouches desselben Autors.** Überschreitet `Σ n` das Budget `D`,
+fallen sämtliche Kanten dieses Autors aus — nicht die letzte, nicht anteilig, alle. Wer nachträglich
+eine Bürgschaft hinzufügt, muss vorher die bestehenden verkleinern. Diese Reihenfolge ist die
+häufigste Betriebsfalle des Trust-Flow, und die erste Fassung dieses Dokuments ist selbst
+hineingelaufen.
 
 ### 8.2 Was nicht gewählt wurde
 
