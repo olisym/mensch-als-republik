@@ -54,7 +54,7 @@
       "J": [3, "proposal_hash"],
       "choice": 1,
       "t": 3,
-      "fork": true,
+      "kette_fortschreiben": false,
       "label": "vote_yes"
     },
     {"art": "zustellen", "von": "anna", "an": "bruno", "nur": ["vote_yes"]},
@@ -66,7 +66,7 @@
       "J": [3, "proposal_hash"],
       "choice": 0,
       "t": 3,
-      "fork": true,
+      "kette_fortschreiben": false,
       "label": "vote_no"
     },
     {"art": "zustellen", "von": "anna", "an": "chris", "nur": ["vote_no"]},
@@ -170,7 +170,7 @@
       "J": [3, "proposal_hash"],
       "choice": 1,
       "t": 3,
-      "fork": true,
+      "kette_fortschreiben": false,
       "label": "vote_yes"
     },
     {"art": "zustellen", "von": "anna", "an": "bruno", "nur": ["vote_yes"]},
@@ -182,7 +182,7 @@
       "J": [3, "proposal_hash"],
       "choice": 0,
       "t": 3,
-      "fork": true,
+      "kette_fortschreiben": false,
       "label": "vote_no"
     },
     {"art": "zustellen", "von": "anna", "an": "chris", "nur": ["vote_no"]},

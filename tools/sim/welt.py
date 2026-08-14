@@ -73,7 +73,7 @@ class Teilnehmer:
         v: bytes | None = None,
         N: bytes | None = None,
         t_exp: int | None = None,
-        fork: bool = False,
+        kette_fortschreiben: bool = True,
     ) -> Claim:
         h_prev = self.read_h_prev()
         unsigned = Claim(
@@ -100,7 +100,7 @@ class Teilnehmer:
             sigma=sign(self._sk, unsigned),
         )
         self.claim_einlegen(signed)
-        if not fork:
+        if kette_fortschreiben:
             self.write_h_prev(claim_id(signed))
         return signed
 

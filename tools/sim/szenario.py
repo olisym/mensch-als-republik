@@ -152,7 +152,7 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
     scope = _resolve_scope(step["scope"], ctx)
     praedikat = step["praedikat"]
     t = int(step.get("t", 1))
-    fork = bool(step.get("fork", False))
+    kette_fortschreiben = bool(step.get("kette_fortschreiben", True))
     t_exp = step.get("t_exp")
     if t_exp is not None:
         t_exp = int(t_exp)
@@ -180,7 +180,7 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
                      "ratify": "ratify", "vouch": "vouch"}[praedikat])
 
     claim = autor.claim_signieren(
-        p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp, fork=fork,
+        p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp, kette_fortschreiben=kette_fortschreiben,
     )
     if label := step.get("label"):
         ctx.labels[label] = claim
