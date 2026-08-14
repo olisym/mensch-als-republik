@@ -134,15 +134,56 @@ Nukleus). Pflichtfelder:
 | 2 | `key_mode` | uint | `0` = Einzelschlüssel, `1` = FROST-Gruppenschlüssel. |
 | 3 | `anchor_set` | array[bytes32] | Der **Nukleus-Seed** (Trust-Flow-Spec §6.3): das out-of-band etablierte Ankerset. |
 | 4 | `constitution_hash` | bytes32 | Hash der **initialen** Verfassung (§5). Spätere Versionen superseden per Governance. |
-| 5 | `amendment_rule` | uint | Schwellenklasse für Verfassungsänderung (§5, Gov-Spec §5). In v1 **selbst unveränderlich**. |
+| 5 | `amendment_rule` | uint | Schwellenklasse für Verfassungsänderung (§5, Gov-Spec §5). `0` = `ordinary`, `1` = `membership`, `2` = `amendment` (D104). |
 | 6 | `weight_mode` | uint | `0` = Kopfzahl, `1` = zweck-gescopt gewichtet (Gov-Spec §4). |
 | 7 | `vote_mode` | uint | `0` = Komposition (Default), `1` = FROST-Opt-in (Gov-Spec §3). Löst DR-015. |
-| 8 | `parent_scope` | bytes32 (optional) | Übergeordnete Föderation, falls dieser Nukleus Konstituent ist (Gov-Spec §7). |
+| 8 | `parent_scope` | bytes32 (optional) | **Rein deklarativ.** Behauptete Zugehörigkeit oder Nachfolge; ohne mechanische Folge (§4.1, D114). |
 
 - `root_keys` trennt **Identität** (= `N`, aus dem *ganzen* Genesis) von **Autorität** (= die
   Schlüssel, die *innerhalb* stehen). Genau diese Trennung erlaubt Rotation ohne Identitätsverlust.
 - `vote_mode`/`weight_mode`/`amendment_rule` im Genesis machen die Konsens-Parameter **vor** der
   ersten Abstimmung fest und prüfbar — kein „Modus-Wechsel mittendrin" ohne Amendment.
+- Die Änderungsregel ist **nicht** unveränderlich, aber nicht kaperbar: die anzuwendende Schwelle
+  ist das Maximum aus alter und neuer (Gov-Spec §3.4). Anheben verlangt die neue, Senken die alte.
+
+### 4.1 `parent_scope` ist eine Behauptung, keine Beziehung
+
+Das Feld wird von **keiner** Funktion dieser Referenzimplementierung gelesen. Es begründet keine
+Autorität, keine Übertragung, keinen Vorrang und keine Sichtbarkeit über Scope-Grenzen hinweg —
+`02 §2` ist unverändert bindend: es gibt einen Graphen je `N`, und Vertrauen aus einem Scope
+fließt nicht in einen anderen.
+
+Was es leistet: Es **behauptet** eine Zugehörigkeit oder eine Nachfolge, prüfbar über die
+Genesis-Kette, bewertet vom Leser. Das Protokoll erzwingt Zurechenbarkeit, nicht Wahrheit
+(`08 §2.1`).
+
+Daraus folgt ausdrücklich: **mehrere Nuklei dürfen dieselbe Elternschaft behaupten**, und keiner
+kann einen anderen daran hindern. Spaltet sich eine Gemeinschaft, berufen sich beide Hälften auf
+denselben Vorgänger; welche als Fortsetzung gilt, entscheiden die Beteiligten und nicht ein
+Register. Das Protokoll bildet den Streit ab, statt ihn zu entscheiden.
+
+Es gibt **keine Stilllegungsmarkierung** und soll keine geben. Ein Nukleus, in dem niemand mehr
+signiert, ist stillgelegt; das erkennt jeder Beobachter an seinem eigenen Bestand. Eine Markierung
+wäre eine globale Aussage über etwas, das nur lokal beobachtbar ist.
+
+### 4.2 Empfehlung: Governance und Substanz in getrennte Scopes
+
+Keine Prüfung, eine Empfehlung — und die folgenreichste Entscheidung bei der Gründung.
+
+Vouches, Obligationen und Quittungen gehören **nicht** in den Scope, dessen `participants`
+abgestimmt werden. Ein Governance-Scope regiert genau eine Sache: sich selbst. Die Substanz lebt
+in einem eigenen Scope, der keine `participants` deklariert und damit nicht auszählbar ist — er
+braucht auch keine, denn Bürgen, sich verpflichten und quittieren sind zweiseitige Akte ohne
+Kollektivbeschluss.
+
+**Der Schnitt entscheidet, was eine Trennung später kostet.** Liegt die Substanz im
+Governance-Scope, kostet ein Zerwürfnis die gesamte gescopte Geschichte. Liegt sie daneben, kostet
+es das Regelwerk — die Vertrauenskanten und Kreditbeziehungen tragen ein anderes `N` und bleiben
+unberührt, egal wie fest der Governance-Scope steckt.
+
+Der Preis der Trennung: ein Scope ohne Governance hat **unveränderliche Arbitratoren**, weil
+`03 §2.4` sie aus der Verfassung des eigenen Scopes nimmt. Wer beides will — änderbare Regeln und
+unangreifbare Substanz — braucht drei Scopes oder muss einen der beiden Nachteile tragen.
 
 ---
 
