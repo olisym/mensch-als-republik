@@ -593,6 +593,13 @@ Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentati
   hört so lange auf zu wirken. Kein Fehler, aber eine Rechnung, die vor der ersten Änderung
   bekannt sein muss (D116, `§6.3`).
 
+- **Ein Equivocierender kann eine Epoche kippen — einmal, abwärts, und mit Beweis.** Zwei
+  widersprechende Stimmen desselben Autors, an verschiedene Beobachter geschickt, lassen einen
+  Beobachter `PASSED` sehen, bevor er den Zwilling kennt. Trifft dieser ein, fällt die Stimme weg
+  und eine darauf gestützte Epoche mit ihr. Die Richtung ist stets abwärts, es entsteht nie etwas;
+  und der Vorgang hinterlässt einen vom Urheber selbst signierten Beweis, dessen Folgen Layer 05
+  regelt (D117).
+
 - **Kein Rechtsweg gegen die eigene Mehrheit.** Wer in `P` überstimmt wird, hat innerhalb des
   Nukleus keine Instanz über sich. Das Ventil ist Austritt und, wenn die Verfassung es vorsieht,
   das Föderationspanel (`§7.2`).

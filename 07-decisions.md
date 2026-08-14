@@ -3314,3 +3314,77 @@ durchlaufen musste.
 beschreiben, werden sie nicht nur nebeneinandergelegt, sondern über den Übergang geführt, der
 beide berührt. Nebeneinander waren `§2.1` und `§6.1` widerspruchsfrei; erst die Ratifizierung
 zwischen ihnen zeigt die Lücke.
+
+---
+
+## AF. Der dritte Ausgang aus `ACTIVE`
+
+### D117 — Equivocation hebt Monotonie auf ⚠️
+
+Gefunden beim Durchrechnen eines Simulationsszenarios mit **vier getrennten Stores** — nicht
+beim Lesen des Codes und nicht in einem Durchgang durch die Spec.
+
+**Der Befund.** D105 und D107 haben die Monotonie der Stimmen- und Epochenmenge gesichert, indem
+`vote@1` und `ratify@1` in `irrevocable_predicates` stehen: Widerruf und Supersede laufen ins
+Leere, Ablauf ist über `VOTE_WITH_EXPIRY` ausgeschlossen. Damit waren zwei Ausgänge aus `ACTIVE`
+geschlossen.
+
+Es gibt einen dritten. In `_classify_one` steht die Equivocation-Prüfung **vor** allem anderen und
+vor der Ermittlung von `protected`:
+
+```
+if _is_in_equivocation_pair(claim, store):
+    return Classification(state=EQUIVOCATION_FLAGGED, trust_usable=False)
+```
+
+`is_irrevocable` schützt nicht davor — und soll es nicht, denn ein Schutz gegen Equivocation wäre
+ein Schutz des Doppelzüngigen. Eine Stimme, die eben noch zählte, hört auf zu zählen, sobald ihr
+Zwilling beim Beobachter eintrifft.
+
+**Damit sinkt die Ja-Menge durch Wissenszuwachs.** Gerechnet, `n = 3`, Schwelle `[1,2]`, zwei Ja
+nötig. Anna signiert zwei Stimmen mit demselben `h_prev` — ein Ja an Bruno, ein Nein an Chris.
+Chris stimmt mit Ja.
+
+| Beobachter | kennt | Ja | Nein | Zustand |
+|---|---|---|---|---|
+| Bruno, vor Austausch | Anna-Ja, Chris-Ja | 2 | 0 | **`PASSED`** |
+| Chris, vor Austausch | Anna-Nein, Chris-Ja | 1 | 1 | `PENDING` |
+| beide, nach Austausch | Anna geflaggt, Chris-Ja | 1 | 0 | `PENDING` |
+
+Brunos `PASSED` kippt zurück — `INV-04.7` ist verletzt. Hat er zwischenzeitlich materialisiert,
+zitiert sein `ratify@1` eine nicht mehr zählende Stimme, es entsteht
+`UNSUPPORTED_RATIFICATION`, und die Epoche fällt — `INV-04.8` ist verletzt.
+
+**Beschluss: keine Mechanikänderung.** Die Mechanik ist richtig, die Invarianten waren zu stark
+formuliert.
+
+Richtig, weil die Richtung sicher ist: es fällt weg, es entsteht nichts. Und weil der Vorgang
+einen vom Urheber **selbst signierten** Beweis seiner Doppelzüngigkeit hinterlässt — das ist
+`08 §2.2` in Reinform, nicht verhindert, sondern unbestreitbar. Die Folge gehört nach Layer 05,
+nicht in eine Sonderregel hier.
+
+Normativ, als Vorbehalt an `INV-04.7` und `INV-04.8`:
+
+> Beide Invarianten gelten unter der Bedingung, dass kein Mitglied equivociert. Eine Equivocation
+> entzieht der betroffenen Stimme rückwirkend die Wirkung; eine darauf gestützte Ratifizierung
+> wird `UNSUPPORTED_RATIFICATION`, und die Epoche fällt. Die Richtung ist stets abwärts.
+
+Ein einzelnes Mitglied kann damit eine Epoche kippen — aber nur einmal, nur unter Hinterlassung
+des Beweises, und nur nach unten.
+
+**Zur Fehlerform.** Bei D105 wurden die Ausgänge aus `ACTIVE` aufgezählt und zwei genannt:
+Widerruf und Ablauf. Der dritte stand als **erste Zeile** derselben Funktion.
+
+Und er wurde von keinem Durchgang gefunden, weil alle bisherigen mit einem gemeinsamen Wissensstand
+gerechnet haben. In einem gemeinsamen Store trifft der Zwilling sofort ein, `PASSED` entsteht gar
+nicht erst, und der Rückfall ist unsichtbar. Sichtbar wurde es erst beim Entwurf einer Simulation
+mit **getrennten** Stores.
+
+**Konsequenz — Ausgänge aufzählen:** Wo eine Invariante einen Zustandsübergang ausschließt, werden
+**alle** Ausgänge aus dem Zustand aufgezählt und einzeln geprüft — nicht die, an die man beim
+Schreiben dachte. Die Aufzählung entsteht aus dem Code der Zustandsfunktion, nicht aus dem
+Gedächtnis.
+
+**Konsequenz — getrennte Sicht:** Eigenschaften über Wissenszuwachs werden mit **mehreren**
+Beobachtern geprüft, die verschiedene Teilmengen halten. Ein einzelner Store kann Konvergenz nicht
+widerlegen, weil in ihm nichts auseinanderläuft.
