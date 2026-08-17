@@ -11,15 +11,22 @@ from tests.property.welten import EX, Welt, speicher, welten
 
 
 def _austritt_ueber_uhr(welt: Welt) -> bool:
-    expired = [c for c in welt.vouches if c.t_exp is not None and c.t_exp < welt.now]
+    expired = [c.t_exp for c in welt.vouches if c.t_exp is not None and c.t_exp < welt.now]
     if not expired:
         return False
+    now_b = min(expired) - 1
+    if now_b < 1:
+        now_b = 1
     store = speicher(*welt.vouches)
-    classifications = classify_all(store, welt.now)
-    groups, _findings = build_groups(
-        store.all_claims(), classifications, EX.N_res, welt.params.D, welt.now
+    class_a = classify_all(store, welt.now)
+    groups_a, _findings_a = build_groups(
+        store.all_claims(), class_a, EX.N_res, welt.params.D, welt.now
     )
-    return any((c.I, c.J[1]) not in groups for c in expired)
+    class_b = classify_all(store, now_b)
+    groups_b, _findings_b = build_groups(
+        store.all_claims(), class_b, EX.N_res, welt.params.D, now_b
+    )
+    return set(groups_a) < set(groups_b)
 
 
 def test_finds_budget_exit_via_clock() -> None:
