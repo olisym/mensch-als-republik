@@ -107,7 +107,7 @@ def test_SE_5() -> None:
 
 def test_SE_6() -> None:
     alice, bob = fresh_alice(), fresh_bob()
-    X = bob.claim(p=nuc(N_A, "vouch"), J=(1, alice.pub), t=1, N=N_A)
+    X = bob.claim(p=nuc(N_A, "vouch"), J=(1, alice.pub), t=1, N=N_A, t_exp=5000)
     O = alice.claim(p=nuc(N_A, "obligation"), J=(2, claim_id(X)), t=2, N=N_A)
     R = bob.claim(p=nuc(N_A, "receipt"), J=(2, claim_id(O)), t=3, N=N_A)
     result = settlement(

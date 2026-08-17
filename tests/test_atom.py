@@ -1,5 +1,6 @@
 """Tests für Claim-Atom Kernfunktionen."""
 
+import inspect
 import json
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from mensch_als_republik.atom import (
     Claim,
+    build_signed,
     claim_id,
     core_bytes,
     id_genesis_anchor,
@@ -110,3 +112,97 @@ def test_claim_id_signature_independent():
     c = claim_from_bytes(bytes.fromhex(_vec("TV1")["signed_bytes"]))
     assert claim_id(c).hex() == GOLDEN_CLAIM_IDS["TV1"]
     assert len(signed_bytes(c)) > len(core_bytes(c))
+
+
+CLAIM_FIELDS = {
+    "version",
+    "I",
+    "J",
+    "p",
+    "t",
+    "h_prev",
+    "v",
+    "N",
+    "t_exp",
+    "sigma",
+}
+
+
+def test_claim_dataclass_fields_are_exactly_these():
+    assert set(Claim.__dataclass_fields__) == CLAIM_FIELDS
+
+
+def test_build_signed_parameters_match_claim_fields():
+    # version ist fest
+    # I wird aus sk abgeleitet
+    # sigma entsteht beim Signieren
+    felder = set(Claim.__dataclass_fields__) - {"version", "I", "sigma"}
+    params = set(inspect.signature(build_signed).parameters) - {"sk"}
+    assert felder == params
+
+
+def test_build_signed_sets_every_field_when_all_optionals_given():
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x03" * 32)
+    pub = sk.public_key().public_bytes_raw()
+    subject = b"\x04" * 32
+    h_prev = id_genesis_anchor(pub)
+    v = b"\x01\x02"
+    N = b"\x05" * 32
+    t_exp = 999
+    claim = build_signed(
+        sk,
+        J=(1, subject),
+        p="core/revoke@1",
+        t=100,
+        h_prev=h_prev,
+        v=v,
+        N=N,
+        t_exp=t_exp,
+    )
+    expected = {
+        "version": 1,
+        "I": pub,
+        "J": (1, subject),
+        "p": "core/revoke@1",
+        "t": 100,
+        "h_prev": h_prev,
+        "v": v,
+        "N": N,
+        "t_exp": t_exp,
+        "sigma": claim.sigma,
+    }
+    got = {name: getattr(claim, name) for name in Claim.__dataclass_fields__}
+    assert got == expected
+    assert claim.sigma is not None
+    assert len(claim.sigma) == 64
+
+
+def test_build_signed_verify_sig_and_I_from_sk():
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x03" * 32)
+    pub = sk.public_key().public_bytes_raw()
+    claim = build_signed(
+        sk,
+        J=(1, pub),
+        p="core/revoke@1",
+        t=100,
+        h_prev=id_genesis_anchor(pub),
+    )
+    assert verify_sig(claim)
+    assert claim.I == pub
+
+
+def test_build_signed_is_deterministic():
+    sk = Ed25519PrivateKey.from_private_bytes(b"\x03" * 32)
+    pub = sk.public_key().public_bytes_raw()
+    kwargs = dict(
+        J=(1, pub),
+        p="core/revoke@1",
+        t=100,
+        h_prev=id_genesis_anchor(pub),
+        v=b"\xaa",
+        N=b"\x06" * 32,
+        t_exp=5000,
+    )
+    a = build_signed(sk, **kwargs)
+    b = build_signed(sk, **kwargs)
+    assert signed_bytes(a) == signed_bytes(b)

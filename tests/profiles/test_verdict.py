@@ -93,7 +93,7 @@ def test_VS_3() -> None:
 
 def test_VS_4() -> None:
     alice, bob, carol = fresh_alice(), fresh_bob(), fresh_carol()
-    X = bob.claim(p=nuc(N_B, "vouch"), J=(1, alice.pub), t=1, N=N_B)
+    X = bob.claim(p=nuc(N_B, "vouch"), J=(1, alice.pub), t=1, N=N_B, t_exp=5000)
     accusation = alice.claim(
         p=nuc(N_B, "accusation"), J=(2, claim_id(X)), t=2, N=N_B
     )

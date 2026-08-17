@@ -7,7 +7,7 @@ import hashlib
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id, id_genesis_anchor, sign
+from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
 from mensch_als_republik.verifier import InMemoryStore
 
 # Normative Seeds aus 00 §3.1 / 03-golden-anchors.md §3.1 — eine Definition (D88).
@@ -41,9 +41,8 @@ class Identity:
         N: bytes | None = None,
         t_exp: int | None = None,
     ) -> Claim:
-        unsigned = Claim(
-            version=1,
-            I=self.pub,
+        signed = build_signed(
+            self._sk,
             J=J,
             p=p,
             t=t,
@@ -51,18 +50,6 @@ class Identity:
             v=v,
             N=N,
             t_exp=t_exp,
-        )
-        signed = Claim(
-            version=unsigned.version,
-            I=unsigned.I,
-            J=unsigned.J,
-            p=unsigned.p,
-            t=unsigned.t,
-            h_prev=unsigned.h_prev,
-            v=unsigned.v,
-            N=unsigned.N,
-            t_exp=unsigned.t_exp,
-            sigma=sign(self._sk, unsigned),
         )
         self._h_prev = claim_id(signed)
         return signed

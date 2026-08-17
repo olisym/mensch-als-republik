@@ -321,7 +321,7 @@ def test_PR_INV_12() -> None:
     alice, bob, carol = fresh_alice(), fresh_bob(), fresh_carol()
     claims = [
         alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A),
-        bob.claim(p=nuc(N_B, "vouch"), J=(1, alice.pub), t=1, N=N_B),
+        bob.claim(p=nuc(N_B, "vouch"), J=(1, alice.pub), t=1, N=N_B, t_exp=5000),
         carol.claim(p=nuc(N_C, "accusation"), J=(1, alice.pub), t=1, N=N_C),
     ]
     store = store_with(*claims)

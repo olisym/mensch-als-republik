@@ -129,7 +129,7 @@ def test_c4_vouch_still_revoked_with_policy():
     alice = Identity("alice-c4")
     bob = Identity("bob-c4")
     scope = scope_id("c4")
-    v = alice.vouch(bob, n=1, scope=scope, t=1)
+    v = alice.vouch(bob, n=1, scope=scope, t=1, t_exp=5000)
     rev = alice.revoke(v, t=2)
     store = store_with(v, rev)
     policy = NucleusPolicy(scope=scope)

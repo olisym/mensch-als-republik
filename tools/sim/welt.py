@@ -10,10 +10,10 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from mensch_als_republik.atom import (
     Claim,
+    build_signed,
     claim_from_bytes,
     claim_id,
     id_genesis_anchor,
-    sign,
     signed_bytes,
 )
 from mensch_als_republik.verifier import InMemoryStore
@@ -76,9 +76,8 @@ class Teilnehmer:
         kette_fortschreiben: bool = True,
     ) -> Claim:
         h_prev = self.read_h_prev()
-        unsigned = Claim(
-            version=1,
-            I=self.pub,
+        signed = build_signed(
+            self._sk,
             J=J,
             p=p,
             t=t,
@@ -86,18 +85,6 @@ class Teilnehmer:
             v=v,
             N=N,
             t_exp=t_exp,
-        )
-        signed = Claim(
-            version=unsigned.version,
-            I=unsigned.I,
-            J=unsigned.J,
-            p=unsigned.p,
-            t=unsigned.t,
-            h_prev=unsigned.h_prev,
-            v=unsigned.v,
-            N=unsigned.N,
-            t_exp=unsigned.t_exp,
-            sigma=sign(self._sk, unsigned),
         )
         self.claim_einlegen(signed)
         if kette_fortschreiben:

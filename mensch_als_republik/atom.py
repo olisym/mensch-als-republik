@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -95,6 +95,32 @@ def sign_preimage(claim: Claim) -> bytes:
 def sign(sk: Ed25519PrivateKey, claim: Claim) -> bytes:
     """Ed25519-Sign(sk, DOM_SIG ‖ core_bytes) (§4)."""
     return sk.sign(sign_preimage(claim))
+
+
+def build_signed(
+    sk: Ed25519PrivateKey,
+    *,
+    J: tuple[int, bytes],
+    p: str,
+    t: int,
+    h_prev: bytes,
+    v: bytes | None = None,
+    N: bytes | None = None,
+    t_exp: int | None = None,
+) -> Claim:
+    """Signierten Claim bauen: I aus sk, version 1, sigma via replace (D122, 01 §2/§4)."""
+    unsigned = Claim(
+        version=1,
+        I=sk.public_key().public_bytes_raw(),
+        J=J,
+        p=p,
+        t=t,
+        h_prev=h_prev,
+        v=v,
+        N=N,
+        t_exp=t_exp,
+    )
+    return replace(unsigned, sigma=sign(sk, unsigned))
 
 
 def verify_sig(claim: Claim) -> bool:

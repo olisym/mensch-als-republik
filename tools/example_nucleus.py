@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id, id_genesis_anchor, sign
+from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance import (
     Epoch,
@@ -104,39 +104,31 @@ class _Author:
         t: int,
         v: bytes | None = None,
         N: bytes | None = None,
+        t_exp: int | None = None,
     ) -> Claim:
-        unsigned = Claim(
-            version=1,
-            I=self.pub,
+        signed = build_signed(
+            self._sk,
             J=J,
             p=p,
             t=t,
             h_prev=self._h_prev,
             v=v,
             N=N,
-        )
-        signed = Claim(
-            version=unsigned.version,
-            I=unsigned.I,
-            J=unsigned.J,
-            p=unsigned.p,
-            t=unsigned.t,
-            h_prev=unsigned.h_prev,
-            v=unsigned.v,
-            N=unsigned.N,
-            t_exp=unsigned.t_exp,
-            sigma=sign(self._sk, unsigned),
+            t_exp=t_exp,
         )
         self._h_prev = claim_id(signed)
         return signed
 
-    def vouch(self, subject: "_Author", *, n: int, scope: bytes, t: int) -> Claim:
+    def vouch(
+        self, subject: "_Author", *, n: int, scope: bytes, t: int, t_exp: int
+    ) -> Claim:
         return self.claim(
             p=_nuc(scope, "vouch"),
             J=(1, subject.pub),
             t=t,
             N=scope,
             v=cbor_canon.encode({0: n}),
+            t_exp=t_exp,
         )
 
 
@@ -455,10 +447,18 @@ def claim_set(ex: ExampleNucleus) -> ClaimSet:
             "vote_chris": v_chris,
             "ratify_anna": ratify_anna,
             "accept_dora": a9,
-            "vouch_anna_bruno": anna.vouch(bruno, n=n, scope=ex.N_res, t=5),
-            "vouch_bruno_anna": bruno.vouch(anna, n=n, scope=ex.N_res, t=3),
-            "vouch_anna_chris": anna.vouch(chris, n=n, scope=ex.N_res, t=6),
-            "vouch_bruno_chris": bruno.vouch(chris, n=n, scope=ex.N_res, t=4),
+            "vouch_anna_bruno": anna.vouch(
+                bruno, n=n, scope=ex.N_res, t=5, t_exp=NOW + 1000000
+            ),
+            "vouch_bruno_anna": bruno.vouch(
+                anna, n=n, scope=ex.N_res, t=3, t_exp=NOW + 1000000
+            ),
+            "vouch_anna_chris": anna.vouch(
+                chris, n=n, scope=ex.N_res, t=6, t_exp=NOW + 1000000
+            ),
+            "vouch_bruno_chris": bruno.vouch(
+                chris, n=n, scope=ex.N_res, t=4, t_exp=NOW + 1000000
+            ),
         },
         anna=anna,
         bruno=bruno,
@@ -617,10 +617,10 @@ def check_overcommit(ex: ExampleNucleus) -> None:
     """Vier Vouches mit n=100: beide Autoren OVERCOMMITTED, alle Kanten aus (example-nucleus.md §8.1)."""
     anna, bruno, chris, _dora = people()
     store = _store(
-        anna.vouch(bruno, n=100, scope=ex.N_res, t=1),
-        anna.vouch(chris, n=100, scope=ex.N_res, t=2),
-        bruno.vouch(anna, n=100, scope=ex.N_res, t=1),
-        bruno.vouch(chris, n=100, scope=ex.N_res, t=2),
+        anna.vouch(bruno, n=100, scope=ex.N_res, t=1, t_exp=NOW + 1000000),
+        anna.vouch(chris, n=100, scope=ex.N_res, t=2, t_exp=NOW + 1000000),
+        bruno.vouch(anna, n=100, scope=ex.N_res, t=1, t_exp=NOW + 1000000),
+        bruno.vouch(chris, n=100, scope=ex.N_res, t=2, t_exp=NOW + 1000000),
     )
     derivation = derive(
         store,
@@ -645,7 +645,7 @@ def check_overcommit(ex: ExampleNucleus) -> None:
 def check_edge_capacity(ex: ExampleNucleus) -> None:
     """Kantenkapazität doppelt gerundet: Anker 50, CHRIS→DORA 25 (example-nucleus.md §7, 02 §8)."""
     cs = claim_set(ex)
-    extra = cs.chris.vouch(cs.dora, n=50, scope=ex.N_res, t=3)
+    extra = cs.chris.vouch(cs.dora, n=50, scope=ex.N_res, t=3, t_exp=NOW + 1000000)
     store = _store(*cs.claims.values(), extra)
     derivation = derive(
         store,
