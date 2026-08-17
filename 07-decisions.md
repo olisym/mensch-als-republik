@@ -3454,7 +3454,7 @@ Zustandsauswertung, Kanonizitätsprüfung — wird einzeln daraufhin geprüft, o
 das Ergebnis wird im Text benannt. Max-Flow ist monoton; der Weg dorthin ist es an zwei Stellen
 nicht.
 
-## AC. Autorschaft, Werkzeug und Schreibautorität
+## AH. Autorschaft, Werkzeug und Schreibautorität
 
 ### D119 — `02 §6.2` bekommt einen Leser
 
@@ -3662,3 +3662,231 @@ Sicht zieht. D119 mildert es: abgelaufene Vouches fallen gegen die lokale Uhr we
 **Zur Reihenfolge:** D62 (`00a-rotate-key`, `resolve_current_key`) wird damit zur Voraussetzung
 des ersten echten Nukleus und nicht zur Nacharbeit. Ein zweiter Ort ist eine Rotation, und der
 Fall tritt beim ersten Gerätewechsel ein.
+
+> **Nachgezogen durch D124.** Der letzte Satz trägt nicht. `00 §6` regelt ausschließlich die
+> Nukleus-Autorität; für einen Menschen gibt es keine Rotation, die die Identität erhält. Der
+> Gerätewechsel ist **Migration von Seed und Spitze** und damit D120s Fall — dieselbe Aussage, die
+> D120 unter „Wiederherstellung ist Migration, nicht Vervielfältigung" bereits trifft. `00a` bleibt
+> fällig, aber nicht aus diesem Grund und nicht zu diesem Zeitpunkt.
+
+---
+
+## AI. Rotation: was sie erhält und was sie kostet
+
+Ausgelöst durch die Frage, was Schritt 1 der Anwendungssitzung (`00a-rotate-key`) eigentlich
+lösen soll. Die Antwort war, dass er zwei verschiedene Dinge löst und das dringendere davon
+nirgends spezifiziert ist. Vorgeschaltet: eine Literaturprüfung, weil das Problem außerhalb von
+MaR seit einem Jahrzehnt bearbeitet wird.
+
+### D124 — Persönliche Rotation ist nicht identitätserhaltend
+
+**Die Frage.** Alice wechselt den Schlüssel. Bleibt sie dieselbe Identity?
+
+**Der Befund.** `00 §6` regelt ausschließlich die **Nukleus**-Autorität. Kettenanker ist
+`genesis.root_keys`, `I` ist der aktuell autorisierte Nukleusschlüssel, `N` der Scope. Ein Mensch
+hat kein Genesis-Objekt, also ist `R_1 ist gültig ⟺ R_1.I ∈ genesis.root_keys` für ihn nicht
+auswertbar. D123s Satz „die Milderung für längere Trennung ist Migration der Kette (D62)" hat beim
+Transfer vom Nukleus auf die Person seinen Anker verloren — Begründungsprüfung, dieselbe Klasse
+wie D77, D83, D87, D91.
+
+**Beschluss: nein.** Ein neuer Schlüssel ist eine neue Identity. Der alte Schlüssel darf als
+letzten Akt seiner Kette einen Nachfolger benennen; diese Aussage ist ein gewöhnlicher Claim,
+bedeutungsblind wie jeder andere. `02` folgt ihr **nicht**, `03` kennt sie nicht. Trust wird durch
+Neu-Bürgen wiederhergestellt.
+
+**Begründung.** Identitätserhaltende Rotation verlangt, dass zwei Leser nicht verschiedene
+Rotationsgeschichten sehen. Das ist Nichtequivokation über eine gemeinsame Historie, also ein
+globales Log. **Es ist D123, auf den Leser angewandt:** dort verlangten zwei gleichzeitige
+Schreiber eine Einigung darüber, wer die Spitze fortschreibt; hier verlangen zwei konkurrierende
+Rotationen eine Einigung darüber, welche gilt. Derselbe Satz, andere Seite.
+
+**Belege aus der Literatur.** Jedes System, das die Identität über die Rotation rettet, bezahlt
+mit globaler Ordnung:
+
+| System | Bauform | Preis |
+|---|---|---|
+| did:plc (AT Protocol) | Genesis-Objekt, dessen Hash der Identifikator ist; Operationen per Hash verkettet | zentrales Verzeichnis, Streit über ein 72-Stunden-Fenster gelöst |
+| Keybase | Sigchain je Konto, Vorgängerhash, alte Links bleiben nach Widerruf gültig | öffentlicher Merkle-Baum plus Verankerung in einer Fremdkette gegen Rollback |
+| CONIKS / Key Transparency | signierte, verkettete Verzeichnis-Snapshots | Auditoren oder Gossip; rückwirkend, schützt den isolierten Leser nicht |
+| Nostr | Pubkey **ist** Identität, kein Verzeichnis — MaRs Randbedingungen | NIP-41 nennt sich selbst bestmöglich und nicht garantiert; Rückdatierung offen; Fenster zählen ab dem lokalen Sehen |
+| Secure Scuttlebutt | ein Feed je Gerät, weil zwei Schreiber einen Feed nicht teilen können | Fusion IDs verbinden Feeds **oberhalb** des Protokolls |
+
+Die erste Spalte von did:plc ist bemerkenswert: es ist strukturell MaRs Nukleus. Das zeigt, dass
+die Bauform nicht das Problem ist — die Zustellgarantie ist es. Und SSB ist unabhängig auf D123
+gekommen und hat es außerhalb des Feed-Begriffs beantwortet.
+
+**Verworfen — Auflösung bei jedem `I` und `J`** (did:plc-Form für Personen: `I` wäre ein
+Genesis-Hash statt eines Pubkeys). Knüpft Offline-Prüfung an eine Nachschlage-Vorbedingung —
+wörtlich das Argument, mit dem `01 §2` den 16-Byte-Truncation-Hash verworfen hat. Ändert außerdem
+die Feldsemantik von Layer 01: Protokollversion 2, kein Layer.
+
+**Verworfen — Widerspruchsfenster** (Nostr NIP-41). Zählt ab dem lokalen Sehen und nicht ab dem
+Zeitstempel, weil ohne Ordnung nichts anderes möglich ist. MaR hat über `h_prev` eine Ordnung **je
+Autor**, aber keine zwischen Autoren; ein Fenster wäre eine Wall-Clock-Regel gegen `01 §5.3`.
+
+**Einordnung nach `08 §3`.** Die Nachfolgeaussage senkt keine Kosten — sie ist bereits
+feststellbar, weil signiert und verkettet — und verteilt keine Macht. **Werkzeug.** Kein Layer,
+keine Golden Anchors, keine Zahl im Dateinamen. Das ist die dritte Spalte, dieselbe wie beim
+Wallet in D122.
+
+**Getragene Grenze.** Wer den Schlüssel verliert, verliert seinen Trust-Score und baut ihn sozial
+neu auf. Das ist der Preis für „alles lokal, nie global" und wird bewusst getragen. Sollte eine
+spätere Fassung ihn senken wollen, ist die Stelle benannt: sie braucht eine Zustellgarantie, die
+`01` heute ausdrücklich nicht gibt.
+
+**Nicht betroffen: der Gerätewechsel.** Er ist Migration von Seed und Spitze an einen anderen Ort
+(D120), keine Rotation. Ein Schreiber, eine Kette, keine neue Identity, kein
+Protokollmechanismus. Rotation braucht es nur bei Kompromittierung oder Verlust.
+
+### D125 — Rotation gilt erst mit Gegenzeichnung des Nachfolgers
+
+**Geltung.** Die Nukleus-Rotation nach `00 §6.1` — nach D124 die einzige, die es gibt.
+
+**Bisher genügt eine Signatur von `K_{n-1}`.** Das lässt drei Fälle offen: die einseitige
+Einsetzung eines Dritten, den Rotate auf einen Schlüssel, dessen Halter nichts davon weiß, und
+den zweiten Rotate an anderer Stelle derselben Kette.
+
+**Beschluss.** Eine Rotation ist **vollständig**, wenn `K_n` sie gegenzeichnet — ein Claim in
+`K_n`s eigener Kette, der die `claim_id` des Rotate-Claims nennt. Eine unvollständige Rotation ist
+wirkungslos: kein Zustand, kein eigener Vermerk, sie zählt nicht. Der **erste vollständige** Rotate
+bindet.
+
+**Begründung.** TUF verlangt für neue Root-Metadaten einen Schwellenwert an Signaturen aus dem
+**alten und dem neuen** Schlüsselsatz. Dieselbe Form, mit Schwelle eins. Sie kommt ohne Uhr und
+ohne globale Ordnung aus: beide Signaturen sind selbstenthalten, das Paar reist zusammen. Sie
+erledigt außerdem drei offene Forks auf einmal und erzeugt damit **weniger** Spec als ihre
+Alternative.
+
+**Verworfen — letzter gewinnt.** Ein Altschlüssel bliebe dauerhaft mächtig; ein Diebstahl wäre
+nie ausheilbar.
+
+**Verworfen — einseitig mit Widerspruchsfenster.** Uhr, wie in D124.
+
+**`00 §6.3` bleibt unberührt.** Signiert `K_{n-1}` zwei Nachfolger auf dieselbe `h_prev`, ist das
+Equivocation und bleibt es, auch wenn beide gegenzeichnen. Auflösung weiterhin über §6.2.
+
+**`00 §6.2` bleibt unberührt.** Ist `K_{n-1}` verloren, kann niemand gegenzeichnen — dafür ist der
+Governance-Pfad da.
+
+**Parallelenprüfung.** Die Regel steht auch in `00 §6.5`: im FROST-Pfad zeichnet der **neue**
+Gruppenschlüssel gegen. Ohne diesen Satz nähme `key_mode = 1` sich still aus.
+
+**Getragene Grenze.** Ein Rotate auf einen Schlüssel, dessen Halter nicht mitwirkt, wirkt nicht.
+Das ist die Absicht.
+
+**Offen bis `00a`.** Das Prädikat der Gegenzeichnung ist benannt, nicht kodiert. Kein Testvektor
+bis dahin.
+
+### D126 — `key_mode` unterscheidet die Signaturform, nicht die Kardinalität
+
+**Widerspruch auf `main`, innerhalb von vier Zeilen.** `00 §7` schreibt die Regel als
+`akt.I ∈ resolve_current_key(akt.N)` — Mengenzugehörigkeit, für jede Mächtigkeit definiert — und
+setzt darunter „für `key_mode = 0`: genau ein Schlüssel". Der Beispiel-Nukleus aus `00 §3.1` führt
+`root_keys = [BRUNO, ANNA]` bei `key_mode = 0` und folgt damit der Formel, nicht der Prosa. Der
+Fall ist keine Randlage, sondern der Zustand unmittelbar nach der Gründung.
+
+**Beschluss: die Formel gilt, der Satz fällt.** `key_mode` wählt zwischen gewöhnlicher
+Ed25519-Signatur und FROST-Gruppensignatur; in beiden Fällen trägt der Akt genau **eine**
+Signatur. Bei mehreren autorisierten Schlüsseln genügt einer.
+
+**Bestätigt durch die Literatur.** Weder TUF noch did:plc verwechseln Signaturform mit
+Kardinalität: beide führen **mehrere** Schlüssel je Rolle, TUF mit einer Schwelle, did:plc mit
+einer nach Autorität sortierten Liste.
+
+**Nicht entschieden: die Schwelle.** Ob ein Nukleus statt „einer genügt" ein `k`-von-`n` verlangen
+können soll, bleibt offen. Es wäre ein Verfassungsknopf nach `00 §4`, kein Protokolldefault, und
+es ist der Punkt, an dem `root_keys` von einer Liste zu einer Rolle würde.
+
+**Zur Fehlerform.** Zwei Durchgänge über `00` haben den Widerspruch nicht gesehen, weil Formel und
+Prosa je für sich richtig aussehen und erst am gerechneten Beispiel auseinanderlaufen — dieselbe
+Fehlerform wie D116, dort über einen Epochenwechsel, hier über eine Mächtigkeit größer eins.
+
+### D127 — Der Rückhalt, nicht die Kette
+
+D120 legt die Absturzordnung fest, sagt aber nicht, wo sie im Code sitzt. Die Frage stellte sich
+beim Zählen: **die Kettenfortführung existiert dreimal.**
+
+| Ort | Bestand |
+|---|---|
+| `tools/example_nucleus.py` | `_Author.claim`, `_h_prev = id_genesis_anchor(pub)` |
+| `tests/helpers.py` | `Identity._append`, dieselben acht Argumente an `build_signed`, gleiche Zuweisung |
+| `tools/sim/welt.py` | `Teilnehmer.claim_signieren`, `h_prev` als Hexdatei |
+
+D122 hat **Bau und Signatur** ins Paket gezogen — `build_signed` — und die **Fortführung** an allen
+drei Stellen gelassen. Die Oberflächen sind bereits auseinander: `helpers.py` trägt vier Helfer,
+`_Author` einen. Und `welt.py` trägt D120s Defekt wörtlich: signieren, einlegen, Spitze schreiben,
+ohne Redo, ohne `fsync`, ohne atomaren Rename. Harmlos nur, weil `Welt.anlegen` bei jedem Lauf
+`rmtree` ruft.
+
+**Beschluss 1 — die Naht liegt unter der Kettenfortführung.** Eine Fortführung, zwei Rückhalte
+(Speicher, Dateien), ein Testsatz über beide. Der Rückhalt kennt fünf Operationen ohne
+Protokollsemantik: Spitze lesen, Spitze schreiben, Redo lesen, Redo schreiben, Redo schließen. Er
+rechnet **nie** `h_prev`.
+
+Damit ist der Einwand aus `03-prompt` — „zwei Implementierungen von Kettenfortführung und Signatur
+driften" — erfüllt statt umgangen: was doppelt ist, kann über `h_prev` nicht uneins werden, weil es
+`h_prev` nicht kennt. Die Literatur gibt dazu die schärfere Fassung: ein Test-Double hält sich
+nicht notwendig an den Vertrag der Sache, die es ersetzt, und veraltet unbemerkt, wenn die echte
+Implementierung sich ändert. Die dort gezogene Konsequenz ist nicht Verzicht, sondern **ein
+Testsatz über beide** — und Treue wird am Vertrag gemessen, nicht an der Implementierung.
+
+**Beschluss 2 — der Redo-Eintrag trägt die signierten Claim-Bytes.** Abweichung vom Wortlaut
+„Core-Redo-Eintrag" in D120, mit Begründung: die Signatur ist eine deterministische reine Funktion
+der Core-Bytes (RFC 8032), und bei atomarem Schreiben ist „Core schreiben, dann signieren"
+genauso sicher wie „signieren, dann Bytes schreiben" — die Absturzordnung, um die es D120 geht,
+betrifft die **Spitze**. Der Gewinn: die Wiederaufnahme benutzt `claim_from_bytes` und braucht
+**keinen zweiten Dekodierweg für Core-Bytes**, den es heute nicht gibt. Einen zweiten Kodierweg zu
+vermeiden war der Zweck von D122; ihn beim Wiederanlauf einzuführen wäre derselbe Fehler mit
+umgekehrtem Vorzeichen. Nebenertrag: `t` bleibt beim Fortsetzen zwingend unverändert, weil es aus
+den Bytes kommt und nicht neu gesetzt werden **kann** — die Idempotenz hängt daran, und eine
+Eigenschaft, die nicht verletzt werden kann, braucht keinen Test, der sie prüft.
+
+**Beschluss 3 — Redo vor Spitze.** Die Prüfreihenfolge ist normativ. D120 zählt fünf Ausgänge auf;
+der Zustand hat aber drei unabhängige Bits (Spitze gesetzt, Redo offen, Claim der Spitze bekannt),
+und die Lage „Spitze leer, Redo offen" fehlt. Prüfte man die Spitze zuerst, führe sie in Ausgang 1
+und baute einen **zweiten Genesis-Claim** mit neuem `t` — Selbst-Equivocation, genau der Fehler,
+den D120 verhindern soll. Die Reihenfolge beseitigt die Lage, statt einen sechsten Ausgang zu
+brauchen.
+
+**Beschluss 4 — `claim_id` ist die Hochwassermarke.** D120 ist strukturell ein Redo-only-Log mit
+idempotenter Wiederholung, also ARIES' „Repeating History". ARIES erkauft die Idempotenz über den
+Vergleich der `pageLSN` mit der LSN des Log-Eintrags: ein zusätzliches Feld, eine zusätzliche
+Invariante. MaR bekommt sie geschenkt, weil der Claim inhaltsadressiert ist — die Wiederaufnahme
+fragt den Store, ob er die rekonstruierte `claim_id` kennt. **Kein „erledigt"-Flag, kein
+zusätzlicher Zustand.** Daraus folgt, dass Ausgang 3 keine Fallunterscheidung braucht, wo der
+Absturz lag: die Folge ab „aussenden" ist durchgehend idempotent, und die Wiederaufnahme ist
+schlicht ihre Fortsetzung von vorn.
+
+**Der Fork-Schalter.** `welt.py` trägt `kette_fortschreiben: bool = True`, damit die Simulation
+absichtlich equivozieren kann. Die Fähigkeit bleibt nötig, das Flag nicht: der gefährlichste
+Zustand der Kette darf kein Default-Argument an der gewöhnlichen Operation sein. Er wird eine
+eigene, anders benannte Operation, und sie entsteht mit dem Umzug von `welt.py`, nicht vorher.
+
+**Vertagt: Ausgang 5** (zwei eigene Claims auf dieselbe Spitze). Er ist keine Eigenschaft des
+Spitzenzustands, sondern eine Abfrage über den Store, und die dafür nötige Schnittstelle
+(`index.py`) ist ungeprüft. Schwerer wiegt: ein doppelt eingespielter Sicherungsblob erzeugt den
+Fork in **zwei getrennten Stores**, von denen keiner beide Zweige sieht. Der Ausgang ist damit
+durch eine Startprüfung gar nicht erreichbar, sondern erst bei der Vereinigung — was ihn zu einer
+Frage an den Einlesepfad (D121) macht und nicht an die Spitze.
+
+**Getragene Grenze: die Persistenzeigenschaften.** Der Datei-Rückhalt setzt drei Eigenschaften
+voraus — atomares `os.replace`, `fsync` der Datei vor dem Rename, `fsync` des Verzeichnisses
+danach. Sie werden im Modul benannt und sind **nicht geprüft**. Die Literatur ist an dieser Stelle
+unangenehm eindeutig: ALICE (OSDI '14) fand 60 Crash-Vulnerabilities in elf ausgereiften
+Anwendungen — darunter Git, SQLite, PostgreSQL, ZooKeeper —, weil die Persistenzeigenschaften
+zwischen sechs verbreiteten Linux-Dateisystemen weit auseinandergehen; insbesondere garantiert ein
+`fsync` auf eine Datei nicht, dass ihr Verzeichniseintrag persistiert ist, und ext3 im
+Ordered-Mode persistiert in Reihenfolge und erzeugt damit eine falsche Sicherheit. Ohne
+ALICE-Klasse-Werkzeug ist die Annahme argumentierbar, nicht prüfbar. Sie wird benannt statt
+behauptet.
+
+**Was dagegen prüfbar ist: die Zustandsmaschine.** Die Absturzpunkte liegen in der **Reihenfolge
+der Operationen**, nicht im Rückhalt. Ein Rückhalt, der beim k-ten Schreibvorgang wirft,
+aufgezählt über alle k, prüft sie erschöpfend — im Speicher, deterministisch, ohne Dateisystem.
+`signieren` schreibt viermal (Redo, Aussenden, Spitze, Redo-Schluss), also fünf Läufe je Vektor
+einschließlich des ungestörten. Der ungestörte Lauf ist die Referenz für alle anderen: **zwei
+Läufe, eine Variable**, und deshalb braucht dieser Lauf **keinen neuen Golden Anchor**.
+
+**Schnitt.** Zwei Läufe. Der erste baut `tools/autor.py` und rührt nichts an; der zweite zieht die
+drei Stellen um und prüft gegen „426 grün, alle Anker byteweise unverändert". Neubau und Umzug
+gemischt hieße, am Ende nicht zu wissen, welche der beiden Änderungen einen Anker bewegt hat.

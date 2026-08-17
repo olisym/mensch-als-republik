@@ -286,6 +286,27 @@ R_n ist gültig  ⟺  R_n.I == (der von R_{n-1} benannte K_{n-1})
 Die Nachfolge ist damit eine Kette über **Autorschaft**: jeder Schlüssel benennt genau seinen
 Nachfolger. Ordnung kommt aus dieser Kette, **nie** aus Wall-Clock `t` (Atom-Spec §5.3).
 
+**Gegenzeichnung (D125).** Ein `rotate-key@1` allein wirkt nicht. Eine Rotation ist
+**vollständig**, wenn `K_n` sie gegenzeichnet — ein Claim in `K_n`s **eigener** Kette, der die
+`claim_id` des Rotate-Claims nennt. Eine unvollständige Rotation ist wirkungslos: kein Zustand,
+kein eigener Vermerk, sie zählt nicht. Es bindet der **erste vollständige** Rotate.
+
+```
+R_n wirkt  ⟺  R_n ist nach der Kettenregel gültig
+              UND es existiert ein Claim C mit C.I == (der von R_n benannte K_n)
+                  und C verweist auf claim_id(R_n)
+```
+
+Beide Signaturen sind selbstenthalten und reisen zusammen; die Regel braucht **weder Uhr noch
+globale Ordnung**. Sie schließt drei Fälle, die die Kettenregel offen ließ: die einseitige
+Einsetzung eines Dritten, den Rotate auf einen Schlüssel, dessen Halter nichts davon weiß, und den
+Vertipper. Ein Altschlüssel bekommt die Kette dadurch nicht zurück — wirkt der erste vollständige
+Rotate, ist `K_{n-1}` nicht mehr autorisiert, und ein späterer Rotate von ihm ist kein Akt eines
+autorisierten Schlüssels mehr.
+
+Das Prädikat der Gegenzeichnung ist hier **benannt, aber nicht kodiert**; die Belegung fällt mit
+`00a` und trägt bis dahin keinen Testvektor.
+
 ### 6.2 Notfallpfad — Governance-Rotation
 
 Ist `K_{n-1}` **verloren** (kann keinen `rotate-key` mehr signieren) oder die Kette **umstritten**
@@ -319,8 +340,27 @@ Governance-Loop (Gov-Spec §2).
     ihn auf → Autorität ist UNAUFGELÖST; Nukleus-Akte ab dem Fork gelten als nicht
     autorisiert, bis Auflösung vorliegt (Detect-not-Prevent, Atom-Spec §A3).
 ```
-Der Rückgabewert ist der/die aktuell autorisierte(n) Schlüssel. Jeder Verifizierer rechnet das
+Der Rückgabewert ist die Menge der aktuell autorisierten Schlüssel. Jeder Verifizierer rechnet das
 lokal über seinen bekannten Claim-Teilgraphen (Partitionstoleranz wie Trust-Flow-Spec §7).
+
+**Zustand vor `00a`.** Solange `resolve_current_key` nicht gebaut ist, gilt
+`resolve_current_key(N) = genesis.root_keys`, und ein vorgefundenes `rotate-key@1` wird **nicht**
+ausgewertet. Rotation ist bis dahin nicht verfügbar. Der zweite Halbsatz ist die eigentliche Regel:
+ohne ihn führte ein Leser eine ihm vorliegende Rotation still nicht nach und vertraute weiter dem
+alten Schlüssel — die unsichere Richtung. Als benannte Grenze ist der Fall tragbar, als Schweigen
+wäre er eine Lücke.
+
+**Zwei Punkte in Schritt 2 und 3 sind offen und fallen mit `00a`:**
+
+- **„Längste" ist unterbestimmt.** Ist die Kette nicht equivoziert, benennt jeder Schlüssel genau
+  einen Nachfolger und es gibt nichts zu maximieren. Mehrere Kandidaten entstehen nur bei
+  Teilwissen (Lücke in der Mitte) oder bei `|root_keys| > 1`, also mehreren parallelen Ketten. Für
+  den zweiten Fall ist auch ungeklärt, ob eine Rotation die Menge verkleinern oder Ketten
+  verschmelzen darf.
+- **Der Effektivpunkt ist nicht rechenbar.** „≥ dem aktuellen Kettenende" vergleicht eine
+  Governance-Größe mit einer Position in einer Autorenkette. Über `t` ist das nach Atom-Spec §5.3
+  verboten. Der uhrfreie Weg ist, die Governance-Rotation den ersetzten Schlüssel bzw. die ersetzte
+  `claim_id` **explizit** nennen zu lassen; entschieden ist er nicht.
 
 ### 6.5 FROST-Re-Keying
 
@@ -329,6 +369,10 @@ neuer Gruppenschlüssel ⇒ derselbe `rotate-key@1`: der **alte** Gruppenschlüs
 FROST) die Rotation auf den **neuen**. Scheitert die Schwellen-Signatur (zu viele Mitglieder weg),
 greift der Notfallpfad §6.2. **`N` bleibt in allen Fällen fix** — das war die Kernanforderung, an
 der Variante A (Pubkey = Scope) gescheitert wäre.
+
+**Die Gegenzeichnung aus §6.1 gilt hier unverändert:** der **neue** Gruppenschlüssel zeichnet die
+Rotation gegen. Ohne diesen Satz nähme `key_mode = 1` sich still von D125 aus, und die Bauform der
+Rotation wäre in den zwei Modi verschieden.
 
 ---
 
@@ -341,9 +385,14 @@ der Variante A (Pubkey = Scope) gescheitert wäre.
 akt.I ∈ resolve_current_key(akt.N)
 ```
 
-- Für `key_mode = 0`: genau ein Schlüssel.
-- Für `key_mode = 1`: der Akt trägt **eine** FROST-Gruppensignatur unter dem aktuellen
-  Gruppenschlüssel.
+- `∈` ist Mengenzugehörigkeit und für jede Mächtigkeit definiert. **`key_mode` unterscheidet die
+  Signaturform, nicht die Zahl der autorisierten Schlüssel.** Für `key_mode = 0` ist das eine
+  gewöhnliche Ed25519-Signatur, für `key_mode = 1` eine FROST-Gruppensignatur unter dem aktuellen
+  Gruppenschlüssel; in beiden Fällen trägt der Akt **eine** Signatur.
+- **Bei mehreren autorisierten Schlüsseln genügt einer.** `root_keys` ist eine Liste — der
+  Beispiel-Nukleus in §3.1 hat zwei —, und jeder von ihnen darf allein handeln. Ob ein Nukleus
+  stattdessen eine Schwelle verlangen können soll, ist **nicht entschieden** und wäre ein
+  Verfassungsknopf nach §4, kein Protokolldefault.
 - `akt.N` MUSS gesetzt sein und zum aufgelösten Scope passen (Atom-Spec §2.2, Bindungsregel).
 
 Das ist die konkrete Code-Konsequenz von DF-0: die heutige Prüfung `atom.I == scope` in
