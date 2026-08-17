@@ -3962,3 +3962,51 @@ bestehende Prüfung liefe.
 vier Befunde, von denen die letzten beiden — die Ausnahmeklasse und die Erholung — erst sichtbar
 wurden, nachdem der Halt existierte. Das ist die gewöhnliche Reihenfolge: ein Mechanismus wirft
 seine eigenen Fragen erst auf, wenn er da ist.
+
+## AJ. Der absichtliche Fork
+
+### D129 — `gabeln` fasst den dauerhaften Zustand nicht an
+
+Die Zählung aus D127 war zu niedrig. Die Kettenfortführung existiert **fünfmal**:
+`tools/example_nucleus.py`, `tests/helpers.py`, `tools/sim/welt.py` und zusätzlich
+`tests/property/welten.py` (`_Signer`, Zeilen 64–91) — dazu seit dem Autorlauf `tools/autor.py`
+als die einzige richtige. Zwei der vier alten erzeugen absichtlich Forks: `welt.py` über
+`kette_fortschreiben` und `welten.py` über denselben Namen, gesteuert von `twin`.
+
+D127 hatte entschieden, dass das Flag aus der Signieroberfläche verschwindet — der gefährlichste
+Zustand der Kette darf kein Default-Argument sein. Die Ersatzoperation heißt **`gabeln`**.
+
+**Beschluss: `gabeln` signiert und sendet aus, schreibt aber weder Redo noch Spitze.**
+
+Der Punkt ist nicht offensichtlich und trägt die Entscheidung allein: Schriebe `gabeln` einen
+Redo-Eintrag, machte ein späteres `wiederaufnehmen` den absichtlichen Fork zur **echten Spitze** —
+der Zwilling würde zum Hauptzweig und der Hauptzweig zum Zwilling, und zwar still. Schriebe
+`gabeln` die Spitze, wäre es kein Fork, sondern ein gewöhnlicher Anhang.
+
+Es bleibt also nur, den dauerhaften Zustand gar nicht zu berühren. Das ist auch die richtige
+Aussage über die Sache: ein absichtlicher Fork ist etwas, das ein Autor **neben** seine Kette
+stellt, nicht etwas, das seine Kette tut. Die Wächter aus D128 gelten unverändert — `gabeln`
+verlangt ein vorheriges `wiederaufnehmen` und verweigert im Zustand `ANGEHALTEN`.
+
+**Das Szenario-Schema behält `kette_fortschreiben`.** `s5.json` führt das Feld viermal,
+`szenario.py` liest es, und `sim-abnahme.md` schreibt Namen und Voreinstellung fest. Der Konflikt
+mit D127 ist keiner: dort steht `false` ausdrücklich in einer Datendatei, von einem Autor, der
+genau das will. Die Grenze liegt zwischen **Datei und Aufrufkonvention** — ein Szenarioautor, der
+`false` schreibt, hat es getippt; ein Programmierer, der ein Argument wegläßt, hätte es nicht.
+`szenario.py` verzweigt auf zwei benannte Operationen, statt ein Bool durchzureichen.
+
+**Die vier alten Klassen bleiben als Oberflächen.** `Identity`, `_Author`, `_Signer` und
+`Teilnehmer` behalten ihre Signaturen; damit ändert sich in den 26 Testdateien, die sie benutzen,
+keine Zeile. Sie hören nur auf, Implementierungen zu sein. Der Zähler `_t` in `_Signer` bleibt bei
+ihm: er ist eine Eigenschaft des Weltgenerators und nicht der Kette, und `t` bleibt Parameter von
+`signieren`.
+
+**Das Abnahmekriterium wird abgeleitet, nicht aufgezählt** (Lehre aus D122): nach dem Umzug findet
+`grep -rn "_h_prev" tools/ tests/` nichts außerhalb von `tools/autor.py`, und keine der vier
+Dateien importiert noch `build_signed` oder `id_genesis_anchor`. Eine Liste erlaubter Fundstellen
+im Kriterium trüge dieselbe Schwäche wie die Sache, die sie prüft.
+
+**Nicht mitrepariert: B-4** (die Zwillingsbuchführung in `welten()` zieht kein Budget ab). Der
+Befund liegt in der Buchführung des Generators, nicht in der Kettenfortführung, und ist vom Umzug
+unabhängig. Ihn mitzunehmen hieße, bei einer Ankerabweichung nicht zu wissen, welche der beiden
+Änderungen sie bewegt hat.
