@@ -221,11 +221,21 @@ class Autor:
             N=N,
             t_exp=t_exp,
         )
-        self._rueckhalt.redo_schreiben(signed_bytes(signed))
-        self._ausgang.aufnehmen(signed)
-        cid = claim_id(signed)
-        self._rueckhalt.spitze_schreiben(cid)
-        self._h_prev = cid
-        self._rueckhalt.redo_schliessen()
+        schritt = "Redo schreiben"
+        try:
+            self._rueckhalt.redo_schreiben(signed_bytes(signed))
+            schritt = "Aussenden"
+            self._ausgang.aufnehmen(signed)
+            cid = claim_id(signed)
+            schritt = "Spitze schreiben"
+            self._rueckhalt.spitze_schreiben(cid)
+            self._h_prev = cid
+            schritt = "Redo schließen"
+            self._rueckhalt.redo_schliessen()
+        except Exception:
+            self._zustand = Kettenzustand.ANGEHALTEN
+            self._h_prev = None
+            self._grund = schritt
+            raise
         self._zustand = Kettenzustand.NORMAL
         return signed

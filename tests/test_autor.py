@@ -128,6 +128,27 @@ def test_fremder_redo_haelt_an(
     assert w.grund is not None
     w2 = autor.wiederaufnehmen()
     assert w2.zustand is Kettenzustand.ANGEHALTEN
+    ausgang.aufnehmen(fremd)
+    assert autor.wiederaufnehmen().zustand is Kettenzustand.ANGEHALTEN
+
+
+def test_ausgang_4_heilt_wenn_claim_nachgeliefert(
+    rueckhalt: Rueckhalt, ausgang: StoreAusgang
+) -> None:
+    autor = Autor(SEED, rueckhalt, ausgang)
+    autor.wiederaufnehmen()
+    c1 = autor.signieren(p=P, J=J, t=1)
+    leer_store = InMemoryStore()
+    leer = StoreAusgang(leer_store)
+    neu = Autor(SEED, rueckhalt, leer)
+    w = neu.wiederaufnehmen()
+    assert w.zustand is Kettenzustand.ANGEHALTEN
+    leer.aufnehmen(c1)
+    w2 = neu.wiederaufnehmen()
+    assert w2.zustand is Kettenzustand.NORMAL
+    assert w2.h_prev == claim_id(c1)
+    c2 = neu.signieren(p=P, J=J, t=2)
+    assert c2.h_prev == claim_id(c1)
 
 
 def test_signieren_ohne_wiederaufnehmen(
@@ -284,9 +305,51 @@ def test_absturzaufzaehlung(
         assert folge.h_prev == w.h_prev
 
 
+@pytest.mark.parametrize("k", [1, 2, 3, 4], ids=["k1", "k2", "k3", "k4"])
+def test_abgefangene_ausnahme_haelt_dasselbe_objekt_an(
+    rueckhalt: Rueckhalt,
+    ausgang: StoreAusgang,
+    store: InMemoryStore,
+    k: int,
+) -> None:
+    autor = Autor(SEED, rueckhalt, ausgang)
+    autor.wiederaufnehmen()
+    autor.signieren(p=P, J=J, t=1)
+    autor.signieren(p=P, J=J, t=2)
+
+    zaehler = [0]
+    z_r = _ZaehlRueckhalt(rueckhalt, zaehler, k)
+    z_a = _ZaehlAusgang(ausgang, zaehler, k)
+    bruch = Autor(SEED, z_r, z_a)
+    bruch.wiederaufnehmen()
+    with pytest.raises(Bruch):
+        bruch.signieren(p=P, J=J, t=3)
+
+    ids_vorher = {claim_id(c) for c in store.all_claims()}
+    redo_vorher = rueckhalt.redo_lesen()
+    spitze_vorher = rueckhalt.spitze_lesen()
+    with pytest.raises(KetteAngehalten):
+        bruch.signieren(p=P, J=J, t=99)
+    assert {claim_id(c) for c in store.all_claims()} == ids_vorher
+    assert rueckhalt.redo_lesen() == redo_vorher
+    assert rueckhalt.spitze_lesen() == spitze_vorher
+
+    neu = Autor(SEED, rueckhalt, ausgang)
+    w = neu.wiederaufnehmen()
+    folge = neu.signieren(p=P, J=J, t=4)
+    assert folge.h_prev == w.h_prev
+    gesehen: set[bytes] = set()
+    for c in store.all_claims():
+        if c.I != neu.pub:
+            continue
+        assert c.h_prev not in gesehen
+        gesehen.add(c.h_prev)
+
+
 def test_oberflaeche_gibt_weder_seed_noch_schluessel_noch_spitze(
     rueckhalt: Rueckhalt, ausgang: StoreAusgang
 ) -> None:
+    """Die Prüfung ruht auf der Idempotenz von ``wiederaufnehmen``; die Spitze ist nur über ``Wiederaufnahme.h_prev`` sichtbar."""
     autor = Autor(SEED, rueckhalt, ausgang)
     w = autor.wiederaufnehmen()
     spitze = w.h_prev
