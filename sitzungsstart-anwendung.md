@@ -19,6 +19,8 @@ schreibst keinen Produktivcode.
   `hypothesis`. Kein `float`, kein `fractions` im Produktivcode. `now` ist immer Parameter.
 - Shell-Befehle als **ein** Copy-Block, fish, kein Heredoc, verbunden mit **`and`** und nicht mit
   `;` — eine rote Prüfung muss die Kette anhalten.
+- **Spec-Dateien werden als Download geliefert**, nicht als Copy-Block. Der Shell-Block setzt
+  voraus, dass die Datei bereits im Repo-Wurzelverzeichnis liegt.
 - **Bei neuen Dateien `git add` vor `make check`**, sonst danach. `check_tree.py` schlägt bei
   unversionierten Quelldateien fehl, und eine neue Datei ist zwangsläufig unversioniert.
 - `git add` mit expliziten Pfaden, nie `-A`. `git stash push` mit Pfad greift nur bei getrackten
@@ -36,7 +38,7 @@ Ein halber Anker hat in der letzten Sitzung einen normativen Satz gelöscht.
 
 ## Stand
 
-`main` = `951b904`. Register **D1–D123**. **426 Tests**, dazu **elf Eigenschaftstests** unter
+`main` = `38ea020`. Register **D1–D123**. **426 Tests**, dazu **elf Eigenschaftstests** unter
 `MAR_HYPOTHESIS=voll`. `make check` prüft Baum, Specs, Tests; `make check-all` zusätzlich
 `tests/property` unter dem vollen Profil — **zwei** pytest-Läufe, also zwei Endzeilen.
 
@@ -89,13 +91,13 @@ Neu aus der letzten Sitzung:
 falsch benannte Equivocation-Test, das zu grobe Prädikat, die Zwillingsbuchführung. Der
 Produktivcode war beide Läufe lang richtig.
 
-**Zwei Befunde lagen in Prüfungen, die ich selbst als Abnahmekriterium formuliert hatte.** Ein
+**Zwei Befunde lagen in Prüfungen, die Claude selbst als Abnahmekriterium formuliert hatte.** Ein
 Abnahmekriterium ist keine Prüfung, sondern ein Text, und Texte haben Lücken derselben Art wie
 Code.
 
-**Das Werkzeug hat viermal richtig gehandelt**, wo es hätte raten können: es hat den
-Grenzwert `t_exp = 5000` in `s6` erkannt und stehengelassen, vier weitere Erzeugerstellen
-gemeldet statt still ausgedehnt, und die Geschwisterformel korrekt auf fünf Helfer angewandt.
+**Das Werkzeug hat viermal richtig gehandelt**, wo es hätte raten können: es hat den Grenzwert
+`t_exp = 5000` in `s6` erkannt und stehengelassen, vier weitere Erzeugerstellen gemeldet statt
+still ausgedehnt, und die Geschwisterformel korrekt auf fünf Helfer angewandt.
 
 ## Offen
 
@@ -111,8 +113,10 @@ gemeldet statt still ausgedehnt, und die Geschwisterformel korrekt auf fünf Hel
 - **`02d-purpose`** (D56), **VR-04.1** (D26), **Zeugenquorum für Fristen** (D100).
 - **`04 §7.2` Föderation** nicht durchgerechnet.
 - **Ein dritter Scope nur für Schlichtung** — Fork, nicht entschieden.
-- **41 Branches**, mehrere mit stehengebliebenen `voraus`-Zählern gegen `origin`. Aufräumen,
-  bevor darin ein nicht gemergter übersehen wird.
+- **Aufräumen im Repo** — 41 Branches mit teils stehengebliebenen `voraus`-Zählern, und die
+  Prompt-Dateien im Wurzelverzeichnis. Vor dem Löschen: prüfen, welche Prompts von Code oder
+  Spec referenziert werden. `fuzz-prompt.md` ist es (Docstrings in `tests/property/`), und das
+  heißt, dass die Definition von P-1 bis P-6 heute nur in einem Prompt steht.
 
 ## Der nächste Schritt
 
