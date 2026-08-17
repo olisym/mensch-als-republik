@@ -3937,3 +3937,28 @@ den Absturz und nicht die abgefangene Ausnahme, obwohl beide durch denselben Cod
 Sie ist die Umkehrung der Lehre aus dem Autorschaftslauf: dort lagen vier von vier Befunden in
 Tests, hier liegt der Befund im Produktivcode und wurde durch die Frage gefunden, was der Test
 **nicht** tut.
+
+**Beschluss 4 — der Halt fängt `BaseException`, nicht `Exception`.** `KeyboardInterrupt` und
+`SystemExit` erben nicht von `Exception`. In einem bedienten Werkzeug ist Strg-C während des
+Signierens der wahrscheinlichste Abbruch überhaupt — wahrscheinlicher als der volle Datenträger,
+mit dem Beschluss 2 begründet wurde —, und eine Schleife, die `KeyboardInterrupt` fängt und
+weiterläuft, ist die übliche Bauform und keine exotische. Ohne die weite Klausel liefe genau
+dieser Fall am Halt vorbei und ließe `_zustand` auf `NORMAL` stehen.
+
+Die Klausel **schluckt nichts**: sie setzt den Zustand, räumt `_h_prev` und wirft mit nacktem
+`raise` unverändert weiter. Das ist die anerkannte Ausnahme von der Regel gegen weite
+`except`-Klauseln — die Regel selbst bleibt unangetastet, und für jede Klausel, die eine Ausnahme
+nicht weiterreicht, gilt sie fort. Nebenbei gedeckt: `asyncio.CancelledError`, seit Python 3.8
+ebenfalls `BaseException`.
+
+**Beschluss 5 — der Halt am Objekt ist über `wiederaufnehmen` verlassbar.** Hier berühren sich
+Beschluss 1 und 2: der Halt klebt am Objekt, aber die Ableitung liest den dauerhaften Zustand neu.
+Dasselbe Objekt nimmt die Kette also wieder auf, ohne weggeworfen werden zu müssen — das ist der
+vorgesehene Weg nach einem behandelten `OSError`. Der Satz braucht eine eigene Zusicherung, weil
+ein späterer Lauf, der den Halt „richtig klebrig" machte, die Erholung bräche und dabei durch jede
+bestehende Prüfung liefe.
+
+**Abgenommen** mit `impl/autor` (`8615889`), 468 Tests. Der Weg dorthin ging über drei Läufe und
+vier Befunde, von denen die letzten beiden — die Ausnahmeklasse und die Erholung — erst sichtbar
+wurden, nachdem der Halt existierte. Das ist die gewöhnliche Reihenfolge: ein Mechanismus wirft
+seine eigenen Fragen erst auf, wenn er da ist.
