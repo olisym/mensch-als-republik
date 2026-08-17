@@ -7,10 +7,8 @@ import hashlib
 import sys
 from dataclasses import dataclass
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
+from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance import (
     Epoch,
@@ -28,6 +26,7 @@ from mensch_als_republik.trust.findings import TrustFinding
 from mensch_als_republik.trust.graph import capacity
 from mensch_als_republik.trust.params import TrustParams
 from mensch_als_republik.verifier import InMemoryStore
+from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 
 NOW = 1000
 
@@ -92,9 +91,9 @@ class _Author:
     """Autorenkette; h_prev beginnt bei SHA-256(DOM_ID_GEN ‖ I) (01 §4, example-nucleus-prompt.md §7)."""
 
     def __init__(self, seed: bytes) -> None:
-        self._sk = Ed25519PrivateKey.from_private_bytes(seed)
-        self.pub = self._sk.public_key().public_bytes_raw()
-        self._h_prev = id_genesis_anchor(self.pub)
+        self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
+        self.pub = self._autor.pub
+        self._autor.wiederaufnehmen()
 
     def claim(
         self,
@@ -106,18 +105,7 @@ class _Author:
         N: bytes | None = None,
         t_exp: int | None = None,
     ) -> Claim:
-        signed = build_signed(
-            self._sk,
-            J=J,
-            p=p,
-            t=t,
-            h_prev=self._h_prev,
-            v=v,
-            N=N,
-            t_exp=t_exp,
-        )
-        self._h_prev = claim_id(signed)
-        return signed
+        return self._autor.signieren(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
 
     def vouch(
         self, subject: "_Author", *, n: int, scope: bytes, t: int, t_exp: int

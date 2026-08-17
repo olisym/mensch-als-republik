@@ -1,4 +1,4 @@
-"""Autorenkette: Vertrag über beide Rückhalte, Absturzaufzählung, Oberfläche (D120, D122, D127)."""
+"""Autorenkette: Vertrag über beide Rückhalte, Absturzaufzählung, Oberfläche (D120, D122, D127, D129)."""
 
 from __future__ import annotations
 
@@ -157,6 +157,58 @@ def test_signieren_ohne_wiederaufnehmen(
     autor = Autor(SEED, rueckhalt, ausgang)
     with pytest.raises(RuntimeError):
         autor.signieren(p=P, J=J, t=1)
+
+
+def test_gabeln_teilt_spitze_ohne_rueckhalt_zu_aendern(
+    rueckhalt: Rueckhalt, ausgang: StoreAusgang, store: InMemoryStore
+) -> None:
+    autor = Autor(SEED, rueckhalt, ausgang)
+    autor.wiederaufnehmen()
+    autor.signieren(p=P, J=J, t=1)
+    c2 = autor.signieren(p=P, J=J, t=2)
+    spitze = rueckhalt.spitze_lesen()
+    redo = rueckhalt.redo_lesen()
+    gegabelt = autor.gabeln(p=P, J=J, t=3)
+    assert rueckhalt.spitze_lesen() == spitze == claim_id(c2)
+    assert rueckhalt.redo_lesen() == redo
+    regulaer = autor.signieren(p=P, J=J, t=4)
+    assert gegabelt.h_prev == regulaer.h_prev == claim_id(c2)
+    assert store.get(claim_id(gegabelt)) is not None
+    assert store.get(claim_id(regulaer)) is not None
+
+
+def test_gabeln_laesst_wiederaufnahme_auf_regulaerer_spitze(
+    rueckhalt: Rueckhalt, ausgang: StoreAusgang
+) -> None:
+    autor = Autor(SEED, rueckhalt, ausgang)
+    autor.wiederaufnehmen()
+    autor.signieren(p=P, J=J, t=1)
+    autor.signieren(p=P, J=J, t=2)
+    gegabelt = autor.gabeln(p=P, J=J, t=3)
+    regulaer = autor.signieren(p=P, J=J, t=4)
+    neu = Autor(SEED, rueckhalt, ausgang)
+    w = neu.wiederaufnehmen()
+    assert w.h_prev == claim_id(regulaer)
+    assert w.h_prev != claim_id(gegabelt)
+
+
+def test_gabeln_waechter(
+    rueckhalt: Rueckhalt, ausgang: StoreAusgang
+) -> None:
+    roh = Autor(SEED, rueckhalt, ausgang)
+    with pytest.raises(RuntimeError):
+        roh.gabeln(p=P, J=J, t=1)
+
+    autor = Autor(SEED, rueckhalt, ausgang)
+    autor.wiederaufnehmen()
+    autor.signieren(p=P, J=J, t=1)
+    leer_store = InMemoryStore()
+    neu = Autor(SEED, rueckhalt, StoreAusgang(leer_store))
+    neu.wiederaufnehmen()
+    ids_vorher = {claim_id(c) for c in leer_store.all_claims()}
+    with pytest.raises(KetteAngehalten):
+        neu.gabeln(p=P, J=J, t=2)
+    assert {claim_id(c) for c in leer_store.all_claims()} == ids_vorher
 
 
 class Bruch(Exception):

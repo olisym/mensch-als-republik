@@ -1,4 +1,4 @@
-"""Autorenkette mit persistenter Spitze und Redo (D120, D122, D127).
+"""Autorenkette mit persistenter Spitze und Redo (D120, D122, D127, D129).
 
 DateiRueckhalt setzt drei Persistenzeigenschaften voraus und prüft sie nicht (D127):
 atomares ``os.replace``, ``fsync`` der Datei vor dem Rename, ``fsync`` des Verzeichnisses
@@ -149,7 +149,7 @@ class Wiederaufnahme:
 
 
 class Autor:
-    """Eine Autorenkette über Rückhalt und Ausgang (D120, D122, D127)."""
+    """Eine Autorenkette über Rückhalt und Ausgang (D120, D122, D127, D129)."""
 
     def __init__(self, seed: bytes, rueckhalt: Rueckhalt, ausgang: Ausgang) -> None:
         self._sk = Ed25519PrivateKey.from_private_bytes(seed)
@@ -238,4 +238,43 @@ class Autor:
             self._grund = schritt
             raise
         self._zustand = Kettenzustand.NORMAL
+        return signed
+
+    def gabeln(
+        self,
+        *,
+        p: str,
+        J: tuple[int, bytes],
+        t: int,
+        v: bytes | None = None,
+        N: bytes | None = None,
+        t_exp: int | None = None,
+    ) -> Claim:
+        """Signiert über die aktuelle Spitze und sendet aus, ohne Redo oder Spitze
+        zu schreiben und ohne ``_h_prev`` vorzurücken (D129).
+
+        Schriebe ``gabeln`` einen Redo, machte ein späteres ``wiederaufnehmen`` den
+        absichtlichen Fork zur echten Spitze — der Zwilling würde still zum
+        Hauptzweig. Schriebe es die Spitze, wäre es kein Fork.
+
+        Ein Abbruch in ``ausgang.aufnehmen`` ist folgenlos für die Kette, weil
+        ``gabeln`` den Rückhalt nicht berührt; ein ``try`` mit Halt wie in
+        ``signieren`` ist deshalb nicht nötig.
+        """
+        if self._zustand is None:
+            raise RuntimeError("gabeln ohne vorheriges wiederaufnehmen")
+        if self._zustand is Kettenzustand.ANGEHALTEN:
+            raise KetteAngehalten(self._grund)
+        assert self._h_prev is not None
+        signed = build_signed(
+            self._sk,
+            J=J,
+            p=p,
+            t=t,
+            h_prev=self._h_prev,
+            v=v,
+            N=N,
+            t_exp=t_exp,
+        )
+        self._ausgang.aufnehmen(signed)
         return signed
