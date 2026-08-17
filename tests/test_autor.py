@@ -163,11 +163,22 @@ class Bruch(Exception):
     """Absturz am k-ten Schreibvorgang (D127)."""
 
 
+class HarterBruch(BaseException):
+    """Absturz als BaseException (B-3)."""
+
+
 class _ZaehlRueckhalt:
-    def __init__(self, innen: Rueckhalt, zaehler: list[int], bei: int | None) -> None:
+    def __init__(
+        self,
+        innen: Rueckhalt,
+        zaehler: list[int],
+        bei: int | None,
+        art: type[BaseException] = Bruch,
+    ) -> None:
         self._innen = innen
         self._zaehler = zaehler
         self._bei = bei
+        self._art = art
 
     def spitze_lesen(self) -> bytes | None:
         return self._innen.spitze_lesen()
@@ -190,14 +201,21 @@ class _ZaehlRueckhalt:
     def _treffen(self) -> None:
         self._zaehler[0] += 1
         if self._bei is not None and self._zaehler[0] == self._bei:
-            raise Bruch()
+            raise self._art()
 
 
 class _ZaehlAusgang:
-    def __init__(self, innen: StoreAusgang, zaehler: list[int], bei: int | None) -> None:
+    def __init__(
+        self,
+        innen: StoreAusgang,
+        zaehler: list[int],
+        bei: int | None,
+        art: type[BaseException] = Bruch,
+    ) -> None:
         self._innen = innen
         self._zaehler = zaehler
         self._bei = bei
+        self._art = art
 
     def kennt(self, cid: bytes) -> bool:
         return self._innen.kennt(cid)
@@ -205,7 +223,7 @@ class _ZaehlAusgang:
     def aufnehmen(self, claim: Claim) -> None:
         self._zaehler[0] += 1
         if self._bei is not None and self._zaehler[0] == self._bei:
-            raise Bruch()
+            raise self._art()
         self._innen.aufnehmen(claim)
 
 
@@ -305,12 +323,14 @@ def test_absturzaufzaehlung(
         assert folge.h_prev == w.h_prev
 
 
+@pytest.mark.parametrize("art", [Bruch, HarterBruch], ids=["bruch", "harterbruch"])
 @pytest.mark.parametrize("k", [1, 2, 3, 4], ids=["k1", "k2", "k3", "k4"])
 def test_abgefangene_ausnahme_haelt_dasselbe_objekt_an(
     rueckhalt: Rueckhalt,
     ausgang: StoreAusgang,
     store: InMemoryStore,
     k: int,
+    art: type[BaseException],
 ) -> None:
     autor = Autor(SEED, rueckhalt, ausgang)
     autor.wiederaufnehmen()
@@ -318,11 +338,11 @@ def test_abgefangene_ausnahme_haelt_dasselbe_objekt_an(
     autor.signieren(p=P, J=J, t=2)
 
     zaehler = [0]
-    z_r = _ZaehlRueckhalt(rueckhalt, zaehler, k)
-    z_a = _ZaehlAusgang(ausgang, zaehler, k)
+    z_r = _ZaehlRueckhalt(rueckhalt, zaehler, k, art)
+    z_a = _ZaehlAusgang(ausgang, zaehler, k, art)
     bruch = Autor(SEED, z_r, z_a)
     bruch.wiederaufnehmen()
-    with pytest.raises(Bruch):
+    with pytest.raises(art):
         bruch.signieren(p=P, J=J, t=3)
 
     ids_vorher = {claim_id(c) for c in store.all_claims()}
@@ -334,13 +354,12 @@ def test_abgefangene_ausnahme_haelt_dasselbe_objekt_an(
     assert rueckhalt.redo_lesen() == redo_vorher
     assert rueckhalt.spitze_lesen() == spitze_vorher
 
-    neu = Autor(SEED, rueckhalt, ausgang)
-    w = neu.wiederaufnehmen()
-    folge = neu.signieren(p=P, J=J, t=4)
+    w = bruch.wiederaufnehmen()
+    folge = bruch.signieren(p=P, J=J, t=4)
     assert folge.h_prev == w.h_prev
     gesehen: set[bytes] = set()
     for c in store.all_claims():
-        if c.I != neu.pub:
+        if c.I != bruch.pub:
             continue
         assert c.h_prev not in gesehen
         gesehen.add(c.h_prev)
@@ -349,7 +368,9 @@ def test_abgefangene_ausnahme_haelt_dasselbe_objekt_an(
 def test_oberflaeche_gibt_weder_seed_noch_schluessel_noch_spitze(
     rueckhalt: Rueckhalt, ausgang: StoreAusgang
 ) -> None:
-    """Die Prüfung ruht auf der Idempotenz von ``wiederaufnehmen``; die Spitze ist nur über ``Wiederaufnahme.h_prev`` sichtbar."""
+    """Die Prüfung ruht auf der Idempotenz von ``wiederaufnehmen``; die Spitze
+    ist nur über ``Wiederaufnahme.h_prev`` sichtbar.
+    """
     autor = Autor(SEED, rueckhalt, ausgang)
     w = autor.wiederaufnehmen()
     spitze = w.h_prev

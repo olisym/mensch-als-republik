@@ -232,7 +232,7 @@ class Autor:
             self._h_prev = cid
             schritt = "Redo schließen"
             self._rueckhalt.redo_schliessen()
-        except Exception:
+        except BaseException:  # B-3: KeyboardInterrupt erbt von BaseException, nicht Exception
             self._zustand = Kettenzustand.ANGEHALTEN
             self._h_prev = None
             self._grund = schritt
