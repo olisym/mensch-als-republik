@@ -1,5 +1,6 @@
 """Tests für Claim-Atom Kernfunktionen."""
 
+import inspect
 import json
 from pathlib import Path
 
@@ -129,6 +130,15 @@ CLAIM_FIELDS = {
 
 def test_claim_dataclass_fields_are_exactly_these():
     assert set(Claim.__dataclass_fields__) == CLAIM_FIELDS
+
+
+def test_build_signed_parameters_match_claim_fields():
+    # version ist fest
+    # I wird aus sk abgeleitet
+    # sigma entsteht beim Signieren
+    felder = set(Claim.__dataclass_fields__) - {"version", "I", "sigma"}
+    params = set(inspect.signature(build_signed).parameters) - {"sk"}
+    assert felder == params
 
 
 def test_build_signed_sets_every_field_when_all_optionals_given():

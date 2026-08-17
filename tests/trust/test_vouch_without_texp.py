@@ -89,7 +89,7 @@ def test_no_vouch_without_texp_on_unparsable_v() -> None:
     assert not any(f.kind == TrustFinding.VOUCH_WITHOUT_TEXP for f in r.findings)
 
 
-def test_no_vouch_without_texp_outside_budget_set() -> None:
+def test_no_vouch_without_texp_on_flagged_author() -> None:
     scope = scope_id("vouch-no-texp-outside")
     a1 = Identity("out-A")
     a2 = Identity("out-A")
@@ -105,3 +105,16 @@ def test_no_vouch_without_texp_outside_budget_set() -> None:
         store.all_claims(), classifications, scope, PARAMS.D, NOW
     )
     assert not any(f.kind == TrustFinding.VOUCH_WITHOUT_TEXP for f in findings)
+
+
+def test_no_vouch_without_texp_on_expired_vouch() -> None:
+    scope = scope_id("vouch-expired-texp")
+    alice, bob = Identity("exp-A"), Identity("exp-B")
+    claim = alice.vouch(bob, n=1, scope=scope, t=1, t_exp=NOW - 1)
+    store = store_with(claim)
+    classifications = classify_all(store, NOW)
+    groups, findings = build_groups(
+        store.all_claims(), classifications, scope, PARAMS.D, NOW
+    )
+    assert not any(f.kind == TrustFinding.VOUCH_WITHOUT_TEXP for f in findings)
+    assert groups == {}

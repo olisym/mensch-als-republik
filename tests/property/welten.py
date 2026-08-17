@@ -26,6 +26,19 @@ GOV_POLICY = NucleusPolicy(
 # Seeds 0x11… aus example-nucleus.md §2, fortgesetzt für bis zu sechs Identitäten.
 _SEEDS = tuple(bytes([0x11 + i] * 32) for i in range(6))
 
+# t_exp je Vouch, Gewichtung 4 : 4 : 1 — abwesend : künftig : vergangen.
+_T_EXP_LAGEN = (
+    "abwesend",
+    "abwesend",
+    "abwesend",
+    "abwesend",
+    "künftig",
+    "künftig",
+    "künftig",
+    "künftig",
+    "vergangen",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class Welt:
@@ -125,6 +138,7 @@ def welten(
     gamma = draw(st.sampled_from(((1, 2), (2, 3))))
     params = TrustParams(C0=c0, gamma_num=gamma[0], gamma_den=gamma[1], D=d_budget)
 
+    now = 1000
     n_vouches = draw(st.integers(min_value=0, max_value=12))
     remaining = {i: d_budget for i in range(n_ids)}
     vouches: list[Claim] = []
@@ -139,6 +153,14 @@ def welten(
             n = draw(st.integers(min_value=1, max_value=d_budget))
         else:
             n = draw(st.integers(min_value=1, max_value=remaining[author_i]))
+        lage = draw(st.sampled_from(_T_EXP_LAGEN))
+        if lage == "abwesend":
+            t_exp: int | None = None
+        elif lage == "künftig":
+            t_exp = draw(st.integers(min_value=now + 1, max_value=now + 10_000))
+        else:
+            t_exp = draw(st.integers(min_value=1, max_value=now - 1))
+        if not erlaube_ueberzeichnung and (t_exp is None or t_exp >= now):
             remaining[author_i] -= n
         twin = erlaube_equivocation and draw(st.booleans())
         first = signers[author_i].claim(
@@ -146,6 +168,7 @@ def welten(
             J=(1, pubs[subject_i]),
             v=_vouch_v(n),
             N=EX.N_res,
+            t_exp=t_exp,
             kette_fortschreiben=not twin,
         )
         vouches.append(first)
@@ -153,12 +176,20 @@ def welten(
             n2 = n - 1 if n > 1 else min(d_budget, n + 1)
             if n2 == n:
                 n2 = 1 if n != 1 else 2
+            lage2 = draw(st.sampled_from(_T_EXP_LAGEN))
+            if lage2 == "abwesend":
+                t_exp2: int | None = None
+            elif lage2 == "künftig":
+                t_exp2 = draw(st.integers(min_value=now + 1, max_value=now + 10_000))
+            else:
+                t_exp2 = draw(st.integers(min_value=1, max_value=now - 1))
             vouches.append(
                 signers[author_i].claim(
                     p=_nuc(EX.N_res, "vouch"),
                     J=(1, pubs[subject_i]),
                     v=_vouch_v(n2),
                     N=EX.N_res,
+                    t_exp=t_exp2,
                 )
             )
 
@@ -209,7 +240,7 @@ def welten(
         vouches=tuple(vouches),
         votes=tuple(votes),
         delivery=delivery,
-        now=1000,
+        now=now,
     )
 
 
