@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import hashlib
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
+from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.verifier import InMemoryStore
+from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 
 # Normative Seeds aus 00 §3.1 / 03-golden-anchors.md §3.1 — eine Definition (D88).
 SEED_ALICE = bytes([0x01] * 32)
@@ -26,10 +25,10 @@ class Identity:
     def __init__(self, label: str, *, seed: bytes | None = None) -> None:
         if seed is None:
             seed = hashlib.sha256(b"identity:" + label.encode()).digest()
-        self._sk = Ed25519PrivateKey.from_private_bytes(seed)
         self.label = label
-        self.pub = self._sk.public_key().public_bytes_raw()
-        self._h_prev = id_genesis_anchor(self.pub)
+        self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
+        self.pub = self._autor.pub
+        self._autor.wiederaufnehmen()
 
     def _append(
         self,
@@ -41,18 +40,7 @@ class Identity:
         N: bytes | None = None,
         t_exp: int | None = None,
     ) -> Claim:
-        signed = build_signed(
-            self._sk,
-            J=J,
-            p=p,
-            t=t,
-            h_prev=self._h_prev,
-            v=v,
-            N=N,
-            t_exp=t_exp,
-        )
-        self._h_prev = claim_id(signed)
-        return signed
+        return self._autor.signieren(J=J, p=p, t=t, v=v, N=N, t_exp=t_exp)
 
     def vouch(
         self,

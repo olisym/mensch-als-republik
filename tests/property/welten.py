@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from hypothesis import strategies as st
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, build_signed, claim_id, id_genesis_anchor
+from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.governance import decide
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy
@@ -16,6 +15,7 @@ from mensch_als_republik.trust.derive import derive
 from mensch_als_republik.trust.flow import trust
 from mensch_als_republik.trust.params import TrustParams
 from mensch_als_republik.verifier import InMemoryStore
+from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 from tools.example_nucleus import build
 
 EX = build()
@@ -61,9 +61,9 @@ class _Signer:
     """Autorenkette; ``kette_fortschreiben=False`` hält ``h_prev`` (fuzz-prompt.md §7)."""
 
     def __init__(self, seed: bytes) -> None:
-        self._sk = Ed25519PrivateKey.from_private_bytes(seed)
-        self.pub = self._sk.public_key().public_bytes_raw()
-        self._h_prev = id_genesis_anchor(self.pub)
+        self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
+        self.pub = self._autor.pub
+        self._autor.wiederaufnehmen()
         self._t = 0
 
     def claim(
@@ -77,19 +77,11 @@ class _Signer:
         kette_fortschreiben: bool = True,
     ) -> Claim:
         self._t += 1
-        signed = build_signed(
-            self._sk,
-            J=J,
-            p=p,
-            t=self._t,
-            h_prev=self._h_prev,
-            v=v,
-            N=N,
-            t_exp=t_exp,
-        )
         if kette_fortschreiben:
-            self._h_prev = claim_id(signed)
-        return signed
+            return self._autor.signieren(
+                p=p, J=J, t=self._t, v=v, N=N, t_exp=t_exp
+            )
+        return self._autor.gabeln(p=p, J=J, t=self._t, v=v, N=N, t_exp=t_exp)
 
 
 def speicher(*claims: Claim) -> InMemoryStore:
