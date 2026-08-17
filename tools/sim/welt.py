@@ -6,17 +6,9 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
-from mensch_als_republik.atom import (
-    Claim,
-    build_signed,
-    claim_from_bytes,
-    claim_id,
-    id_genesis_anchor,
-    signed_bytes,
-)
+from mensch_als_republik.atom import Claim, claim_from_bytes, claim_id, signed_bytes
 from mensch_als_republik.verifier import InMemoryStore
+from tools.autor import Autor, DateiRueckhalt
 
 
 @dataclass
@@ -25,9 +17,8 @@ class Teilnehmer:
 
     name: str
     path: Path
-    seed: bytes
-    _sk: Ed25519PrivateKey = field(repr=False)
-    pub: bytes = field(repr=False)
+    pub: bytes = field(repr=False, init=False)
+    _autor: Autor = field(repr=False, init=False)
 
     @classmethod
     def anlegen(cls, root: Path, name: str, seed: bytes, now: int) -> Teilnehmer:
@@ -36,23 +27,23 @@ class Teilnehmer:
         inbox.mkdir(parents=True, exist_ok=True)
         (path / "key.bin").write_bytes(seed)
         (path / "now").write_text(str(now), encoding="ascii")
-        sk = Ed25519PrivateKey.from_private_bytes(seed)
-        pub = sk.public_key().public_bytes_raw()
-        h_prev = id_genesis_anchor(pub)
-        (path / "h_prev").write_text(h_prev.hex(), encoding="ascii")
-        return cls(name=name, path=path, seed=seed, _sk=sk, pub=pub)
+        tp = cls(name=name, path=path)
+        tp._autor = Autor(seed, DateiRueckhalt(path), tp)
+        tp.pub = tp._autor.pub
+        tp._autor.wiederaufnehmen()
+        return tp
+
+    def kennt(self, cid: bytes) -> bool:
+        return self.hat_claim(cid)
+
+    def aufnehmen(self, claim: Claim) -> None:
+        self.claim_einlegen(claim)
 
     def read_now(self) -> int:
         return int((self.path / "now").read_text(encoding="ascii").strip())
 
     def write_now(self, now: int) -> None:
         (self.path / "now").write_text(str(now), encoding="ascii")
-
-    def read_h_prev(self) -> bytes:
-        return bytes.fromhex((self.path / "h_prev").read_text(encoding="ascii").strip())
-
-    def write_h_prev(self, h_prev: bytes) -> None:
-        (self.path / "h_prev").write_text(h_prev.hex(), encoding="ascii")
 
     def inbox_path(self, cid: bytes) -> Path:
         return self.path / "inbox" / f"{cid.hex()}.cbor"
@@ -73,23 +64,20 @@ class Teilnehmer:
         v: bytes | None = None,
         N: bytes | None = None,
         t_exp: int | None = None,
-        kette_fortschreiben: bool = True,
     ) -> Claim:
-        h_prev = self.read_h_prev()
-        signed = build_signed(
-            self._sk,
-            J=J,
-            p=p,
-            t=t,
-            h_prev=h_prev,
-            v=v,
-            N=N,
-            t_exp=t_exp,
-        )
-        self.claim_einlegen(signed)
-        if kette_fortschreiben:
-            self.write_h_prev(claim_id(signed))
-        return signed
+        return self._autor.signieren(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
+
+    def claim_gabeln(
+        self,
+        *,
+        p: str,
+        J: tuple[int, bytes],
+        t: int,
+        v: bytes | None = None,
+        N: bytes | None = None,
+        t_exp: int | None = None,
+    ) -> Claim:
+        return self._autor.gabeln(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
 
     def store_laden(self) -> InMemoryStore:
         store = InMemoryStore()

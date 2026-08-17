@@ -88,7 +88,7 @@ def _nuc(scope: bytes, name: str) -> str:
 
 
 class _Author:
-    """Autorenkette; h_prev beginnt bei SHA-256(DOM_ID_GEN ‖ I) (01 §4, example-nucleus-prompt.md §7)."""
+    """Autorenkette über ``Autor`` (01 §4, example-nucleus-prompt.md §7)."""
 
     def __init__(self, seed: bytes) -> None:
         self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
