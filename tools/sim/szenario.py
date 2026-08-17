@@ -179,9 +179,10 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
     p = _nuc(scope, {"accept-rules": "accept-rules", "vote": "vote", "propose": "propose",
                      "ratify": "ratify", "vouch": "vouch"}[praedikat])
 
-    claim = autor.claim_signieren(
-        p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp, kette_fortschreiben=kette_fortschreiben,
-    )
+    if kette_fortschreiben:
+        claim = autor.claim_signieren(p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp)
+    else:
+        claim = autor.claim_gabeln(p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp)
     if label := step.get("label"):
         ctx.labels[label] = claim
 

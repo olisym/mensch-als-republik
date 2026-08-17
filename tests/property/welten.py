@@ -58,7 +58,7 @@ class Welt:
 
 
 class _Signer:
-    """Autorenkette; ``kette_fortschreiben=False`` hält ``h_prev`` (fuzz-prompt.md §7)."""
+    """Autorenkette; ``kette_fortschreiben=False`` ruft ``gabeln`` (fuzz-prompt.md §7)."""
 
     def __init__(self, seed: bytes) -> None:
         self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
