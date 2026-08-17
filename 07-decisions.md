@@ -3890,3 +3890,50 @@ Läufe, eine Variable**, und deshalb braucht dieser Lauf **keinen neuen Golden A
 **Schnitt.** Zwei Läufe. Der erste baut `tools/autor.py` und rührt nichts an; der zweite zieht die
 drei Stellen um und prüft gegen „426 grün, alle Anker byteweise unverändert". Neubau und Umzug
 gemischt hieße, am Ende nicht zu wissen, welche der beiden Änderungen einen Anker bewegt hat.
+
+### D128 — Der Halt ist eine Ableitung, und eine abgefangene Ausnahme ist ein Absturz mit Zeugen
+
+Zwei Befunde aus der Abnahme des Autorlaufs, die dieselbe Wurzel haben: D120 beschreibt den
+**Absturz**, und ein Absturz ist der einzige Fall, in dem das schreibende Objekt danach nicht mehr
+existiert.
+
+**Beschluss 1 — der Halt klebt am Objekt, nicht am Rückhalt.** `wiederaufnehmen` leitet den
+Zustand bei jedem Aufruf aus Rückhalt und Ausgang neu ab; ein Halt aus Ausgang 4 heilt, sobald der
+fehlende Claim nachgeliefert ist. Begründung: Ausgang 4 sagt „der Ausgang kennt die Spitze nicht",
+und das ist eine Aussage über den Ausgang und nicht über die Kette. Ein klebriger Halt verlangte
+einen Eingriff, wo keiner nötig ist, und wäre eine zweite Wahrheit neben dem Rückhalt — dieselbe
+Linie wie D61: keine abgeleitete Größe wird zusätzlich gespeichert.
+
+Der fremde Redo bleibt dagegen angehalten, solange er offen ist. Das ist keine Ausnahme von der
+Regel, sondern dieselbe Ableitung über eine Lage, die sich nicht von selbst ändert. Der Prompt
+hatte „nach `ANGEHALTEN` bleibt jeder weitere Aufruf `ANGEHALTEN`" verlangt; das war zu grob und
+wird hier zurückgenommen.
+
+**Beschluss 2 — innerhalb eines Objekts klebt der Halt sehr wohl.** Bricht in `signieren` ein
+Schreibvorgang mit einer Ausnahme ab und **fängt der Aufrufer sie**, ist der Zustand des Objekts
+derselbe wie nach einem Absturz — nur läuft der Prozess weiter. Ohne Halt baut der nächste Aufruf
+einen zweiten Claim auf dasselbe `h_prev`: Selbst-Equivocation, beweisbar und dauerhaft, also
+genau der Fehler, gegen den das Modul existiert.
+
+Das ist keine Randlage. `DateiRueckhalt` wirft `OSError` bei vollem Datenträger, bei `EACCES`, bei
+einer schreibgeschützt neu eingehängten Partition. Das sind Lagen der Welt, und ein Prozess, der
+sie behandeln will, ist danach in einem Zustand, den D120 als „anhalten" führt.
+
+**Beschluss 3 — der Halt gilt einheitlich für alle vier Schreibvorgänge**, auch für den letzten.
+Bricht `redo_schliessen` ab, ist die Lage sachlich unbedenklich: der Claim ist ausgesandt, die
+Spitze steht. Der Halt kostet dort ein `wiederaufnehmen` und nichts sonst, weil die Wiederaufnahme
+idempotent ist. Eine Fallunterscheidung nach Schritt wäre teurer zu lesen als der Gewinn — und
+jede Fallunterscheidung an dieser Stelle wäre eine Behauptung darüber, was der abgebrochene
+Schritt bereits bewirkt hat, die das Objekt nicht prüfen kann.
+
+**Zur Fehlerform — neue Prüfregel.** Die Absturzaufzählung konnte den Befund strukturell nicht
+sehen: **jeder** ihrer Läufe baut nach dem Bruch einen frischen `Autor`. Der Injektor modellierte
+den Absturz und nicht die abgefangene Ausnahme, obwohl beide durch denselben Code laufen.
+
+> **Prüfregel 13 — Neustart als Annahme.** Modelliert ein Test einen Neustart, wird gefragt, ob
+> dieselbe Ursache auch **ohne** Neustart eintreten kann. Wenn ja, ist der Weiterlauf ein eigener
+> Vektor und keine Variante.
+
+Sie ist die Umkehrung der Lehre aus dem Autorschaftslauf: dort lagen vier von vier Befunden in
+Tests, hier liegt der Befund im Produktivcode und wurde durch die Frage gefunden, was der Test
+**nicht** tut.
