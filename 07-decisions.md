@@ -4445,6 +4445,8 @@ die hier gebraucht wird, und genau sie ist eingetreten und war unsichtbar. Ein s
 die Suche gegen einen Vektor tauscht, löscht die Aussage und hält es für Aufräumen. Dieser Absatz
 steht hier, damit er es nicht tut.
 
+**Der gemessene Preis, und was er wirklich ist.** Nach der Umstellung steht `make check` bei 16,46 s gegen 10,09 s zur Prompt-Grundlinie und gegen 6,44 s zum warmen Arbeitsstand. Die zweite Zahl ist die ehrliche: `find` spielt nicht mehr aus `.hypothesis/` ab, und die alte Laufzeit war ein Cache-Preis, kein Rechenpreis. Die Kosten sind nicht gestiegen, sie sind zum ersten Mal sichtbar. Dieser Absatz steht hier, damit der Satz "D137 hat den Testlauf verlangsamt" nicht in einem Jahr als Argument gegen D137 wiederkommt.
+
 **Verworfen: `.hypothesis/` einchecken.** Es macht den Cache zur Grundlage statt ihn zu
 entwerten — dieselbe Abhängigkeit, nur committet.
 
