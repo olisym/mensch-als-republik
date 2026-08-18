@@ -6,8 +6,8 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from mensch_als_republik.atom import Claim, claim_from_bytes, claim_id, signed_bytes
-from mensch_als_republik.verifier import InMemoryStore
+from mensch_als_republik.atom import Claim, claim_id, signed_bytes
+from mensch_als_republik.verifier import InMemoryStore, read_claim
 from tools.autor import Autor, DateiRueckhalt
 
 
@@ -49,7 +49,12 @@ class Teilnehmer:
         return self.path / "inbox" / f"{cid.hex()}.cbor"
 
     def hat_claim(self, cid: bytes) -> bool:
-        return self.inbox_path(cid).is_file()
+        """Wahr genau dann, wenn Datei existiert, read_claim einen Claim liefert und claim_id == cid (D132, D138)."""
+        path = self.inbox_path(cid)
+        if not path.is_file():
+            return False
+        result = read_claim(path.read_bytes())
+        return isinstance(result, Claim) and claim_id(result) == cid
 
     def claim_einlegen(self, claim: Claim) -> None:
         cid = claim_id(claim)
@@ -80,10 +85,13 @@ class Teilnehmer:
         return self._autor.gabeln(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
 
     def store_laden(self) -> InMemoryStore:
+        """Inbox ueber read_claim ohne Store; ErrorCode wird uebersprungen (D131, D132, D138)."""
         store = InMemoryStore()
         inbox = self.path / "inbox"
         for path in sorted(inbox.glob("*.cbor")):
-            store.add(claim_from_bytes(path.read_bytes()))
+            result = read_claim(path.read_bytes())
+            if isinstance(result, Claim):
+                store.add(result)
         return store
 
 
