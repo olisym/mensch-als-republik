@@ -25,3 +25,8 @@ def test_non_canonical_rejected_by_reserialize():
     assert cbor_canon.reserialize(noncanonical) == cbor_canon.encode(
         cbor_canon.decode(noncanonical)
     )
+
+
+def test_is_canonical_throws_on_bv1():
+    with pytest.raises(Exception):
+        cbor_canon.is_canonical(bytes.fromhex("a100ff"))

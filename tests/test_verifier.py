@@ -7,7 +7,7 @@ import cbor2
 import pytest
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_from_bytes, claim_id, is_equivocation_pair
+from mensch_als_republik.atom import Claim, claim_from_bytes, claim_id, is_equivocation_pair
 from mensch_als_republik.errors import (
     BadScopeBinding,
     BadSignature,
@@ -26,6 +26,7 @@ from mensch_als_republik.verifier import (
     InMemoryStore,
     State,
     classify,
+    read_claim,
     structural_check,
 )
 
@@ -64,16 +65,65 @@ def test_nv1_invalid_genesis_anchor_not_pending():
     assert exc.value.code == ErrorCode.INVALID_GENESIS_ANCHOR
 
 
-def test_nv2_non_canonical_encoding():
+def _nv2_wire() -> bytes:
     nv2 = _vec("NV2")
     # Nicht-kanonischer Core + σ als Key 9 angehängt (ebenfalls nicht kanonisch sortiert)
     core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
     sigma = bytes.fromhex(_vec("TV1")["sigma"])
     obj = cbor2.loads(core_nc)
     obj[9] = sigma
-    wire_nc = cbor2.dumps(obj, canonical=False)
+    return cbor2.dumps(obj, canonical=False)
+
+
+def test_nv2_non_canonical_encoding():
     with pytest.raises(NonCanonicalEncoding):
-        structural_check(wire_nc)
+        structural_check(_nv2_wire())
+
+
+def test_nv2_non_canonical_encoding_read_claim():
+    assert read_claim(_nv2_wire()) == ErrorCode.NON_CANONICAL_ENCODING
+
+
+@pytest.mark.parametrize(
+    "name, exc",
+    [
+        ("BV1", MalformedCbor),
+        ("BV2", MalformedCbor),
+        ("BV3", NonCanonicalEncoding),
+    ],
+)
+def test_bv_structural_check(name: str, exc: type):
+    with pytest.raises(exc):
+        structural_check(bytes.fromhex(_vec(name)["wire_bytes"]))
+
+
+def _reject_vectors_with_wire() -> list[dict]:
+    out: list[dict] = []
+    for v in VECTORS["vectors"]:
+        if "expect_reject" not in v:
+            continue
+        if "wire_bytes" not in v and "signed_bytes" not in v:
+            continue
+        out.append(v)
+    return out
+
+
+@pytest.mark.parametrize(
+    "v",
+    _reject_vectors_with_wire(),
+    ids=lambda v: v["name"],
+)
+def test_read_claim_reject_vectors(v: dict):
+    hex_bytes = v["wire_bytes"] if "wire_bytes" in v else v["signed_bytes"]
+    assert read_claim(bytes.fromhex(hex_bytes)) == ErrorCode[v["expect_reject"]]
+
+
+def test_read_claim_tv1_matches_structural_check():
+    data = bytes.fromhex(_vec("TV1")["signed_bytes"])
+    checked = structural_check(data)
+    result = read_claim(data)
+    assert isinstance(result, Claim)
+    assert claim_id(result) == claim_id(checked)
 
 
 def test_nv2_reserializes_to_tv1_core():

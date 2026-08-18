@@ -17,6 +17,7 @@ from mensch_als_republik.atom import (
     id_genesis_anchor,
     sign,
     signed_bytes,
+    signed_map,
 )
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik import cbor_canon
@@ -58,6 +59,10 @@ P_ACCEPT = f"nuc:{N_HEX}/accept-rules@1"
 P_REVOKE = "core/revoke@1"
 
 V_VOUCH = bytes.fromhex("a1001864")
+
+# BV1, BV2 — Byte-Vektoren Anhang C.8 (kein Schlüsselmaterial)
+BV1_HEX = "a100ff"
+BV2_HEX = "bf616100ff"
 
 # NV2: nicht-kanonisches CBOR desselben TV1-Cores (Key-Reihenfolge 8,6,5,3,2,1,0,7,4)
 NV2_CORE_HEX = (
@@ -117,6 +122,17 @@ def build_vectors() -> dict:
     )
     tv1 = _finalize(tv1_unsigned, alice_sk)
     tv1_cid = claim_id(tv1)
+
+    # BV3 — TV1s signierte Map in indefinite-length-Form (Anhang C.8)
+    tv1_signed = signed_map(tv1)
+    bv3_wire = (
+        b"\xbf"
+        + b"".join(
+            cbor_canon.encode(k) + cbor_canon.encode(tv1_signed[k])
+            for k in sorted(tv1_signed)
+        )
+        + b"\xff"
+    )
 
     # TV2 — accept-rules Alice, verkettet auf TV1
     tv2_unsigned = Claim(
@@ -200,6 +216,21 @@ def build_vectors() -> dict:
                 "name": "NV2",
                 "core_bytes_noncanonical": nv2_core.hex(),
                 "reserializes_to": core_bytes(tv1).hex(),
+                "expect_reject": "NON_CANONICAL_ENCODING",
+            },
+            {
+                "name": "BV1",
+                "wire_bytes": BV1_HEX,
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "BV2",
+                "wire_bytes": BV2_HEX,
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "BV3",
+                "wire_bytes": bv3_wire.hex(),
                 "expect_reject": "NON_CANONICAL_ENCODING",
             },
         ],
