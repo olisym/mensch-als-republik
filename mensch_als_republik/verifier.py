@@ -154,8 +154,12 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
         if not isinstance(k, int):
             raise MalformedCbor()
 
-    # 2c: kanonische Kodierung (§3)
-    if not cbor_canon.is_canonical(data):
+    # 2c: kanonische Kodierung (§3, D130)
+    try:
+        canonical = cbor_canon.is_canonical(data)
+    except Exception as exc:
+        raise MalformedCbor() from exc
+    if not canonical:
         raise NonCanonicalEncoding()
 
     # 2d: Feldtypen
@@ -201,6 +205,14 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
         raise IncoherentExpiry()
 
     return claim
+
+
+def read_claim(data: bytes, store: ClaimStore | None = None) -> Claim | ErrorCode:
+    """Einlesepfad: liefert einen Claim oder einen Reject-Code, wirft nie (D131)."""
+    try:
+        return structural_check(data, store)
+    except VerifierError as exc:
+        return exc.code
 
 
 def _is_temporally_valid(claim: Claim, now: int | None) -> bool | None:
@@ -358,5 +370,6 @@ __all__ = [
     "UnsupportedVersion",
     "VerifierError",
     "classify",
+    "read_claim",
     "structural_check",
 ]
