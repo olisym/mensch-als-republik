@@ -89,7 +89,7 @@ def test_no_vouch_without_texp_on_unparsable_v() -> None:
     assert not any(f.kind == TrustFinding.VOUCH_WITHOUT_TEXP for f in r.findings)
 
 
-def test_no_vouch_without_texp_on_flagged_author() -> None:
+def test_vouch_without_texp_fires_on_flagged_author() -> None:
     scope = scope_id("vouch-no-texp-outside")
     a1 = Identity("out-A")
     a2 = Identity("out-A")
@@ -104,7 +104,13 @@ def test_no_vouch_without_texp_on_flagged_author() -> None:
     _groups, findings = build_groups(
         store.all_claims(), classifications, scope, PARAMS.D, NOW
     )
-    assert not any(f.kind == TrustFinding.VOUCH_WITHOUT_TEXP for f in findings)
+    expected = tuple(
+        sorted(
+            Finding(kind=TrustFinding.VOUCH_WITHOUT_TEXP, subject=claim_id(v))
+            for v in (v1, v2)
+        )
+    )
+    assert findings == expected
 
 
 def test_no_vouch_without_texp_on_expired_vouch() -> None:

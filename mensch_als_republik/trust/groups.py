@@ -12,7 +12,7 @@ from mensch_als_republik.verifier import Classification, State
 from .findings import Finding, TrustFinding
 
 BUDGET_STATES = frozenset(
-    {State.ACTIVE, State.REVOKED, State.SUPERSEDED, State.PENDING}
+    {State.ACTIVE, State.REVOKED, State.SUPERSEDED, State.PENDING, State.EQUIVOCATION_FLAGGED}
 )
 
 
@@ -61,7 +61,9 @@ def _is_scope_vouch(claim: Claim, scope: bytes) -> bool:
 
 
 def _in_budget_set(claim: Claim, classification: Classification, now: int) -> bool:
-    """state in {ACTIVE,REVOKED,SUPERSEDED,PENDING} UND nicht abgelaufen (02a §2.6).
+    """state in {ACTIVE,REVOKED,SUPERSEDED,PENDING,EQUIVOCATION_FLAGGED} UND nicht abgelaufen
+    (02a §2.6, D135). Equivocation ist kein Lebenszyklus-Akt; der Ueber-Commitment-Beweis
+    beruht auf Signaturen, nicht auf Aktivitaet.
 
     classify() aus Layer 01 prueft REVOKED/SUPERSEDED/PENDING *vor* der Ablauf-Prüfung
     (Prioritaet in der Zustandsmaschine) -- ein einmal widerrufener oder supersedierter
