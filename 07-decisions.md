@@ -4353,3 +4353,50 @@ Daraus die **Wirkungsprüfung**: bevor einem Befund eine Folge zugeschrieben wir
 Wert bis zu der Stelle verfolgt, die ihn verbraucht. Die Wirkung liegt nie dort, wo die Zahl
 entsteht. Der Beschluss selbst ist davon unberührt — vier normative Stellen gegen eine Aufzählung,
 und das Finding muss fallen.
+
+## AN. Ein Verweis auf gelöschten Text
+
+### D136 — Gelöschte Prompt-Dateien werden umgelenkt, nicht wiederhergestellt
+
+Achtzehn Docstring-Zitate in zwölf Quelldateien zeigen auf `fuzz-prompt.md` und `sim-prompt.md`.
+Beide Dateien sind gelöscht. `check_specs.py` führt sie nicht, kann sie also nicht prüfen — und
+nach Prüfregel 17 sind sie normativer Text, solange Code auf sie zeigt.
+
+**Ein Verweis auf gelöschten Text ist schlechter als kein Verweis.** Er sieht aus wie eine
+Verankerung und ist keine. Wer `welten.py` liest und `fuzz-prompt.md §2` nachschlagen will, findet
+nichts und muss raten, ob die Regel noch gilt, wo sie steht oder ob sie je bestand. Ein Docstring
+ohne Quellenangabe hätte ihn wenigstens nicht in die Irre geschickt.
+
+**Beschluss: die Zitate werden auf `werkzeuge.md` umgelenkt. Die gelöschten Dateien kehren nicht
+zurück.**
+
+Die Begründung ist, dass `werkzeuge.md` kein Ersatzdokument ist, sondern der Nachfolger mit
+demselben Inhalt in eigenen Paragraphen: `§4.1` der Generator, `§4.2` die sechs Eigenschaften
+`P-1` bis `P-6`, `§2.4` `gabeln` — dort ausdrücklich „für die Simulation (S5) und die
+Eigenschaftstests (P-3b) und für nichts sonst" —, `§3.1` bis `§3.3` die Simulation. Die Löschung
+war richtig; nur die Docstrings wurden nicht nachgezogen.
+
+**Verworfen: Wiederherstellung aus der Historie.** Sie brächte zwei Dateien zurück, die dasselbe
+sagen wie `werkzeuge.md`, und schüfe genau die Parallele, deren stilles Auseinanderdriften
+Prüfregel 8 fängt. Zwei Quellen für eine Aussage sind auf Dauer teurer als ein toter Verweis, weil
+der tote Verweis wenigstens beim Nachschlagen auffällt.
+
+**Die Tabelle ist normativ.**
+
+| Zitat im Code           | Ziel                |
+|-------------------------|---------------------|
+| `fuzz-prompt.md §2`     | `werkzeuge.md §4.1` |
+| `fuzz-prompt.md §3`     | `werkzeuge.md §4.2` |
+| `fuzz-prompt.md §7`     | `werkzeuge.md §2.4` |
+| `sim-prompt.md` (ohne §)| `werkzeuge.md §3`   |
+| `sim-prompt.md §2`      | `werkzeuge.md §3.1` |
+| `sim-prompt.md §3`      | `werkzeuge.md §3.2` |
+| `sim-prompt.md §6`      | `werkzeuge.md §3.3` |
+
+Beigefügte Zusätze bleiben, wie sie sind: `02 §7`, `01 §6`, `INV-04.3`, `P-1`. Sie zeigen auf
+lebende Dateien. Passt ein Zitat nicht in die Tabelle, wird es gemeldet und nicht geraten.
+
+**Stehende Prüfung daraus.** Vor der Löschung einer Prompt-Datei wird gegriffen, ob Code auf sie
+zeigt. Zeigt er, wird im selben Lauf umgelenkt. Eine Löschung, die Verweise hinterlässt, ist nicht
+abgeschlossen — und beide hier haben zwei Sitzungen überdauert, weil niemand die Frage gestellt
+hat.
