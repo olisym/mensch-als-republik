@@ -4245,9 +4245,33 @@ Gruppe abgelaufen sind. `welten()` prüft `t_exp` je Claim. Eine Gruppe bindet a
 ein Mitglied nicht abgelaufen ist — auch dann, wenn das nicht abgelaufene Mitglied der Zwilling
 ist.
 
-**Die Richtung des Fehlers erklärt seine Lebensdauer.** Zu wenig Budget heißt zu wenige Vouches,
-nie eine verletzte Invariante; `erlaube_ueberzeichnung = False` hält, was es verspricht. Der Preis
-ist Abdeckung, kein falsches Grün — deshalb ist es lange unsichtbar geblieben.
+**Ein dritter Symptompfad, und er kehrt die Richtung um (Nachtrag).** Die beiden Symptome oben
+teilen eine stillschweigende Annahme: dass der erste Claim einer Gruppe lebt. Trifft sie nicht zu,
+bucht der Erzeuger nichts ab — richtig, denn ein abgelaufener Claim ist nicht im Budget-Set — aber
+`lage2` wird unabhängig gezogen. Ist der Zwilling lebend, ist er das einzige Mitglied, das
+`_in_budget_set` passiert, und die Gruppe zahlt `n2`, während der Erzeuger null gebucht hat. Über
+mehrere Empfänger summiert sich das unbeschränkt: `Σ_J n_budget > D` ist bei
+`erlaube_ueberzeichnung = False` erreichbar, und `derive.py` Schritt 4 setzt
+`OVERCOMMITTED_AUTHOR`.
+
+**Der Satz, den das ersetzt**, lautete: zu wenig Budget heiße zu wenige Vouches, nie eine
+verletzte Invariante, `erlaube_ueberzeichnung = False` halte, was es verspreche. Er war aus der
+zweigliedrigen Aufzählung darüber abgeleitet und hat deren Geltungsbereich still verloren —
+dieselbe Form wie D77, D83, D87, D91, D130 und D135, und der Grund, warum Prüfregel 18 existiert.
+Die Wirkung lag wieder nicht dort, wo die Zahl entsteht (Prüfregel 16): verfolgt worden war der
+Zweig „der Erste lebt", nicht der andere.
+
+**Kein falsches Grün heute, und das ist kein Trost.** Die Kombination
+`erlaube_ueberzeichnung = False` mit `erlaube_equivocation = True` kommt einmal vor, in
+`test_p3b_finds_equivocation_passed_to_pending`, und dessen Prädikat liest ausschließlich den
+Auszählungszustand; Budget geht dort nirgends ein. Die Lücke ist heute folgenlos und wäre es ab
+dem ersten Test nicht mehr, der auf dieser Kombination eine Trust-Aussage trifft. Genau der ist
+der Zweck dieses Eintrags.
+
+**Die Buchführung wird deshalb über lebende Mitglieder formuliert, nicht über den ersten Claim.**
+`gruppe[(I, J)] = max n über die lebenden Mitglieder`, `verbraucht[I] = Σ_J gruppe[(I, J)]`,
+Schranke `verbraucht[I] ≤ D`. Ein abgelaufenes Mitglied trägt null, gleich an welcher Stelle es
+gezogen wurde. Der Preis der ersten beiden Symptome bleibt Abdeckung; der des dritten war es nie.
 
 **Warum es trotzdem fällig ist.** Eine Eigenschaft mit `erlaube_ueberzeichnung = False` **und**
 `erlaube_equivocation = True` ist heute nicht schreibbar: der Erzeuger kann nicht sagen, wie viel
