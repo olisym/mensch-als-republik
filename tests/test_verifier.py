@@ -118,6 +118,17 @@ def test_read_claim_reject_vectors(v: dict):
     assert read_claim(bytes.fromhex(hex_bytes)) == ErrorCode[v["expect_reject"]]
 
 
+def test_reject_vectors_without_wire_are_exactly_nv2():
+    excluded = {
+        v["name"]
+        for v in VECTORS["vectors"]
+        if "expect_reject" in v
+        and "wire_bytes" not in v
+        and "signed_bytes" not in v
+    }
+    assert excluded == {"NV2"}
+
+
 def test_read_claim_tv1_matches_structural_check():
     data = bytes.fromhex(_vec("TV1")["signed_bytes"])
     checked = structural_check(data)
@@ -130,6 +141,18 @@ def test_nv2_reserializes_to_tv1_core():
     nv2 = _vec("NV2")
     core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
     assert cbor_canon.reserialize(core_nc).hex() == nv2["reserializes_to"]
+
+
+def test_bv3_reserializes_to_tv1_signed():
+    bv3 = bytes.fromhex(_vec("BV3")["wire_bytes"])
+    tv1_signed = bytes.fromhex(_vec("TV1")["signed_bytes"])
+    assert cbor_canon.reserialize(bv3) == tv1_signed
+
+
+def test_bv3_is_one_byte_longer_than_tv1_signed():
+    bv3 = bytes.fromhex(_vec("BV3")["wire_bytes"])
+    tv1_signed = bytes.fromhex(_vec("TV1")["signed_bytes"])
+    assert len(bv3) == len(tv1_signed) + 1
 
 
 # --- Classification ---
