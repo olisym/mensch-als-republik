@@ -232,9 +232,20 @@ kanonischen Bytes. Ein Claim ist nach `01 §4` offline selbstenthalten und träg
 Verify-Key — die Simulation behandelt ihn deshalb wie einen Gegenstand, den man kopieren,
 verschicken oder ausdrucken kann.
 
-Der Teilnehmer **ist** der `Ausgang` seines Autors: die Inbox beantwortet `kennt` über die
-Dateiexistenz und `aufnehmen` über das Anlegen einer Datei. Ein zweiter Weg, der Claim-Dateien
-anlegt, darf nicht entstehen.
+Der Teilnehmer **ist** der `Ausgang` seines Autors: die Inbox beantwortet `kennt`, und `aufnehmen`
+legt eine Datei an. Ein zweiter Weg, der Claim-Dateien anlegt, darf nicht entstehen.
+
+**`kennt` antwortet aus dem Inhalt, nicht aus dem Dateinamen (D132, D138).** Der Name
+`<claim_id_hex>.cbor` lokalisiert die Datei; die Antwort verlangt darüber hinaus, dass `read_claim`
+auf ihren Bytes einen Claim liefert und dessen `claim_id` der gefragten gleicht. Der Grund liegt
+nicht in der Inbox, sondern bei ihrem Verbraucher: `kennt` ist der Port, den `wiederaufnehmen`
+befragt, um zu entscheiden, ob die gespeicherte Spitze vorliegt (§2.2). Ein falsches „kenne ich"
+aus einem Dateinamen ließe die Kette über einen Vorgänger fortschreiben, den niemand hält — ein
+Absender könnte sie stören, ohne eine Signatur zu fälschen.
+
+Ebenso lädt `store_laden` über `read_claim` und überspringt, was als Reject-Code zurückkommt. Der
+Store wird dabei nicht durchgereicht: er wäre während des Ladens halbfertig und bände
+`FOREIGN_LIFECYCLE` an die Sortierung der Dateinamen (D138).
 
 **Zustellung ist ein Befehl**, nie automatisch, und läuft **nicht** über den `Ausgang`: sie kopiert
 rohe Bytes, ohne zu dekodieren. Zustellung ist keine Autorschaft. Nichts synchronisiert von selbst.
