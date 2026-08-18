@@ -62,7 +62,7 @@ def test_p3a_finds_overcommit_violation() -> None:
     welt = find(
         welten(erlaube_ueberzeichnung=True, erlaube_equivocation=False),
         _p3a_verletzt,
-        settings=settings(),
+        settings=settings(max_examples=200, derandomize=True, deadline=None),
     )
     assert _p3a_verletzt(welt)
     assert len(welt.vouches) >= 2
@@ -101,7 +101,7 @@ def test_p3b_finds_equivocation_passed_to_pending() -> None:
     welt = find(
         welten(erlaube_ueberzeichnung=False, erlaube_equivocation=True),
         _p3b_verletzt,
-        settings=settings(),
+        settings=settings(max_examples=200, derandomize=True, deadline=None),
     )
     assert _p3b_verletzt(welt)
 

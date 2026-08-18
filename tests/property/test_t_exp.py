@@ -33,6 +33,6 @@ def test_finds_budget_exit_via_clock() -> None:
     welt = find(
         welten(),
         _austritt_ueber_uhr,
-        settings=settings(),
+        settings=settings(max_examples=200, derandomize=True, deadline=None),
     )
     assert _austritt_ueber_uhr(welt)
