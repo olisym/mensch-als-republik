@@ -4075,6 +4075,19 @@ Der trägt aber zwei Dinge: `_build_lifecycle_index`, `_find_revoking_claim` und
 Werfen bringt. Drei Aufrufer verlassen sich darauf, dass sie es tut. Die Zusicherung gehört dorthin,
 wo die Eigenschaft entsteht.
 
+**Mitbefund: `Anhang B.2` führte indefinite-length unter `MALFORMED_CBOR`.** Der Code sagt etwas
+anderes, und der Code hat recht. Eine indefinite-length-Kodierung, deren einziger Mangel die
+Längenform ist, dekodiert sauber, passiert die Schlüssel- und Feldtypprüfung und scheitert erst am
+Rundlauf — `NON_CANONICAL_ENCODING`. Das ist auch die richtige Aussage: es gibt eine kanonische
+Kodierung desselben Inhalts, und sie ist eine andere. Genau die Bedingung, an der dieser Eintrag
+die beiden Codes trennt. Unter `MALFORMED_CBOR` gehört die Längenform nur, wenn sie
+**unabgeschlossen** ist, und das deckt „nicht dekodierbar" ab. B.2 verliert das Stichwort und
+gewinnt „Nicht-uint-Schlüssel", das dort fehlte, obwohl §6 Punkt 2b es prüft.
+
+Belegt durch **BV3** (`Anhang C.8`): TV1s signierte Map in indefinite-length-Form, 310 statt 309
+Byte, re-serialisiert zu TV1s Bytes, `NON_CANONICAL_ENCODING`. Die drei Byte-Vektoren `BV1`–`BV3`
+sind zusammen mit diesem Eintrag entstanden und normativ.
+
 ### D131 — Der Einlesepfad fängt `VerifierError`; „wirft nie" wird zugesichert, nicht gefangen
 
 D121 verlangt eine Funktion, die nie wirft und entweder einen Claim oder einen Reject-Code liefert.

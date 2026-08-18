@@ -605,8 +605,8 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 | Code | Auslöser |
 |------|----------|
 | `UNSUPPORTED_VERSION` | `version` nicht unterstützt |
-| `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3) |
-| `MALFORMED_CBOR` | nicht dekodierbar / doppelte Keys / falscher Feldtyp / indefinite-length |
+| `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3); dazu zählt dekodierbare indefinite-length (BV3) |
+| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
 | `UNKNOWN_NAMESPACE` | Namensraum von `p` ist weder `core` noch `nuc:` (§2.2) |
 | `BAD_SCOPE_BINDING` | `nuc:…` ohne `N`, oder `N ≠ bytes.fromhex(scope)` bei kanonischer Kodierung (§2.2 R3) |
@@ -632,6 +632,11 @@ Alle Werte sind **reproduzierbar** aus festen Ed25519-Seeds und kanonischem CBOR
 verifiziert; `claim_id = SHA-256(DOM_CID ‖ bytes)`. Das Beispiel-Nukleus (`N`, Genesis,
 Verfassung) ist **schema-valide zu `00 §4/§5`** und **identisch** mit dem Worked-Example in
 `00-nucleus-genesis-constitution.md §3.1` — die gesamte Spec-Reihe teilt damit *einen* Anker.
+
+Davon ausgenommen ist die Gruppe der **Byte-Vektoren `BV1`–`BV3` (C.8)**: rohe Bytefolgen ohne
+Schlüsselmaterial, die kein gültiger Claim sein können. Sie sind nicht schema-valide und nicht
+aus Seeds gerechnet — sie legen fest, **welchen Code** eine Implementierung liefern muss, nicht
+über welchen Schritt sie dorthin gelangt.
 
 ### C.0 Gemeinsame Parameter
 
@@ -791,6 +796,72 @@ received == canonical            : false     → Reject
 reserialize(received) == canonical: true     → gleicher Core, nur nicht-kanonisch kodiert
 erwartet = Reject: NON_CANONICAL_ENCODING
 ```
+
+### C.8 BV1–BV3 — Byte-Vektoren (kein Schlüsselmaterial, keine Claims)
+
+Die drei Bytefolgen sind kein gültiger Claim und können keiner werden. Sie prüfen den
+**Fehlerkanal** des Verifizierers: welchen Code er liefert, unabhängig davon, an welchem Schritt
+seiner Prüfreihenfolge er ihn findet. Eine Implementierung mit anderer CBOR-Bibliothek erreicht
+denselben Reject möglicherweise früher oder später — der Code muss derselbe sein.
+
+#### BV1 — Break-Sentinel in Wertposition → `MALFORMED_CBOR`
+
+```
+           a100ff
+
+; Map {0: <break>}. Dekodiert; die Schlüsselprüfung (uint) passiert der Vektor,
+; weil das Sentinel im Wert steht. Die Re-Serialisierung kann den Wert nicht
+; kodieren und wirft.
+erwartet = Reject: MALFORMED_CBOR
+```
+
+Der Vektor gehört zu D130: der Rundlauf steht im selben `try` wie das Dekodieren, und was von dort
+kommt, ist unlesbar. Eine Implementierung, die den Rundlauf ungeschützt aufruft, liefert hier
+**keinen** Reject-Code, sondern einen Bibliotheksfehler — das ist der Defekt, den BV1 fängt.
+
+#### BV2 — indefinite-length **und** Nicht-uint-Schlüssel → `MALFORMED_CBOR`
+
+```
+           bf616100ff
+
+; Indefinite-length-Map {"a": 0}. Dekodiert, ist nicht kanonisch, und hat einen
+; text-Schlüssel.
+erwartet = Reject: MALFORMED_CBOR
+```
+
+Der Grund ist der **Schlüsseltyp**, nicht die Längenform. Der Vektor legt damit den Vorrang fest:
+eine Implementierung, die zuerst auf Kanonizität prüft, antwortet `NON_CANONICAL_ENCODING` und
+behauptet, es gebe eine kanonische Kodierung desselben Inhalts, die gültig wäre — die gibt es
+nicht, ein `str`-Schlüssel bleibt in jeder Kodierung ungültig. Die Prüfreihenfolge aus §6 (2b vor
+2c) ist normativ und dieser Vektor prüft sie.
+
+#### BV3 — indefinite-length als **einziger** Mangel → `NON_CANONICAL_ENCODING`
+
+Derselbe logische Inhalt wie TV1 — sortierte uint-Schlüssel, gültige Feldtypen, gute Signatur —
+allein die Längenform der äußeren Map ist indefinite.
+
+```
+           bf00010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3
+           748801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a
+           91b4ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364
+           61333066646130363164376335656630303262366238306534323638326364
+           353464373033616231336662366337643266353535372f766f756368403104
+           44a100186405582065309fe233da30fda061d7c5ef002b6b80e42682cd54d7
+           03ab13fb6c7d2f5557061a6553f100071a6774858008582062db0b05f44c17
+           e2dfe7f371d631845fdd5858dd94c37d327a28f73b25625430095840ef3b66
+           74898a1f037bdb58dc485926b4f0de01ef995d6cbf7d6387c4dd33679f63da
+           403f2f2d1c4bb39513484dee2c74387ec904bbab0aa22b8bdb376fb1c401ff
+
+dekodiert zu TV1.signed_map    : true
+received == canonical          : false    (310 Byte statt 309)
+reserialize(received) == TV1.signed_bytes : true
+erwartet = Reject: NON_CANONICAL_ENCODING
+```
+
+BV3 trennt, was `Anhang B.2` vor D130 zusammenwarf. Eine dekodierbare indefinite-length-Kodierung
+ist der Musterfall von `NON_CANONICAL_ENCODING`: es gibt eine kanonische Kodierung desselben
+Inhalts, und sie ist eine andere. Unter `MALFORMED_CBOR` fällt die Längenform nur, wenn sie
+**unabgeschlossen** ist — und das deckt „nicht dekodierbar" bereits ab.
 
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 
