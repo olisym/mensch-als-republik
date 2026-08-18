@@ -1,4 +1,4 @@
-"""P-5 — Die sichere Richtung der Auszählung (fuzz-prompt.md §3, INV-04.3).
+"""P-5 — Die sichere Richtung der Auszählung (werkzeuge.md §4.2, INV-04.3).
 
 Teilwissen erzeugt nie PASSED, wo Vollwissen es nicht tut.
 

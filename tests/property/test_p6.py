@@ -1,4 +1,4 @@
-"""P-6 — Zeitgrenze (fuzz-prompt.md §3, 01 §6).
+"""P-6 — Zeitgrenze (werkzeuge.md §4.2, 01 §6).
 
 Ein Claim ist zeitlich gültig gdw. ``now ≤ t_exp``. Über zufällige ``t_exp``
 und ``now`` beiderseits der Grenze, mit ``now = t_exp`` als ausdrücklich

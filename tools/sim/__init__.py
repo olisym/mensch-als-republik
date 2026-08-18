@@ -1,4 +1,4 @@
-"""Simulation mit getrennten Beobachter-Stores (sim-prompt.md)."""
+"""Simulation mit getrennten Beobachter-Stores (werkzeuge.md §3)."""
 
 from __future__ import annotations
 

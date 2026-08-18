@@ -1,4 +1,4 @@
-"""Szenariodatei lesen und ausführen (sim-prompt.md §3)."""
+"""Szenariodatei lesen und ausführen (werkzeuge.md §3.2)."""
 
 from __future__ import annotations
 

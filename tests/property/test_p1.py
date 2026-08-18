@@ -1,4 +1,4 @@
-"""P-1 — Reihenfolgeunabhängigkeit (fuzz-prompt.md §3).
+"""P-1 — Reihenfolgeunabhängigkeit (werkzeuge.md §4.2).
 
 Derselbe Claim-Bestand in beliebiger Einfügereihenfolge liefert byte-identische
 Ergebnisse. Ohne Vorbehalte. Spec: Ableitung ist eine Funktion der Menge, nicht

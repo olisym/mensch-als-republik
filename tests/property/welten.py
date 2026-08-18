@@ -1,4 +1,4 @@
-"""hypothesis-Strategien: Welten mit getrennten Beobachtern (fuzz-prompt.md §2)."""
+"""hypothesis-Strategien: Welten mit getrennten Beobachtern (werkzeuge.md §4.1)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ GOV_POLICY = NucleusPolicy(
 # Seeds 0x11… aus example-nucleus.md §2, fortgesetzt für bis zu sechs Identitäten.
 _SEEDS = tuple(bytes([0x11 + i] * 32) for i in range(6))
 
-# t_exp je Vouch, Gewichtung 4 : 4 : 1 — abwesend : künftig : vergangen.
+# t_exp je Vouch, Gewichtung 4 : 4 : 1 : 1 — abwesend : künftig : vergangen : grenze.
 _T_EXP_LAGEN = (
     "abwesend",
     "abwesend",
@@ -37,12 +37,13 @@ _T_EXP_LAGEN = (
     "künftig",
     "künftig",
     "vergangen",
+    "grenze",
 )
 
 
 @dataclass(frozen=True, slots=True)
 class Welt:
-    """Eine zufällige Welt: Identitäten, Anker, Claims, Zustellplan (fuzz-prompt.md §2)."""
+    """Eine zufällige Welt: Identitäten, Anker, Claims, Zustellplan (werkzeuge.md §4.1)."""
 
     pubs: tuple[bytes, ...]
     anchors: frozenset[bytes]
@@ -58,13 +59,18 @@ class Welt:
 
 
 class _Signer:
-    """Autorenkette; ``kette_fortschreiben=False`` ruft ``gabeln`` (fuzz-prompt.md §7)."""
+    """Autorenkette; ``kette_fortschreiben=False`` ruft ``gabeln`` (werkzeuge.md §2.4)."""
 
     def __init__(self, seed: bytes) -> None:
         self._autor = Autor(seed, SpeicherRueckhalt(), StoreAusgang(InMemoryStore()))
         self.pub = self._autor.pub
         self._autor.wiederaufnehmen()
         self._t = 0
+
+    @property
+    def naechstes_t(self) -> int:
+        """t, das der naechste claim()-Aufruf verwenden wird (D133)."""
+        return self._t + 1
 
     def claim(
         self,
@@ -132,49 +138,95 @@ def welten(
 
     now = 1000
     n_vouches = draw(st.integers(min_value=0, max_value=12))
-    remaining = {i: d_budget for i in range(n_ids)}
+    gruppe: dict[tuple[int, int], int] = {}
+    verbraucht: dict[int, int] = {i: 0 for i in range(n_ids)}
     vouches: list[Claim] = []
+
+    def _t_exp(lage: str, t: int) -> int | None:
+        if lage == "abwesend":
+            return None
+        if lage == "künftig":
+            return draw(st.integers(min_value=now + 1, max_value=now + 10_000))
+        if lage == "grenze":
+            return now
+        return draw(st.integers(min_value=t + 1, max_value=now - 1))
+
+    def _lebend(t_exp: int | None) -> bool:
+        return t_exp is None or t_exp >= now
+
+    def _buche(a: int, s: int, n: int) -> None:
+        alt = gruppe.get((a, s), 0)
+        neu = max(alt, n)
+        verbraucht[a] += neu - alt
+        gruppe[(a, s)] = neu
+
+    def _n_lebend(a: int, s: int) -> int | None:
+        if erlaube_ueberzeichnung:
+            return draw(st.integers(min_value=1, max_value=d_budget))
+        obere = gruppe.get((a, s), 0) + (d_budget - verbraucht[a])
+        if obere < 1:
+            return None
+        return draw(st.integers(min_value=1, max_value=obere))
+
+    def _n_tot() -> int:
+        return draw(st.integers(min_value=1, max_value=d_budget))
+
     for _ in range(n_vouches):
         author_i = draw(st.integers(min_value=0, max_value=n_ids - 1))
-        if not erlaube_ueberzeichnung and remaining[author_i] < 1:
-            continue
         subject_i = draw(
             st.integers(min_value=0, max_value=n_ids - 1).filter(lambda j, a=author_i: j != a)
         )
-        if erlaube_ueberzeichnung:
-            n = draw(st.integers(min_value=1, max_value=d_budget))
+        want_twin = erlaube_equivocation and draw(st.booleans())
+        t1 = signers[author_i].naechstes_t
+        lage1 = draw(st.sampled_from(_T_EXP_LAGEN))
+        t_exp1 = _t_exp(lage1, t1)
+        t_exp2: int | None = None
+        if want_twin:
+            lage2 = draw(st.sampled_from(_T_EXP_LAGEN))
+            t_exp2 = _t_exp(lage2, t1 + 1)
+
+        if _lebend(t_exp1):
+            n1 = _n_lebend(author_i, subject_i)
+            if n1 is None:
+                continue
         else:
-            n = draw(st.integers(min_value=1, max_value=remaining[author_i]))
-        lage = draw(st.sampled_from(_T_EXP_LAGEN))
-        if lage == "abwesend":
-            t_exp: int | None = None
-        elif lage == "künftig":
-            t_exp = draw(st.integers(min_value=now + 1, max_value=now + 10_000))
-        else:
-            t_exp = draw(st.integers(min_value=1, max_value=now - 1))
-        if not erlaube_ueberzeichnung and (t_exp is None or t_exp >= now):
-            remaining[author_i] -= n
-        twin = erlaube_equivocation and draw(st.booleans())
+            n1 = _n_tot()
+
+        n2: int | None = None
+        build_twin = want_twin
+        if want_twin:
+            if _lebend(t_exp2):
+                if erlaube_ueberzeichnung:
+                    n2 = draw(st.integers(min_value=1, max_value=d_budget))
+                else:
+                    if _lebend(t_exp1):
+                        alt = gruppe.get((author_i, subject_i), 0)
+                        grp = max(alt, n1)
+                        verbr = verbraucht[author_i] - alt + grp
+                    else:
+                        grp = gruppe.get((author_i, subject_i), 0)
+                        verbr = verbraucht[author_i]
+                    obere2 = grp + (d_budget - verbr)
+                    if obere2 < 1:
+                        build_twin = False
+                    else:
+                        n2 = draw(st.integers(min_value=1, max_value=obere2))
+            else:
+                n2 = _n_tot()
+
         first = signers[author_i].claim(
             p=_nuc(EX.N_res, "vouch"),
             J=(1, pubs[subject_i]),
-            v=_vouch_v(n),
+            v=_vouch_v(n1),
             N=EX.N_res,
-            t_exp=t_exp,
-            kette_fortschreiben=not twin,
+            t_exp=t_exp1,
+            kette_fortschreiben=not build_twin,
         )
         vouches.append(first)
-        if twin:
-            n2 = n - 1 if n > 1 else min(d_budget, n + 1)
-            if n2 == n:
-                n2 = 1 if n != 1 else 2
-            lage2 = draw(st.sampled_from(_T_EXP_LAGEN))
-            if lage2 == "abwesend":
-                t_exp2: int | None = None
-            elif lage2 == "künftig":
-                t_exp2 = draw(st.integers(min_value=now + 1, max_value=now + 10_000))
-            else:
-                t_exp2 = draw(st.integers(min_value=1, max_value=now - 1))
+        if _lebend(t_exp1):
+            _buche(author_i, subject_i, n1)
+        if build_twin:
+            assert n2 is not None
             vouches.append(
                 signers[author_i].claim(
                     p=_nuc(EX.N_res, "vouch"),
@@ -184,6 +236,8 @@ def welten(
                     t_exp=t_exp2,
                 )
             )
+            if _lebend(t_exp2):
+                _buche(author_i, subject_i, n2)
 
     votes: list[Claim] = []
     if draw(st.booleans()):
@@ -245,7 +299,7 @@ def _findings_bytes(findings: tuple) -> list[list[object]]:
 
 
 def fingerprint_derive(store: InMemoryStore, welt: Welt) -> bytes:
-    """Byte-Identität von ``derive`` (fuzz-prompt.md §3 P-1)."""
+    """Byte-Identität von ``derive`` (werkzeuge.md §4.2 P-1)."""
     result = derive(
         store,
         anchors=welt.anchors,
@@ -266,7 +320,7 @@ def fingerprint_derive(store: InMemoryStore, welt: Welt) -> bytes:
 
 
 def fingerprint_trust(store: InMemoryStore, welt: Welt) -> bytes:
-    """Byte-Identität von ``trust`` (fuzz-prompt.md §3 P-1)."""
+    """Byte-Identität von ``trust`` (werkzeuge.md §4.2 P-1)."""
     targets = frozenset(p for p in welt.pubs if p not in welt.anchors)
     result = trust(
         store,
@@ -286,7 +340,7 @@ def fingerprint_trust(store: InMemoryStore, welt: Welt) -> bytes:
 
 
 def fingerprint_decide(store: InMemoryStore, welt: Welt) -> bytes:
-    """Byte-Identität von ``decide`` (fuzz-prompt.md §3 P-1)."""
+    """Byte-Identität von ``decide`` (werkzeuge.md §4.2 P-1)."""
     result = decide(
         store,
         epoch=EX.epoch_1,
@@ -313,7 +367,7 @@ def fingerprint_decide(store: InMemoryStore, welt: Welt) -> bytes:
 
 
 def fingerprint_classify(store: InMemoryStore, welt: Welt) -> bytes:
-    """Byte-Identität von ``classify_all`` (fuzz-prompt.md §3 P-1)."""
+    """Byte-Identität von ``classify_all`` (werkzeuge.md §4.2 P-1)."""
     result = classify_all(store, welt.now)
     payload = [
         [cid, result[cid].state.value, result[cid].trust_usable]

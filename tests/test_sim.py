@@ -1,4 +1,4 @@
-"""Simulation — sechs Szenarien mit getrennten Beobachter-Stores (sim-prompt.md §6)."""
+"""Simulation — sechs Szenarien mit getrennten Beobachter-Stores (werkzeuge.md §3.3)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Tabellenausgabe für Szenarioschritte (sim-prompt.md §2)."""
+"""Tabellenausgabe für Szenarioschritte (werkzeuge.md §3.1)."""
 
 from __future__ import annotations
 

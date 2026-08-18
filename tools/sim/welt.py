@@ -1,4 +1,4 @@
-"""Teilnehmer, Verzeichnisse, Zustellung (sim-prompt.md §2)."""
+"""Teilnehmer, Verzeichnisse, Zustellung (werkzeuge.md §3.1)."""
 
 from __future__ import annotations
 

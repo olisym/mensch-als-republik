@@ -1,4 +1,4 @@
-"""P-2 — Monotonie in Wissen, mit Vorbehalten (fuzz-prompt.md §3, 02 §7).
+"""P-2 — Monotonie in Wissen, mit Vorbehalten (werkzeuge.md §4.2, 02 §7).
 
 Eine Teilmenge des Claim-Bestands liefert nie höheres Vertrauen als der volle
 Bestand. Vorbehalte, beide zwingend:

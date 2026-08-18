@@ -1,4 +1,4 @@
-"""P-3 — Die Vorbehalte von P-2, positiv (fuzz-prompt.md §3).
+"""P-3 — Die Vorbehalte von P-2, positiv (werkzeuge.md §4.2).
 
 P-3a: mit ``erlaube_ueberzeichnung = True`` existieren Welten, in denen eine
 Teilmenge höheres Vertrauen liefert (D118). Kleinstes Gegenbeispiel: zwei

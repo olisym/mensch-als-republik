@@ -1,4 +1,4 @@
-"""P-4 — Konvergenz (fuzz-prompt.md §3).
+"""P-4 — Konvergenz (werkzeuge.md §4.2).
 
 Haben am Ende alle Beobachter denselben Bestand und dieselbe Uhr, rechnen sie
 dasselbe. Ohne Vorbehalte. Gleiche Uhr ist Bedingung, nicht Vorbehalt: über
