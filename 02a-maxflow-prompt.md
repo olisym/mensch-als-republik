@@ -133,11 +133,18 @@ cap(I → J) = (n_kante * C(d(I))) // D
 | Menge | Inhalt | Verwendung |
 |---|---|---|
 | **Aktiv-Set** | `classify(...).state == State.ACTIVE` **und** `p` ist `nuc:N/vouch@1` **und** `c.N == scope` | `n_kante`, Kantensatz |
-| **Budget-Set** | wie oben, aber `state ∈ {ACTIVE, REVOKED, SUPERSEDED, PENDING}` | `n_budget`, Prüfung `Σ n_budget ≤ D` |
+| **Budget-Set** | wie oben, aber `state ∈ {ACTIVE, REVOKED, SUPERSEDED, PENDING, EQUIVOCATION_FLAGGED}` (D135) | `n_budget`, Prüfung `Σ n_budget ≤ D` |
 
 **Ein Vouch verlässt das Budget-Set ausschließlich durch `t_exp`** (`state == EXPIRED`). Weder
 Widerruf noch Supersede geben Budget frei; eine Gruppe verlässt es erst, wenn **alle** ihre
-Mitglieder abgelaufen sind. `MALFORMED` gehört in keine der beiden Mengen.
+Mitglieder abgelaufen sind. `MALFORMED` gehört in keine der beiden Mengen. Auch Equivocation gibt
+kein Budget frei (D135) — sie ist kein Lebenszyklus-Akt und der Über-Commitment-Beweis beruht auf
+Signaturen, nicht auf Aktivität.
+
+**Die Aufzählung in der Tabelle ist die ausgerechnete Form dieses Satzes, nicht seine Definition.
+Bei Abweichung gilt der Satz.** Die ursprüngliche Aufzählung ließ `EQUIVOCATION_FLAGGED` weg und
+stand damit neun Zeilen über ihrer eigenen Widerlegung; der Code folgte der Aufzählung, und
+Equivocation wurde zum Budget-Reset (D135).
 
 Prüfe `state == State.ACTIVE` **explizit**; übernimm nicht `trust_usable`. Siehe Test T-02.4.
 

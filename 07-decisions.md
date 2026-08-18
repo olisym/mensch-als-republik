@@ -4161,3 +4161,151 @@ des Absenders.
 `read_claim` daneben. D132 ist Werkzeugarbeit — Bündelformat, `store_laden` und `zustellen` über
 den neuen Pfad, `claim_id` nachgerechnet. Getrennt, damit ein roter Bestandstest nicht in einer
 Abnahme über neues Bündelformat untergeht.
+
+## AL. Was der Erzeuger schuldet
+
+### D133 — `welten()` erzeugt gültige Claims; die Vorbedingung liegt beim Aufrufer
+
+Der Einlesepfad hat beim ersten Lauf etwas gefunden, wofür er nicht gebaut war. Die Messung aus
+`impl/einlesen`: von 534 erzeugten Claims liefert `read_claim` 532 mal einen `Claim` und zweimal
+`INCOHERENT_EXPIRY`. Die Lage `"vergangen"` in `tests/property/welten.py` zieht
+`t_exp ∈ [1, now-1]` ohne Blick auf `t`; wo `t ≥ t_exp` herauskommt, entsteht kein abgelaufener
+Claim, sondern gar keiner. Zwei Fundstellen — die Ziehung steht für den ersten Claim und für den
+Zwilling.
+
+**Warum es nie auffiel.** `classify_all` ruft `structural_check` nur für Lifecycle-Kandidaten beim
+Indexaufbau, nie für den zu klassifizierenden Claim selbst. Die Eigenschaftstests klassifizieren
+also Claims, die ein Empfänger zurückgewiesen hätte, ohne dass irgendwo eine Prüfung liegt, die es
+merkt.
+
+**`classify_all` trägt daran keine Schuld.** `02a §3` setzt strukturelle Gültigkeit voraus und legt
+die Prüfung ausdrücklich beim Aufrufer ab; das ist der Grund, warum der schnelle Zwilling schnell
+ist. Der Befund lautet nicht „`classify_all` prüft zu wenig", sondern „die Vorbedingung wird in der
+Testschicht von niemandem hergestellt". Dieser Satz steht hier, damit kein späterer Lauf
+`classify_all` repariert und es dabei langsamer und falscher zugleich macht.
+
+**Beschluss: `welten()` erzeugt in der Voreinstellung ausschließlich strukturell gültige Claims.**
+
+Die Begründung kommt aus D131 und ist erst seit ihm formulierbar: ein Store in einem
+Eigenschaftstest modelliert, was ein Beobachter hält — und ein Beobachter hält seit dem
+Einlesepfad genau das, wofür `read_claim` einen `Claim` geliefert hat. Ohne diese Regel sagen der
+Erzeuger und der Einlesepfad Widersprüchliches über denselben Gegenstand, und jeder Lauf, der auf
+beidem aufbaut, erbt den Widerspruch.
+
+**Kein Verbot, nur eine Voreinstellung.** Ein Erzeuger, der auf Verlangen ungültige Claims baut,
+ist etwas, das dem Einlesepfad noch fehlt. Der Unterschied liegt zwischen *versehentlich
+ungültig* und *ungültig, wenn man es verlangt*; das erste ist der Befund, das zweite eine
+Fähigkeit. Die Schalter `erlaube_ueberzeichnung` und `erlaube_equivocation` sind das Muster.
+
+**Die Reparatur ist nicht die Schranke, sondern die Sichtbarkeit von `t`.** `_Signer.claim()` zählt
+`_t` **innerhalb** der Methode hoch; der Aufrufer kennt das `t` erst, wenn der Claim signiert ist,
+und kann deshalb keine Untergrenze setzen. Nach D129 bleibt der Zähler bei `_Signer` — er ist eine
+Eigenschaft des Weltgenerators und nicht der Kette — und genau deshalb darf er auch gelesen werden.
+
+Verworfen: eine feste Untergrenze wie `min_value=100`. Sie hielte nur, solange keine Welt mehr als
+hundert Claims je Identität baut, und diese Schranke stünde nirgends.
+
+**Vierte Lage `"grenze"` mit `t_exp = now`.** Die drei bestehenden Lagen decken `now ≤ t_exp`
+überall ab **außer** an der Kante: `künftig` beginnt bei `now + 1`, `vergangen` endet bei
+`now - 1`. Der Grenzwertvektor `now = t_exp` steht seit D119 als „baubar und ungebaut" in der
+Offen-Liste — er war ungebaut, weil der Erzeuger ihn nicht ziehen konnte. Gewichtung
+`4 : 4 : 1 : 1`; ein einzelner Punkt braucht keine Masse, er muss nur erreichbar sein.
+
+**Der Schaden ist heute null, und das gehört dazu.** Ein Claim mit `t ≥ t_exp` und `t_exp < now`
+landet ohnehin in `EXPIRED` — demselben Zustand wie ein sauber gebauter abgelaufener Claim — und
+bindet kein Budget. Kein Fingerabdruck ändert sich, kein bestehender Anker bewegt sich. Der
+Beschluss ist vorwärtsgerichtet und keine Fehlerbehebung an einem falschen Ergebnis.
+
+### D134 — Die Budgetbuchführung des Erzeugers ist gruppenweise
+
+`02 §3.1`: `n_budget = max n` über die Mitglieder einer Gruppe `(I, J, N)` im Budget-Set,
+`Σ_J n_budget ≤ D` über die Gruppen. **Maximum innerhalb, Summe darüber.**
+
+`welten()` führt `remaining[author] -= n` **pro Claim**. Das ist die falsche Form, und sie hat zwei
+Symptome:
+
+- **Der Zwilling.** Erster und Zwilling teilen `(I, J, N)`. Die Gruppe zahlt `max(n, n2)`, nicht
+  `n + n2`. Im Regelfall `n2 = n - 1` kostet der Zwilling **nichts**; nur im Zweig
+  `min(d_budget, n+1)` bei `n = 1` steigt das Maximum, und dann um eins.
+- **Die Wiederholung.** Bürgt derselbe Autor in zwei Schleifendurchläufen für denselben
+  Empfänger, zieht `remaining` zweimal ab, wo die Spec einmal das Maximum zählt.
+
+**Verworfen: die wörtliche Reparatur von B-4.** „Der Zwilling zieht Budget ab wie der erste"
+überzieht — sie addiert, wo die Spec maximiert, und verschärft die Unterschätzung, statt sie zu
+beheben. B-4 war als eigener Befund richtig beobachtet und als Ursache falsch benannt; er geht in
+diesem Eintrag auf und verschwindet aus der Offen-Liste.
+
+**Der Zwilling gehört ins Budget-Set.** `02 §8`: ob ein geflaggter Bürge Fluss trägt, ist Policy
+(`include_flagged`), die Budgetrechnung ist davon unberührt — ein Flag darf die Grundlage nicht
+verschieben, auf der es erkannt wurde. „Zwilling ignorieren" ist damit ebenso ausgeschlossen wie
+„Zwilling addieren".
+
+**Die Ablaufregel erbt dieselbe Form.** `02 §3.1` gibt Budget erst frei, wenn **alle** Vouches der
+Gruppe abgelaufen sind. `welten()` prüft `t_exp` je Claim. Eine Gruppe bindet also weiter, solange
+ein Mitglied nicht abgelaufen ist — auch dann, wenn das nicht abgelaufene Mitglied der Zwilling
+ist.
+
+**Die Richtung des Fehlers erklärt seine Lebensdauer.** Zu wenig Budget heißt zu wenige Vouches,
+nie eine verletzte Invariante; `erlaube_ueberzeichnung = False` hält, was es verspricht. Der Preis
+ist Abdeckung, kein falsches Grün — deshalb ist es lange unsichtbar geblieben.
+
+**Warum es trotzdem fällig ist.** Eine Eigenschaft mit `erlaube_ueberzeichnung = False` **und**
+`erlaube_equivocation = True` ist heute nicht schreibbar: der Erzeuger kann nicht sagen, wie viel
+Budget eine Welt mit Zwillingen verbraucht hat. Genau diese Kombination braucht jeder Test, der
+Equivocation unter gültigem Budget prüfen will — und das ist die interessante Lage, weil
+`include_flagged` dort seinen einzigen Sinn hat.
+
+## AM. Ein Flag verschiebt die Grundlage nicht
+
+### D135 — `EQUIVOCATION_FLAGGED` gehört ins Budget-Set
+
+Gefunden auf dem Weg zu D134, an einer Zeile, die nicht zur Sache gehörte: `BUDGET_STATES` in
+`trust/groups.py` führt `{ACTIVE, REVOKED, SUPERSEDED, PENDING}` und lässt
+`EQUIVOCATION_FLAGGED` weg. Weil **beide** Claims eines Equivocation-Paars geflaggt werden, fällt
+die ganze Gruppe `(I, J, N)` aus der Budgetrechnung.
+
+**Gerechnet.** Ein Autor bürgt für B mit `n = D = 16`, equivoziert auf diesen Vouch
+(`n₂ = 15`) und bürgt danach für C mit `n = 16`. Drei signierte Vouches, `Σ n_budget = 16`,
+keine Findings. Der Autor hat sein Budget zweimal ausgegeben, und die Rechnung sieht ihn bei
+einmal.
+
+**Equivocation ist damit ein Budget-Reset.** Unter `include_flagged = False` verliert der Autor
+die Kante zu B — aber die wollte er nicht behalten; knapp ist das Budget, nicht die Kante.
+`02 §3.1` sagt: „Kein selbst-bezüglicher Lebenszyklus-Akt gibt Budget frei; Budget folgt der Uhr,
+nicht dem Willen des Autors." Equivocation ist kein Lebenszyklus-Akt und umgeht den Satz an ihm
+vorbei. Der tragende Satz desselben Abschnitts — „die Deklaration selbst ist der Einsatz" — hält
+nicht, wenn der Einsatz durch Doppelsignatur zurückgeholt werden kann.
+
+**Beschluss: das Budget-Set ist `{ACTIVE, REVOKED, SUPERSEDED, PENDING, EQUIVOCATION_FLAGGED}`
+und nicht abgelaufen. Ein Vouch verlässt es ausschließlich durch `t_exp`.**
+
+Die Begründung ist dieselbe, mit der `02 §3.1` `pending` einschließt: der
+Über-Commitment-Beweis beruht auf **Signaturen, nicht auf Aktivität**. Und `02 §8` sagt es
+direkt — ein Flag darf die Grundlage nicht verschieben, auf der es erkannt wurde.
+
+**Vier Stellen gegen eine.** `02 §8`, `02a §2.6` Satz nach der Tabelle („ausschließlich durch
+`t_exp`"), `02a` zu `include_flagged` („Flags ändern nie die Budgetrechnung") und
+`02-spec-nachzug §…` sagen dasselbe; allein die Aufzählung in `02a §2.6` sagt etwas anderes. Sie
+steht **neun Zeilen** über ihrer eigenen Widerlegung, in derselben Tabelle-plus-Absatz-Einheit.
+Die Parallelenprüfung hätte sie gefunden — sie ist auf diese Datei nie angewandt worden, weil
+`02a` als erledigte Prompt-Datei galt und nicht als Text, gegen den geprüft wird.
+
+**Wie es entstand.** Die Aufzählung listet die Zustände, in denen ein *gewöhnlicher* Claim landet.
+Als Beschreibung war sie richtig; als Definition übernommen, hat sie still ihren Geltungsbereich
+verloren. Prüfregel 8, zum vierten Mal nach D77, D83, D87, D91 — und diesmal in der teuersten
+Fassung, weil die falsche Hälfte in Code gegossen wurde.
+
+**Sprengweite gemessen, bevor entschieden wurde.** Mit erweitertem `BUDGET_STATES`: 488 Tests
+grün, einer rot. Die Golden Anchors aus `02-golden-anchors.md §3–§5` bewegen sich **nicht**;
+Variante A bleibt trotz geflaggter CAROL innerhalb `D`.
+
+**Der rote Test ist der Befund selbst.** `test_no_vouch_without_texp_on_flagged_author` behauptet,
+ein geflaggter Vouch ohne `t_exp` erzeuge kein `VOUCH_WITHOUT_TEXP`. Das folgt aus der Whitelist
+und aus nichts sonst. Unter dem Beschluss bindet dieser Vouch Budget **für immer** — genau die
+Lage, vor der das Finding warnt (`02 §…`: `t_exp` ist für Vouches in Scopes mit Budgetregel
+verpflichtend). Die Erwartung dreht sich um: das Finding **muss** fallen. Findings sind
+bedeutungsblinde Diagnosen; dass der Autor ohnehin slashbar ist, macht die Dauerbindung nicht
+kleiner.
+
+**D134 hängt daran.** Die gruppenweise Buchführung in `welten()` kann nicht gebaut werden, bevor
+feststeht, wogegen sie rechnet. Reihenfolge: D135, dann `welten.py`.
