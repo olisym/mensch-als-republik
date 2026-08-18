@@ -4010,3 +4010,141 @@ im Kriterium trüge dieselbe Schwäche wie die Sache, die sie prüft.
 Befund liegt in der Buchführung des Generators, nicht in der Kettenfortführung, und ist vom Umzug
 unabhängig. Ihn mitzunehmen hieße, bei einer Ankerabweichung nicht zu wissen, welche der beiden
 Änderungen sie bewegt hat.
+
+## AK. Eine Tür pro Sprache
+
+### D130 — Der Rundlauf ist eine Form, keine Fundstelle
+
+D83 hat entschieden, dass `decode` und `is_canonical` im selben `try` stehen: der Rundlauf ruft
+`encode` auf, und `encode` wirft bei Werten, die `decode` durchlässt. Der Beschluss wurde auf
+`trust/groups.py` angewandt, von `profiles/payload.py` übernommen — und ist nie nach Layer 01
+zurückgegangen. `verifier.structural_check` prüft die Kanonizität zwei Schritte nach dem
+Dekodier-`try`, ungeschützt.
+
+Die Parallelenprüfung zeigt Layer 01 als den Ausreißer unter drei gleichartigen Stellen:
+
+```
+02 groups.py:41   try: decode ; is_canonical   except Exception → UNPARSABLE_VOUCH_PAYLOAD
+03 payload.py:18  try: decode ; is_canonical   except Exception → UNPARSABLE_V
+01 verifier.py    try: decode                  except Exception → MalformedCbor
+                  … is_canonical zwei Schritte später, ungeschützt
+```
+
+Der Vektor ist `h'a100ff'` — eine Map, deren **Wert** zu Schlüssel `0` das Break-Sentinel ist.
+`decode` liefert ein `dict`, die Schlüsselprüfung 2b sieht nur Integer-Schlüssel und läßt es
+durch, `is_canonical` ruft `encode` und bekommt `CBOREncodeError`. Die Ausnahme verläßt
+`structural_check` als Nicht-`VerifierError`.
+
+`h'a1ff01'` — Sentinel im **Schlüssel** — ist auf Layer 01 dagegen harmlos: Schritt 2b fängt es
+vorher ab. Auf Layer 02 waren beide Vektoren gefährlich, weil `_decode_weight` keinen
+Schlüsseltypfilter hat. **Ein Vektor, nicht zwei.** Die Tabelle aus D83 gilt für die dortige
+Fundstelle und nicht für diese; sie ungeprüft zu übernehmen wäre derselbe Fehler noch einmal.
+
+**Beschluss: der Rundlauf steht auf jeder Schicht im selben `try` wie das Dekodieren; was von dort
+kommt, ist unlesbar.** Auf Layer 01 heißt das `MALFORMED_CBOR`.
+
+Nicht aufgezählt wird, welche Ausnahmen `cbor2` werfen kann. Das ist eine Eigenschaft der
+Bibliothek, nicht von MaR, und über die Version nicht stabil; tiefe Verschachtelung, die beim
+Dekodieren durchgeht und beim Enkodieren rekursiert, wäre ein weiterer Geschwisterfall, den keine
+Liste kennt. Der `try` fängt die Form, nicht die Namen.
+
+**Kein `False` aus `is_canonical`.** Die naheliegende Vereinfachung — die Hilfsschicht fängt selbst
+und meldet „nicht kanonisch" — löscht die Unterscheidung, die D83 gerade begründet hat: eine
+Ablehnung als `NON_CANONICAL_ENCODING` behauptet, es gebe eine kanonische Kodierung desselben
+Inhalts. Bei `h'a100ff'` gibt es die nicht. Auf Layer 01 wiegt das schwerer als auf 02, weil dort
+zwei verschiedene Reject-Codes daran hängen und ein Absender in die falsche Richtung suchen würde.
+`cbor_canon` bleibt dünn und wirft; die Zuordnung zum Code bleibt am Aufrufer.
+
+**Die Reihenfolge bleibt erhalten.** „Im selben `try`" wörtlich genommen zöge die Kanonizität vor
+die Schlüsseltypprüfung 2b. Der trennende Vektor ist `h'bf616100ff'` — die
+indefinite-length-Kodierung von `{"a": 0}`: dekodierbar, nicht kanonisch, Schlüssel ist `str`.
+Vorgezogen ergäbe er `NON_CANONICAL_ENCODING`, und das wäre falsch, denn die kanonische
+Neukodierung derselben Map bliebe ein ungültiger Claim; Anhang B führt den falschen Feldtyp unter
+`MALFORMED_CBOR`. Der Rundlauf bekommt also einen eigenen `try` **an seinem bisherigen Platz**,
+nicht einen gemeinsamen weiter vorn. §6 Punkte 1–7 behalten ihre normative Ordnung, und D113
+braucht keinen Abhängigkeitssatz.
+
+**Warum es nicht folgenlos ist, obwohl die Entscheidung dieselbe bleibt.** `h'a100ff'` scheitert
+zwei Schritte später ohnehin an der Längenprüfung von `m[1]`; falsch ist allein der Fehlerkanal.
+Der trägt aber zwei Dinge: `_build_lifecycle_index`, `_find_revoking_claim` und
+`_find_superseding_claim` fangen `VerifierError` und überspringen — ein `CBOREncodeError`
+überspringt nicht, er reißt den Index-Aufbau ab, und ein einziger solcher Claim im Store legt
+`classify_all` still. Und er ist die Ausnahme, an der D131 bräche, bevor sie geschrieben ist.
+
+**Testpunkt an der Hilfsschicht.** `test_cbor_canon.py` hat keinen Vektor, der `is_canonical` zum
+Werfen bringt. Drei Aufrufer verlassen sich darauf, dass sie es tut. Die Zusicherung gehört dorthin,
+wo die Eigenschaft entsteht.
+
+### D131 — Der Einlesepfad fängt `VerifierError`; „wirft nie" wird zugesichert, nicht gefangen
+
+D121 verlangt eine Funktion, die nie wirft und entweder einen Claim oder einen Reject-Code liefert.
+Die Frage, die der Beschluss offenließ: **was fängt sie?**
+
+Fängt sie `Exception`, ist der Wortlaut erfüllt und die Sache verdorben. Ein Programmierfehler im
+Erkenner würde dann zu `MALFORMED_CBOR` auf **jedem** Claim: das Netz sähe aus, als bestünde es aus
+kaputten Bytes, der Store bliebe leer, und nichts zeigte an, dass die Ursache lokal ist. Das ist
+D92 eine Ebene höher — eigene Fehler sind keine Lage der Welt.
+
+Die Literatur hat die Grenze vor MaR gezogen. Joe Duffys Bericht über Midoris Fehlermodell
+(2016) trennt **Bugs** von **behebbaren Fehlern** und behandelt sie mit verschiedenen Mitteln:
+Fail-Fast für die einen, geprüfte Ausnahmen für die anderen, mit der Begründung, dass Bugs
+grundsätzlich nicht behebbar sind und der Versuch, sie zu behandeln, systematisch zu unzuverlässigem
+Code führt. Die Einteilung ist seither Konsens — Go, Rust, Swift und Zig sind bei ihr angekommen.
+
+**Beschluss: der Einlesepfad fängt `VerifierError` und nichts sonst.** Alles andere schlägt durch.
+
+**Die Totalität wird zugesichert, nicht erkauft.** Ein Eigenschaftstest über beliebige Bytes
+behauptet, dass nichts anderes als ein `Claim` oder ein `ErrorCode` herauskommt. Dieselbe Bewegung
+wie D75: eine Unmöglichkeit wird geprüft statt eine Semantik. Der Test ist zugleich derjenige, der
+D130 heute rot machen würde.
+
+**Verworfen: die Umkehrung.** Naheliegende Alternative wäre, `structural_check` selbst auf
+Rückgabewerte umzubauen — elf `raise` werden elf `return` — und die werfende Fassung zum dünnen
+Adapter zu machen. Das entspräche der Literatur besser. Der Grund dagegen ist nicht der Diff:
+**auch diese Bauform macht „wirft nie" nicht strukturell.** Ein `AttributeError` im Erkenner
+entkommt der Rückgabefassung genauso wie dem Wrapper. Die Totalität hängt in beiden Fällen am Test,
+und dann gewinnt die Bauform, die elf Stellen mitten in Layer 01 und die daran hängenden
+`pytest.raises`-Vektoren nicht anfaßt.
+
+**Die Grenze verläuft an der Herkunft des Codes, nicht an der Breite der Klausel.**
+`groups.py` und `payload.py` fangen `Exception` und bleiben richtig: in ihrem `try` steht ein
+**fremder** Aufruf, dessen Ausnahmemenge weder aufzählbar noch versionsstabil ist. Im `try` des
+Einlesepfads steht **eigener** Code, und dort verwandelt dieselbe Klausel Bugs in Weltlagen.
+Gleiche Syntax, gegensätzliche Wirkung. Ein späterer Lauf, der D131 als „schmal fangen" liest und
+auf die beiden anderen Stellen anwendet, macht sie kaputt.
+
+### D132 — Fremde Bytes gehen an keiner Stelle durch `claim_from_bytes`
+
+`structural_check` ist ein ordentlicher Erkenner: eine Tür, feste Reihenfolge, liefert strukturierte
+Daten. Daneben steht `atom.claim_from_bytes` — dieselbe Sprache, schwächere Grammatik, keine
+Kanonizitätsprüfung, keine Feldtypen, keine Signatur.
+
+Das ist das Muster, gegen das LangSec geschrieben ist: der faktische Erkenner verteilt sich über
+das Programm und deckt sich nicht mit den Annahmen der Programmierer über die Gültigkeit der Daten.
+Die Gegenform heißt Recognizer Pattern — erst Erkennung, dann eine klare Grenze, jenseits derer die
+Rohbytes nicht mehr erreichbar sind. Ein Wrapper um Tür eins läßt Tür zwei offen und ändert am
+Muster nichts.
+
+**Beschluss: fremde Bytes gehen an keiner Stelle durch `claim_from_bytes`.**
+
+Der legitime Rest bleibt: `tools/autor.py` liest über diesen Weg den **eigenen** Redo, und das ist
+nach D92 richtig. Die Voraussetzung wandert aus dem Kommentar in den Namen. Der Satz ist als Regel
+formuliert und nicht als Liste von Aufrufstellen, weil eine Liste den nächsten Aufrufer nicht kennt
+— Prüfregel 11.
+
+Heute hat der Satz genau einen Verstoß im Produktivcode: `tools/sim/welt.py:86` in `store_laden`.
+Alle übrigen Fundstellen sind Tests, die Vektor-Hex aus der Spec dekodieren, also eigene Bytes.
+
+**Der Container wird auch im Dateinamen nicht geglaubt.** Die Inbox der Simulation adressiert über
+`{cid.hex()}.cbor`, `zustellen` kopiert Bytes ohne Prüfung, und `hat_claim` beantwortet „kenne ich"
+allein aus der Existenz des Dateinamens. Niemand rechnet nach, dass in `abc….cbor` ein Claim mit
+`claim_id == abc…` steht. Die Inbox **ist** das unsignierte Bündel aus D121, nur als Verzeichnis;
+der Satz „dem Container wird nie geglaubt" gilt für sie mit demselben Wortlaut. Der Zusammenhang
+ist nicht bloß formal: `claim_id` ist der Hash über `core_bytes`, und erst die Kanonizitätsprüfung
+bindet empfangene Bytes an diese Id. Ohne sie ist die Zuordnung von Name zu Inhalt eine Behauptung
+des Absenders.
+
+**Zuschnitt: zwei Läufe.** D130 und D131 sind Paketarbeit an Layer 01 — Reparatur im Bestand plus
+`read_claim` daneben. D132 ist Werkzeugarbeit — Bündelformat, `store_laden` und `zustellen` über
+den neuen Pfad, `claim_id` nachgerechnet. Getrennt, damit ein roter Bestandstest nicht in einer
+Abnahme über neues Bündelformat untergeht.
