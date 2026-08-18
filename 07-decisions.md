@@ -4269,8 +4269,17 @@ die ganze Gruppe `(I, J, N)` aus der Budgetrechnung.
 keine Findings. Der Autor hat sein Budget zweimal ausgegeben, und die Rechnung sieht ihn bei
 einmal.
 
-**Equivocation ist damit ein Budget-Reset.** Unter `include_flagged = False` verliert der Autor
-die Kante zu B — aber die wollte er nicht behalten; knapp ist das Budget, nicht die Kante.
+**Equivocation ist damit ein Budget-Reset — und er wirkt bei `include_flagged = True`.**
+`derive.py` Schritt 5 schließt geflaggte Autoren **autorweit** aus den Kantenkandidaten aus, nicht
+gruppenweit: bei `include_flagged = False` verliert der equivozierende Autor **alle** seine Kanten
+im Scope, auch die zu C, und der Reset kauft ihm dort nichts. Bei `True` dagegen werden die Flags
+vollständig ignoriert — und dann ist `Σ n_budget ≤ D` die einzige verbleibende Schranke gegen
+einen Autor. Genau die hatte die Equivocation ersatzlos entfernt.
+
+Das ist keine Randeinstellung. `02a` hält fest, dass die Ankerwerte in
+`02-golden-anchors.md §3–§5` bei `include_flagged = True` gelten; die dokumentierte
+Bezugskonfiguration ist die, in der das Loch klaffte.
+
 `02 §3.1` sagt: „Kein selbst-bezüglicher Lebenszyklus-Akt gibt Budget frei; Budget folgt der Uhr,
 nicht dem Willen des Autors." Equivocation ist kein Lebenszyklus-Akt und umgeht den Satz an ihm
 vorbei. Der tragende Satz desselben Abschnitts — „die Deklaration selbst ist der Einsatz" — hält
@@ -4309,3 +4318,14 @@ kleiner.
 
 **D134 hängt daran.** Die gruppenweise Buchführung in `welten()` kann nicht gebaut werden, bevor
 feststeht, wogegen sie rechnet. Reihenfolge: D135, dann `welten.py`.
+
+**Nachtrag zur Wirkung.** Der Absatz über den Budget-Reset stand zuerst in der Gegenrichtung: er
+behauptete, der Reset wirke bei `include_flagged = False`, weil der Autor dort „nur die Kante zu B"
+verliere. Das war falsch — die Ausschlussmenge in `derive.py` Schritt 5 ist autorweit. Aufgefallen
+ist es beim Lesen des Regressionstests, nicht beim Schreiben des Eintrags: `Σ n_budget` war
+ausgerechnet, aber nicht bis zu seinem Verbraucher verfolgt.
+
+Daraus die **Wirkungsprüfung**: bevor einem Befund eine Folge zugeschrieben wird, wird der falsche
+Wert bis zu der Stelle verfolgt, die ihn verbraucht. Die Wirkung liegt nie dort, wo die Zahl
+entsteht. Der Beschluss selbst ist davon unberührt — vier normative Stellen gegen eine Aufzählung,
+und das Finding muss fallen.
