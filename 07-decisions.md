@@ -4400,3 +4400,57 @@ lebende Dateien. Passt ein Zitat nicht in die Tabelle, wird es gemeldet und nich
 zeigt. Zeigt er, wird im selben Lauf umgelenkt. Eine Löschung, die Verweise hinterlässt, ist nicht
 abgeschlossen — und beide hier haben zwei Sitzungen überdauert, weil niemand die Frage gestellt
 hat.
+
+## AO. Eine Existenzbehauptung handelt keine Abdeckung
+
+### D137 — `find` bekommt ein festes Budget und einen festen Seed
+
+Drei Tests behaupten die **Existenz** einer Welt statt einer Eigenschaft über viele:
+`test_p3a_finds_overcommit_violation`, `test_p3b_finds_equivocation_passed_to_pending` und
+`test_finds_budget_exit_via_clock`. Alle drei rufen `find(..., settings=settings())` und erben
+damit das Profil aus `tests/property/conftest.py` — unter `schnell` zehn Beispiele, dazu einen
+frischen Zufallsseed je Lauf.
+
+**Der Befund: `main` bei `40ee7a5` ist auf einem kalten Klon rot.** Gemessen mit gelöschtem
+`.hypothesis/` und altem Generator: `p3a` und `p3b` scheitern beide mit `NoSuchExample`. Grün
+waren sie zwei Sitzungen lang, weil die Beispieldatenbank die gefundenen Welten vorhielt — und
+`.hypothesis/` ist gitignored. Grün war eine Eigenschaft der Arbeitskopie, nicht des Commits.
+
+**Aufgefallen ist es auf dem Weg zu etwas anderem.** Der Lauf `impl/welten` meldete `p3a` als neu
+fragil und vermutete die geänderte Ziehungsreihenfolge. Die Gegenprobe kehrt das um: kalt bei
+`4da3304` grün, kalt bei `40ee7a5` rot, einzige verhaltenswirksame Variable `welten.py`. Der Lauf
+hat den Test nicht zerbrochen, er hat ihn repariert. Der Defekt lag woanders und war älter.
+
+**Beschluss: `find` läuft mit `max_examples=200` und `derandomize=True`, unabhängig vom Profil.**
+
+Die Begründung ist, dass `schnell` gegen `voll` **Abdeckung gegen Zeit** handelt. Bei einer
+Eigenschaft über viele Welten ist das ein sinnvoller Handel: weniger Beispiele heißt weniger
+geprüfte Fälle, aber jede geprüfte Aussage bleibt wahr. Eine Existenzbehauptung hat nichts zu
+handeln — die Antwort ist ja oder nein. Ein Nein aus Zeitmangel ist von einem Nein aus Sachgrund
+nicht zu unterscheiden, und genau diese Verwechslung hat hier zwei Sitzungen überdauert.
+
+`derandomize=True` nimmt dem Test das Streuen über Läufe. Bei einer Eigenschaft wäre das ein
+Verlust; hier ist es der Zweck. Findet ein Lauf nichts, ist das nach `werkzeuge.md §4.2` der
+Befund — und er soll reproduzierbar sein, nicht launisch.
+
+**Die Zahl ist gemessen, nicht geraten.** Unter festem Seed genügen zehn Beispiele für alle drei.
+Zweihundert ist Faktor zwanzig Abstand zum Rand. Null Abstand wäre auf andere Weise spröde: die
+nächste Generatoränderung verschiebt den Ziehungsstrom, und ein fester Seed ohne Reserve ist dann
+dauerhaft rot statt gelegentlich.
+
+**Verworfen: die gefundene Welt als festen Vektor einfrieren.** `test_p3.py` führt zwei solche
+Vektoren, und sie behaupten etwas anderes als die Suche. Ein Vektor sagt „diese Welt verletzt die
+Eigenschaft"; die Suche sagt „**der Erzeuger erreicht diese Gegend**". Das zweite ist die Aussage,
+die hier gebraucht wird, und genau sie ist eingetreten und war unsichtbar. Ein späterer Lauf, der
+die Suche gegen einen Vektor tauscht, löscht die Aussage und hält es für Aufräumen. Dieser Absatz
+steht hier, damit er es nicht tut.
+
+**Verworfen: `.hypothesis/` einchecken.** Es macht den Cache zur Grundlage statt ihn zu
+entwerten — dieselbe Abhängigkeit, nur committet.
+
+**Messfehler in der eigenen Vorarbeit, für die Akte.** Die Laufzeiten zu dieser Entscheidung waren
+zuerst unbrauchbar: `derandomize=True` schaltet die Beispieldatenbank nicht ab, der erste
+Messlauf füllte sie, der zweite las daraus. `n=200` kam auf 7,59 s, `n=10` auf 12,45 s — bei
+festem Seed unmöglich. Zwei Läufe, zwei Variablen. Der Fund-Befund selbst ist davon unberührt,
+weil er unter festem Seed nicht vom Cache abhängt; die Kosten misst deshalb `make check` und
+nichts sonst.
