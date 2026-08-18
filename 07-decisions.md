@@ -4456,3 +4456,83 @@ Messlauf füllte sie, der zweite las daraus. `n=200` kam auf 7,59 s, `n=10` auf 
 festem Seed unmöglich. Zwei Läufe, zwei Variablen. Der Fund-Befund selbst ist davon unberührt,
 weil er unter festem Seed nicht vom Cache abhängt; die Kosten misst deshalb `make check` und
 nichts sonst.
+
+## AP. Die Tür der Simulation
+
+### D138 — Lauf B ist zwei Funktionen; der Einlesepfad lädt ohne Store
+
+Drei Beschlüsse, jeder mit eigener Begründung, weil sie unabhängig voneinander falsch sein können.
+
+**Erstens: das Bündelformat gehört nicht in diesen Lauf.**
+
+Der Zuschnitt-Absatz in D132 zählt Lauf B als drei Dinge auf — Bündelformat, `store_laden` und
+`zustellen` über den neuen Pfad, `claim_id` nachgerechnet. Das erste folgt aus keinem der beiden
+normativen Sätze von D132. D132 schreibt selbst: die Inbox **ist** das unsignierte Bündel aus
+D121, nur als Verzeichnis. Wenn sie es ist, verlangt D132 kein neues Format; die Aufzählung hat es
+aus D121s Kontext mitgebracht, wo es hingehört.
+
+Dieselbe Form wie D77, D83, D87, D91, D130, D134 und D135: ein Satz und eine Aufzählung, und die
+Aufzählung hat beim Wandern still ihren Geltungsbereich gewechselt. Prüfregel 18.
+
+**Lauf B ist damit `store_laden` und `hat_claim`, und sonst nichts.** `zustellen` schiebt
+unvertraute Bytes zwischen unvertrauten Verzeichnissen; die Grenze liegt beim Lesen, nicht beim
+Kopieren. Ein zweiter Erkenner an der Kopierstelle wäre genau der über das Programm verteilte
+Erkenner, gegen den D132 geschrieben ist.
+
+**Zweitens: `store_laden` ruft `read_claim(data)` ohne Store.**
+
+`structural_check` benutzt den Store an genau einer Stelle: `_check_foreign_lifecycle`. Ohne Store
+ist diese Prüfung nicht falsch, sondern **stumm** — Ziel unbekannt, also kein Reject. Dasselbe
+Muster wie in `classify`: „bei bekannter Ziel-Identity".
+
+Der Grund gegen einen durchgereichten Store ist nicht, dass er beim Laden halbfertig wäre; das ist
+das Symptom. Der Grund ist, dass ein Teilstore `FOREIGN_LIFECYCLE` **an die Hex-Sortierung von
+Dateinamen bindet**. Derselbe Claim wäre je nach Ladereihenfolge Reject oder nicht. Ein Reject,
+den ein Beobachter nur bei günstiger Hash-Reihenfolge sieht, ist schlimmer als keiner: er macht
+die Ablehnung selbst zu einer lokalen Laune. `werkzeuge.md §4.2` P-1 — Reihenfolgeunabhängigkeit —
+ist die Eigenschaft, gegen die dieses Projekt seit zwei Sitzungen prüft, und sie gilt für den
+Einlesepfad genauso wie für die Ableitung.
+
+Ohne Store ist die Prüfung stumm und **gleichbleibend** stumm. Die Kontextarbeit macht
+`classify_all` später auf dem vollständigen Bestand, wo sie hingehört.
+
+**Vermerk, damit es niemand für einen Fehler hält.** `FOREIGN_LIFECYCLE` hat damit im
+Produktivcode keinen Träger mehr. Der Code existiert, Vektortests prüfen ihn, und der einzige
+Produktivpfad, der ihn auslösen könnte, ruft ohne Store. Das ist vertretbar, weil `index.py` die
+Prüfung als Zustandsprüfung ein zweites Mal führt und dort `ForeignLifecycle` wirft. Es ist aber
+eine Aussage und kein Zufall, und ohne diesen Absatz hält sie in einem Jahr jemand für einen Bug
+und repariert sie in die falsche Richtung.
+
+**Drittens: `hat_claim` glaubt dem Dateinamen nicht.**
+
+Heute ist `hat_claim` ein `is_file()` auf `{cid.hex()}.cbor`. Niemand rechnet nach, dass in
+`abc….cbor` ein Claim mit `claim_id == abc…` steht. `claim_id` ist der Hash über `core_bytes`,
+und erst die Kanonizitätsprüfung bindet empfangene Bytes an diese Id — ohne sie ist die Zuordnung
+von Name zu Inhalt eine Behauptung des Absenders.
+
+Der Name bleibt der Hinweis, wo nachzusehen ist. Die Antwort kommt aus dem Inhalt.
+
+**Die Wirkung liegt nicht dort, wo der Fehler entsteht.** `Teilnehmer.kennt` ist der
+`Ausgang.kennt`-Port, den `Autor.wiederaufnehmen` in `tools/autor.py:189` befragt, um zu
+entscheiden, ob die gespeicherte Spitze im Ausgang vorliegt. Ein falsches „kenne ich" aus einem
+Dateinamen lässt `wiederaufnehmen` die Kette über einen Vorgänger fortschreiben, den niemand hält
+— statt sie nach D120 anzuhalten. Ein Absender kann heute die Kette des Empfängers stören, **ohne
+eine einzige Signatur zu fälschen.** Das ist der Grund für diesen Lauf; die nachgerechnete
+`claim_id` ist nur das Mittel.
+
+**Der Preis ist gemessen und wird bezahlt.** `zustellen` fragt für jede Datei bei jedem Ziel
+`hat_claim`; aus einem `is_file()` wird ein Lesen plus Prüfen. Die Szenarien laufen mit `nur=` und
+über Inboxen einstelliger Größe, die Zahlen tragen es. Kein Cache und kein Index — ein Index wäre
+wieder etwas, dem geglaubt wird, und damit derselbe Fehler eine Ebene höher.
+
+**Zurückgestellt: eine Meldung übersprungener Claims.** `store_laden` überspringt still, was
+`read_claim` als `ErrorCode` liefert; das ist nach D133 die richtige Semantik — ein Beobachter
+hält genau das, wofür `read_claim` einen `Claim` geliefert hat. Ein Zähler oder ein Protokoll wäre
+ein zweiter Kanal aus derselben Funktion und verbreiterte den Port, den D127 schmal hält. Wenn
+sich beim Debuggen von Szenarien herausstellt, dass die Stille teuer ist, ist das ein eigener
+Fork mit eigener Begründung und nicht ein Zusatz hier.
+
+**Gemessen vor dem Prompt:** es gibt heute keinen Test, in dem Dateiname und Inhalt
+auseinanderfallen. `tests/test_sim.py` führt einen parametrisierten Szenariotest und berührt
+weder `inbox_path` noch `fromhex`. Der Regressionstest ist deshalb neu zu bauen, und die
+Rücknahmeprobe hat einen eindeutigen Ort.
