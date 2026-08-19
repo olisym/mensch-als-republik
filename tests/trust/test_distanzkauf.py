@@ -105,6 +105,8 @@ def test_angriff_auf_der_schwelle() -> None:
     C_p = capacity(PARAMS, d_p)
     beitrag_p = (n * C_p) // PARAMS.D
     assert d_h == d_p + 1
+    assert d_h < D_H_OHNE
+    assert d_p < D_H_OHNE - 1
     assert C_h == capacity(PARAMS, d_p + 1)
     assert result.value == capacity(PARAMS, d_p + 1)
     von_p = sum(
