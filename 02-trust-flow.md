@@ -587,6 +587,46 @@ Der *Mechanismus* ist festgelegt; die *Werte* sind Interpretation (A2):
 
 ---
 
+### 8.1 Woher die Kalibrierung kommt (D147)
+
+Die Werte sind Policy, ihre **Herkunft** ist es nicht. `C₀`, `γ` und `D` stehen nach
+`00 §4` Schlüssel 9 im Genesis, und `D` steckt über `n/D` in jeder signierten Vouch. Wer mit
+einem anderen `D` rechnet als der Scope deklariert, bewertet Bestandssignaturen still um —
+genau das, was der Absatz oben mit „ein anderes `D` bedeutet einen neuen Scope" ausschließt.
+
+**Der Ort der Herleitung ist getrennt von der Rechnung.** `resolve_trust_params` nimmt Scope und
+Genesis-Objekt, rechnet `SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj)) == scope` nach und liefert die
+`TrustParams` dieses Nukleus. `derive`, `trust` und `rank` bleiben parametrisiert und kennen kein
+Genesis — dieselbe Naht wie in `03 §1.2`, wo `resolve_policy` das Genesis verlangt und die
+Profilfunktionen die fertige Policy übergeben bekommen.
+
+| Lage | Antwort |
+|---|---|
+| Genesis passt nicht zum Scope | `ValueError` |
+| Schlüssel 9 vorhanden, keine Parameter übergeben | die Werte des Genesis |
+| Schlüssel 9 vorhanden, übergebene Werte weichen ab | `ValueError` |
+| Schlüssel 9 fehlt, Parameter übergeben | die übergebenen Werte |
+| Schlüssel 9 fehlt, keine Parameter übergeben | `ValueError` |
+
+**Ein fehlender Schlüssel 9 ist kein Teilwissen.** `00 §4.0` erklärt ihn für optional: fehlt er,
+hat der Nukleus die Kalibrierung out-of-band gelassen. Das ist eine Aussage des Nukleus und nicht
+eine Lücke im Bestand des Lesers — deshalb trägt hier keine Sicherheits-Voreinstellung, sondern
+die Frage, ob der Aufrufer die Werte anderswoher hat.
+
+**Warum kein Vermerk und kein Weiterrechnen bei Abweichung.** Die Praxis kennt dafür den
+Soft-Fail: fehlt die Prüfinformation, wird trotzdem gerechnet. Er hat sich in der Web-PKI als
+untauglich erwiesen, weil die Prüfinformation dort **online** geholt werden muss und ein
+Angreifer, der ohnehin den Kanal hält, sie schlicht blockiert. Die Antwort der Praxis war nicht
+ein besserer Soft-Fail, sondern die Information mitzuliefern statt sie nachzuschlagen. Ein
+Genesis ist unveränderlich, wenige hundert Bytes groß, content-adressiert, und sein Hash steht
+als `N` in jedem Claim; es kann mitreisen. Die Verfügbarkeitssorge, die den Soft-Fail erzwungen
+hat, besteht hier nicht.
+
+**Nicht hergeleitet werden `α` und `K`** (§5). Sie stehen nicht im Genesis, sind reine
+Policy-Knöpfe und bleiben Feld von `RelaxParams` neben dem hergeleiteten `base`.
+
+---
+
 ## 9. Bewusst getragene v1-Grenzen & gemachte Designentscheidungen
 
 - **Geometrischer Decay** `⌊C₀ γ^d⌋` ist eine *gewählte* Form (ein Knopf, saubere Monotonie);

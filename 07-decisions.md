@@ -5001,3 +5001,66 @@ von `D` verlangt, weil `n/D` in jeder Vouch-Signatur steckt. `[1]`, `[2]`, `[3]`
 gar keinen Träger. Das ist einmal zu beantworten und nicht viermal: welches Feld hat einen
 Träger, und woran ist er gebunden. Der Durchgang steht vor `00a`, weil `root_keys` eines der
 trägerlosen Felder ist.
+
+### D147 — Die Kalibrierung bekommt einen Herleitungsort, die Rechnung bleibt parametrisiert
+
+**Die Lage.** `TrustParams` trägt `C0`, `gamma_num`, `gamma_den`, `D` — feldgleich mit
+`genesis[9]` nach `00 §4`. Nichts gleicht beide ab. `derive`, `trust` und `rank` nehmen die
+Parameter vom Aufrufer entgegen; `tools/sim/szenario.py` und `tools/example_nucleus.py` tippen
+sie als Literale. D35 verlangt Unveränderlichkeit von `D` über die Lebensdauer eines Scopes,
+weil `n/D` in jeder signierten Vouch steckt. Ein Leser kann heute mit einem anderen `D` rechnen
+als der Scope deklariert, und nichts zeigt es an.
+
+**Zweitens, kleiner:** `TrustParams.__post_init__` prüft dieselben Wohlgeformtheitsbedingungen
+wie `00 §4.0`, in eigener Formulierung. Sie stimmen heute überein — `C0 > 0` und `C₀ >= 1` sind
+über `int` dasselbe, ebenso `0 < γ_num < γ_den` und `1 <= γ_num < γ_den`. Zwei Orte, eine Regel:
+notiert, nicht zusammengelegt, weil eine Zusammenlegung `params.py` an die Spec-Prosa binden
+würde statt an ein Objekt.
+
+**Die Literaturprüfung hat den Fork aufgelöst, statt ihn zu entscheiden** (Prüfregel 15). Die
+Frage war, was ein Verifizierer ohne Genesis tun soll. Zwei Familien antworten:
+
+| System | Bauform | Antwort bei fehlender oder abweichender Quelle |
+|---|---|---|
+| TUF | Trust Anchor out-of-band, alles Weitere aus signierten Metadaten | Schwellen nie aus Client-Konfiguration; abgelaufenen Metadaten wird nicht vertraut |
+| go-ethereum | Genesis trägt nur einen Teil der Chain-Spec, der Rest liegt im Client | `CheckCompatible` meldet `ConfigCompatError` mit Rückspulpunkt, kein Vermerk |
+| Web-PKI (OCSP) | Widerrufsstatus wird online geholt | Soft-Fail — und er ist wirkungslos, weil der Angreifer den Kanal hält |
+
+**Ethereum ist derselbe Fall, nicht nur ein ähnlicher:** dass die Parameter teils im
+content-adressierten Anker und teils in der Implementierung stehen, ist dort die benannte Ursache
+dafür, dass zwei Clients dasselbe Netz verschieden sehen. Genau diese Lücke hatte MaR.
+
+**Die Web-PKI liefert die Begründung dafür, warum ihre eigene Antwort hier nicht gilt.** Der
+Soft-Fail existiert, weil ein Responder ausfallen kann und ein Hard-Fail dann funktionierende
+Verbindungen bricht. Ein Genesis ist kein Responder: unveränderlich, klein, content-adressiert,
+und über `N` in jedem Claim referenziert. Die Antwort der Praxis auf den Soft-Fail war Stapling
+und Mitliefern — die Information reist mit, statt nachgeschlagen zu werden. In MaR ist das der
+Normalfall und nicht die Verschärfung; D121s Bündel trägt die Objektmap bereits.
+
+**Beschluss: `resolve_trust_params` in `mensch_als_republik/trust/params.py`.** Signatur und
+fünf Lagen stehen in `02 §8.1`. Die Bindungsprüfung ist die aus D145, mit derselben Begründung
+aus `03 §1.2`: ein falsches Genesis ist eine falsche Zuordnung, kein Teilwissen.
+
+**Der eigentliche Defektfall ist die dritte Lage** — Schlüssel 9 vorhanden **und** abweichende
+Parameter übergeben. Nur dort behauptet jemand zwei verschiedene Kalibrierungen für denselben
+Scope, und nur dort kann eine Vouch still umbewertet werden. Die anderen vier Lagen sind
+Nebenwirkungen einer sauberen Signatur.
+
+**Verworfen — `derive` bindet das Genesis selbst.** Das zöge ein Objekt in Layer 02, das Layer 02
+nie brauchte, und machte den Trust-Graphen ohne Nukleus unrechenbar. Die Naht aus `03 §1.2` ist
+billiger und bereits erprobt.
+
+**Verworfen — Rückgabe eines Vermerks statt einer Ausnahme.** Ein Trust-Score, der unter
+bestrittener Kalibrierung entstanden ist, ist keine schwächere Aussage, sondern eine über einen
+anderen Scope. Und `02 §7` verlangt, dass fehlendes Wissen ein Ergebnis nur **senkt**; ein
+falsches `C₀` senkt nicht, es verschiebt — dieselbe dritte Richtung, die D120 für den Autor über
+seine eigene Kette gefunden hat.
+
+**Nicht entschieden: `anchor_set` (`genesis[3]`).** Nach TUFs Trennung ist es der Trust Anchor
+und nicht ein abgeleiteter Parameter; `02 §6.3` führt es ausdrücklich als out-of-band etabliert.
+Wer bewusst mit einer Teilmenge der Anker rechnet, tut nichts Falsches. Bleibt ungebunden, als
+benannte Grenze und nicht als Versehen.
+
+**Offen: `D >= C₀` ist ein SHOULD in `00 §4.0` und `02 §8` und wird nirgends geprüft.** Kein
+Defekt — ein SHOULD erzwingt nichts —, aber ein Kandidat für einen Vermerk, sobald es einen Ort
+gibt, der ihn trägt.
