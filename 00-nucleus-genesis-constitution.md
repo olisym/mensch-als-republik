@@ -387,16 +387,16 @@ ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
 ### 6.4 `resolve_current_key(N)` — der autoritative Auflösungsalgorithmus
 
 ```
-1.  Anker A bestimmen: nennt die Verfassung der juengsten ratifizierten Epoche (Gov-Spec
+1.  Anker A bestimmen: nennt die Verfassung der jüngsten ratifizierten Epoche (Gov-Spec
     §1.1) ein Feld nucleus_keys (§5.4), ist A diese Menge; sonst ist A = genesis.root_keys
     aus dem Objekt, dessen Hash == N.
-2.  Fuer jedes k aus A der Kette der vollstaendigen Rotationen (§6.1) ab k folgen, bis zu
-    dem Schluessel, der keinen vollstaendigen Nachfolger hat. Dieser Schluessel ist der
+2.  Für jedes k aus A der Kette der vollständigen Rotationen (§6.1) ab k folgen, bis zu
+    dem Schlüssel, der keinen vollständigen Nachfolger hat. Dieser Schlüssel ist der
     Kopf der Kette von k.
-3.  Ist die Kette von k an einem Punkt equivoziert (§6.3) und loest keine Aenderung von
+3.  Ist die Kette von k an einem Punkt equivoziert (§6.3) und löst keine Änderung von
     nucleus_keys sie auf, liefert k keinen Kopf; Nukleus-Akte beider konkurrierender
-    Schluessel gelten als nicht autorisiert (Detect-not-Prevent, Atom-Spec §A3).
-4.  Rueckgabe ist die Vereinigung der Koepfe aller k aus A.
+    Schlüssel gelten als nicht autorisiert (Detect-not-Prevent, Atom-Spec §A3).
+4.  Rückgabe ist die Vereinigung der Köpfe aller k aus A.
 ```
 Der Rückgabewert ist die Menge der aktuell autorisierten Schlüssel. Jeder Verifizierer rechnet das
 lokal über seinen bekannten Claim-Teilgraphen (Partitionstoleranz wie Trust-Flow-Spec §7).
@@ -415,6 +415,13 @@ autorverkettet und hat die Voraussetzung nicht.
 **Das Ergebnis ist unter Wissenszuwachs nicht monoton (D154).** Trifft die Gegenzeichnung einer
 früheren Rotation nach der einer späteren ein, springt der Kopf zurück. Das ist dieselbe Klasse
 wie nachträglich entdeckte Equivocation und die sichere Richtung.
+
+**Was als Kettenglied zählt (D155).** Rotate und Ack müssen `ACTIVE` sein; `EXPIRED` zählt bei
+diesen beiden Prädikaten wie `ACTIVE`, weil eine ablaufende Rotation die Autorität zurückspringen
+ließe — dieselbe Monotonie-Begründung, aus der `01 §5.3` das `t_exp` von `core/*` ignoriert. Sind
+zwei vollständige Rotationen desselben Autors mangels Zwischenglied nicht vergleichbar, liefert
+die Wurzel keinen Kopf. Trifft der Lauf einen bereits besuchten Schlüssel, ebenso: eine zyklische
+Kette ist keine Nachfolge.
 
 **Zustand vor `00a`.** Solange `resolve_current_key` nicht gebaut ist, gilt
 `resolve_current_key(N) = genesis.root_keys`, und ein vorgefundenes `rotate-key@1` wird **nicht**

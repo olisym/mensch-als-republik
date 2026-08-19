@@ -5159,87 +5159,87 @@ und Anna dürfen jeder allein als der Nukleus handeln. Das ist nach `§7` zuläs
 ist zugleich der erste Ort, an dem diese Bauform auf echte Menschen träfe, und damit der erste
 Kandidat für den Verfassungsknopf, falls er je gebaut wird.
 
-### D150 — Die Governance-Rotation bekommt einen Traeger: `nucleus_keys` in der Verfassung
+### D150 — Die Governance-Rotation bekommt einen Träger: `nucleus_keys` in der Verfassung
 
 **Der Befund.** `00 §6.2` verlangt „ein `propose@1`/Abstimmung, dessen Payload den neuen
-autorisierten Schluessel deklariert". Diese Payload gibt es nicht. Das Vorschlagsobjekt
-(`04 §2.4`) traegt genau drei Felder — `{0: scope, 1: predecessor, 2: constitution_hash}`, fest
-kodiert in `governance/objects.py` — und das Verfassungs-Minimal-Schema (`00 §5`) traegt vier,
-von denen keines einen Schluessel aufnimmt. `§6.4` Schritt 3 war damit nicht bloss im
-Effektivpunkt unterbestimmt; er verwies auf ein Objekt, das die Aussage nicht ausdruecken kann.
+autorisierten Schlüssel deklariert". Diese Payload gibt es nicht. Das Vorschlagsobjekt
+(`04 §2.4`) trägt genau drei Felder — `{0: scope, 1: predecessor, 2: constitution_hash}`, fest
+kodiert in `governance/objects.py` — und das Verfassungs-Minimal-Schema (`00 §5`) trägt vier,
+von denen keines einen Schlüssel aufnimmt. `§6.4` Schritt 3 war damit nicht bloß im
+Effektivpunkt unterbestimmt; er verwies auf ein Objekt, das die Aussage nicht ausdrücken kann.
 
 **Die Fehlerform ist die von D145.** Der allgemeine Satz existiert und ist richtig; die
-Aufzaehlung darunter traegt ihn nicht. Gefunden nicht beim Lesen von `00`, sondern beim Lesen
+Aufzählung darunter trägt ihn nicht. Gefunden nicht beim Lesen von `00`, sondern beim Lesen
 von `objects.py` gegen `00 §6.2` — dieselbe Bewegung wie in D118.
 
-**Beschluss.** Die Verfassung bekommt ein fuenftes normatives Feld `nucleus_keys`
+**Beschluss.** Die Verfassung bekommt ein fünftes normatives Feld `nucleus_keys`
 (`array[bytes32]`, optional). Fehlt es, gilt `genesis.root_keys`. Ist es gesetzt, **ersetzt** es
 den Anker der Key-Chain (`00 §5.4`, `§6.4` Schritt 1).
 
-**Begruendung, in dieser Reihenfolge.**
+**Begründung, in dieser Reihenfolge.**
 
-1. Die Bauform steht schon da. `arbitration.arbitrators` ist bereits eine Autoritaetsliste im
-   Verfassungsobjekt: wer im Scope urteilen darf. `nucleus_keys` ist dieselbe Form fuer: wer als
-   der Nukleus handeln darf. Kein neues Primitiv, und `08 §3` faellt eindeutig aus — die
-   Bestandstabelle fuehrt Autoritaetslisten unter Policy.
+1. Die Bauform steht schon da. `arbitration.arbitrators` ist bereits eine Autoritätsliste im
+   Verfassungsobjekt: wer im Scope urteilen darf. `nucleus_keys` ist dieselbe Form für: wer als
+   der Nukleus handeln darf. Kein neues Primitiv, und `08 §3` fällt eindeutig aus — die
+   Bestandstabelle führt Autoritätslisten unter Policy.
 2. Die Schwelle stimmt ohne Zusatzregel. `§6.2` verlangt die `amendment`-Schwelle; eine
-   Verfassungsaenderung **ist** diese Schwelle (`00 §5.3`, `04 §5`).
-3. Der Effektivpunkt loest sich ersatzlos auf. Die Epochenkette ist ueber `predecessor` total
-   geordnet und uhrfrei. Die Verfassung der juengsten ratifizierten Epoche setzt den Anker neu,
+   Verfassungsänderung **ist** diese Schwelle (`00 §5.3`, `04 §5`).
+3. Der Effektivpunkt löst sich ersatzlos auf. Die Epochenkette ist über `predecessor` total
+   geordnet und uhrfrei. Die Verfassung der jüngsten ratifizierten Epoche setzt den Anker neu,
    statt mit einem Kettenende verglichen zu werden. Der verbotene Vergleich zweier Ordnungen aus
    `§6.4` Schritt 3 entsteht nicht mehr — und die Frage, ob ein Rotate-Claim vor oder nach der
-   Epoche liegt, entsteht ebenfalls nicht: ein Rotate eines nicht mehr genannten Schluessels
-   verliert seine Wurzel und wirkt nicht, unabhaengig davon, wann er signiert wurde.
-4. Kein Golden Anchor bricht. `proposal_hash` bleibt unveraendert, `04`s Vektoren bleiben gueltig.
+   Epoche liegt, entsteht ebenfalls nicht: ein Rotate eines nicht mehr genannten Schlüssels
+   verliert seine Wurzel und wirkt nicht, unabhängig davon, wann er signiert wurde.
+4. Kein Golden Anchor bricht. `proposal_hash` bleibt unverändert, `04`s Vektoren bleiben gültig.
 
-**Verworfen — ein viertes Feld im Vorschlagsobjekt.** Aendert die CBOR-Kodierung von
-`proposal_hash` und damit jeden Anker in `04-golden-anchors.md`. Ausserdem traegt heute jeder
-Vorschlag einen `constitution_hash`; ein Vorschlag ohne Verfassungsaenderung ist nicht vorgesehen,
-und eine Rotation ohne Verfassungsaenderung waere genau das.
+**Verworfen — ein viertes Feld im Vorschlagsobjekt.** Ändert die CBOR-Kodierung von
+`proposal_hash` und damit jeden Anker in `04-golden-anchors.md`. Außerdem trägt heute jeder
+Vorschlag einen `constitution_hash`; ein Vorschlag ohne Verfassungsänderung ist nicht vorgesehen,
+und eine Rotation ohne Verfassungsänderung wäre genau das.
 
-**Verworfen — ein eigenes Profil `govern-rotate@1`.** Ein neuer Mechanismus fuer eine Aussage,
+**Verworfen — ein eigenes Profil `govern-rotate@1`.** Ein neuer Mechanismus für eine Aussage,
 die ein bestehendes Objekt tragen kann. `08 §3`: keines von beidem, also nicht ins Protokoll.
 
 **Neu und nicht vorgelegt: die leere Liste.** `nucleus_keys = []` bedeutet **keine** autorisierten
-Schluessel; Nukleus-Akte sind dann nicht autorisiert. Das ist die sichere Richtung, dieselbe wie in
-`§6.4` Schritt 3 und `§9` („lieber kein gueltiger Akt als ein falsch autorisierter"). Die
-Gegenrichtung — leer wie fehlend behandeln, also zurueck auf `genesis.root_keys` — laesst eine
-Governance, die entmachten will, ins Leere laufen und laesst den alten Schluessel maechtig. Der
-Preis ist, dass eine Verfassung den Nukleus per Amendment handlungsunfaehig machen kann. Das ist
-ausdrueckbar und wird nicht verhindert.
+Schlüssel; Nukleus-Akte sind dann nicht autorisiert. Das ist die sichere Richtung, dieselbe wie in
+`§6.4` Schritt 3 und `§9` („lieber kein gültiger Akt als ein falsch autorisierter"). Die
+Gegenrichtung — leer wie fehlend behandeln, also zurück auf `genesis.root_keys` — lässt eine
+Governance, die entmachten will, ins Leere laufen und lässt den alten Schlüssel mächtig. Der
+Preis ist, dass eine Verfassung den Nukleus per Amendment handlungsunfähig machen kann. Das ist
+ausdrückbar und wird nicht verhindert.
 
 ### D151 — `00a` baut die Key-Chain, `00b` den Verfassungsanker
 
 **Beschluss.** Der Lauf `00a-rotate-key` baut `resolve_current_key` mit dem Anker als
 **Parameter** und `rotate-key@1`/`rotate-ack@1` als Kettenmechanik. Das Bestimmen des Ankers aus
-der juengsten ratifizierten Epoche (D150) ist ein eigener Lauf `00b`.
+der jüngsten ratifizierten Epoche (D150) ist ein eigener Lauf `00b`.
 
-**Begruendung.** D150 zieht `00a` sonst in Layer 04 hinein — Epochenkette lesen, juengste
+**Begründung.** D150 zieht `00a` sonst in Layer 04 hinein — Epochenkette lesen, jüngste
 ratifizierte Epoche bestimmen, `policy.py` um ein Verfassungsfeld erweitern — und diese Arbeit
-teilt mit der Kettenauflösung nichts ausser der Signatur. Die Entscheidung faellt trotzdem jetzt,
+teilt mit der Kettenauflösung nichts außer der Signatur. Die Entscheidung fällt trotzdem jetzt,
 damit `00a` keine Signatur baut, die `00b` umbauen muss.
 
 **Die Naht ist die bekannte.** `03 §4` nimmt `authorized_keys` als Parameter (D62),
-`resolve_policy` traegt die Bindungspruefung fuer die Verfassung (`03 §1.2`),
-`resolve_trust_params` die fuer die Kalibrierung (D147). `resolve_current_key` nimmt den Anker
-gleichermassen als Parameter; das Herleiten des Ankers bekommt in `00b` seinen eigenen Ort.
+`resolve_policy` trägt die Bindungsprüfung für die Verfassung (`03 §1.2`),
+`resolve_trust_params` die für die Kalibrierung (D147). `resolve_current_key` nimmt den Anker
+gleichermaßen als Parameter; das Herleiten des Ankers bekommt in `00b` seinen eigenen Ort.
 
 **Getragene Grenze bis `00b`.** Ein vorgefundenes `nucleus_keys` wird nicht ausgewertet. Das ist
-die **unsichere** Richtung — ein Leser vertraut weiter dem alten Schluessel, obwohl die Mitglieder
-ihn abgesetzt haben. Als benannte Grenze tragbar, als Schweigen waere sie eine Luecke; derselbe
+die **unsichere** Richtung — ein Leser vertraut weiter dem alten Schlüssel, obwohl die Mitglieder
+ihn abgesetzt haben. Als benannte Grenze tragbar, als Schweigen wäre sie eine Lücke; derselbe
 Satz und derselbe Grund wie beim „Zustand vor `00a`" in `§6.4`.
 
-### D152 — Die Gegenzeichnung ist `nuc:N/rotate-ack@1`, ein vierteiliges Strukturpraedikat
+### D152 — Die Gegenzeichnung ist `nuc:N/rotate-ack@1`, ein vierteiliges Strukturprädikat
 
 **Die offene Stelle aus D125.** `00 §6.1` sagt „ein Claim `C` mit `C.I == K_n`, der die
-`claim_id` des Rotate nennt" und laesst die Feldbelegung offen.
+`claim_id` des Rotate nennt" und lässt die Feldbelegung offen.
 
 **Der Satz ist zu weit.** Ein `core/revoke@1` mit `J = [claim-ref, claim_id(R_n)]`, signiert von
-`K_n`, erfuellt ihn woertlich. Eine Ruecknahme als Zustimmung zu lesen ist nicht die abwegigste
+`K_n`, erfüllt ihn wörtlich. Eine Rücknahme als Zustimmung zu lesen ist nicht die abwegigste
 Belegung, sondern die naheliegendste Fehlbelegung: `claim-ref` ist der Tag, den die
-`core`-Praedikate ohnehin fuehren (`01 §5`).
+`core`-Prädikate ohnehin führen (`01 §5`).
 
-**Beschluss.** Ein eigenes Praedikat, vierteilig nach dem Muster von D63:
+**Beschluss.** Ein eigenes Prädikat, vierteilig nach dem Muster von D63:
 
 ```
 ack.p  == nuc:N/rotate-ack@1
@@ -5248,61 +5248,99 @@ ack.I  == R_n.J.value    und   R_n.J.tag == identity
 ack.N  == R_n.N
 ```
 
-**Die vierte Bedingung ist nicht redundant** — dieselbe Begruendung wie die dritte in D63.
+**Die vierte Bedingung ist nicht redundant** — dieselbe Begründung wie die dritte in D63.
 `01 §2.2` Regel 3 erzwingt nur, dass `N` gesetzt und selbstkonsistent ist, nicht dass zwei Claims
 denselben Scope teilen. Ohne sie zeichnet eine Ack aus Nukleus B eine Rotation in Nukleus A gegen.
 
-**Trennende Vektoren fuer `00a`:** Ack vom Vorgaengerschluessel statt vom Nachfolger; Ack mit
+**Trennende Vektoren für `00a`:** Ack vom Vorgängerschlüssel statt vom Nachfolger; Ack mit
 fremdem `N`; Ack als `core/revoke@1` statt `rotate-ack@1`; Rotate, dessen `J.tag` `claim-ref`
 statt `identity` ist.
 
 ### D153 — `rotate-key@1` und `rotate-ack@1` sind Protokoll-Default irrevocable
 
-**Der Fall.** Waere `rotate-ack@1` widerrufbar, koennte `K_n` die eigene Zustimmung
-zuruecknehmen und die Autoritaet spraenge auf `K_{n-1}` zurueck. Das ist der Zustand, den D125
+**Der Fall.** Wäre `rotate-ack@1` widerrufbar, könnte `K_n` die eigene Zustimmung
+zurücknehmen und die Autorität spränge auf `K_{n-1}` zurück. Das ist der Zustand, den D125
 unter „Verworfen — letzter gewinnt" ausgeschlossen hat, nur von der anderen Seite erreicht.
-Dasselbe gilt fuer den Rotate selbst.
+Dasselbe gilt für den Rotate selbst.
 
-**Beschluss.** Beide Praedikate gehoeren in die Protokoll-Default-Menge der irrevocablen
-Praedikate, neben `obligation@1` (`00 §5.2`, D70). `irrevocable_predicates` kann die Menge
+**Beschluss.** Beide Prädikate gehören in die Protokoll-Default-Menge der irrevocablen
+Prädikate, neben `obligation@1` (`00 §5.2`, D70). `irrevocable_predicates` kann die Menge
 weiterhin nur erweitern.
 
-**Wirkungspruefung (Pruefregel 16).** Der Traeger ist `PROTOCOL_IRREVOCABLE` in `policy.py`, heute
+**Wirkungsprüfung (Prüfregel 16).** Der Träger ist `PROTOCOL_IRREVOCABLE` in `policy.py`, heute
 `frozenset({"obligation@1"})`. Der Konsument ist `is_irrevocable`, aufgerufen aus der
 Klassifikation; die Wirkung ist, dass ein `core/revoke@1` auf einen Rotate oder eine Ack ignoriert
-und vermerkt wird. Die Erweiterung gehoert in den `00a`-Lauf, nicht in diese Spec-Runde — sie ist
-ohne Kettenmechanik nicht pruefbar.
+und vermerkt wird. Die Erweiterung gehört in den `00a`-Lauf, nicht in diese Spec-Runde — sie ist
+ohne Kettenmechanik nicht prüfbar.
 
-**Getragene Grenze.** Ein Vertipper in der Ack ist nicht heilbar, sondern nur ueber die
-Governance-Rotation (`§6.2`). Das ist derselbe Preis, den D125 fuer den Rotate bereits akzeptiert
-hat, und dieselbe Bauform wie beim Schuldenschutz: ein Boden, keine Rueckfallebene.
+**Getragene Grenze.** Ein Vertipper in der Ack ist nicht heilbar, sondern nur über die
+Governance-Rotation (`§6.2`). Das ist derselbe Preis, den D125 für den Rotate bereits akzeptiert
+hat, und dieselbe Bauform wie beim Schuldenschutz: ein Boden, keine Rückfallebene.
 
-### D154 — Ordnung ueber die Autorenkette; der Kopf kann unter Wissenszuwachs zurueckspringen
+### D154 — Ordnung über die Autorenkette; der Kopf kann unter Wissenszuwachs zurückspringen
 
 **Der Fall.** `K_{n-1}` signiert nacheinander `R_a` und `R_b` auf verschiedene Nachfolger mit
 **verschiedener** `h_prev`. Das ist keine Equivocation (`§6.3` verlangt dieselbe `h_prev`), beide
-sind nach der Kettenregel gueltig, und D125 sagt: der **erste vollstaendige** bindet. Trifft
-zuerst nur die Ack zu `R_b` ein, bindet nach lokalem Wissen `R_b`; trifft spaeter die Ack zu `R_a`
-ein, bindet `R_a`, und alle Akte des zwischenzeitlichen Kopfes verlieren rueckwirkend ihre
+sind nach der Kettenregel gültig, und D125 sagt: der **erste vollständige** bindet. Trifft
+zuerst nur die Ack zu `R_b` ein, bindet nach lokalem Wissen `R_b`; trifft später die Ack zu `R_a`
+ein, bindet `R_a`, und alle Akte des zwischenzeitlichen Kopfes verlieren rückwirkend ihre
 Autorisierung.
 
 **Beschluss.** „Erster" ist die Position in der eigenen Kette von `K_{n-1}` (`h_prev`), nicht die
-Empfangsreihenfolge. Der Ruecksprung wird **benannt** und getragen.
+Empfangsreihenfolge. Der Rücksprung wird **benannt** und getragen.
 
-**Verworfen — erster nach Empfang.** Zwei Leser mit demselben Claim-Bestand kaemen zu
+**Verworfen — erster nach Empfang.** Zwei Leser mit demselben Claim-Bestand kämen zu
 verschiedenen Ergebnissen. Das ist schlechter als Nicht-Monotonie: nicht reproduzierbar statt
 revidierbar.
 
-**Die Klasse ist bekannt.** Mehr Wissen revidiert einen Zustand — dieselbe Lage wie nachtraeglich
+**Die Klasse ist bekannt.** Mehr Wissen revidiert einen Zustand — dieselbe Lage wie nachträglich
 entdeckte Equivocation, Detect-not-Prevent (`01 §A3`, `02 §7`). Neu ist nur, dass sie hier die
-Autoritaet trifft und damit indirekt jeden Nukleus-Akt.
+Autorität trifft und damit indirekt jeden Nukleus-Akt.
 
-**Ein defektes Kettenglied blockiert nichts.** Eine ungueltige oder unvollstaendige Rotation ist
-schlicht kein Nachfolger; der Kopf bleibt beim letzten vollstaendigen Glied. Der Betriebsschaden
-der TUF-Referenzimplementierung — eine ungueltige Version blockierte alle folgenden dauerhaft —
-setzt eine lueckenlos versionsnummerierte Kette voraus. Die Kette hier ist autorverkettet und hat
+**Ein defektes Kettenglied blockiert nichts.** Eine ungültige oder unvollständige Rotation ist
+schlicht kein Nachfolger; der Kopf bleibt beim letzten vollständigen Glied. Der Betriebsschaden
+der TUF-Referenzimplementierung — eine ungültige Version blockierte alle folgenden dauerhaft —
+setzt eine lückenlos versionsnummerierte Kette voraus. Die Kette hier ist autorverkettet und hat
 diese Voraussetzung nicht. Damit ist der dritte offene Punkt aus dem Sitzungsstart keiner.
 
-**Ebenfalls erledigt: „folge der laengsten Kette".** Nach D149 gibt es nichts zu maximieren; der
-Wortlaut faellt aus `§6.4` und wird durch „bis zum Schluessel ohne vollstaendigen Nachfolger"
+**Ebenfalls erledigt: „folge der längsten Kette".** Nach D149 gibt es nichts zu maximieren; der
+Wortlaut fällt aus `§6.4` und wird durch „bis zum Schlüssel ohne vollständigen Nachfolger"
 ersetzt.
+
+### D155 — Vier Belegungen, ohne die `resolve_current_key` nicht rechenbar ist
+
+Die vier Stellen fielen beim Lesen von `verifier.py` und `index.py` gegen `§6.4` an. Keine
+folgt aus D150 bis D154; jede wäre sonst im Implementierer entschieden worden.
+
+**(a) Zwei vollständige Rotationen desselben Autors, die nicht vergleichbar sind.** D154 ordnet
+über die eigene Kette: bindend ist die frühere. Rechenbar ist das, indem geprüft wird, ob `R_a`
+auf dem `h_prev`-Pfad von `R_b` liegt (`store.get(h_prev)` läuft rückwärts). Fehlt ein Glied
+dazwischen im lokalen Bestand, liegt keine auf dem Pfad der anderen und die Ordnung ist
+unbestimmt. **Beschluss: dann liefert diese Wurzel keinen Kopf**, wie bei Equivocation. Die
+Alternative — irgendeine nehmen — wählt eine Autorität aus Unwissen.
+
+**(b) Welcher Zustand zählt.** **Beschluss: Rotate und Ack müssen `ACTIVE` sein**, wie die vierte
+Bedingung in D63 („beide aktiv"). Kein neuer Satz, nur die Übernahme des Präzedenzfalls. Damit
+fallen `PENDING` (Vorgänger unbekannt) und `EQUIVOCATION_FLAGGED` von selbst heraus.
+
+**(c) `t_exp` auf Rotate oder Ack.** Heute nicht verboten. Wäre es wirksam, liefe eine Rotation
+ab und die Autorität spränge zum Vorgänger zurück — dieselbe Nicht-Monotonie, aus der `01 §5.3`
+bereits folgert, dass `core/*` sein `t_exp` ignoriert. **Beschluss: `EXPIRED` zählt bei diesen
+beiden Prädikaten wie `ACTIVE`**, geprüft in `keys.py`. Das geht (b) vor.
+
+Verworfen — eine Ignorierregel nach dem Muster von `01 §5.4`: ein Eingriff in eine eingefrorene
+Schicht für einen Fall, den `00a` lokal erledigen kann. Die getragene Grenze: ein `t_exp` auf
+einer Rotation bleibt sichtbar und wirkt woanders, nur nicht auf die Autoritätsauflösung.
+
+**(d) Zyklen. Neu und nicht vorgelegt.** Rotiert `K_1` auf `K_2` und `K_2` zurück auf `K_1`, läuft
+ein naiver Vorwärtslauf endlos. **Beschluss: der Lauf führt die Menge der besuchten Schlüssel;
+trifft er einen bereits besuchten, liefert die Wurzel keinen Kopf.** Eine zyklische Kette ist
+keine Nachfolge. TAP 8 hat für dieselbe Lage eine Zyklusprüfung vorgesehen (Literaturtabelle in
+D149); übernommen wird die Prüfung, nicht der übrige Vorschlag.
+
+**Zur Equivocation, die keine dieser vier ist.** `§6.4` Schritt 3 sagt: ist die Kette an einem
+Punkt equivoziert, liefert die Wurzel keinen Kopf. Das gilt **unabhängig von Vollständigkeit** —
+ein Equivocation-Paar aus zwei Rotationen ohne Gegenzeichnung blockiert ebenso. Andernfalls bliebe
+im Diebstahlfall (`§6.3`) der kompromittierte Schlüssel selbst der Kopf, und die Entscheidung
+fiele nicht an die Mitglieder. Das steht bereits in der Spec und wird hier nur ausgeschrieben,
+weil der Zustandstest aus (b) allein es nicht leistet.
