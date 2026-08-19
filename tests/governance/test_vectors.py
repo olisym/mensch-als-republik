@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
+
 import pytest
 
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import claim_id
+from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance import (
     Finding,
     GovernanceFinding,
@@ -44,6 +47,8 @@ from .fixtures import (
     PROPOSAL_AMEND_E1,
     PROPOSAL_HIGH,
     PROPOSAL_LOWER,
+    STOCK_GENESIS,
+    STOCK_N,
     fresh_alice,
     fresh_bob,
     fresh_carol,
@@ -496,15 +501,21 @@ def test_GV_23() -> None:
 
 
 def test_GV_24() -> None:
-    genesis = dict(GENESIS_D)
-    genesis[6] = 1
+    epoch = Epoch(
+        scope=STOCK_N, index=2, constitution_hash=constitution_hash(C2)
+    )
+    proposal = Proposal(
+        scope=STOCK_N,
+        predecessor=epoch.epoch_id,
+        constitution_hash=constitution_hash(C3),
+    )
     result = _tally(
         store_with(),
-        epoch=EPOCH_2,
-        proposal=PROPOSAL_2,
+        epoch=epoch,
+        proposal=proposal,
         constitution=C2,
         target=C3,
-        genesis=genesis,
+        genesis=STOCK_GENESIS,
     )
     assert result.state is TallyState.UNEVALUABLE
     assert GovernanceFinding.UNSUPPORTED_WEIGHT_MODE in _kinds(result)
@@ -583,10 +594,19 @@ def test_GV_28() -> None:
 def test_GV_29() -> None:
     genesis = dict(GENESIS_D)
     genesis[5] = 3
+    scope = hashlib.sha256(DOM_NUC_GEN + cbor_canon.encode(genesis)).digest()
+    epoch = Epoch(
+        scope=scope, index=2, constitution_hash=constitution_hash(C2)
+    )
+    proposal = Proposal(
+        scope=scope,
+        predecessor=epoch.epoch_id,
+        constitution_hash=constitution_hash(C3),
+    )
     result = _tally(
         store_with(),
-        epoch=EPOCH_2,
-        proposal=PROPOSAL_2,
+        epoch=epoch,
+        proposal=proposal,
         constitution=C2,
         target=C3,
         genesis=genesis,

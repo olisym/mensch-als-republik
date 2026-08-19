@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from enum import Enum
 
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id
+from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance.findings import (
     Finding,
     GovernanceFinding,
@@ -66,7 +68,11 @@ def hopeless(no: int, n: int, num: int, den: int) -> bool:
 
 
 def threshold_class(old_obj: dict, new_obj: dict, genesis_obj: dict) -> str:
-    """Klasse aus dem Verfassungsunterschied (04-governance.md §3.4, D113)."""
+    """Klasse aus dem Verfassungsunterschied (04-governance.md §3.4, D113).
+
+    Liest ``genesis_obj[5]`` ungeprüft. Der Aufrufer muss Bindung und Index
+    bereits validiert haben — so wie ``decide`` es tut (04-governance.md §3, D145).
+    """
     old_rest = {k: v for k, v in old_obj.items() if k != "participants"}
     new_rest = {k: v for k, v in new_obj.items() if k != "participants"}
     if cbor_canon.encode(old_rest) == cbor_canon.encode(new_rest):
@@ -160,9 +166,14 @@ def decide(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> TallyResult:
-    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112)."""
+    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112, D145)."""
     if proposal.scope != epoch.scope:
         raise ValueError("proposal scope does not match epoch scope")
+    if (
+        hashlib.sha256(DOM_NUC_GEN + cbor_canon.encode(genesis_obj)).digest()
+        != epoch.scope
+    ):
+        raise ValueError("genesis_obj does not match epoch scope")
     if proposal.predecessor != epoch.epoch_id:
         return _unevaluable(
             GovernanceFinding.STALE_EPOCH_VOTE,
