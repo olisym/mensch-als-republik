@@ -390,9 +390,9 @@ akt.I ∈ resolve_current_key(akt.N)
   gewöhnliche Ed25519-Signatur, für `key_mode = 1` eine FROST-Gruppensignatur unter dem aktuellen
   Gruppenschlüssel; in beiden Fällen trägt der Akt **eine** Signatur.
 - **Bei mehreren autorisierten Schlüsseln genügt einer.** `root_keys` ist eine Liste — der
-  Beispiel-Nukleus in §3.1 hat zwei —, und jeder von ihnen darf allein handeln. Ob ein Nukleus
-  stattdessen eine Schwelle verlangen können soll, ist **nicht entschieden** und wäre ein
-  Verfassungsknopf nach §4, kein Protokolldefault.
+  Beispiel-Nukleus in `example-nucleus.md` hat zwei (D149) —, und jeder von ihnen darf allein
+  handeln. Ob ein Nukleus stattdessen eine Schwelle verlangen können soll, ist **nicht
+  entschieden** und wäre ein Verfassungsknopf nach §4, kein Protokolldefault.
 - `akt.N` MUSS gesetzt sein und zum aufgelösten Scope passen (Atom-Spec §2.2, Bindungsregel).
 
 Das ist die konkrete Code-Konsequenz von DF-0: die heutige Prüfung `atom.I == scope` in

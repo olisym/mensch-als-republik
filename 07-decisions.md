@@ -5105,3 +5105,56 @@ Schlusszeile für die Simulation von Hand getippt worden war. Daraus die operati
 selbst getippte Ankerzeile prüft den Anker nicht.** Ein Anhang ans Dateiende braucht überhaupt
 keinen Prosa-Anker; die tragende Vorbedingung ist, dass der letzte Registereintrag der erwartete
 ist, und die lässt sich ohne Zitat prüfen.
+
+### D149 — Die Schwellenfrage war bereits verortet; `00a` ist kleiner als vermutet
+
+**Der Anlass.** Vor der Design-Runde zu `00a` standen vier vermeintliche Forks: das
+Gegenzeichnungsprädikat kodieren, „die längste Kette" bei mehreren `root_keys`, ein uhrfreier
+Effektivpunkt der Governance-Rotation, und der Befund, dass `rotate-key@1` mit
+`J = [identity, K_n]` nicht ausdrücken kann, was mit den übrigen Schlüsseln geschieht. Drei davon
+sind keine.
+
+**`00 §7` hatte die Frage gestellt und beantwortet.** Wörtlich: `∈` ist Mengenzugehörigkeit und
+für jede Mächtigkeit definiert; bei mehreren autorisierten Schlüsseln genügt einer; und ob ein
+Nukleus stattdessen eine Schwelle verlangen können soll, ist **nicht entschieden und wäre ein
+Verfassungsknopf nach §4, kein Protokolldefault**. Der Supervisor hat diese Verortung über eine
+`08 §3`-Prüfung und drei Literaturrecherchen neu hergeleitet, statt den Absatz zu lesen — obwohl
+`§6` und `§7` als gelesen geführt wurden. Prüfregel 22 in ihrer teuersten Form: nicht ein
+falscher Bezeichner, sondern ein übersprungener Absatz, und die Kosten waren eine ganze
+Sitzungshälfte.
+
+**Die `08 §3`-Prüfung bestätigt die Verortung** und braucht keine Auslegung: die Bestandstabelle
+führt „Schwellenwerte, Arbitratorenlisten, Ressourcengrenzen" bereits unter Policy. Die Spec ist
+darin konsistent — `genesis[5]` ist ein **Index auf eine Klasse**, die Ratios selbst stehen in der
+Verfassung. Dieselbe Trennung, die für die Autorität gesucht wurde, ist eine Ebene tiefer schon
+gebaut. Damit entfällt auch die Spannung, an der die Runde hing: eine Schwelle im unveränderlichen
+Genesis wäre für immer festgeschrieben, in der Verfassung ist sie per `amendment` änderbar.
+
+**Was für `00a` folgt.** `resolve_current_key` liefert eine **Menge**; `|root_keys| = 2` bedeutet
+zwei parallele Ketten, deren Köpfe beide darin landen. Es gibt keine Auswahl zwischen
+konkurrierenden Ketten zu treffen, weil jede Rotation den Schlüssel **ihres eigenen Autors**
+ersetzt — Konkurrenz entsteht nur innerhalb einer Wurzel, und das ist Equivocation, die Layer 01
+seit jeher führt. `J = [identity, K_n]` ist damit korrekt und nicht defekt, und die
+Gegenzeichnung bleibt ein einzelner Claim. Offen bleibt allein das Gegenzeichnungsprädikat
+(D125, Belegung) und der uhrfreie Effektivpunkt der Governance-Rotation.
+
+**Die Literatur, damit sie nicht ein zweites Mal gesucht wird** (Prüfregel 15):
+
+| Quelle | Befund | Trägt für MaR |
+|---|---|---|
+| TUF-Spec, Root-Rolle | mehrere Schlüssel **plus** Schwelle; ein Angreifer unterhalb der Schwelle kompromittiert nichts; jeder Schlüssel zählt einmal | ja — die Kette ab einem out-of-band-Anker ist normativ, kein Vorschlag |
+| TUF TAP 8 | Rotate trägt Menge **und** Schwelle, dazu Zyklusprüfung und Selbstwiderruf per Selbstschleife | **nein** — seit 2017 nicht angenommen, TAP 20 legt einen Teil neu auf, und TAP 8 erklärt ausdrücklich, den Root-Fall nicht anzufassen |
+| did:plc | `rotationKeys` nach Autorität geordnet; ein höherrangiger Schlüssel überschreibt Historie **innerhalb von 72 Stunden** | nein — die Rangordnung ist uhrfrei, das Fenster nicht, und ohne Fenster bleibt ein Altschlüssel dauerhaft mächtig (D125 hat das verworfen) |
+| Web-PKI, Soft-Fail vs. Hard-Fail | Soft-Fail ist wirkungslos, wo der Angreifer den Kanal hält; die Antwort der Praxis war Mitliefern statt Nachschlagen | ja, als Begründung in D147 |
+| go-ethereum | Parameter teils im content-adressierten Anker, teils im Client — die benannte Ursache dafür, dass zwei Clients dasselbe Netz verschieden sehen | ja, als Begründung in D147 |
+
+**Ein Verweisdefekt, mitkorrigiert.** `00 §7` schrieb dem Beispiel-Nukleus in `§3.1` zwei
+Wurzelschlüssel zu. `§3.1` und `04-golden-anchors.md` führen `[ALICE]`, also einen;
+`example-nucleus.md` führt an zwei Stellen `[BRUNO, ANNA]`. Die Zahl stimmte, die Fundstelle
+nicht. Nach Prüfregel 17 ist das schlechter als ein fehlender Verweis, weil er auf eine Stelle
+zeigt, die das Gegenteil belegt. Der Verweis geht auf `example-nucleus.md`.
+
+**Notiert, nicht entschieden.** `example-nucleus.md` führt damit eine **1-von-2-Autorität**: Bruno
+und Anna dürfen jeder allein als der Nukleus handeln. Das ist nach `§7` zulässig und bewusst. Es
+ist zugleich der erste Ort, an dem diese Bauform auf echte Menschen träfe, und damit der erste
+Kandidat für den Verfassungsknopf, falls er je gebaut wird.
