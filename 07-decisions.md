@@ -4827,3 +4827,46 @@ der Relaxation aus D140. D141 ist in keinem Punkt korrigiert, nur ergänzt.
 `Σ C(h)` für Gates ausschließt — die Größe ist schlaff, wo die Decke nicht bindet, und sie
 wandert mit dem Angreifer, wo sie es tut. Ebenso offen bleibt der Fork selbst: ob ein Mechanismus
 gegen den Distanzkauf gebaut wird. Beides sind Entscheidungen des Operators.
+
+### D143 — Kein Mechanismus gegen den Distanzkauf (schließt den Fork aus D140/D141)
+
+**Entschieden.** Es wird kein Mechanismus gebaut, der den Distanzkauf verhindert, erkennt oder
+abmildert. `C(x) = ⌊C₀ · γ^{d(s,x)}⌋` bleibt wie in `02 §3`. Die Kaufbarkeit von `d` bleibt eine
+benannte, gemessene und getestete Eigenschaft der Schicht.
+
+**Erstens — das Aufnahmekriterium schließt es aus.** `08 §3` fragt: senkt der Mechanismus die
+Kosten dafür, festzustellen, wer was gesagt hat, oder verteilt er Macht? Eine Positionsgröße
+gegen Bürgschaften zu stabilisieren, senkt keine Feststellungskosten. Es legt fest, wessen
+Position beweglich ist und wessen nicht — das ist Machtverteilung, also Policy, nicht Protokoll.
+
+**Zweitens — und das trägt die Entscheidung: der Schaden ist zu einem großen Teil gar keiner.**
+D141 hat gemessen, dass `p` eine Kapazitätseinheit beisteuert und der Fluss um drei steigt. Die
+drei Einheiten sind **ehrlicher Fluss, den die Decke vorher abgeschnitten hat**: `h` hatte einen
+Zufluss von `8` und durfte `1` weiterreichen. Der Kauf hebt eine Unterschätzung auf, die die
+Schicht selbst erzeugt hat. Ein Mechanismus, der den Kauf verhindert, hält genau diesen ehrlichen
+Fluss weiter draußen — er macht das Protokoll über einen gut verbundenen, seed-fernen ehrlichen
+Knoten dauerhafter falsch, um einem Angreifer einen Hebel zu nehmen, den dieser mit dem Budget
+eines verwirrten Menschen bezahlen muss. Der Tausch lohnt nicht.
+
+**Drittens — die Literatur kennt die gesuchte Größe nicht.** Nach D142: eine harte Knotendecke,
+die nicht über den Graphen kaufbar ist, existiert in der Familie sozialgraph-basierter Abwehren
+nicht; die reifsten Systeme (SumUp) haben die Garantie stattdessen an die Zahl der Angriffskanten
+gehängt. `02 §4` tut das bereits. Die Alternative mit der stärksten Schranke (SybilLimit) setzt
+Schätzungen globaler Größen voraus und ist mit „alles lokal, nichts global" unvereinbar.
+
+**Was damit als Preis angenommen ist.** Ein Angreifer, der einen seed-nahen ehrlichen Menschen
+verwirrt, kann seed-ferne ehrliche Knoten näher an den Anker ziehen und deren Decke heben — mit
+Hebel `3` bei Kosten von einer Kapazitätseinheit, linear in der Zahl der so behandelten
+Grenzknoten, gedeckelt in der gemessenen Topologie durch das Budget des Ankers. Das ist der Preis
+der harten Schranke aus `02 §4` und keine Schwäche in der Wahl der Sicht: die Schranke braucht
+eine Obergrenze pro Knoten, die Obergrenze braucht eine Positionsgröße, und jede Positionsgröße
+über dem Vouch-Graphen wird mit Vouches gestaltet. `02 §5` ist davon frei, weil es nichts
+verspricht — keine harte Schranke, für Gates verboten.
+
+**Rücknahmeprobe im Voraus.** Entsteht je ein Mechanismus gegen den Distanzkauf, werden
+`tests/trust/test_distanzkauf.py` und `tests/trust/test_deckenelastizitaet.py` rot. Diese
+Entscheidung ist damit nicht still zurücknehmbar: wer sie aufhebt, muss zwei Testdateien
+anfassen und diesen Eintrag überschreiben.
+
+**Nicht entschieden.** Ob `02 §4` einen normativen Satz über die Verwendung von
+`Σ_{h ∈ Grenze} C(h)` erhält (D142, letzter Absatz). Der Fork ist geschlossen, diese Frage nicht.
