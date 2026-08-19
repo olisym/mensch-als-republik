@@ -4539,6 +4539,9 @@ Rücknahmeprobe hat einen eindeutigen Ort.
 
 ### D139 — Distanz ist kaufbar; der Satz vom doppelten Schutz fällt
 
+**⚠️ Die Zahlen dieses Eintrags sind durch D141 ersetzt** (`02 §4`, Warnblock). Der Befund
+bleibt, die Rechnung war falsch: `Σ C(h)` ist eine Schranke, kein Ertrag.
+
 Ausgelöst durch die Frage, was ein erster realer Einsatz eigentlich prüfen würde. Vorgeschaltet
 war eine Literaturprüfung (Prüfregel 15), weil das Problem außerhalb von MaR seit
 fünfundzwanzig Jahren bearbeitet wird. Ergebnis der Prüfung: die Feldfrage und die
@@ -4681,3 +4684,66 @@ spaltenstochastische Fassung korrekt als die verworfene.
 **Konvention:** Hebt ein Registereintrag einen älteren auf, weist der Titel das aus und der Text
 nennt **Datei und Abschnitt**, die nachzuziehen sind. Ohne diese Angabe ist die Aufhebung im
 Register vollständig und in der Spec unsichtbar — der Zustand, der hier zwei Jahre gehalten hat.
+
+### D141 — Der Distanzkauf entfernt eine Decke, er trägt keinen Fluss (korrigiert D139)
+
+Nachzuziehen war `02-trust-flow.md §4`, Warnblock „Distanz ist kaufbar". Der Befund von D139
+bleibt vollständig bestehen; falsch war die Rechnung darin.
+
+**Der Fehler.** D139 schrieb, die Grenzsumme steige von `0` auf `32`, und nannte das den
+„Ertrag `C(p) · ⌊γ · C(p)⌋`, quadratisch in `C(p)`". `Σ_{h ∈ Grenze} C(h)` ist aber eine
+**obere Schranke**, kein erzielter Fluss. Die dort beschriebene Konstruktion — acht vorher
+unerreichbare Knoten mit `C = 0`, neu angehängt an `p` — trägt sogar **gar keinen** zusätzlichen
+Fluss: aller Fluss zu diesen Knoten müsste durch `p` laufen, und `p` deckelt bei `C(p)`. Der
+Angriff, wie ich ihn aufgeschrieben hatte, ist wertlos. Die Verwechslung von Schranke und Ertrag
+ist genau die Sorte Fehler, die Prüfregel 20 im Nachbarsatz gefunden hat und im eigenen Satz
+nicht.
+
+**Aufgefallen beim Versuch, den Testgraphen zu bauen.** Die Behauptung war zwei Tage alt und
+hatte einen Registereintrag, einen Warnblock in der Layer-Datei und eine Runde Prosa überstanden.
+Sie fiel in dem Moment, in dem sie für eine Maschine präzise genug formuliert werden musste —
+das D118-Muster, inzwischen zum wiederholten Mal.
+
+**Gemessen** (`γ = ½`, `C₀ = 16`, `D = 16`, Messlauf gegen `trust()` und `derive()`):
+
+| | ohne Angriff | mit Angriff |
+|---|---|---|
+| `d(h)` | 4 | 2 |
+| `C(h)` | 1 | 4 |
+| Zufluss zu `h` | 8 | 9, davon 1 von `p` |
+| `Σ C(h)` über der Grenze | 1 | 4 |
+| `maxflow(A → S)` | **1** | **4** |
+| `disjoint_paths` | 1 | 1 |
+
+Die Topologie: ein Anker `A`, vier Ketten `A → a_i → b_i → x_i → h` der Länge 4, dann `h → S`.
+`h` hat damit `8` Zufluss und sitzt bei `d = 4` mit `C(h) = 1` — die Knotendecke schneidet sieben
+Achtel des vorhandenen ehrlichen Zuflusses ab. Der Angreifer verwirrt `p` bei `d = 1` und lässt
+`p` mit `n = 2` von Budget `16` für `h` bürgen. Die Kante trägt `cap = ⌊2 · 8 / 16⌋ = 1`, genügt
+aber, um in `E⁺` zu liegen; `bfs_capacities` setzt `distance` beim **ersten** Sehen und
+schichtweise, also rutscht `h` auf `d = 2` und `C(h)` auf `4`.
+
+**Die korrigierte Aussage.** Gekauft wird nicht Fluss, sondern das **Entfernen einer Decke**. `p`
+steuert genau eine Kapazitätseinheit bei; drei der vier Einheiten sind ehrlicher Fluss, der
+vorher an `C(h) = 1` abgeschnitten wurde. Daraus folgt, welcher Grenzknoten für einen Angreifer
+lohnt: nicht der unerreichbare — der trägt nichts —, sondern der **gut verbundene, aber
+seed-ferne**. Peripherie mit Substanz. Wer lange dabei und weit vom Seed ist, ist das lohnendste
+Ziel, und das ist eine unangenehmere Aussage als die ursprüngliche.
+
+`disjoint_paths` bleibt bei `1` und ist damit die Größe, die der Angriff **nicht** bewegt. Ob das
+trägt oder ein Artefakt dieser Topologie ist, ist nicht gemessen und wird hier nicht behauptet.
+
+**Was unverändert bleibt.** Der Min-Cut-Satz stimmt, die Schranke steigt mit (`1 → 4`) und bleibt
+wahr — sie ist eine Aussage über den Graphen nach dem Angriff. Was fällt, bleibt der gestrichene
+Satz vom doppelten Schutz aus D139. Die Immunität der Relaxation aus D140 ist von dieser
+Korrektur nicht berührt: dort ging es um Masse, nicht um Decken.
+
+**Offen und ausdrücklich nicht entschieden.** Wie der Effekt mit `p`s Budget skaliert — `p` kann
+`⌊D / (D/C(p))⌋ = C(p)` solcher Kanten legen, ohne dass der eigene Durchsatz von `C(p)` je
+gebraucht wird — ist gerechnet plausibel und **nicht gemessen**. Es steht deshalb in keiner
+Spec-Datei. Ebenso offen bleibt der Fork aus D140: gibt es eine harte Knotendecke, die nicht über
+den Graphen gekauft werden kann?
+
+**Nächster Schritt.** Der Messlauf wird zu einem Charakterisierungstest unter `tests/trust/`. Er
+repariert nichts; er nagelt fest, dass die Zahl `4` ist und nicht `1` oder `8`. Entsteht je ein
+Mechanismus gegen den Distanzkauf, wird genau dieser Test rot — das ist die Rücknahmeprobe im
+Voraus.

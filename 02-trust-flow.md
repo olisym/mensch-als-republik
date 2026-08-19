@@ -309,10 +309,17 @@ Aussage über den Graphen, wie er vorliegt, und **keine** Aussage über Angriffs
 > für **ehrliche** Knoten, nicht für Sybils — `p` ist also **kein Grenzknoten** und taucht in
 > `Σ_{h ∈ Grenze} C(h)` nicht auf. Gekauft wird genau der Knoten, den die Schranke nicht sieht.
 >
-> Mit `γ = ½`, `C₀ = 16`, `D ≥ C₀` (§8): `p` bei `d = 1` trägt `C(p) = 8` und hat wirksamen
-> Out-Degree `8`. Acht Knoten bei `d ≥ 5` tragen `C = 0` und sind nach §3 nicht bürgschaftsfähig;
-> nach `p`s Bürgschaft sitzen sie bei `d = 2` mit je `C = 4`. Die Grenzsumme steigt von `0` auf
-> `32`. Allgemein: Ertrag `C(p) · ⌊γ · C(p)⌋`, quadratisch in `C(p)`.
+> **Gemessen** mit `γ = ½`, `C₀ = 16`, `D = 16` (D141). Ein Ziel `S`, ein Grenzknoten `h`, der
+> über vier Ketten der Länge 4 einen Zufluss von `8` hat. Ohne Angriff sitzt `h` bei `d = 4` mit
+> `C(h) = 1`, und `maxflow(A → S) = 1`: die Knotendecke schneidet vorhandenen ehrlichen Zufluss
+> ab. Der Angreifer verwirrt `p` bei `d = 1` und lässt `p` mit `n = 2` für `h` bürgen — die Kante
+> trägt `cap = ⌊2 · 8 / 16⌋ = 1`. Danach sitzt `h` bei `d = 2` mit `C(h) = 4`, und
+> `maxflow(A → S) = 4`.
+>
+> Gekauft wird also **nicht Fluss, sondern das Entfernen einer Decke.** `p` steuert eine einzige
+> Kapazitätseinheit bei; drei der vier Einheiten sind ehrlicher Fluss, der vorher an `C(h) = 1`
+> abgeschnitten wurde. Deshalb ist der lohnende Grenzknoten nicht der unerreichbare, sondern der
+> **gut verbundene, aber seed-ferne** — Peripherie mit Substanz.
 >
 > Der Min-Cut-Satz bleibt davon unberührt — er gilt über dem Graphen, der vorliegt. Was **nicht**
 > folgt, ist der Schluss, eine seed-ferne Angriffskante sei von sich aus billig. Seed-Ferne wird
