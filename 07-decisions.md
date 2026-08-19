@@ -4747,3 +4747,83 @@ den Graphen gekauft werden kann?
 repariert nichts; er nagelt fest, dass die Zahl `4` ist und nicht `1` oder `8`. Entsteht je ein
 Mechanismus gegen den Distanzkauf, wird genau dieser Test rot — das ist die Rücknahmeprobe im
 Voraus.
+
+### D142 — Die Decke wandert genau dann, wenn `d` sich bewegt (ergänzt D141)
+
+**Die Frage.** D141 hält fest, dass `Σ_{h ∈ Grenze} C(h)` beim Distanzkauf von `1` auf `4`
+steigt und der Min-Cut-Satz davon unberührt bleibt. Ungemessen war, **unter welcher Bedingung**
+die Schranke mitwandert — und ob es Züge gibt, bei denen sie stillsteht. Der Satz „bleibt
+unberührt" ist wahr und liest sich wie eine Beruhigung; ohne die Bedingung ist er keine.
+
+**Gemessen** (`γ = ½`, `C₀ = 16`, `D = 16`, `tests/trust/test_deckenelastizitaet.py`). Der
+Beitrag von `p` ist der **zugeführte Fluss** `min(cap(A → p), Σ cap(p → h))`, nicht die
+Ausgangskapazität. Der Term `C(p)` ist nach `02 §3`, Nachtrag seit D1, redundant und darum nicht
+Teil der Definition.
+
+| Fall | Zug | `Σ C(h)` ohne → mit | `maxflow` ohne → mit | Beitrag `p` | Hebel |
+|---|---|---|---|---|---|
+| A | Distanzkauf, `p → h` mit `n = 2` | 1 → 4 | 1 → 4 | 1 | **3** |
+| B | Spende, `d(h)` bleibt `1`, ungesättigt | 8 → 8 | 1 → 5 | 4 | **1** |
+| B2 | Spende, `d(h)` bleibt `1`, gesättigt | 8 → 8 | 1 → 8 | 8 | **7/8** |
+| C, `k = 1` | `1` gekaufte Kante | 1 → 4 | 1 → 4 | 1 | 3 |
+| C, `k = 2` | `2` gekaufte Kanten | 2 → 8 | 2 → 8 | 2 | 3 |
+| C, `k = 3` | `3` gekaufte Kanten | 3 → 12 | 3 → 12 | 3 | 3 |
+
+**Erstens: die Elastizität hat eine Bedingung.** In A und C bewegt der Zug `d(h)`, und `Σ C(h)`
+wandert exakt mit dem Fluss. In B und B2 bewegt er `d(h)` nicht, und `Σ C(h)` steht still,
+während der Fluss steigt. Die Schranke ist nicht generisch angreiferabhängig — sie ist es genau
+dann, wenn der Zug eine **Distanz** verschiebt. Alles andere lässt sie unberührt.
+
+**Zweitens: nur der Distanzkauf hat Hebel.** Ein Zug, der keine Distanz ändert, ändert keine
+Kapazität und kann folglich höchstens den Fluss addieren, den er selbst trägt — Hebel `≤ 1`.
+B zeigt den Gleichstand (`4` zugeführt, `4` Zuwachs), B2 den Verfall an der Decke (`8` zugeführt,
+`7` Zuwachs). Der Distanzkauf zahlt `1` und bekommt `3`. Das ist der ganze Unterschied zwischen
+den beiden Angriffsformen, und er sitzt nicht in der Größe des Einsatzes.
+
+**Drittens: die Schranke ist schlaff, wo die Decke nicht bindet.** In B steht `maxflow = 5`
+gegen `Σ C(h) = 8`. `Σ C(h)` ist dort keine Näherung des Flusses, sondern überzeichnet ihn um
+`60 %`. In A, B2 und C ist sie scharf. Wer `Σ C(h)` als Kennzahl liest statt als Schranke, liest
+je nach Graphlage etwas anderes.
+
+**Skalierung — das offene Stück aus D141 ist geschlossen.** Der Hebel ist über `k = 1, 2, 3`
+konstant `3`; `Σ C(h)` und `maxflow` wachsen beide linear. D141 vermutete, `p` könne `C(p)`
+solcher Kanten legen. Gemessen bindet in dieser Topologie **das Budget des Ankers zuerst**:
+`A` liegt bei `k = 3` mit `4 + 4k = 16` genau auf `D`, während `p` bei `2k = 6` noch weit unter
+`D` sitzt. Die ehrliche Substanz, die der Kauf freilegt, musste selbst durch das Ankerbudget.
+Das ist ein Befund über diese Topologie, keine allgemeine Aussage — behauptet wird nur, dass
+`p`s Budget **nicht** notwendig die bindende Größe ist.
+
+**Literaturprüfung (PR-15).** Cheng/Friedman (P2PECON 2005) zeigen, dass keine symmetrische,
+nichttriviale Reputationsfunktion sybilproof sein kann, und geben für **flussbasierte,
+quellrelative** Funktionen Bedingungen an, unter denen sie es sind. `02 §4` liegt damit in der
+erreichbaren Klasse; verwundbar ist nicht der Fluss, sondern die darübergelegte
+Kapazitätszuweisung, deren Eingang `d(s,h)` ein Kürzeste-Pfad-Maß ist — und ein kürzester Pfad
+ist genau das, was eine einzelne Kante verkürzt. SumUp (Tran et al., NSDI 2009) benutzt dieselbe
+Konstruktion (mit der Distanz fallende Kantenkapazität, approximierter Max-Flow zu einem
+vertrauten Sammler) und hat **keine** unkaufbare Knotendecke: die Garantie sitzt dort an der
+Zahl der Angriffskanten, nicht am Knoten. Die SybilLimit-Linie scheitert an MaRs Constraints vor
+der Arithmetik: sie braucht `r = Θ(√m)` und eine Schätzung der Mixing-Zeit, also lokale
+Schätzungen **globaler** Größen.
+
+**Was daraus folgt.** Eine harte Knotendecke, die nicht über den Graphen kaufbar ist, existiert
+in dieser Familie nicht, und die reifsten Systeme haben die Garantie stattdessen auf den Schnitt
+verlegt. `02 §4` tut das bereits. Der Distanzkauf ist der Preis der harten Schranke, nicht ein
+Fehler in der Wahl der Sicht.
+
+**Methodik.** Der Lauf brauchte vier Anläufe, und alle vier Defekte lagen im Prompt, nicht in der
+Arbeit des Werkzeugs. Zweimal derselbe Fehlertyp: eine **Kapazität als Ertrag** geführt — erst
+`cap(p → h) = 8` als Beitrag, obwohl `p` über `A → p` nur `4` empfängt, dann `C(p)` als Term
+einer Minimumsbildung, obwohl `02 §3` ihn als nie allein bindend beweist. Beide Male fiel die
+Behauptung erst, als sie an einer konkreten Topologie präzise werden musste. Daraus **Prüfregel
+21: eine Kapazität ist eine Schranke, kein Ertrag** — wer eine Kapazität in eine Bilanz
+einsetzt, muss den Weg rechnen, den der Fluss zu ihr nimmt. Und als Zusatz: ein Term, den die
+Spec als redundant beweist, kann von keiner Rücknahmeprobe rot gefärbt werden; eine Probe, die
+ihn treffen soll, ist falsch gebaut.
+
+**Was unverändert bleibt.** Der Min-Cut-Satz, die `|S|`-Unabhängigkeit, VR-02.1, die Immunität
+der Relaxation aus D140. D141 ist in keinem Punkt korrigiert, nur ergänzt.
+
+**Offen und ausdrücklich nicht entschieden.** Ob `02 §4` einen normativen Satz erhält, der
+`Σ C(h)` für Gates ausschließt — die Größe ist schlaff, wo die Decke nicht bindet, und sie
+wandert mit dem Angreifer, wo sie es tut. Ebenso offen bleibt der Fork selbst: ob ein Mechanismus
+gegen den Distanzkauf gebaut wird. Beides sind Entscheidungen des Operators.
