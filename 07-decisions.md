@@ -4870,3 +4870,40 @@ anfassen und diesen Eintrag überschreiben.
 
 **Nicht entschieden.** Ob `02 §4` einen normativen Satz über die Verwendung von
 `Σ_{h ∈ Grenze} C(h)` erhält (D142, letzter Absatz). Der Fork ist geschlossen, diese Frage nicht.
+
+### D144 — Die Prüfregeln bekommen eine Datei; sechs abgelöste Sitzungsstarts fallen
+
+**Der Befund.** `sitzungsstart-decke.md` schrieb „die neunzehn aus den Vorsitzungen gelten
+unverändert" und führte nur Regel 20 aus. Der Volltext der Regeln 1–19 stand **verteilt über
+fünf abgelöste Sitzungsstart-Dateien**: sieben in `05`, drei in `anwendung`, drei in
+`einlesepfad`, drei in `buchfuehrung`, eine in `kollision`. Das Register nennt sie nur als
+Verweise. Der meistbenutzte methodische Bestand des Projekts hatte damit keinen Ort — er lag in
+Dateien, deren einziger Zweck es ist, abgelöst zu werden.
+
+Das ist kein Aufräumproblem. Ein Aufräumen ohne diesen Befund hätte die Regeln gelöscht, und
+zwar in einem Commit, dessen Nachricht „abgelöste Sitzungsstarts entfernt" gelautet hätte.
+
+**Entschieden.** Neue Datei `pruefregeln.md` mit den Regeln 1–21 im Volltext, thematisch
+gruppiert nach dem Zeitpunkt, an dem sie greifen, mit der Nummer als stabilem Bezeichner. Sie ist
+der einzige Ort ihres Volltextes. Ein `sitzungsstart-*.md` **verweist** künftig darauf und
+wiederholt ihn nicht; neue Regeln entstehen weiter aus Befunden und wandern von dort in diese
+Datei.
+
+**Nummern 8 und 9 vergeben.** Parallelenprüfung und Begründungsprüfung liefen seit
+`sitzungsstart-05.md` unnummeriert als „die beiden älteren" mit. Ohne Nummer waren sie in
+Prompts nicht zitierbar, und beide sind laufend im Gebrauch. 8 ist die Parallelenprüfung, 9 die
+Begründungsprüfung.
+
+**Regel 21 ist neu** und stammt aus D142: eine Kapazität ist eine Schranke, kein Ertrag.
+
+**Löschung geprüft, nicht angenommen.** Nach Prüfregel 17 ist eine Datei normativer Text, solange
+Code oder Spec auf sie zeigt. Gegrept über alle `*.py` und `*.md` außerhalb der
+`sitzungsstart-*`-Familie und außerhalb von `.venv`: **keine einzige Fundstelle**. Damit fallen
+`sitzungsstart-03.md`, `-05.md`, `-anwendung.md`, `-buchfuehrung.md`, `-einlesepfad.md` und
+`-kollision.md`. `sitzungsstart-decke.md` fällt mit dem Schreiben seines Nachfolgers.
+
+**Was mit den Dateien verlorengeht — benannt, nicht behauptet.** Die Abschnitte „Was die letzte
+Sitzung gelehrt hat" sind Erzählung, nicht Regel; was daran trug, ist entweder in eine Regel
+geworden oder steht in einem Registereintrag. Was in keinem von beidem steht, war nicht wichtig
+genug, es dorthin zu schaffen — das ist die Aussage dieses Eintrags und nicht ihr Nebeneffekt.
+Wer sie doch braucht, findet sie in der Historie.
