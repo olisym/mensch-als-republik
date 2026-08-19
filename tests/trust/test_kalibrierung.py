@@ -9,6 +9,7 @@ import pytest
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.trust.params import TrustParams, resolve_trust_params
+from tools.example_nucleus import build
 
 _RAW = {0: 100, 1: 1, 2: 2, 3: 100}
 _GENESIS_WITH = {9: dict(_RAW)}
@@ -85,3 +86,13 @@ def test_key9_malformed() -> None:
         resolve_trust_params(
             scope=_scope(genesis), genesis_obj=genesis, out_of_band=out_of_band
         )
+
+
+def test_example_nucleus_genesis_res_agrees_with_params() -> None:
+    ex = build()
+    result = resolve_trust_params(
+        scope=_scope(ex.genesis_res),
+        genesis_obj=ex.genesis_res,
+        out_of_band=ex.params,
+    )
+    assert result == ex.params
