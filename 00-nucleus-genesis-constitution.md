@@ -208,15 +208,16 @@ unangreifbare Substanz — braucht drei Scopes oder muss einen der beiden Nachte
 ## 5. Verfassungs-Minimal-Schema (DF-3)
 
 Die Verfassung ist ein content-adressiertes, **versioniertes** Objekt. Ihr **Großteil bleibt
-opak/Policy** (A2). Aber vier Felder sind **normativ** und **MÜSSEN** von Verifizierern honoriert
+opak/Policy** (A2). Aber fünf Felder sind **normativ** und **MÜSSEN** von Verifizierern honoriert
 werden, weil an ihnen Sicherheit hängt:
 
 | Feld | Typ | Zweck | Schließt |
 |------|-----|-------|----------|
-| `irrevocable_predicates` | array[text] | Prädikate, deren `core/revoke`/`core/supersede` **ignoriert** werden (Atom-Spec §5.4). Profilnamen ohne Scope-Präfix. `obligation@1` gilt auch ungenannt (§5.2); trust-gewährende Prädikate werden verworfen (Atom-Spec §5.4.3 b). | **P-1 / DR-030** |
+| `irrevocable_predicates` | array[text] | Prädikate, deren `core/revoke`/`core/supersede` **ignoriert** werden (Atom-Spec §5.4). Profilnamen ohne Scope-Präfix. `obligation@1`, `rotate-key@1` und `rotate-ack@1` gelten auch ungenannt (§5.2); trust-gewährende Prädikate werden verworfen (Atom-Spec §5.4.3 b). | **P-1 / DR-030** |
 | `thresholds` | map{text→ratio} | Quorum je Schwellenklasse (`ordinary`, `membership`, `amendment`, …). | DR-012 |
 | `arbitration` | map | Zuständige Schiedsrichter / Klausel (§5.1). | **E-1 / DR-029** |
 | `enforcement_policy` | map (optional) | Cure-Kurve, terminale Fehler (Enf-Spec §4, §8). | DR-022 |
+| `nucleus_keys` | array[bytes32] (optional) | Die per Governance gesetzten autorisierten Schlüssel (§5.4, §6.2). Fehlt das Feld, gilt `genesis.root_keys`. | **DF-0 / D150** |
 
 ### 5.1 `arbitration` (Träger für DF-2)
 
@@ -235,12 +236,20 @@ auf E-1.
 
 ### 5.2 Sicherheits-Default: ein Boden, keine Rückfallebene
 
-`obligation@1` ist **immer** irrevocable (Protokoll-Default, Profile-II §3.3.3).
-`irrevocable_predicates` kann die Menge nur **erweitern**, nie verkleinern:
+`obligation@1`, `rotate-key@1` und `rotate-ack@1` sind **immer** irrevocable
+(Protokoll-Default, Profile-II §3.3.3 und §6.1). `irrevocable_predicates` kann die Menge nur
+**erweitern**, nie verkleinern:
 
 ```
-wirksame Menge  =  { "obligation@1" }  ∪  irrevocable_predicates  ∖  unsicher (Atom-Spec §5.4.3 b)
+wirksame Menge  =  { "obligation@1", "rotate-key@1", "rotate-ack@1" }
+                   ∪  irrevocable_predicates  ∖  unsicher (Atom-Spec §5.4.3 b)
 ```
+
+Die beiden Rotationsprädikate stehen aus einem eigenen Grund darin (D153): wäre eine Ack
+widerrufbar, könnte der Nachfolger seine Zustimmung zurücknehmen und die Autorität spränge auf
+den Vorgänger zurück — genau die Lage, die D125 unter „letzter gewinnt" verworfen hat, nur von
+der anderen Seite erreicht.
+
 
 Damit gilt der Schutz in drei Fällen gleichermaßen: die Verfassung schweigt; sie nennt
 `obligation@1`; sie nennt **andere** Prädikate und lässt `obligation@1` weg. Eine
@@ -258,6 +267,28 @@ schlechter: eine einzelne Fehldeklaration nähme dem Nukleus auch den Schuldensc
 Verfassungsupdate ⇒ neues Objekt ⇒ neuer Hash. Ratifizierung *ist* die Re-Akzeptanz per
 `accept-rules@1` auf den neuen Hash über die `amendment`-Schwelle (Gov-Spec §5). **`N` bleibt
 fix**, weil `N` aus dem *Genesis*, nicht aus der Verfassung abgeleitet ist.
+
+### 5.4 `nucleus_keys` — Träger der Governance-Rotation (D150)
+
+```
+nucleus_keys = [bytes32]     ; die autorisierten Schlüssel des Nukleus
+```
+
+Fehlt das Feld, gilt `genesis.root_keys`. Ist es gesetzt, **ersetzt** es den Anker der Key-Chain
+(§6.4 Schritt 1) vollständig: die Ketten werden ab den hier genannten Schlüsseln neu aufgebaut,
+und ein `rotate-key@1` eines nicht mehr genannten Schlüssels verliert seine Wurzel und wirkt
+nicht — unabhängig davon, wann er signiert wurde. Damit ist der Notfallpfad (§6.2) uhrfrei
+rechenbar, ohne dass je verglichen werden müsste, ob ein Claim vor oder nach einer Epoche liegt.
+
+Der Ort ist die Verfassung und nicht das Vorschlagsobjekt, weil `arbitration.arbitrators` dort
+bereits eine Autoritätsliste derselben Bauform führt, weil eine Verfassungsänderung schon die
+`amendment`-Schwelle trägt, die §6.2 verlangt, und weil ein viertes Feld im Vorschlagsobjekt die
+Kodierung von `proposal_hash` änderte (D150).
+
+**`nucleus_keys = []` bedeutet: kein autorisierter Schlüssel.** Nukleus-Akte sind dann nicht
+autorisiert. Das ist die sichere Richtung, dieselbe wie in §6.4 und §9; die Gegenrichtung ließe
+eine Governance, die absetzen will, ins Leere laufen. Der Preis ist, dass eine Verfassung den
+Nukleus per Amendment handlungsunfähig machen kann. Das ist ausdrückbar und wird nicht verhindert.
 
 ---
 
@@ -287,15 +318,26 @@ Die Nachfolge ist damit eine Kette über **Autorschaft**: jeder Schlüssel benen
 Nachfolger. Ordnung kommt aus dieser Kette, **nie** aus Wall-Clock `t` (Atom-Spec §5.3).
 
 **Gegenzeichnung (D125).** Ein `rotate-key@1` allein wirkt nicht. Eine Rotation ist
-**vollständig**, wenn `K_n` sie gegenzeichnet — ein Claim in `K_n`s **eigener** Kette, der die
-`claim_id` des Rotate-Claims nennt. Eine unvollständige Rotation ist wirkungslos: kein Zustand,
-kein eigener Vermerk, sie zählt nicht. Es bindet der **erste vollständige** Rotate.
+**vollständig**, wenn `K_n` sie gegenzeichnet. Eine unvollständige Rotation ist wirkungslos: kein
+Zustand, kein eigener Vermerk, sie zählt nicht. Es bindet der **erste vollständige** Rotate.
+
+Die Gegenzeichnung ist ein eigenes Profil `nuc:N/rotate-ack@1` mit vierteiliger Belegung (D152):
 
 ```
 R_n wirkt  ⟺  R_n ist nach der Kettenregel gültig
-              UND es existiert ein Claim C mit C.I == (der von R_n benannte K_n)
-                  und C verweist auf claim_id(R_n)
+              UND es existiert ein Claim ack mit
+
+              ack.p  == nuc:N/rotate-ack@1
+              ack.J  == [claim-ref, claim_id(R_n)]
+              ack.I  == R_n.J.value    und   R_n.J.tag == identity
+              ack.N  == R_n.N
 ```
+
+Alle vier Bedingungen tragen. Ein eigenes Prädikat ist nötig, weil „irgendein Claim, der die
+`claim_id` nennt" auch ein `core/revoke@1` von `K_n` erfüllte — eine Rücknahme als Zustimmung.
+`ack.N == R_n.N` ist nicht redundant: `01 §2.2` Regel 3 erzwingt nur, dass `N` gesetzt und
+selbstkonsistent ist, nicht dass zwei Claims denselben Scope teilen (dieselbe Begründung wie die
+dritte Bedingung in D63).
 
 Beide Signaturen sind selbstenthalten und reisen zusammen; die Regel braucht **weder Uhr noch
 globale Ordnung**. Sie schließt drei Fälle, die die Kettenregel offen ließ: die einseitige
@@ -304,22 +346,35 @@ Vertipper. Ein Altschlüssel bekommt die Kette dadurch nicht zurück — wirkt d
 Rotate, ist `K_{n-1}` nicht mehr autorisiert, und ein späterer Rotate von ihm ist kein Akt eines
 autorisierten Schlüssels mehr.
 
-Das Prädikat der Gegenzeichnung ist hier **benannt, aber nicht kodiert**; die Belegung fällt mit
-`00a` und trägt bis dahin keinen Testvektor.
+**Rotate und Ack sind irrevocable** (Protokoll-Default, §5.2, D153). Ohne das könnte `K_n` die
+eigene Zustimmung zurücknehmen und die Autorität spränge zum Vorgänger zurück.
+
+**„Erster" heißt: erster in der Kette von `K_{n-1}`, nicht erster nach Empfang (D154).** Signiert
+`K_{n-1}` nacheinander zwei Rotationen auf verschiedene Nachfolger mit **verschiedener** `h_prev`,
+ist das keine Equivocation (§6.3 verlangt dieselbe `h_prev`), und beide sind gültig. Bindend ist
+die frühere in `K_{n-1}`s eigener Kette. Daraus folgt ausdrücklich: **trifft deren Gegenzeichnung
+erst später ein, springt der aufgelöste Kopf zurück**, und Akte des zwischenzeitlichen Kopfes
+verlieren rückwirkend ihre Autorisierung. Das ist dieselbe Klasse wie nachträglich entdeckte
+Equivocation — mehr Wissen revidiert einen Zustand (Detect-not-Prevent, Atom-Spec §A3). Die
+Alternative, nach Empfangsreihenfolge zu ordnen, wäre schlechter: zwei Leser mit demselben
+Claim-Bestand kämen zu verschiedenen Ergebnissen.
+
 
 ### 6.2 Notfallpfad — Governance-Rotation
 
 Ist `K_{n-1}` **verloren** (kann keinen `rotate-key` mehr signieren) oder die Kette **umstritten**
-(§6.3), installieren die **Mitglieder** einen neuen Schlüssel per Governance-Akt: ein
-`propose@1`/Abstimmung, dessen Payload den neuen autorisierten Schlüssel deklariert, ratifiziert
-über die **`amendment`-Schwelle** (hoch, gegen Routine-Capture). Kein neues Primitiv — reiner
-Governance-Loop (Gov-Spec §2).
+(§6.3), installieren die **Mitglieder** einen neuen Schlüssel per Governance-Akt: eine
+Verfassungsänderung, deren `nucleus_keys` (§5.4) den neuen autorisierten Schlüssel deklariert,
+ratifiziert über die **`amendment`-Schwelle** (hoch, gegen Routine-Capture). Kein neues Primitiv
+und kein neues Feld im Vorschlagsobjekt — reiner Governance-Loop (Gov-Spec §2), und die Schwelle
+ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
 
 ### 6.3 Präzedenz & umstrittene Rotation (der Diebstahlfall)
 
-- **Governance schlägt Key-Chain.** Existiert eine ratifizierte Governance-Rotation, **supersediert**
-  sie die Key-Chain ab ihrem Effektivpunkt. Begründung: die Mitglieder sind die letzte Autorität;
-  der Schlüssel ist ihr Delegat.
+- **Governance schlägt Key-Chain.** Nennt die Verfassung der jüngsten ratifizierten Epoche ein
+  Feld `nucleus_keys`, **ersetzt** diese Menge den Anker der Key-Chain (§5.4, §6.4 Schritt 1); die
+  Ketten werden ab ihr neu aufgebaut. Es wird kein Effektivpunkt verglichen — die Epoche *ist* der
+  Zustand. Begründung: die Mitglieder sind die letzte Autorität; der Schlüssel ist ihr Delegat.
 - **Doppel-Nachfolger = Equivocation.** Signiert `K_{n-1}` zwei verschiedene Nachfolger, haben beide
   `I == K_{n-1}` und dieselbe `h_prev` in `K_{n-1}`s eigener Kette ⇒ **Equivocation-Beweis nach
   Atom-Spec §4**, ohne neue Mechanik. Der Verifizierer sieht eine *umstrittene* Autorität und
@@ -332,16 +387,34 @@ Governance-Loop (Gov-Spec §2).
 ### 6.4 `resolve_current_key(N)` — der autoritative Auflösungsalgorithmus
 
 ```
-1.  Starte mit genesis.root_keys (aus dem Objekt, dessen Hash == N).
-2.  Folge der längsten NICHT-equivozierten rotate-key-Kette (§6.1).
-3.  Existiert eine ratifizierte Governance-Rotation (§6.2) mit Effektivpunkt ≥ dem
-    aktuellen Kettenende, ersetzt ihr Schlüssel das Kettenende.
-4.  Ist die Key-Chain an einem Punkt equivoziert UND keine Governance-Rotation löst
-    ihn auf → Autorität ist UNAUFGELÖST; Nukleus-Akte ab dem Fork gelten als nicht
-    autorisiert, bis Auflösung vorliegt (Detect-not-Prevent, Atom-Spec §A3).
+1.  Anker A bestimmen: nennt die Verfassung der juengsten ratifizierten Epoche (Gov-Spec
+    §1.1) ein Feld nucleus_keys (§5.4), ist A diese Menge; sonst ist A = genesis.root_keys
+    aus dem Objekt, dessen Hash == N.
+2.  Fuer jedes k aus A der Kette der vollstaendigen Rotationen (§6.1) ab k folgen, bis zu
+    dem Schluessel, der keinen vollstaendigen Nachfolger hat. Dieser Schluessel ist der
+    Kopf der Kette von k.
+3.  Ist die Kette von k an einem Punkt equivoziert (§6.3) und loest keine Aenderung von
+    nucleus_keys sie auf, liefert k keinen Kopf; Nukleus-Akte beider konkurrierender
+    Schluessel gelten als nicht autorisiert (Detect-not-Prevent, Atom-Spec §A3).
+4.  Rueckgabe ist die Vereinigung der Koepfe aller k aus A.
 ```
 Der Rückgabewert ist die Menge der aktuell autorisierten Schlüssel. Jeder Verifizierer rechnet das
 lokal über seinen bekannten Claim-Teilgraphen (Partitionstoleranz wie Trust-Flow-Spec §7).
+
+**Es wird nichts maximiert (D149).** Mehrere Elemente in `A` sind mehrere **parallele** Ketten,
+keine konkurrierenden: jede Rotation ersetzt den Schlüssel ihres **eigenen** Autors, und Konkurrenz
+innerhalb einer Wurzel ist Equivocation, die Layer 01 seit jeher führt. Der frühere Wortlaut „folge
+der längsten Kette" ist damit gegenstandslos.
+
+**Ein defektes Kettenglied blockiert nichts (D154).** Eine ungültige oder eine unvollständige
+Rotation ist schlicht kein Nachfolger; der Kopf bleibt beim letzten vollständigen Glied. Der
+bekannte Betriebsschaden der TUF-Referenzimplementierung — eine ungültige Version blockierte alle
+folgenden dauerhaft — setzt eine lückenlos versionsnummerierte Kette voraus; diese Kette ist
+autorverkettet und hat die Voraussetzung nicht.
+
+**Das Ergebnis ist unter Wissenszuwachs nicht monoton (D154).** Trifft die Gegenzeichnung einer
+früheren Rotation nach der einer späteren ein, springt der Kopf zurück. Das ist dieselbe Klasse
+wie nachträglich entdeckte Equivocation und die sichere Richtung.
 
 **Zustand vor `00a`.** Solange `resolve_current_key` nicht gebaut ist, gilt
 `resolve_current_key(N) = genesis.root_keys`, und ein vorgefundenes `rotate-key@1` wird **nicht**
@@ -350,17 +423,10 @@ ohne ihn führte ein Leser eine ihm vorliegende Rotation still nicht nach und ve
 alten Schlüssel — die unsichere Richtung. Als benannte Grenze ist der Fall tragbar, als Schweigen
 wäre er eine Lücke.
 
-**Zwei Punkte in Schritt 2 und 3 sind offen und fallen mit `00a`:**
-
-- **„Längste" ist unterbestimmt.** Ist die Kette nicht equivoziert, benennt jeder Schlüssel genau
-  einen Nachfolger und es gibt nichts zu maximieren. Mehrere Kandidaten entstehen nur bei
-  Teilwissen (Lücke in der Mitte) oder bei `|root_keys| > 1`, also mehreren parallelen Ketten. Für
-  den zweiten Fall ist auch ungeklärt, ob eine Rotation die Menge verkleinern oder Ketten
-  verschmelzen darf.
-- **Der Effektivpunkt ist nicht rechenbar.** „≥ dem aktuellen Kettenende" vergleicht eine
-  Governance-Größe mit einer Position in einer Autorenkette. Über `t` ist das nach Atom-Spec §5.3
-  verboten. Der uhrfreie Weg ist, die Governance-Rotation den ersetzten Schlüssel bzw. die ersetzte
-  `claim_id` **explizit** nennen zu lassen; entschieden ist er nicht.
+**Zustand zwischen `00a` und `00b` (D151).** `00a` baut Schritt 2 bis 4 und nimmt den Anker als
+Parameter; Schritt 1 bleibt bei `genesis.root_keys`. Ein vorgefundenes `nucleus_keys` wird
+**nicht** ausgewertet — derselbe Satz und derselbe Grund wie oben, hier mit der schwereren Folge:
+ein Leser vertraut weiter einem Schlüssel, den die Mitglieder abgesetzt haben.
 
 ### 6.5 FROST-Re-Keying
 
@@ -435,7 +501,7 @@ radiale Prinzip bleibt intakt.
   (`amendment`-)Schwelle + der Halter kann per Exit/Fork ausweichen (er behält seine *eigene*
   Identität, Profile-II §4). Residual bewusst getragen — es ist dieselbe irreduzible „Mehrheit kann
   irren"-Grenze wie in Enforcement-Spec §7.
-- **Unaufgelöste Autorität unter Partition (§6.4 Schritt 4).** Solange eine umstrittene Rotation
+- **Unaufgelöste Autorität unter Partition (§6.4 Schritt 3).** Solange eine umstrittene Rotation
   nicht per Governance aufgelöst ist, sind Nukleus-Akte ab dem Fork *nicht autorisiert* — die
   sichere Richtung (lieber kein gültiger Akt als ein falsch autorisierter), konsistent mit dem
   „Unter-Vertrauen"-Prinzip aus Trust-Flow-Spec §7.
