@@ -70,6 +70,16 @@ D139, D141 und D142 sind dreimal dieselbe Verwechslung. Zusatz: ein Term, den di
 redundant beweist, kann von keiner Rücknahmeprobe rot gefärbt werden — eine Probe, die ihn
 treffen soll, ist falsch gebaut (D142).
 
+**23. Die Rücknahmeprobe setzt an der ungeschützten Seite an.** Behauptet ein Test die
+Übereinstimmung zweier Orte, sind die Orte selten gleich bewacht. Wer für die Probe den Ort
+anfasst, an dem schon ein anderer Test hängt, bekommt Rot aus fremder Ursache — die Probe sieht
+bestätigt aus und beweist nichts. Vor jeder Probe steht daher die Frage: **was außer dem
+geprüften Test könnte hier noch rot werden?** Die Antwort muss „nichts" sein. In D147 wurde
+`genesis_res[9]` verändert; das ändert den Hash und schlug beim Bestandsanker `N_res` an, bevor
+`resolve_trust_params` überhaupt lief. Die ungeschützte Seite war das `TrustParams`-Literal, das
+an keinem Hash hängt. Unterschied zum Zusatz in Regel 21: dort ist die Probe **unmöglich**, hier
+ist sie **zweideutig**.
+
 ## Beim Prüfen von Code und Spec nebeneinander
 
 **8. Parallelenprüfung.** Zwei Stellen, die dasselbe tun, werden nebeneinandergelegt —
@@ -137,7 +147,7 @@ gegen vergessene **Dateien**; gegen vergessene **Zustände** gibt es keines. Gen
 
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
-`sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146.
+`sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus D148.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

@@ -5064,3 +5064,44 @@ benannte Grenze und nicht als Versehen.
 **Offen: `D >= C₀` ist ein SHOULD in `00 §4.0` und `02 §8` und wird nirgends geprüft.** Kein
 Defekt — ein SHOULD erzwingt nichts —, aber ein Kandidat für einen Vermerk, sobald es einen Ort
 gibt, der ihn trägt.
+
+### D148 — Prüfregel 23: die Rücknahmeprobe setzt an der ungeschützten Seite an
+
+**Der Vorgang.** Der Nachlauf zu D147 sollte feststellen, dass `genesis_res[9]` und das
+`TrustParams`-Literal im Beispielnukleus dieselben vier Zahlen tragen. Die Rücknahmeprobe im
+Prompt lautete: eine Zahl in `genesis_res[9]` ändern und bestätigen, dass der Test rot wird. Er
+wurde rot — mit der Meldung `N_res: got …, expected …`, also aus dem Bestandsanker in `build()`
+und nicht aus dem neuen Test. Eine Änderung an `genesis_res` ändert den Scope, und den prüft der
+Beispielnukleus seit Layer 04.
+
+**Die beiden Seiten waren ungleich bewacht.** `genesis_res[9]` hängt am Hash und damit an einem
+Golden Anchor. `ExampleNucleus.params` hängt an nichts. Der neue Test existiert für die zweite
+Seite, und die Probe hatte die erste angefasst.
+
+**Die Wiederholung an der richtigen Seite hat gegriffen:** `D=100` auf `D=99` im Literal ergibt
+`ValueError: out_of_band does not match genesis trust_params`, sechs andere Tests bleiben grün.
+Der Test ist damit berechtigt und der Nachlauf gut.
+
+**Beschluss: Prüfregel 23.** Vor jeder Probe die Frage, was außer dem geprüften Test hier noch
+rot werden könnte; die Antwort muss „nichts" sein.
+
+**Abgegrenzt gegen Regel 21.** Deren Zusatz aus D142 betrifft die **unmögliche** Probe: ein von
+der Spec als redundant bewiesener Term lässt sich nicht rot färben. Hier war die Probe möglich
+und hat gefärbt — nur aus fremder Ursache. Unmöglich gegen zweideutig; die zweite Form ist die
+gefährlichere, weil sie wie eine Bestätigung aussieht.
+
+**Zur Fehlerform.** Die Meldung nannte `N_res` und einen Ankerwert, also einen Test, den es
+vorher schon gab. Die Diagnose war ohne zweiten Lauf möglich; der Supervisor hat das Rot als
+Bestätigung durchgewinkt, statt die Meldung zu lesen. Der Bericht des Werkzeugs war korrekt und
+vollständig — er hätte die Frage beantwortet, wenn sie gestellt worden wäre. Das ist die
+Umkehrung der bekannten Regel: nicht der Bericht ersetzt das Lesen nicht, sondern **das Rot
+ersetzt das Lesen nicht**.
+
+**Nachtrag zum eigenen Splice, gleiche Sitzung, gleiche Klasse.** Der erste Anlauf dieses
+Eintrags scheiterte am Endanker: der Supervisor hatte den Schlusssatz von D147 aus dem eigenen
+Entwurf rekonstruiert statt aus der Datei abgelesen, und der Zeilenumbruch lag anderswo als
+erinnert — Prüfregel 22, eine Runde nach ihrer Einführung. Der Trockenlauf verdeckte es, weil die
+Schlusszeile für die Simulation von Hand getippt worden war. Daraus die operative Fassung: **eine
+selbst getippte Ankerzeile prüft den Anker nicht.** Ein Anhang ans Dateiende braucht überhaupt
+keinen Prosa-Anker; die tragende Vorbedingung ist, dass der letzte Registereintrag der erwartete
+ist, und die lässt sich ohne Zitat prüfen.
