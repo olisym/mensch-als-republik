@@ -4907,3 +4907,58 @@ Sitzung gelehrt hat" sind Erzählung, nicht Regel; was daran trug, ist entweder 
 geworden oder steht in einem Registereintrag. Was in keinem von beidem steht, war nicht wichtig
 genug, es dorthin zu schaffen — das ist die Aussage dieses Eintrags und nicht ihr Nebeneffekt.
 Wer sie doch braucht, findet sie in der Historie.
+
+### D145 — Das Genesis wird in `04` geglaubt, nicht nachgerechnet
+
+**Die Lage.** `decide()` liest `genesis_obj[5]` (Schwellenklasse) und `genesis_obj[6]`
+(Gewichtungsmodus) und rechnet nie nach, dass
+`SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj)) == epoch.scope`. `resolve_policy` rechnet genau das
+nach, mit ausformulierter Begründung in `03 §1.2`: der Resolver rechnet nach statt zu glauben,
+sonst wäre die Content-Adressierung eine Behauptung.
+
+**Die Fehlerform — Prüfregel 18, mit dem Beweis im selben Abschnitt.** `04 §3` schreibt den
+allgemeinen Satz selbst: „Dann die Objektidentitäten, vor jedem Zugriff auf ihren Inhalt." Die
+darunterstehende Tabelle führt zwei Objekte, beide Verfassungen. Das Genesis fehlt in der
+Aufzählung, obwohl der Satz es erfasst — und der Code ist der Aufzählung gefolgt, nicht dem
+Satz. Zugleich Prüfregel 9: die Begründung aus `03 §1.2` ist an keine Eigenschaft von `03`
+gebunden, sie gilt für jeden Leser eines Genesis. Sie ist beim Übergang nach `04` nicht
+mitgereist.
+
+**Die Wirkung liegt beim Konsumenten, nicht am Ort des Defekts** (Prüfregel 16). `genesis[5]`
+wählt die Schwellenklasse. Ein nicht gebundenes Genesis mit `[5] = 0` lässt eine
+Verfassungsänderung mit der `ordinary`-Schwelle ratifizieren — genau der Routine-Capture, gegen
+den `00 §6.2` die `amendment`-Schwelle setzt. `[6] = 0` erlaubt Kopfzahl-Auszählung in einem
+Nukleus, der gewichtet abstimmt. Beide Wege enden in `RATIFIED`, wohlgeformt und ohne Vermerk.
+Das ist die stille Variante: nicht ein Fehler, der auffällt, sondern eine Entscheidung, die
+falsch fällt und richtig aussieht.
+
+**Beschluss: `ValueError`, unmittelbar nach der Scope-Prüfung.** Kein Vermerk, kein zwölfter
+Code. Die Begründung ist die Asymmetrie aus `03 §1.2`: ein falsches Genesis ist eine falsche
+Zuordnung — der Zustand ist nicht unvollständig, sondern falsch, und dafür gibt es keine sichere
+Voreinstellung. Eine fehlende Verfassung ist Teilwissen und behält ihren Vermerk. `decide` wirft
+bereits an dieser Stelle für `proposal.scope != epoch.scope`; die neue Prüfung ist derselbe Typ
+und steht daneben.
+
+**Verworfen — ein Vermerk `GENESIS_MISMATCH`.** Er behauptete, der Zustand sei auswertbar und
+nur unvollständig. Er ist nicht unvollständig. Ein Vermerk gäbe `decide` außerdem einen
+Rückgabewert für eine Lage, in der keine der gelesenen Zahlen einem Nukleus zurechenbar ist —
+eine Auszählung ohne Nukleus.
+
+**Zwei Golden-Anchor-Vektoren konstruieren eine unmögliche Lage.** `GV-24` und `GV-29` mutieren
+`GENESIS_D` und übergeben das Ergebnis an eine Epoche mit `N_D`; das mutierte Genesis hat einen
+anderen Hash. Nach dieser Entscheidung ist das kein zulässiger Zustand mehr. **Die
+Erwartungswerte bleiben unverändert** — beide Befunde sind weiterhin erreichbar, über ein eigenes
+Genesis mit eigenem Scope und eine Epoche darauf; `STOCK_GENESIS` mit `[6] = 1` und `STOCK_N` ist
+genau diese Bauform und liegt bereits im Fixture. Geändert wird die Konstruktion, nicht die
+Erwartung. Wäre eine Erwartung zu ändern, wäre das der Abbruchgrund und nicht der nächste
+Schritt.
+
+**Nicht repariert: `threshold_class`.** Sie ist exportiert, liest `genesis_obj[5]` ungeschützt
+und wird in `tools/example_nucleus.py` direkt aufgerufen, wo `decide`s Indexprüfung nicht greift.
+Eine eigene Prüfung dort brächte die zweite Implementierung derselben Regel zurück, die D111
+gerade beseitigt hat. Die Vorbedingung gehört in den Docstring, nicht in den Code.
+
+**Offen, eigener Fork: `trust_params`.** `trust/params.py` trägt `TrustParams` eigenständig,
+`00 §4` Key 9 deklariert dieselben Zahlen unveränderlich im Genesis, und nichts gleicht sie ab.
+D35 verlangt Unveränderlichkeit von `D`, weil `n/D` in jeder Vouch-Signatur steckt. Dieselbe
+Klasse wie dieser Eintrag, anderer Layer — nicht in diesem Lauf.

@@ -314,12 +314,12 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-21` | Verfassungsobjekt zu `constitution_hash_2` lokal unbekannt | `CONSTITUTION_UNAVAILABLE`, Zustand `UNEVALUABLE` |
 | `GV-22` | Verfassung ohne `participants` | `PARTICIPANTS_UNDECLARED`, Zustand `UNEVALUABLE` |
 | `GV-23` | `participants` unsortiert oder mit Duplikat | `MALFORMED_PARTICIPANTS`, Zustand `UNEVALUABLE` |
-| `GV-24` | `genesis[6] = 1` | `UNSUPPORTED_WEIGHT_MODE`, Zustand `UNEVALUABLE` |
+| `GV-24` | eigenes Genesis mit `[6] = 1`, Epoche auf **dessen** Scope (D145) | `UNSUPPORTED_WEIGHT_MODE`, Zustand `UNEVALUABLE` |
 | `GV-25` | aktive Ja-Stimme auf einen lokal unbekannten Vorschlag; derselbe Autor hat ein zweites Ja | `UNKNOWN_PROPOSAL`, beide Ja zählen nicht |
 | `GV-26` | `vote.t_exp` gesetzt | `VOTE_WITH_EXPIRY`, die Stimme zählt nicht |
 | `GV-27` | Verfassung ohne `vote@1` in `irrevocable_predicates` | `VOTE_REVOCABLE`, Zustand `UNEVALUABLE` |
 | `GV-28` | ein widerrufener `vote@1` in einer Verfassung **mit** `vote@1` als irrevocable | kein Vermerk, die Stimme zählt weiter |
-| `GV-29` | `genesis[5] = 3` | `MALFORMED_THRESHOLD`, Zustand `UNEVALUABLE` |
+| `GV-29` | eigenes Genesis mit `[5] = 3`, Epoche auf **dessen** Scope (D145) | `MALFORMED_THRESHOLD`, Zustand `UNEVALUABLE` |
 | `GV-30` | `ratify@1` zitiert eine `claim_id`, die im Store fehlt | `UNKNOWN_WITNESS_VOTE`, keine Epoche |
 | `GV-31` | Verfassung ohne `ratify@1` in `irrevocable_predicates` | `RATIFY_REVOCABLE`, Zustand `UNEVALUABLE` |
 | `GV-32` | widerrufener `ratify@1` in einer Verfassung **mit** `ratify@1` als irrevocable | kein Vermerk, die Epoche steht weiter |

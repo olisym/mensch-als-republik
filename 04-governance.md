@@ -289,6 +289,14 @@ Aufruferfehler und keine Lage der Welt (D82, D92, D112). Dasselbe gilt in `§4.1
 gegen `epoch.scope`, `predecessor` gegen `epoch.epoch_id`, `constitution_hash` gegen das gereichte
 Zielobjekt.
 
+**Zuerst die Bindung des Genesis an den Scope** (D145). `decide` MUSS
+`SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj)) == epoch.scope` nachrechnen, **bevor** es ein Feld des
+Genesis liest, und bei Abweichung eine Ausnahme werfen statt einen Vermerk zu erzeugen. Die
+Asymmetrie zu den Verfassungsobjekten weiter unten ist die aus `03 §1.2`: ein falsches Genesis
+ist eine falsche Zuordnung, kein Teilwissen, und für eine falsche Zuordnung gibt es keine sichere
+Voreinstellung. Ohne diese Prüfung wählt `genesis[5]` eine Schwellenklasse, die zu keinem Nukleus
+gehört.
+
 **Dann die Paarprüfung.**
 
 | Lage | Vermerk |
