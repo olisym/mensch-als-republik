@@ -22,7 +22,8 @@ T_EXP = 5000
 N_A_TO_P = 4
 CHAIN_STEPS = ("a", "b", "x")
 D_H_FERN = len(CHAIN_STEPS) + 1
-D_H_NAH = len(("h",))
+# A → h ist eine einzelne Kante.
+D_H_NAH = 1
 
 N_CHAINS_A = 4
 N_A_TO_AI_A = 3
@@ -70,31 +71,25 @@ def _sigma(derivation: Derivation, grenze: tuple[bytes, ...]) -> int:
     return sum(derivation.bfs.node_capacity[pub] for pub in grenze)
 
 
-def _beitrag_p(derivation: Derivation, p: Identity, grenze: tuple[bytes, ...]) -> int:
-    return sum(
+def _beitrag_p(
+    derivation: Derivation,
+    A: Identity,
+    p: Identity,
+    grenze: tuple[bytes, ...],
+) -> int:
+    """min(cap(A→p), C(p), Σ cap(p→h)): zugefuehrter Fluss, nicht die Ausgangsschranke (02 §4)."""
+    cap_a_p = sum(
+        e.cap
+        for e in derivation.bfs.edges
+        if e.author == A.pub and e.subject == p.pub
+    )
+    C_p = capacity(PARAMS, derivation.bfs.distance[p.pub])
+    cap_p_grenze = sum(
         e.cap
         for e in derivation.bfs.edges
         if e.author == p.pub and e.subject in grenze
     )
-
-
-def _beitrag_p_zugefuehrt(
-    derivation: Derivation,
-    A: Identity,
-    p: Identity,
-    h: Identity,
-) -> int:
-    """min(cap(A→p), cap(p→h)): zugefuehrter Fluss, nicht die Ausgangsschranke (02 §4)."""
-
-    def _cap(author: bytes, subject: bytes) -> int:
-        edge = next(
-            e for e in derivation.bfs.edges
-            if e.author == author and e.subject == subject
-        )
-        d = derivation.bfs.distance[author]
-        return (edge.n_kante * capacity(PARAMS, d)) // PARAMS.D
-
-    return min(_cap(A.pub, p.pub), _cap(p.pub, h.pub))
+    return min(cap_a_p, C_p, cap_p_grenze)
 
 
 def _graph_a(
@@ -178,7 +173,7 @@ def _ratio_a() -> int:
     store_mit, scope, A, h, S, p = _graph_a(N_P_H_A)
     res_mit, der_mit = _run(store_mit, A, frozenset({S.pub}), scope)
     grenze = (h.pub,)
-    beitrag = _beitrag_p(der_mit, p, grenze)
+    beitrag = _beitrag_p(der_mit, A, p, grenze)
     return (res_mit.value - res_ohne.value) // beitrag
 
 
@@ -194,10 +189,12 @@ def test_fall_a_distanzkauf() -> None:
     d_p = der_mit.bfs.distance[p.pub]
     d_h_mit = der_mit.bfs.distance[h.pub]
     sigma_mit = _sigma(der_mit, grenze)
-    beitrag = _beitrag_p_zugefuehrt(der_mit, A, p, h)
+    beitrag = _beitrag_p(der_mit, A, p, grenze)
 
     assert d_h_ohne == D_H_FERN
     assert d_h_mit == d_p + 1
+    assert d_h_mit < d_h_ohne
+    assert d_p < d_h_ohne - 1
     assert sigma_ohne == capacity(PARAMS, D_H_FERN)
     assert sigma_mit == capacity(PARAMS, d_h_mit)
     assert res_ohne.value == capacity(PARAMS, D_H_FERN)
@@ -205,6 +202,9 @@ def test_fall_a_distanzkauf() -> None:
     assert res_ohne.value == sigma_ohne
     assert res_mit.value == sigma_mit
     assert res_mit.value - res_ohne.value > beitrag
+    assert any(e.author == p.pub and e.subject in grenze for e in der_mit.bfs.edges)
+    _keine_budget_oder_granular_findings(res_ohne)
+    _keine_budget_oder_granular_findings(res_mit)
 
 
 def test_fall_b_kapazitaetsspende() -> None:
@@ -220,7 +220,7 @@ def test_fall_b_kapazitaetsspende() -> None:
     res_mit, der_mit = _run(store_mit, A, frozenset({S.pub}), scope)
     d_h_mit = der_mit.bfs.distance[h.pub]
     sigma_mit = _sigma(der_mit, grenze)
-    beitrag = _beitrag_p_zugefuehrt(der_mit, A, p, h)
+    beitrag = _beitrag_p(der_mit, A, p, grenze)
 
     assert d_h_ohne == D_H_NAH
     assert d_h_mit == D_H_NAH
@@ -231,6 +231,9 @@ def test_fall_b_kapazitaetsspende() -> None:
     assert res_ohne.value < sigma_ohne
     assert res_mit.value < sigma_mit
     assert res_mit.value - res_ohne.value == beitrag
+    assert any(e.author == p.pub and e.subject in grenze for e in der_mit.bfs.edges)
+    _keine_budget_oder_granular_findings(res_ohne)
+    _keine_budget_oder_granular_findings(res_mit)
 
 
 def test_fall_b2_gesaettigte_spende() -> None:
@@ -245,7 +248,7 @@ def test_fall_b2_gesaettigte_spende() -> None:
     res_mit, der_mit = _run(store_mit, A, frozenset({S.pub}), scope)
     d_h_mit = der_mit.bfs.distance[h.pub]
     sigma_mit = _sigma(der_mit, grenze)
-    beitrag = _beitrag_p_zugefuehrt(der_mit, A, p, h)
+    beitrag = _beitrag_p(der_mit, A, p, grenze)
     C_p = capacity(PARAMS, der_mit.bfs.distance[p.pub])
 
     assert d_h_ohne == D_H_NAH
@@ -256,6 +259,7 @@ def test_fall_b2_gesaettigte_spende() -> None:
     assert res_ohne.value < sigma_ohne
     assert res_mit.value == sigma_mit
     assert res_mit.value - res_ohne.value < beitrag
+    assert any(e.author == p.pub and e.subject in grenze for e in der_mit.bfs.edges)
     _keine_budget_oder_granular_findings(res_ohne)
     _keine_budget_oder_granular_findings(res_mit)
 
@@ -282,13 +286,15 @@ def test_fall_c_skalierung() -> None:
         sigma_mit = _sigma(der_mit, grenze)
         d_p = der_mit.bfs.distance[p.pub]
         d_h_mit = der_mit.bfs.distance[hs[0].pub]
-        beitrag = _beitrag_p(der_mit, p, grenze)
+        beitrag = _beitrag_p(der_mit, A, p, grenze)
         beitrag_erwartet = k * ((N_P_H_C * capacity(PARAMS, d_p)) // PARAMS.D)
 
         for h in hs:
             assert der_ohne.bfs.distance[h.pub] == D_H_FERN
             assert der_mit.bfs.distance[h.pub] == d_h_mit
+            assert der_mit.bfs.distance[h.pub] < D_H_FERN
         assert d_h_mit == d_p + 1
+        assert d_p < D_H_FERN - 1
         assert sigma_ohne == k * capacity(PARAMS, D_H_FERN)
         assert sigma_mit == k * capacity(PARAMS, d_h_mit)
         assert res_ohne.value == k * capacity(PARAMS, D_H_FERN)
@@ -298,6 +304,7 @@ def test_fall_c_skalierung() -> None:
         assert beitrag != 0
         assert zuwachs % beitrag == 0
         ratios.append(zuwachs // beitrag)
+        assert any(e.author == p.pub and e.subject in grenze for e in der_mit.bfs.edges)
         _keine_budget_oder_granular_findings(res_ohne)
         _keine_budget_oder_granular_findings(res_mit)
 
