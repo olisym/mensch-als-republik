@@ -326,6 +326,18 @@ Aussage über den Graphen, wie er vorliegt, und **keine** Aussage über Angriffs
 > aus demselben Vorrat verwirrter ehrlicher Menschen bezahlt wie die Angriffskanten selbst; die
 > beiden Verteidigungslinien sind nicht unabhängig. Die Konstruktion stammt von Rudermans Kritik
 > an der Advogato-Metrik, deren Kapazitätsmodell dasselbe Distanz-Decay ist.
+>
+> **Wann sie wandert (D142).** `Σ_{h ∈ Grenze} C(h)` ist genau dann angreiferabhängig, wenn ein
+> Zug die **Distanz** eines Grenzknotens verschiebt. Ein Zug, der `d` unberührt lässt — etwa eine
+> breite Bürgschaft auf einen bereits seed-nahen Knoten —, ändert keine Kapazität und addiert
+> höchstens den Fluss, den er selbst trägt. Gemessen: Hebel `3` beim Distanzkauf gegen Hebel
+> `≤ 1` bei jedem Zug ohne Distanzänderung (`tests/trust/test_deckenelastizitaet.py`). Wo die
+> Decke nicht bindet, ist die Schranke schlaff und überschätzt den Angreifer — das ist die
+> sichere Richtung und kein Defekt. Der Defekt ist allein die Beweglichkeit.
+>
+> **Kein Mechanismus dagegen (D143).** Entschieden und begründet: der Hebel entsteht daraus, dass
+> die Decke ehrlichen Fluss abschneidet, der bereits anliegt. Wer den Kauf verhindert, hält
+> genau diesen ehrlichen Fluss draußen.
 
 > **Schärfere Schranke.** Unter gültigem Budget gilt zusätzlich
 > `maxflow(s → S) ≤ Σ_{h ∈ Grenze} Σ_{e Angriffskante von h} ⌊n_e·C(h)/D⌋ ≤ Σ_{h} C(h)`.
