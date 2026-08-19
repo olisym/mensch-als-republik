@@ -77,19 +77,22 @@ def _beitrag_p(
     p: Identity,
     grenze: tuple[bytes, ...],
 ) -> int:
-    """min(cap(A→p), C(p), Σ cap(p→h)): zugefuehrter Fluss, nicht die Ausgangsschranke (02 §4)."""
+    """min(cap(A→p), Σ cap(p→h)): zugefuehrter Fluss (02 §4).
+
+    02 §3, Nachtrag seit D1: unter gueltigem Budget ist die interne Knotenkante
+    nie allein bindend, der Term C(p) ist redundant.
+    """
     cap_a_p = sum(
         e.cap
         for e in derivation.bfs.edges
         if e.author == A.pub and e.subject == p.pub
     )
-    C_p = capacity(PARAMS, derivation.bfs.distance[p.pub])
     cap_p_grenze = sum(
         e.cap
         for e in derivation.bfs.edges
         if e.author == p.pub and e.subject in grenze
     )
-    return min(cap_a_p, C_p, cap_p_grenze)
+    return min(cap_a_p, cap_p_grenze)
 
 
 def _graph_a(
@@ -221,6 +224,14 @@ def test_fall_b_kapazitaetsspende() -> None:
     d_h_mit = der_mit.bfs.distance[h.pub]
     sigma_mit = _sigma(der_mit, grenze)
     beitrag = _beitrag_p(der_mit, A, p, grenze)
+    cap_a_p = sum(
+        e.cap for e in der_mit.bfs.edges
+        if e.author == A.pub and e.subject == p.pub
+    )
+    cap_p_h = sum(
+        e.cap for e in der_mit.bfs.edges
+        if e.author == p.pub and e.subject in grenze
+    )
 
     assert d_h_ohne == D_H_NAH
     assert d_h_mit == D_H_NAH
@@ -231,6 +242,8 @@ def test_fall_b_kapazitaetsspende() -> None:
     assert res_ohne.value < sigma_ohne
     assert res_mit.value < sigma_mit
     assert res_mit.value - res_ohne.value == beitrag
+    assert beitrag == cap_a_p
+    assert beitrag < cap_p_h
     assert any(e.author == p.pub and e.subject in grenze for e in der_mit.bfs.edges)
     _keine_budget_oder_granular_findings(res_ohne)
     _keine_budget_oder_granular_findings(res_mit)
@@ -249,13 +262,21 @@ def test_fall_b2_gesaettigte_spende() -> None:
     d_h_mit = der_mit.bfs.distance[h.pub]
     sigma_mit = _sigma(der_mit, grenze)
     beitrag = _beitrag_p(der_mit, A, p, grenze)
-    C_p = capacity(PARAMS, der_mit.bfs.distance[p.pub])
+    cap_a_p = sum(
+        e.cap for e in der_mit.bfs.edges
+        if e.author == A.pub and e.subject == p.pub
+    )
+    cap_p_h = sum(
+        e.cap for e in der_mit.bfs.edges
+        if e.author == p.pub and e.subject in grenze
+    )
 
     assert d_h_ohne == D_H_NAH
     assert d_h_mit == D_H_NAH
     assert sigma_ohne == capacity(PARAMS, D_H_NAH)
     assert sigma_mit == sigma_ohne
-    assert beitrag == C_p
+    assert beitrag == cap_p_h
+    assert beitrag < cap_a_p
     assert res_ohne.value < sigma_ohne
     assert res_mit.value == sigma_mit
     assert res_mit.value - res_ohne.value < beitrag
