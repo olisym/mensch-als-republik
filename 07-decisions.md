@@ -4536,3 +4536,85 @@ Fork mit eigener Begründung und nicht ein Zusatz hier.
 auseinanderfallen. `tests/test_sim.py` führt einen parametrisierten Szenariotest und berührt
 weder `inbox_path` noch `fromhex`. Der Regressionstest ist deshalb neu zu bauen, und die
 Rücknahmeprobe hat einen eindeutigen Ort.
+
+### D139 — Distanz ist kaufbar; der Satz vom doppelten Schutz fällt
+
+Ausgelöst durch die Frage, was ein erster realer Einsatz eigentlich prüfen würde. Vorgeschaltet
+war eine Literaturprüfung (Prüfregel 15), weil das Problem außerhalb von MaR seit
+fünfundzwanzig Jahren bearbeitet wird. Ergebnis der Prüfung: die Feldfrage und die
+Angriffsfrage sind verschiedene Fragen, und die zweite ist heute entscheidbar, ohne einen
+einzigen weiteren Menschen.
+
+**Erstens: der Satz vom doppelten Schutz fällt.**
+
+Das Korollar in `02 §4` schließt mit der Beobachtung, eine seed-ferne Angriffskante sei ohnehin
+billig, weil `C(h) = ⌊C₀ γ^{d(s,h)}⌋` mit der Distanz falle. Der Satz behandelt `d(s,h)` als
+Eigenschaft des ehrlichen Knotens. Das ist sie nicht: `d` ist die BFS-Distanz über dem
+**aktuellen** wirksamen Kantenset `E⁺`, und dieses Kantenset gestaltet der Angreifer mit.
+
+Der Satz ist außerdem eine **Kostenaussage** — „billig" —, und ein Kostenmodell für verwirrte
+ehrliche Knoten hat die Spec nirgends. Die Schranke selbst braucht keines: sie ist eine Aussage
+über den Graphen, wie er vorliegt. Der angehängte Satz behauptet mehr, als der bewiesene Satz
+trägt, und verliert dabei still den Geltungsbereich seiner eigenen Begründung.
+
+**Zweitens: der Angriff wird benannt, nicht abgewehrt.**
+
+Ein Angreifer, der einen seed-nahen ehrlichen Knoten `p` verwirrt, kann durch Bürgschaften bis zu
+`min(D, C(p))` andere ehrliche Knoten gleichzeitig näher an den Seed ziehen und damit deren
+Kapazität heben. Entscheidend ist die Rollenverteilung: `p` bürgt für **ehrliche** Knoten, nicht
+für Sybils, ist also kein Grenzknoten im Sinne des Satzes und taucht in `Σ_{h ∈ Grenze} C(h)`
+überhaupt nicht auf. Gekauft wird genau der Knoten, den die Schranke nicht sieht, und er
+multipliziert die Kapazität derer, die sie sieht.
+
+`02 §4` bekommt dazu einen Warnabsatz. Kein neuer Mechanismus, keine Änderung an Kapazität,
+Budget oder Fluss: die Spec sagt an der Stelle, was gilt, statt an der Stelle etwas zu
+versprechen, was sie nicht hält.
+
+**Drittens: der Min-Cut-Beweis bleibt unangetastet.**
+
+`maxflow(s → S) ≤ Σ_{h ∈ Grenze} C(h)` ist korrekt, die `|S|`-Unabhängigkeit steht, und
+„Identitäten gratis, Kanten teuer" steht ebenfalls. Was fällt, ist allein die Behauptung, die
+zweite Verteidigungslinie sei von der ersten unabhängig. Sie ist es nicht — beide werden aus
+demselben Vorrat verwirrter ehrlicher Menschen bezahlt.
+
+**Gemessen vor dem Prompt.** Mit den Anker-Parametern `γ = ½`, `C₀ = 16` und `D ≥ C₀` (§8) ist
+`C(d) = 16, 8, 4, 2, 1, 0` für `d = 0…5`. Ein verwirrter Knoten `p` bei `d = 1` trägt `C(p) = 8`
+und hat wirksamen Out-Degree `min(D, C(p)) = 8`. Acht ehrliche Knoten bei `d ≥ 5` tragen `C = 0`
+und sind nach `§3` nicht einmal bürgschaftsfähig; nach `p`s Bürgschaft sitzen sie bei `d = 2` und
+tragen je `C = 4`. Die Grenzsumme steigt damit von `0` auf `32`. Allgemein ist der Ertrag
+`C(p) · ⌊γ · C(p)⌋`, also **quadratisch in der Kapazität des einen teuren Knotens**. Ohne den
+Trick müsste derselbe Angreifer acht Menschen bei `d = 2` verwirren; sobald Seed-Nähe teurer ist
+als Seed-Ferne — und darauf beruht das gesamte Distanz-Decay-Argument —, ist der Trick strikt
+billiger. Die Zahlen sind gerechnet, nicht gemessen; der Simulationslauf hat damit einen
+abgeleiteten Erwartungswert und keine getippte Menge.
+
+**Belege aus der Literatur.** Levien betrieb die Advogato-Metrik jahrelang mit echten Nutzern und
+berichtet als Ergebnis, die Metriken hätten ihren Zweck erfüllt, entscheidend sei aber die
+Deckung zwischen den Annahmen der abstrakten Berechnung und der realen Implementierung. Der
+eigentliche Defekt kam nicht aus dem Feldbetrieb: Ruderman fand beim Nachlesen des Beweises, dass
+dieser über die Kapazitäten **nach** dem Angriff beschränkt statt über die davor, und
+konstruierte daraus einen Ertrag im Quadrat der Angriffskosten. MaRs Kapazitätsmodell ist
+dasselbe Distanz-Decay, also überträgt sich die Konstruktion. Bei Secure Scuttlebutt fand der
+Feldbetrieb dafür anderes — Replikationslecks, eine Kanonisierung ohne deterministische
+Schlüsselordnung, ein einzelnes langlebiges Signaturschlüsselpaar. Zwei davon sind in MaR
+strukturell geschlossen, das dritte ist die offene Schlüsselrotation. Die Lehre für die
+Reihenfolge: **Feldbetrieb findet Implementierungsränder, Nachrechnen findet Beweislücken.**
+
+**Nicht entschieden.** Ob ein Mechanismus reagieren soll, bleibt offen und ist ein eigener Fork
+mit sozialer Konsequenz — es geht darum, wessen Position kaufbar ist. Offen bleibt insbesondere,
+ob die PageRank-Relaxation aus `02 §5` an dieser Stelle robuster ist als der maßgebliche
+Max-Flow; Ruderman hält PageRank für unempfindlich, weil der erlangte Score durch den
+Vor-Angriffs-Score der verwirrten Knoten beschränkt bleibt. `02 §5` ist zum Zeitpunkt dieses
+Eintrags ungelesen, die Übertragung daher Hypothese und ausdrücklich keine Entscheidung.
+
+**Prüfregel 20 — Kostenaussage braucht Kostenmodell.** Ein Satz, der etwas „billig", „teuer"
+oder „ohnehin unattraktiv" nennt, ist eine Aussage über Angriffskosten. Steht in der Spec kein
+Kostenmodell, das ihn trägt, fällt der Satz — auch und gerade dann, wenn der Satz daneben
+bewiesen ist. Ein bewiesener Nachbar macht eine unbelegte Behauptung nicht wahr, er macht sie
+nur schwerer sichtbar.
+
+**Neuntes Auftreten der Form „Satz und Anhang".** Nach D77, D83, D87, D91, D130, D134, D135 und
+dem Zuschnitt-Absatz in D132 ist dies der neunte Fall, in dem eine tragende Aussage einen zweiten
+Satz mitführt, der ihren Geltungsbereich still überschreitet. Prüfregel 18 fängt die Form beim
+Hinsehen; gefunden wurde sie auch diesmal nicht beim Lesen der Spec, sondern beim Versuch, gegen
+sie zu argumentieren.

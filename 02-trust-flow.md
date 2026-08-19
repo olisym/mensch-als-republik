@@ -298,9 +298,27 @@ Voraussetzung des Beweises.
 **Korollar (`|S|`-Unabhängigkeit).** Die simultane Schranke hängt **nur** von den ehrlichen
 Grenzknoten ab — **nicht von `|S|`**. Sind es `g` Angriffskanten mit Grenz-Kapazität `≤ C_max`,
 gilt `maxflow(s → S) ≤ g · C_max`. Eine Million zusätzliche Sybils teilen dasselbe feste Budget.
-Das ist „Identitäten gratis, Kanten teuer" — **bewiesen**, nicht erhofft. Und weil
-`C(h) = ⌊C₀ γ^{d(s,h)}⌋` mit der Distanz fällt, ist eine seed-ferne Angriffskante ohnehin
-billig: doppelter Schutz.
+Das ist „Identitäten gratis, Kanten teuer" — **bewiesen**, nicht erhofft. Die Schranke ist eine
+Aussage über den Graphen, wie er vorliegt, und **keine** Aussage über Angriffskosten: `C(h)` wird
+über demselben Kantenset gerechnet, das der Angreifer mitgestaltet hat.
+
+> **⚠️ Distanz ist kaufbar (D139).** `d(s,h)` ist keine Eigenschaft des ehrlichen Knotens `h`,
+> sondern die BFS-Distanz über dem **aktuellen** `E⁺`. Ein Angreifer, der einen seed-nahen
+> ehrlichen Knoten `p` verwirrt, zieht durch dessen Bürgschaften bis zu `min(D, C(p))` weitere
+> ehrliche Knoten gleichzeitig näher an den Seed und hebt damit deren Kapazität. `p` bürgt dabei
+> für **ehrliche** Knoten, nicht für Sybils — `p` ist also **kein Grenzknoten** und taucht in
+> `Σ_{h ∈ Grenze} C(h)` nicht auf. Gekauft wird genau der Knoten, den die Schranke nicht sieht.
+>
+> Mit `γ = ½`, `C₀ = 16`, `D ≥ C₀` (§8): `p` bei `d = 1` trägt `C(p) = 8` und hat wirksamen
+> Out-Degree `8`. Acht Knoten bei `d ≥ 5` tragen `C = 0` und sind nach §3 nicht bürgschaftsfähig;
+> nach `p`s Bürgschaft sitzen sie bei `d = 2` mit je `C = 4`. Die Grenzsumme steigt von `0` auf
+> `32`. Allgemein: Ertrag `C(p) · ⌊γ · C(p)⌋`, quadratisch in `C(p)`.
+>
+> Der Min-Cut-Satz bleibt davon unberührt — er gilt über dem Graphen, der vorliegt. Was **nicht**
+> folgt, ist der Schluss, eine seed-ferne Angriffskante sei von sich aus billig. Seed-Ferne wird
+> aus demselben Vorrat verwirrter ehrlicher Menschen bezahlt wie die Angriffskanten selbst; die
+> beiden Verteidigungslinien sind nicht unabhängig. Die Konstruktion stammt von Rudermans Kritik
+> an der Advogato-Metrik, deren Kapazitätsmodell dasselbe Distanz-Decay ist.
 
 > **Schärfere Schranke.** Unter gültigem Budget gilt zusätzlich
 > `maxflow(s → S) ≤ Σ_{h ∈ Grenze} Σ_{e Angriffskante von h} ⌊n_e·C(h)/D⌋ ≤ Σ_{h} C(h)`.
