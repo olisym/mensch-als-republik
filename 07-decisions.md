@@ -4962,3 +4962,42 @@ gerade beseitigt hat. Die Vorbedingung gehört in den Docstring, nicht in den Co
 `00 §4` Key 9 deklariert dieselben Zahlen unveränderlich im Genesis, und nichts gleicht sie ab.
 D35 verlangt Unveränderlichkeit von `D`, weil `n/D` in jeder Vouch-Signatur steckt. Dieselbe
 Klasse wie dieser Eintrag, anderer Layer — nicht in diesem Lauf.
+
+### D146 — Regel 14 zum dritten Mal, und eine neue Regel 22
+
+**Zwei Prompt-Defekte im Lauf zu D145.** Der Prompt nannte `passed()`, die Funktion heißt
+`reached()`. Und er behauptete, `_tally` habe einen Importeur außerhalb seiner Datei; es waren
+zwei, und `test_invariants.py` wäre ohne die Meldung des Werkzeugs rot geworden.
+
+**Der zweite ist kein neuer Befund.** Regel 14 sagt bereits, dass eine Aufzählung von Fundstellen
+gegrept und nicht gelesen wird, und führt zwei Präzedenzen: D119 nannte einen Erzeuger, es waren
+drei; D127 nannte vier Kettenfortführungen, es waren fünf. „Ein Importeur, es waren zwei" ist der
+dritte Fall derselben Regel. Ihn zum Anlass einer neuen Regel zu nehmen, hätte die bestehende
+verwässert und den eigentlichen Punkt verdeckt: die Regel stand, sie wurde nicht angewandt.
+
+**Ein Zusatz zu 14 trägt trotzdem.** Die Behauptung stammte aus einem `head -20`, das genau
+zwanzig Zeilen zurückgab. Eine Ausgabe an der Grenze ihres Limits sieht aus wie eine
+vollständige, und darin unterscheidet sie sich von einem leeren Ergebnis, das sich selbst
+anzeigt. Deshalb: ein Limit, das exakt erreicht wird, ist ein Nulltreffer.
+
+**Der erste Defekt ist neu.** Ein Bezeichner ist keine Aufzählung. `passed()` entstand daraus,
+dass der Rumpf der Funktion gelesen und die `def`-Zeile ergänzt wurde — und ein Funktionsrumpf
+ohne seine Signatur sieht nicht abgeschnitten aus. Dagegen hilft keine Zählregel, sondern nur die
+Herkunft: **Regel 22**, Namen und Signaturen im Prompt werden übernommen, nicht rekonstruiert.
+
+**Auch nicht „Modulcode vor Prompt".** Der Modulcode war gelesen. Gelesen und vollständig gelesen
+sind zwei Zustände, und die Differenz war beide Male unsichtbar.
+
+**Zur Fehlerform.** Der Supervisor war in dieser Sitzung wie in der vorigen die Fehlerquelle, und
+beide Male hat das Werkzeug gemeldet statt still anzupassen. Das ist die Bedingung, unter der ein
+falscher Prompt billig bleibt — keine Erlaubnis, ihn falsch zu schreiben, aber die Erklärung
+dafür, warum der Schaden ein Nachlauf war und kein Defekt in `main`.
+
+**Offen, aus D145 mitgenommen: die Genesis-Felder haben keinen gemeinsamen Durchgang.**
+`[5]`/`[6]` waren ungebunden und sind es nicht mehr. `[4]` ist an die Epochenkette nicht gebunden
+— `GV-24` führt ein Genesis, dessen deklarierte Verfassung in der Auszählung nirgends vorkommt.
+`[9]` hat mit `trust/params.py` eine zweite Quelle ohne Abgleich, obwohl D35 Unveränderlichkeit
+von `D` verlangt, weil `n/D` in jeder Vouch-Signatur steckt. `[1]`, `[2]`, `[3]` und `[7]` haben
+gar keinen Träger. Das ist einmal zu beantworten und nicht viermal: welches Feld hat einen
+Träger, und woran ist er gebunden. Der Durchgang steht vor `00a`, weil `root_keys` eines der
+trägerlosen Felder ist.
