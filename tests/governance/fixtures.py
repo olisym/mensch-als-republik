@@ -8,6 +8,7 @@ from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance.objects import Epoch, Proposal
+from mensch_als_republik.governance.tally import decide
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from tests.helpers import SEED_ALICE, SEED_BOB, SEED_CAROL, Identity
 
@@ -204,6 +205,35 @@ def nuc(scope: bytes, name: str) -> str:
 def policy_of(constitution_obj: dict, scope: bytes = N_D) -> NucleusPolicy:
     return NucleusPolicy(
         scope, declared=constitution_obj.get("irrevocable_predicates", [])
+    )
+
+
+def _tally(
+    store,
+    *,
+    epoch=EPOCH_1,
+    proposal=PROPOSAL_1,
+    constitution=C1,
+    target=C2,
+    genesis=GENESIS_D,
+    known=None,
+    now=NOW,
+    policy=None,
+):
+    if known is None:
+        known = {proposal.proposal_hash: proposal}
+    if policy is None and constitution is not None:
+        policy = policy_of(constitution, epoch.scope)
+    return decide(
+        store,
+        epoch=epoch,
+        proposal=proposal,
+        genesis_obj=genesis,
+        constitution_obj=constitution,
+        target_constitution_obj=target,
+        known_proposals=known,
+        now=now,
+        policy=policy,
     )
 
 

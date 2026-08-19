@@ -18,6 +18,7 @@ from .fixtures import (
     PROPOSAL_1,
     PROPOSAL_2,
     PROPOSAL_AMEND_E1,
+    _tally,
     fresh_p1,
     fresh_p2,
     policy_of,
@@ -25,7 +26,6 @@ from .fixtures import (
     ratify_claim,
     vote,
 )
-from .test_vectors import _tally
 
 
 def test_INV_04_1_absorbing() -> None:

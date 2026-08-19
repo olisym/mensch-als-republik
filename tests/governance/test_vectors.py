@@ -12,7 +12,6 @@ from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance import (
     Finding,
     GovernanceFinding,
-    decide,
     verify_ratification,
 )
 from mensch_als_republik.governance.objects import Epoch, Proposal
@@ -47,8 +46,7 @@ from .fixtures import (
     PROPOSAL_AMEND_E1,
     PROPOSAL_HIGH,
     PROPOSAL_LOWER,
-    STOCK_GENESIS,
-    STOCK_N,
+    _tally,
     fresh_alice,
     fresh_bob,
     fresh_carol,
@@ -62,35 +60,6 @@ from .fixtures import (
     ratify_claim,
     vote,
 )
-
-
-def _tally(
-    store,
-    *,
-    epoch=EPOCH_1,
-    proposal=PROPOSAL_1,
-    constitution=C1,
-    target=C2,
-    genesis=GENESIS_D,
-    known=None,
-    now=NOW,
-    policy=None,
-):
-    if known is None:
-        known = {proposal.proposal_hash: proposal}
-    if policy is None and constitution is not None:
-        policy = policy_of(constitution, epoch.scope)
-    return decide(
-        store,
-        epoch=epoch,
-        proposal=proposal,
-        genesis_obj=genesis,
-        constitution_obj=constitution,
-        target_constitution_obj=target,
-        known_proposals=known,
-        now=now,
-        policy=policy,
-    )
 
 
 def _kinds(result) -> set[GovernanceFinding]:
@@ -501,11 +470,14 @@ def test_GV_23() -> None:
 
 
 def test_GV_24() -> None:
+    genesis = dict(GENESIS_D)
+    genesis[6] = 1
+    scope = hashlib.sha256(DOM_NUC_GEN + cbor_canon.encode(genesis)).digest()
     epoch = Epoch(
-        scope=STOCK_N, index=2, constitution_hash=constitution_hash(C2)
+        scope=scope, index=2, constitution_hash=constitution_hash(C2)
     )
     proposal = Proposal(
-        scope=STOCK_N,
+        scope=scope,
         predecessor=epoch.epoch_id,
         constitution_hash=constitution_hash(C3),
     )
@@ -515,7 +487,7 @@ def test_GV_24() -> None:
         proposal=proposal,
         constitution=C2,
         target=C3,
-        genesis=STOCK_GENESIS,
+        genesis=genesis,
     )
     assert result.state is TallyState.UNEVALUABLE
     assert GovernanceFinding.UNSUPPORTED_WEIGHT_MODE in _kinds(result)

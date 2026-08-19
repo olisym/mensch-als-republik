@@ -13,11 +13,11 @@ from .fixtures import (
     GENESIS_D,
     P1,
     PROPOSAL_AMEND_E1,
+    _tally,
     _thresholds,
     fresh_p1,
     vote,
 )
-from .test_vectors import _tally
 
 
 def test_D145_unbound_ordinary_genesis_does_not_pass_amendment() -> None:
@@ -36,7 +36,7 @@ def test_D145_unbound_ordinary_genesis_does_not_pass_amendment() -> None:
     store = store_with(
         *(vote(identity, PROPOSAL_AMEND_E1, choice=1, t=1) for identity in identities)
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="genesis_obj does not match epoch scope"):
         _tally(
             store,
             epoch=EPOCH_1,
