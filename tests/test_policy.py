@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from mensch_als_republik.policy import (
+    PROTOCOL_IRREVOCABLE,
     NucleusPolicy,
     PolicyNote,
     PolicyWarning,
@@ -26,18 +27,18 @@ def _unsafe(*predicates: str) -> tuple[PolicyNote, ...]:
 @pytest.mark.parametrize(
     "declared, irrevocable, warnings",
     [
-        (frozenset(), frozenset({"obligation@1"}), ()),  # P-1
-        (frozenset({"obligation@1"}), frozenset({"obligation@1"}), ()),  # P-2
-        (frozenset({"foo@1"}), frozenset({"obligation@1", "foo@1"}), ()),  # P-3
-        (frozenset({"vouch@1"}), frozenset({"obligation@1"}), _unsafe("vouch@1")),  # P-4
+        (frozenset(), PROTOCOL_IRREVOCABLE, ()),  # P-1
+        (frozenset({"obligation@1"}), PROTOCOL_IRREVOCABLE, ()),  # P-2
+        (frozenset({"foo@1"}), PROTOCOL_IRREVOCABLE | {"foo@1"}, ()),  # P-3
+        (frozenset({"vouch@1"}), PROTOCOL_IRREVOCABLE, _unsafe("vouch@1")),  # P-4
         (
             frozenset({"vouch@1", "foo@1"}),
-            frozenset({"obligation@1", "foo@1"}),
+            PROTOCOL_IRREVOCABLE | {"foo@1"},
             _unsafe("vouch@1"),
         ),  # P-5
         (
             frozenset({"revoke@1", "supersede@1"}),
-            frozenset({"obligation@1"}),
+            PROTOCOL_IRREVOCABLE,
             (),
         ),  # P-6
     ],
@@ -109,6 +110,27 @@ def test_c2_obligation_active_with_policy():
 
     assert result.state == State.ACTIVE
     assert result.trust_usable is True
+
+
+def test_rotate_key_not_revoked_with_policy() -> None:
+    """core/revoke@1 auf nuc:N/rotate-key@1 lässt den Rotate ACTIVE (D153)."""
+    alice = Identity("alice-rotate-irr")
+    successor = Identity("succ-rotate-irr")
+    scope = scope_id("rotate-irr")
+    rotate = alice.claim(
+        p=f"nuc:{scope.hex()}/rotate-key@1",
+        J=(1, successor.pub),
+        t=1,
+        N=scope,
+    )
+    rev = alice.revoke(rotate, t=2)
+    store = store_with(rotate, rev)
+    policy = NucleusPolicy(scope=scope)
+
+    result = classify(rotate, store, now=100, policy=policy)
+
+    assert result.state is not State.REVOKED
+    assert result.state == State.ACTIVE
 
 
 def test_c3_obligation_active_against_supersede_with_policy():
@@ -206,7 +228,7 @@ def test_P_7_character_set_from_text() -> None:
     raw = "obligation@1"
     policy = NucleusPolicy(scope=scope_id("p7"), declared=raw)
     assert policy.declared == raw
-    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.irrevocable == PROTOCOL_IRREVOCABLE
     assert policy.warnings == (
         PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, repr(raw)),
     )
@@ -217,7 +239,7 @@ def test_P_8_non_str_entry() -> None:
     raw = [42]
     policy = NucleusPolicy(scope=scope_id("p8"), declared=raw)
     assert policy.declared is raw
-    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.irrevocable == PROTOCOL_IRREVOCABLE
     assert policy.warnings == (
         PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "42"),
     )
@@ -226,7 +248,7 @@ def test_P_8_non_str_entry() -> None:
 def test_P_8_non_iterable_declared() -> None:
     policy = NucleusPolicy(scope=scope_id("p8b"), declared=42)
     assert policy.declared == 42
-    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.irrevocable == PROTOCOL_IRREVOCABLE
     assert policy.warnings == (
         PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "42"),
     )
@@ -237,7 +259,7 @@ def test_P_9_scope_prefix() -> None:
     raw = ["nuc:N/obligation@1"]
     policy = NucleusPolicy(scope=scope_id("p9"), declared=raw)
     assert policy.declared is raw
-    assert policy.irrevocable == frozenset({"obligation@1"})
+    assert policy.irrevocable == PROTOCOL_IRREVOCABLE
     assert policy.warnings == (
         PolicyNote(PolicyWarning.MALFORMED_IRREVOCABLE_ENTRY, "nuc:N/obligation@1"),
     )
