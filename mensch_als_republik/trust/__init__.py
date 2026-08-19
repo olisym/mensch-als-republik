@@ -6,7 +6,7 @@ from mensch_als_republik.index import classify_all
 
 from .findings import Finding, TrustFinding
 from .flow import TrustResult, trust
-from .params import TrustParams
+from .params import TrustParams, resolve_trust_params
 from .relax import RankingResult, RelaxParams, rank
 
 __all__ = [
@@ -18,5 +18,6 @@ __all__ = [
     "TrustResult",
     "classify_all",
     "rank",
+    "resolve_trust_params",
     "trust",
 ]
