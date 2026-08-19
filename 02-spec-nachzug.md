@@ -595,5 +595,6 @@ TV1 existiert und grün ist — ist damit erfüllt.
 - Zweiter Spec-Durchgang für `05`, `06`, `04`, `00`, `VISION` gemäß Änderungsliste G. `05 §3`
   braucht Über-Commitment als Stufe-3-Auslöser — mit dem Zusatz aus D40, dass die Prüfung über
   Gruppenmaxima läuft.
-- `02b-pagerank`: liest `w` (D27), Normalisierung über `Σw` dort **erlaubt**, weil `§5` keine
-  harte Schranke trägt. `w` ist dort `n_kante/D` je Gruppe, nicht je Claim.
+- `02b-pagerank`: liest `w` (D27). **Überholt durch D45:** keine Normalisierung über `Σw`; es
+  gilt `P[J][I] = n_kante(I, J) / D` je Gruppe, nicht je Claim. Die hier notierte Erlaubnis ist
+  aufgehoben, die D9-Ausnahme für `§5` entfällt ersatzlos.

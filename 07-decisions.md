@@ -4618,3 +4618,66 @@ dem Zuschnitt-Absatz in D132 ist dies der neunte Fall, in dem eine tragende Auss
 Satz mitführt, der ihren Geltungsbereich still überschreitet. Prüfregel 18 fängt die Form beim
 Hinsehen; gefunden wurde sie auch diesmal nicht beim Lesen der Spec, sondern beim Versuch, gegen
 sie zu argumentieren.
+
+### D140 — Abschnitt 5 wird auf D45 nachgezogen; die Relaxation ist gegen den Distanzkauf immun
+
+Aufgefallen beim Versuch, die in D139 offengelassene Frage aus `02 §5` zu beantworten: der
+Abschnitt beschrieb das Gegenteil dessen, was seit D45 gilt.
+
+**Erstens: die Layer-Datei widersprach dem Register.**
+
+`02 §5` führte `P` als spaltenstochastisch über `Σw` normalisiert — zweimal im Fließtext und in
+einem Blockabsatz, der diese Normalisierung gegen `§4` rechtfertigte und sie „genau die
+Trennlinie zwischen beiden Sichten" nannte. D45 hat beides aufgehoben: normativ gilt
+`P[J][I] = n_kante(I, J) / D` ohne Kopplung an andere Kanten, und die D9-Ausnahme für `§5`
+entfällt **ersatzlos**, womit `§7` in beiden Sichten gilt. Der Rechtfertigungsabsatz, der noch
+in der Layer-Datei stand, **war** der gestrichene Sonderstatus.
+
+`02b-golden-anchors.md` führt unter K9 die richtige Fassung, die Implementierung folgt K9, und
+die Testnamen in `tests/trust/` nennen die spaltenstochastische Fassung ausdrücklich als die
+verworfene. Kein Test konnte deshalb rot werden: **nur die Spec war falsch.** Genau das ist die
+Driftform, gegen die das Register gebaut ist — die Entscheidung war getroffen, begründet und
+implementiert, und die Datei, die ein Leser zuerst aufschlägt, sagte das Gegenteil.
+
+Nachgezogen wird ausschließlich Text. Kein Mechanismus, keine Zahl, kein Anker ändert sich.
+
+**Zweitens: die überholte Zeile in `02-spec-nachzug.md` wird markiert, nicht stillschweigend
+umgeschrieben.** Sie steht unter „Was danach noch offen ist" und trägt die D27-Fassung. Ein
+falscher normativer Satz in einer Bestandsliste ist teurer als ein sichtbar aufgehobener, also
+bleibt der ursprüngliche Verweis stehen und bekommt die Aufhebung danebengeschrieben.
+
+**Drittens: die offene Frage aus D139 ist beantwortet — mit korrigierter Begründung.**
+
+Der Distanzkauf greift in `§5` nicht. Ich hatte das zunächst damit begründet, `§5` kenne keinen
+Distanzterm. Das ist **falsch**: `C(x)` geht sehr wohl ein, nämlich als Filter darüber, welche
+Kanten in `E⁺` liegen (Anker K13, so auch der Kommentar in `trust/relax.py`). Ein verwirrter
+seed-naher Knoten kann den Kantensatz von `§5` also durchaus verändern — Knoten mit `C = 0`
+werden emissionsfähig, sobald sie näher an den Seed rücken.
+
+Der tragende Grund ist ein anderer und ist Rudermans eigener: das **Gewicht** einer Kante hängt
+nicht von `C` ab, und wegen `Σ n ≤ D` ist jede Spalte von `P` sub-stochastisch. Ein Knoten gibt
+höchstens weiter, was er empfängt. Der Ertrag des Angriffs bleibt damit durch die
+**Vor-Angriffs-Masse** der verwirrten Knoten beschränkt; ein quadratischer Term entsteht nicht.
+Die Immunität kommt aus der Massenerhaltung, nicht aus der Abwesenheit einer Größe.
+
+Das macht `§5` **nicht** zum Ersatz für `§4`. Die Relaxation trägt keine harte Schranke und ist
+für Gates verboten; sie ist unverwundbar, weil sie nichts verspricht. Damit steht der Trade-off
+sauber: **die Verwundbarkeit von `§4` ist der Preis der harten Schranke.** Der Min-Cut-Beweis
+braucht eine harte Knotendecke, die Decke braucht eine Positionsgröße, und jede Positionsgröße
+über dem Vouch-Graphen ist mit Vouches beeinflussbar.
+
+**Der Fork lautet damit präziser als in D139:** Gibt es eine harte Knotendecke, die nicht über
+den Graphen gekauft werden kann? Das ist eine Literaturfrage — die SybilLimit-Linie arbeitet mit
+Random Routes statt mit Distanz — und sie ist groß genug für eine eigene Runde. Sie bleibt offen
+und wird hier ausdrücklich nicht entschieden.
+
+**Gemessen.** Einträge, die im Titel eine Korrektur eines älteren Eintrags ausweisen: **genau
+einer**, D45. Und genau dieser eine war nicht nachgezogen. Die Stichprobe ist klein, die
+Trefferquote ist eins. Träger des veralteten Satzes außerhalb des Registers: zwei Zeilen in
+`02-trust-flow.md` plus der Rechtfertigungsabsatz, eine Zeile in `02-spec-nachzug.md`. Alle
+übrigen Fundstellen — `02b-abnahme.md`, `02b-golden-anchors.md`, zwei Testmodule — nennen die
+spaltenstochastische Fassung korrekt als die verworfene.
+
+**Konvention:** Hebt ein Registereintrag einen älteren auf, weist der Titel das aus und der Text
+nennt **Datei und Abschnitt**, die nachzuziehen sind. Ohne diese Angabe ist die Aufhebung im
+Register vollständig und in der Spec unsichtbar — der Zustand, der hier zwei Jahre gehalten hat.

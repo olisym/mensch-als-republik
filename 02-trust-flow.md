@@ -376,22 +376,38 @@ Personalisierter Random-Walk-mit-Restart vom Seed:
 t_s = α · e_s + (1−α) · Pᵀ · t_s     ⇔     t_s = α (I − (1−α) Pᵀ)⁻¹ · e_s
 ```
 
-mit spaltenstochastischer Übergangsmatrix `P` (**gewichtete**, normalisierte Vouch-Adjazenz),
+mit **sub-stochastischer** Übergangsmatrix `P` (absolute, an `D` gemessene Vouch-Adjazenz),
 Restart-Vektor `e_s` (der Seed, §6.3) und Restart-Wahrscheinlichkeit `α`.
 
-> **Die Relaxation liest `w` (§3.1).** Der Übergangsanteil von `I` nach `J` ist proportional zum
-> Gewicht `w` der Kante `I → J`, anschließend spaltenstochastisch normalisiert — **nicht**
-> gleichverteilt über die ausgehenden Kanten. Andernfalls behandelte die schnelle Sicht einen
-> Probe-Vouch mit `w = 0.05` wie eine volle Bürgschaft und wäre damit **großzügiger** als die
-> harte Sicht (§4). Eine Relaxation darf ungenauer sein, nie über-vertrauend.
+> **Die Relaxation liest `w` absolut (§3.1; D45, korrigiert D27).** Der Übergangsanteil ist
+> `P[J][I] = n_kante(I, J) / D` — an `D` gemessen, **ohne** Normalisierung über `Σw` und ohne
+> Kopplung an andere Kanten desselben Autors. Weil `Σ n ≤ D` gilt, ist jede Spalte
+> sub-stochastisch; es folgt `Σt ≤ 1 − (1−α)^K`, und das Defizit `1 − Σt` ist das ungenutzte
+> Budget, als Zahl lesbar (Anker PR-5).
 >
-> Die hier nötige Normalisierung über `Σw` wäre in §4 **verboten** (sie koppelt Kanten
-> aneinander und bricht damit die Monotonie aus §7, siehe das Blockzitat in §3.1). In §5 ist sie
-> zulässig, **weil dieser Abschnitt ohnehin keine harte Schranke trägt** und für Gates verboten
-> ist. Das ist kein Widerspruch, sondern genau die Trennlinie zwischen beiden Sichten.
+> Eine Normalisierung über `Σw` kürzte `D` heraus: ein Autor mit einer einzigen Kante und `n = 1`
+> bei `D = 100` bekäme `P = 1`, exakt wie bei `n = 100`. Der Probe-Vouch mit `w = 0.05` würde
+> also gerade dann wie eine volle Bürgschaft behandelt, wenn er allein steht — das erklärte Ziel
+> von D27 verfehlt seine eigene Regel. Sie bräche zudem die Monotonie aus §7: eine zusätzliche
+> Kante von `I` senkte den Anteil jeder bestehenden, also höbe **fehlendes Wissen fremde Werte**.
+> Erschöpfend gemessen über alle 32 Teilgraphen der Variante B: **9 Verletzungen** unter der
+> normalisierten Fassung, **0** unter dieser (02b, Anker K9).
+>
+> **Es gibt hier keine D9-Ausnahme.** §5 trägt keine Kopplung, die D9 verbietet; §7 gilt in
+> **beiden** Sichten, nicht nur in §4.
 >
 > Der Buchstabe `P` ersetzt das frühere `C`, um die Kollision mit der Knotenkapazität `C(x)`
 > (§3) zu vermeiden. Reine Umbenennung, keine inhaltliche Änderung.
+
+> **Distanzkauf greift hier nicht (D140, zu D139).** Der Angriff aus §4 hebt Kapazitäten, indem
+> er Distanzen verkürzt. In §5 wirkt `C(x)` allein als Filter, welche Kanten in `E⁺` liegen
+> (Anker K13); das Gewicht einer Kante hängt nicht von `C` ab. Ein verwirrter seed-naher Knoten
+> kann damit den Kantensatz verändern, aber **keine Masse erzeugen**: seine Spalte ist
+> sub-stochastisch, er gibt höchstens weiter, was er empfängt. Der Ertrag bleibt durch die
+> **Vor-Angriffs-Masse** der verwirrten Knoten beschränkt, und es entsteht kein quadratischer
+> Term. Das macht §5 **nicht** zum Ersatz für §4 — die Relaxation trägt weiterhin keine harte
+> Schranke und bleibt für Gates verboten. Die Verwundbarkeit von §4 ist der Preis der harten
+> Schranke, nicht ein Fehler in der Wahl der Sicht.
 
 - **Garantie:** nur **weich/probabilistisch** sybil-resistent — Walks überqueren wenige
   Angriffskanten selten, also erreicht `S` wenig stationäre Masse, aber **keine harte
