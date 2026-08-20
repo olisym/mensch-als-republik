@@ -5967,3 +5967,50 @@ ein Messwert mit Verfallsdatum, kein Merkposten. Aufgefallen ist es nur, weil de
 gelaufen ist — und ein zweiter Grep derselben Runde wäre beinahe untergegangen, weil eine Pipe
 auf `tail` seinen roten Status verschluckt hat. Dass `INV-04` nirgends in `04-governance.md`
 steht, war ein **leeres** Ergebnis, und leere Ergebnisse sind die, die eine Maskierung frisst.
+
+### D171 — Berichtigung zu D170: es gibt keine `INV-04`-Lücke, sondern eine ungeschriebene Bauform
+
+**Was D170 behauptet und was nicht stimmt.** D170 schließt mit dem Satz, die `INV-04`-Reihe lebe
+„in erteilten Prompt- und Abnahmedateien, die per Konvention nicht mehr umgeschrieben werden", und
+benennt ihre Aufnahme in `04-governance.md` als nächsten Zug. Beides ist falsch. Die Reihe steht
+vollständig in **`04-golden-anchors.md §8`**, als Tabelle `INV-04.1` bis `INV-04.8`, mit den
+Vorbehalten aus D117 an Ort und Stelle. `tests/governance/test_invariants.py` zitiert im Kopf
+genau diese Stelle und nicht den Prompt. Golden-Anchors-Dateien sind gepflegte Spec-Dateien: D157
+hat die `03`-Anker nachgezogen, und `P-H` ist heute dort eingefügt worden.
+
+**Der Fehlschluss.** Aus „`INV-04` steht nicht in `04-governance.md`" wurde „steht nirgends
+Normatives", ohne zu prüfen, wie die anderen Schichten es halten. Gemessen: **keine** Layer-Datei
+nennt ihre Invarianten. `00`, `02`, `03` und `04` enthalten je null Treffer auf `PR-INV`, `INV-0`
+und `golden-anchors`. `04` ist nicht die Ausnahme, sondern die Regel.
+
+Das ist Prüfregel 8, und der Handgriff hat gefehlt, obwohl er in derselben Sitzung zweimal
+angewandt wurde — bei D166 für die drei Autoritätslisten und bei D168 für die zwei Auflöser.
+Eine Auffälligkeit an **einer** Stelle ist erst ein Befund, wenn die Nachbarstellen dieselbe
+Erwartung erfüllen.
+
+**Die Bauform, ausdrücklich.** Die Layer-Datei sagt, **was gilt**; die zugehörige
+`*-golden-anchors.md` sagt, **was daran geprüft wird**, mit benannten Vektoren und Invarianten.
+Die Trennung ist getragen und hat einen Grund: eine Invariante ist eine Aussage über eine
+Implementierung, keine Norm für einen Teilnehmer. Ein Nukleus, der die Spec liest, muss `INV-04.7`
+nicht kennen; wer die Auszählung baut, muss es. Dass diese Trennung nirgends aufgeschrieben ist,
+ist der Grund, aus dem sie in D170 wie eine Lücke aussah — und der einzige tragfähige Rest jenes
+Eintrags.
+
+**Was von D170 stehen bleibt.** Die Zählung sieben statt vier, die Aufteilung in fünf richtige
+Verweise und die Messung, dass `trust/graph.py` keinen Determinismusbruch trägt. Der Beschluss zu
+den vier `dedupe_sort` bleibt ebenfalls.
+
+**Was sich ändert.** Es gibt keine `INV-04`-Migration und keinen nächsten Zug daraus. Der Verweis
+in `governance/findings.py` auf `04-prompt.md §2` betrifft nur „sortiert und dedupliziert" und
+nicht die Invariantenreihe; er ist damit derselbe Zeigerfehler wie der in `payload.py`, mit
+`04-golden-anchors.md §8` als besserer Stelle. **Drei** Docstring-Zeiger reiten beim nächsten Lauf
+mit, nicht zwei:
+
+- `profiles/payload.py` → `03 §1.3` statt `03-prompt.md §3.1`
+- `governance/findings.py` → `04-golden-anchors.md §8` statt `04-prompt.md §2`
+- `mensch_als_republik/findings.py` → eine Zitatzeile für `dedupe_sort`, die heute fehlt
+
+**Zur Methode.** Ein Registereintrag, der einen Zug später widerlegt wird, ist billiger als einer,
+der stehen bleibt: D170 hat den nächsten Schritt benannt, und der Versuch, ihn zu beginnen, hat
+den Fehler in einem Zug gefunden. Teuer wäre die Reihenfolge andersherum gewesen — erst migrieren,
+dann merken, dass `02` und `03` es genauso halten.
