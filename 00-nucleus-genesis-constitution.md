@@ -423,17 +423,19 @@ zwei vollständige Rotationen desselben Autors mangels Zwischenglied nicht vergl
 die Wurzel keinen Kopf. Trifft der Lauf einen bereits besuchten Schlüssel, ebenso: eine zyklische
 Kette ist keine Nachfolge.
 
-**Zustand vor `00a`.** Solange `resolve_current_key` nicht gebaut ist, gilt
-`resolve_current_key(N) = genesis.root_keys`, und ein vorgefundenes `rotate-key@1` wird **nicht**
-ausgewertet. Rotation ist bis dahin nicht verfügbar. Der zweite Halbsatz ist die eigentliche Regel:
-ohne ihn führte ein Leser eine ihm vorliegende Rotation still nicht nach und vertraute weiter dem
-alten Schlüssel — die unsichere Richtung. Als benannte Grenze ist der Fall tragbar, als Schweigen
-wäre er eine Lücke.
+**Zustand seit `00a`, vor `00b` (D151, D160).** Schritt 2 bis 4 sind gebaut; der Anker ist
+Parameter, Schritt 1 bleibt bei `genesis.root_keys`. Ein vorgefundenes `nucleus_keys` wird
+**nicht** ausgewertet. Das ist die unsichere Richtung — ein Leser vertraut weiter einem Schlüssel,
+den die Mitglieder abgesetzt haben. Als benannte Grenze tragbar, als Schweigen wäre sie eine
+Lücke.
 
-**Zustand zwischen `00a` und `00b` (D151).** `00a` baut Schritt 2 bis 4 und nimmt den Anker als
-Parameter; Schritt 1 bleibt bei `genesis.root_keys`. Ein vorgefundenes `nucleus_keys` wird
-**nicht** ausgewertet — derselbe Satz und derselbe Grund wie oben, hier mit der schwereren Folge:
-ein Leser vertraut weiter einem Schlüssel, den die Mitglieder abgesetzt haben.
+**Die Auflösung ist rechenbar, aber noch ohne Wirkung (D160).** Kein Produktivpfad füllt
+`authorized_keys` aus `03 §4` mit dem Ergebnis; wer eine veraltete Menge übergibt, bekommt ein
+veraltetes Ergebnis. Der Anschluss gehört zu `00b`, weil dort ohnehin der Anker hergeleitet wird.
+
+**Ebenfalls offen (D160).** Die Auflösung erkennt Equivocation nur an den **Rotationen** eines
+Schlüssels. Ob eine an anderer Stelle gespaltene Autorenkette die Wurzel ebenso entwerten soll —
+Schritt 3 sagt „die Kette", §6.3 definiert nur den Rotationsfall — wird in `00b` entschieden.
 
 ### 6.5 FROST-Re-Keying
 

@@ -389,7 +389,7 @@ dass die Menge der zählenden `claim_id` nie kleiner wird.
   in diesem Dokument.
 - **Keine Signaturvektoren.** Die Claims selbst folgen `01` Anhang C; dieses Profil liefert die
   Objekte und die Arithmetik, nicht die Atome.
-- **Kein `resolve_current_key`.** Der Schlüsselpfad aus `04 §5` ist vertagt (D62); alle Vektoren
-  laufen über `vote_mode = 0`.
+- **Kein `resolve_current_key`.** Alle Vektoren laufen über `vote_mode = 0`. Die Funktion
+  existiert seit `00a` (D160), wird von dieser Schicht aber nicht aufgerufen.
 - **Keine Föderationszahlen.** `04 §7.2` ist eine Belegung desselben Loops; ein zweites Profil auf
   Föderationsebene bringt keine neue Arithmetik.

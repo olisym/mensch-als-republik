@@ -80,6 +80,13 @@ geprüften Test könnte hier noch rot werden?** Die Antwort muss „nichts" sein
 an keinem Hash hängt. Unterschied zum Zusatz in Regel 21: dort ist die Probe **unmöglich**, hier
 ist sie **zweideutig**.
 
+**25. Die Begründung wird beim Beschluss geprüft, nicht beim Widerspruch.** Für jede Stelle, die
+eine Begründung zitiert, wird gefragt, ob sie den Fall des Beschlusses regelt oder einen
+benachbarten. D152 nannte einen Angriff, den der Einlesepfad ausschließt; D156 nannte einen
+Paragraphen über fehlende Objekte für den Fall eines fehlenden Aufrufs. Beide Beschlüsse trugen,
+beide Begründungen nicht, und beide fielen erst auf, als eine Messung widersprach. Eine ungeprüfte
+Begründung sieht aus wie eine geprüfte (D158, D159, D160).
+
 ## Beim Prüfen von Code und Spec nebeneinander
 
 **8. Parallelenprüfung.** Zwei Stellen, die dasselbe tun, werden nebeneinandergelegt —
@@ -116,6 +123,12 @@ weiterverfolgt; der erste Wirkungsabsatz behauptete die Gegenrichtung, weil `der
 geflaggte Autoren autorweit ausschließt und nicht gruppenweit. Die Wirkung liegt nie dort, wo die
 Zahl entsteht.
 
+**24. Ein Nicht-Ziel, das eine beschlossene Norm verletzt, ist keines.** Vor jedem „keine
+Änderung an X" im Prompt wird geprüft, ob eine Norm desselben Laufs X zwangsläufig bewegt. Steht
+die Normänderung im selben Prompt wie das Verbot, sie nachzuziehen, hat das Werkzeug keinen
+erfüllbaren Weg — und der einzige verbleibende ist der stille Umbau, den das Nicht-Ziel
+verhindern sollte (D157, D160).
+
 ## Beim Ändern von Reihenfolgen und Stufen
 
 **6. Monotonie stufenweise.** Eine Monotonieaussage gilt zunächst nur für die letzte Stufe. Jede
@@ -147,7 +160,8 @@ gegen vergessene **Dateien**; gegen vergessene **Zustände** gibt es keines. Gen
 
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
-`sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus D148.
+`sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
+D148, 24 und 25 aus D160.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

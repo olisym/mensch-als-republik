@@ -407,6 +407,7 @@ Offen, außerhalb dieser Datei:
   `03` definiert das Vokabular selbst, damit es nicht auf Text zeigt, den es nicht gibt.
 - **`00 §5.1`** zieht auf „aktiv zum Bewertungszeitpunkt" nach (D78).
 - **`05 §2`** verweist auf „Profile-II §7.1" — das ist `01 §7.1`. Alter Tippfehler.
-- **`02d-purpose`** (Zweck-Tag, D56) und **`00a-rotate-key`** (`resolve_current_key`, D62).
+- **`02d-purpose`** (Zweck-Tag, D56). `00a-rotate-key` ist gebaut (D160), aber ohne Aufrufer in
+  dieser Schicht: `authorized_keys` bleibt Parameter.
 - **`example-nucleus.md`** mit `D = 100`, `C₀ ≤ 100`, niedrigem `k_slash`. Mit `03` dringender
   geworden, weil `unit_ref` und die Irrevocable-Markierung dort landen.

@@ -470,7 +470,9 @@ Stellen verschieden formuliert; die folgende Zuordnung ist die normative:
 aus `resolve_current_key`. Das war nie ausgeschrieben und ist der Grund, aus dem `03 §5` eine
 Lücke melden musste.
 
-`resolve_current_key` selbst bleibt vertagt (`00a-rotate-key`, D62).
+`resolve_current_key` ist seit `00a` gebaut (D160), hat aber noch keinen Aufrufer: `03 §4` bekommt
+`authorized_keys` weiterhin von außen. Der Schlüsselpfad ist damit normiert und rechenbar, aber
+nicht angeschlossen.
 
 ---
 

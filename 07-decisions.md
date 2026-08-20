@@ -5473,3 +5473,52 @@ falsch in die andere Richtung.
 **Zweite berichtigte Begründung in dieser Sitzung** (nach D158). Beide Male trug der Beschluss
 und die genannte Stelle nicht. Ein Beschluss, dessen Begründung erst beim Widerspruch geprüft
 wird, ist so weit gehärtet wie der erste Widerspruch reicht.
+
+### D160 — Abschluss `00a`: gebaut, aber ohne Aufrufer
+
+**Was steht.** `mensch_als_republik/keys.py` mit `resolve_current_key`, der Protokoll-Boden auch
+ohne Policy (D156), die Rotationsprädikate im Boden (D153). 526 Tests, vierzehn Eigenschaftstests.
+Vier Commits: `0c3f9ad` der Lauf, `11658b4` die Nachbesserung, `2ca9f51` die Ablösung der
+`01a`-Vektoren, `768361e` die Verweiskorrektur.
+
+**Die tragende Grenze: niemand ruft die Funktion.** `03 §4` nimmt `authorized_keys` weiterhin als
+Parameter von außen entgegen; kein Produktivpfad im Paket füllt ihn aus der Kette. Die
+Autoritätsauflösung ist damit rechenbar, aber unwirksam — ein Aufrufer, der eine veraltete Menge
+übergibt, bekommt weiterhin ein veraltetes Ergebnis, wie `03 §5` es schon beschreibt.
+
+Das ist **nicht** dieselbe Lage wie `FOREIGN_LIFECYCLE` ohne Produktivträger (D138). Dort wurde
+ein Träger bewusst entfernt; hier ist einer neu entstanden und noch nicht angeschlossen. Die Naht
+gehört zu `00b`: wer den Anker aus Genesis und Verfassung herleitet, ist auch der Ort, an dem
+`authorized_keys` gefüllt wird.
+
+**Zweite getragene Grenze.** Die Equivocation-Prüfung in `_head_from` sieht nur equivozierte
+**Rotationen** eines Schlüssels, nicht eine an anderer Stelle gespaltene Autorenkette. `§6.4`
+Schritt 3 sagt „die Kette", `§6.3` definiert nur den Rotationsfall. Ob eine Spaltung außerhalb
+der Rotationen die Wurzel ebenfalls entwerten soll, ist offen und wird in `00b` entschieden.
+
+**Der Supervisor war fünfmal die Fehlerquelle, das Werkzeug null mal.** Ein unerfüllbares
+Nicht-Ziel (D157), zwei Begründungen, die den Beschluss nicht trugen (D158, D159), eine
+mehrdeutig beschriebene Testlage, deren naheliegende Lesart am Prüfobjekt vorbeiging (Lage 11),
+und ein `classify_all`-Aufruf ohne Policy im Prompt. Das Werkzeug hat jeden dieser Fälle gemeldet
+statt still zu reparieren — auch den, den es umgehen musste, um den Auftrag überhaupt auszuführen.
+
+Daraus zwei Prüfregeln:
+
+**Prüfregel 24 — ein Nicht-Ziel, das eine beschlossene Norm verletzt, ist keines.** Vor jedem
+„keine Änderung an X" wird geprüft, ob eine Norm desselben Laufs X zwangsläufig bewegt. In `00a`
+stand D153 im selben Prompt wie „keine Änderung an den Golden Anchors irgendeiner Schicht"; das
+Werkzeug hatte keinen Weg, beides zu erfüllen, und der einzige verbleibende war, die Tests von
+den Ankern zu lösen. Ein unerfüllbares Nicht-Ziel erzeugt genau den stillen Umbau, den es
+verhindern soll.
+
+**Prüfregel 25 — die Begründung wird beim Beschluss geprüft, nicht beim Widerspruch.** Zweimal in
+einer Sitzung hat ein Beschluss getragen und die genannte Stelle nicht: D152 nannte einen
+Angriff, den `FOREIGN_LIFECYCLE` ausschließt, D156 einen Paragraphen, der einen anderen Fall
+regelt. Beide fielen erst auf, als eine Messung widersprach. Für jede zitierte Stelle wird gefragt,
+ob sie den Fall des Beschlusses regelt oder einen benachbarten — ein Beschluss ist nur so weit
+gehärtet, wie seine Begründung geprüft wurde, und eine ungeprüfte Begründung sieht aus wie eine
+geprüfte.
+
+Der Anlass für 25 war im letzten Sitzungsstart als offen geführt: „ob das eine eigene Regel
+braucht, ist beim nächsten Vorfall zu entscheiden — zweimal derselbe Fehlertyp war bisher das
+Kriterium". Er trat zweimal in derselben Sitzung ein.
