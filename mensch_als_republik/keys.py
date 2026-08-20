@@ -1,4 +1,4 @@
-"""Schlüsselkette: resolve_current_key (00-nucleus-genesis-constitution.md §6.4, D151–D156)."""
+"""Schlüsselkette: resolve_current_key (00-nucleus-genesis-constitution.md §6.4, D151–D159)."""
 
 from __future__ import annotations
 

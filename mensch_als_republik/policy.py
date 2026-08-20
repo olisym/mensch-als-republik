@@ -109,7 +109,7 @@ def is_irrevocable(predicate: str, policy: NucleusPolicy | None) -> bool:
     (Teil nach dem letzten "/") in der wirksamen Menge liegt (§5.4.2).
 
     Die wirksame Menge ist ``policy.irrevocable``, falls ``policy`` gesetzt ist,
-    sonst ``PROTOCOL_IRREVOCABLE`` (01 §5.4.1, 00 §5.2, D156).
+    sonst ``PROTOCOL_IRREVOCABLE`` (00 §5.2, D156, D159).
     """
     if not predicate.startswith("nuc:"):
         return False

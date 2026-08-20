@@ -106,11 +106,11 @@ def test_non_boden_revoked_without_policy() -> None:
     alice = Identity("alice-d159")
     bob = Identity("bob-d159")
     scope = scope_id("d159-non-boden")
-    v = alice.vouch(bob, n=1, scope=scope, t=1, t_exp=5000)
-    rev = alice.revoke(v, t=2)
-    store = store_with(v, rev)
+    foo = alice.claim(p=f"nuc:{scope.hex()}/foo@1", J=(1, bob.pub), t=1, N=scope)
+    rev = alice.revoke(foo, t=2)
+    store = store_with(foo, rev)
 
-    result = classify(v, store, now=100, policy=None)
+    result = classify(foo, store, now=100, policy=None)
 
     assert result.state == State.REVOKED
 
