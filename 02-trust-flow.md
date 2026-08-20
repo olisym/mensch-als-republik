@@ -129,6 +129,12 @@ Ein Vouch deklariert in `v`, wie viel Vertrauen er weiterreicht.
 > eigenen Autor (§6.2), und zwei aktive Vouches auf dasselbe Subjekt trügen doppelte
 > Kapazität bei einfachem Budget.
 
+> **Welches Gruppenmitglied die Kante benennt.** `kante_claim_id` — der Träger von
+> `SUBGRANULAR_VOUCH` — ist die kleinste `claim_id` unter den Gruppenmitgliedern mit
+> `n = n_kante`, nach der Benennungsregel aus Atom-Spec §4.1. Die Vertauschungsprobe hält:
+> `cap`, das Budget, die BFS-Distanzen und der Fluss lesen `kante_claim_id` nicht. Trägt die
+> Gruppe keine Kante, gibt es keinen Träger.
+
 > **Out-Degree folgt aus dem Budget.** Aus `n ≥ 1` und `Σn ≤ D` folgt: höchstens `D`
 > gleichzeitig bebürgte **Subjekte** pro Identität und Scope — gezählt werden Gruppen im
 > Budget-Set, nicht Claims. Aus `cap ≥ 1 ⟺ n·C(I) ≥ D` folgt schärfer

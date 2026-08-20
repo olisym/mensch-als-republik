@@ -706,6 +706,13 @@ eines Objekts, das gar nicht vorliegt, und nie `b""`. `findings` ist sortiert un
 ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben Defekt bezeichnet wie in einer
 anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
 
+**Benennen ist keine Entscheidung.** `subject` und die `*_claim_id`-Felder eines Ergebnisses
+benennen einen Claim, sie wählen keinen aus: erfüllen mehrere dieselbe Regel, gilt die kleinste
+`claim_id` nach der inhaltlichen Filterung (Atom-Spec §4.1). Die Vertauschungsprobe hält für alle
+drei — `MembershipState`, `SettlementState` und die Bindungskraft aus §2.4 lesen kein
+`*_claim_id`. Wo sie nicht hielte, wäre nicht die Benennung zu ändern, sondern der Leser: eine
+Auswahl, an der ein Zustand hängt, gehört nicht an eine Hashordnung.
+
 ### 6.1 Vermerke
 
 | Vermerk | Ausgelöst durch |

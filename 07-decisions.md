@@ -6014,3 +6014,88 @@ mit, nicht zwei:
 der stehen bleibt: D170 hat den nächsten Schritt benannt, und der Versuch, ihn zu beginnen, hat
 den Fehler in einem Zug gefunden. Teuer wäre die Reihenfolge andersherum gewesen — erst migrieren,
 dann merken, dass `02` und `03` es genauso halten.
+
+
+### D172 — Die Ordnung der `claim_id` benennt, sie entscheidet nicht (erweitert D101)
+
+**Der Befund.** Fünf Stellen im Paket wählen aus mehreren Claims, die dieselbe Regel gleich
+erfüllen, einen aus. Sie zerfallen in zwei Regeln, nicht in eine:
+
+| Stelle | Bruch | Wirkung |
+|---|---|---|
+| `trust/groups.py` `build_groups` | `sorted(...)[0]` | kleinste `claim_id` |
+| `profiles/membership.py` | `min(accept_ids)`, `min(grant_ids)` | kleinste `claim_id` |
+| `profiles/credit.py` `settlement` | `sort(key=claim_id)`, erster passende | kleinste nach Filter |
+| `keys.py` `_earliest_on_chain` | Vorfahr aller anderen, sonst `None` | kein Bruch |
+| `governance/tally.py` | zwei Stimmen eines Autors, `AMBIGUOUS_VOTE` | kein Bruch |
+
+Die **Entscheidungsseite** ist zweimal ausgeschrieben: `00 §6.3`/`§6.4` (D149, D154, D155, D162)
+und `04 §3.1` (D101). Die **Benennungsseite** steht genau einmal, als Abgrenzungs-Zitat in
+`04 §3.1` — `membership()` löse mehrere aktive `accept-rules` mit `min(claim_id)` auf, das sei
+dort richtig, weil alle dasselbe sagen. Also in der Datei, die sie am wenigsten braucht: `02`
+müsste heute `04` zitieren, um zu erklären, wie eine Vouch-Kante benannt wird, und `02` hat mit
+Governance nichts zu tun.
+
+**Der erste Anlauf war zu weich.** Als allgemeine Regel formuliert, hätte das Kriterium „die
+Kandidaten sagen dasselbe" vom Atom ein Urteil über die **Bedeutung** von Aussagen verlangt —
+gegen `01 §1 A2`. In `04 §3.1` geht der Satz durch, weil er Prosa über einen benannten Fall ist;
+an der Basis wäre er ein Leitsatzbruch. Der Supervisor hat ihn geschrieben und auf Nachfrage des
+Operators zurückgezogen, bevor ein Splice lief.
+
+**Die Entscheidung: eine strukturelle Probe statt eines semantischen Urteils.**
+
+> **Vertauschungsprobe.** Ersetzt man den benannten Claim durch einen beliebigen anderen aus
+> derselben Kandidatenmenge, ist das Ergebnis der Ableitung byte-gleich — das benannte Feld
+> ausgenommen.
+
+Hält sie, ist es Benennen und die kleinste `claim_id` gilt. Hält sie nicht, ist es Entscheiden;
+dann darf keine **abgeleitete** Ordnung wählen (Hash, Kodierungslänge, Ankunftszeit), sondern nur
+eine **deklarierte** — Verfassung oder Governance-Akt. Gibt es keine, fällt die Aussage weg. Die
+Probe ist mechanisch nachprüfbar und braucht kein Urteil über Bedeutung.
+
+**Warum die Mahlbarkeit die Regel trägt.** Die `claim_id`-Ordnung ist ein Nebenprodukt des
+Hashes; wer einen Schlüssel hält, erzeugt Claims, bis seiner der kleinere ist. Auf der
+Benennungsseite ist das folgenlos, weil per Vertauschungsprobe kein Ergebnis daran hängt — wer
+mahlt, gewinnt einen Namen. Auf der Entscheidungsseite wäre Autorität durch Rechenzeit wählbar.
+Dieselbe sichere Richtung wie D162: mehr Wissen entzieht Autorität, es verteilt sie nicht neu.
+
+**Was die Literatur beisteuert (Prüfregel 15).** Drei Vorbilder, ein Ergebnis.
+
+- **CRDT, Multi-Value gegen LWW-Register.** Das MV-Register behält alle nebenläufigen Werte, das
+  LWW-Register kollabiert sie über eine willkürliche Totalordnung und verliert dabei still
+  Schreibvorgänge (Lost Update). Der gangbare Mittelweg ist bekannt und genau unserer: ein
+  mehrwertiger Zustand mit **einem** willkürlich gewählten *angezeigten* Wert. Die Willkür lebt
+  in der Anzeige, nie im Zustand.
+- **Ethereum, LMD-GHOST.** Bricht Gleichgewicht über die lexikografisch höhere Blockwurzel, mit
+  der ausdrücklichen Begründung, die konkrete Wahl sei gleichgültig, solange alle dieselbe
+  treffen. Das ist eine Entscheidung über eine abgeleitete Ordnung, und tragbar ist sie dort nur,
+  weil eine getrennte Finalisierungsschicht (Casper FFG) den Kopf später einschränkt und
+  revidiert. Diese Schicht gibt es hier nicht; derselbe Griff wäre bei uns endgültig.
+- **did:plc.** Konkurrierende Operationen werden über den **Index im deklarierten**
+  `rotationKeys`-Array aufgelöst, nicht über den Inhaltshash — und auch das nur in einem
+  72-Stunden-Fenster und gegenüber einem zentralen Verzeichnis. Deklarierte Ordnung plus
+  Zeitfenster plus Verzeichnis für das, was hier ein Governance-Akt ist.
+
+**Was sich ändert.**
+
+- `01 §4.1` ist neu und trägt die Regel: Benennen, Entscheiden, Vertauschungsprobe, die
+  ausdrückliche Feststellung, dass die Probe kein Bedeutungsurteil ist.
+- `02 §3.1` sagt jetzt, dass `kante_claim_id` der Benennungsregel folgt und warum die Probe hält
+  (`cap`, Budget, BFS und Fluss lesen das Feld nicht).
+- `03 §6` sagt dasselbe für `subject` und die `*_claim_id`-Felder.
+
+**Was sich ausdrücklich nicht ändert.** `04 §3.1` bleibt byte-gleich. Ein Umschreiben dort
+riskierte, den Geltungsbereich von D101 beim Neuformulieren zu verlieren (Zusatz zu Prüfregel
+18), und der Gewinn wäre ein Rückverweis. `01 §4.1` nennt `04 §3.1` und D101 als Herkunft; eine
+Richtung genügt.
+
+**Folge für den Lauf.** Aus einem Vektortest werden zwei Prüfstücke. Ein Vektor hält den Wert
+fest (`kante_claim_id` ist die kleinste `claim_id` unter den Gleichständigen), ein
+Eigenschaftstest prüft die Vertauschungsprobe selbst. Die Rücknahmeprobe unterscheidet beide: mit
+`tied[-1]` statt `tied[0]` muss der Vektor rot werden und der Eigenschaftstest **grün bleiben**.
+Ein Eigenschaftstest, der dabei mitrötet, prüft den Wert und nicht die Norm.
+
+**Herkunft.** Der Anlass war der ungeprüfte Bruch über `sorted(...)[0]` in `build_groups`, offen
+seit der Abnahme der Autorschaft. Dass daraus fünf Stellen und zwei Regeln wurden, ist Prüfregel
+8 — und dass sie beim ersten Anlauf nur drei waren, weil `00` und `04` nicht gegrept worden
+waren, ist derselbe Handgriff, einmal versäumt.

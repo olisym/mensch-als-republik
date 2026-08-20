@@ -241,6 +241,38 @@ mit TV1).
 > dadurch **zwangsläufig an die Mitglieder** (Governance-Akt), ohne dass der Core dafür ein
 > Sonder-Primitiv braucht.
 
+### 4.1 Die Ordnung der `claim_id` benennt, sie entscheidet nicht
+
+Zwei verschiedene Claims haben verschiedene `claim_id`s, und 32-Byte-Zeichenketten sind total
+geordnet. Diese Ordnung ist ein Nebenprodukt des Hashes: sie sagt nichts über Zeit, Rang, Nähe
+zum Anker oder Autorität, und sie ist **mahlbar** — wer einen Schlüssel hält, erzeugt Claims,
+bis seiner der kleinere ist.
+
+**Benennen (erlaubt).** Muss eine Ableitung aus mehreren Claims, die eine Regel gleich erfüllen,
+einen **benennen** — als `subject` eines Vermerks oder als Beleg in einem Ergebnis —, so ist es
+der mit der kleinsten `claim_id`, ausgewählt **nach** der inhaltlichen Filterung. Zulässig ist
+das genau dann, wenn die **Vertauschungsprobe** hält:
+
+> Ersetzt man den benannten Claim durch einen beliebigen anderen aus derselben
+> Kandidatenmenge, ist das Ergebnis der Ableitung **byte-gleich** — das benannte Feld
+> ausgenommen.
+
+Kein Kandidat wird dabei verworfen; alle bleiben gespeichert und lesbar (§1 A3). Die Benennung
+ist eine **Anzeige** über einem mehrwertigen Zustand, nicht seine Auflösung. Genau deshalb ist
+die Mahlbarkeit hier folgenlos: wer mahlt, gewinnt einen Namen und kein Ergebnis.
+
+**Entscheiden (verboten).** Hält die Vertauschungsprobe nicht, so wählt die Ordnung aus, was
+**gilt** — welcher Schlüssel autorisiert, welche Stimme zählt, welcher Zweig eines geforkten
+Logs der echte ist. Eine **abgeleitete** Ordnung darf das nie: nicht der Hash, nicht die
+Kodierungslänge, nicht die Ankunftszeit. Entscheiden darf allein eine **deklarierte** Ordnung —
+die Verfassung (`00 §5.4`) oder ein Governance-Akt (`00 §6.2`). Gibt es keine, fällt die Aussage
+weg; die Kandidaten bleiben gespeichert und werden gemeldet.
+
+> **Die Probe ersetzt kein Urteil über Bedeutung und verlangt keines (§1 A2).** Ob mehrere
+> `accept-rules` dasselbe sagen (`04 §3.1`, D101), ist die *Begründung* dafür, dass die
+> Vertauschungsprobe dort hält — nicht die Prüfung selbst. Die Prüfung ist mechanisch: sie
+> vergleicht Ergebnisbytes, nicht Aussagen.
+
 ---
 
 ## 5. Der gesegnete Kern: `core/revoke` & `core/supersede`
