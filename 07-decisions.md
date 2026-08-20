@@ -5671,3 +5671,47 @@ die D163 an der anderen Flanke behebt. Der Vermerk trägt den Zweifel; ein Aufru
 als fatal behandelt, bekommt die sichere Richtung, ohne dass die Auflösung sie ihm aufzwingt.
 
 **Damit hat Schritt 1 drei Lagen und nicht zwei.** Der Wortlaut wird nachgezogen.
+
+### D165 — Abnahme `00b`: der Anschluss steht, der Satz über die Kette war verengt
+
+**Was steht.** `mensch_als_republik/findings.py` mit `NucleusFinding`,
+`resolve_authorized_keys` und `KeyResolution` in `keys.py`, die auf jede Spaltung erweiterte
+Prüfung in `_head_from`, und im Beispielnukleus `check_anchor_resolution` samt `_member`, das die
+hergeleitete Menge weiterreicht. Commit `1115281`, gemergt. **541 Tests** und **14**
+Eigenschaftstests unter `voll`, kalt auf `main` gemessen. Die Tabelle aus
+`tools/example_nucleus.py` ist bytegleich zum Stand davor.
+
+**Befund 1: der neue Satz in `§6.4` Schritt 3 war enger als der alte.** Die abgelöste Fassung
+sagte „ist die Kette von k **an einem Punkt** equivoziert"; meine Neufassung sagte „hat k
+irgendeinen Claim". Der Code prüft — richtig, und schon vor `00b` — bei **jedem** Schlüssel, den
+Schritt 2 auf der Kette erreicht, nicht nur beim Anker. Damit stand die Spec hinter dem Code, und
+zwar in der sicheren Richtung, was den Fall nicht besser macht: ein Leser, der `§6.4` umsetzt,
+hätte weniger gebaut als das, was gilt. **Der Satz wird mit diesem Eintrag berichtigt**, `00
+§6.4` Schritt 3.
+
+Daraus ein Zusatz zu Prüfregel 18: er galt bisher für Aufzählungen, die neben einem Satz stehen.
+Er gilt ebenso für einen Satz, der einen älteren **ersetzt**. Der Geltungsbereich des alten wird
+zuerst benannt und gegen den Code geprüft, der ihn umsetzt.
+
+**Befund 2: zwei Nähte, zwei Fehlertypen, keine Notiz.** `resolve_authorized_keys` wirft bei
+einer Hash-Abweichung `ValueError`, `resolve_policy` gibt an derselben Stelle
+`CONSTITUTION_HASH_MISMATCH` als Vermerk zurück. Der Unterschied ist begründet und das Kriterium
+ist, **wer den Hash geliefert hat**: `resolve_policy` zieht ihn selbst aus `genesis[4]`, eine
+Abweichung ist dort eine Lage der Welt. Bei `resolve_authorized_keys` kommen Hash und Objekt
+beide vom Aufrufer, eine Abweichung ist ein Widerspruch im eigenen Aufruf — dieselbe Behandlung
+wie in `membership` (D82, D92, D109). Das steht hier, weil eine unbegründete Asymmetrie zwischen
+zwei benachbarten Funktionen genau die Stelle ist, an der später jemand harmonisiert (Prüfregel 8).
+
+**Der Supervisor war dreimal die Fehlerquelle, das Werkzeug null mal — zweite Sitzung in Folge.**
+Der Prompt sagte „Elf Lagen" und zählte zwölf auf; Abnahmekriterium 4 nannte `python3` statt
+`.venv/bin/python`; die Rücknahmeproben 2 und 3 nannten je einen roten Test, wo eine ganze Gruppe
+dieselbe Aussage trägt. Das Werkzeug hat alle drei gemeldet und keinen still repariert. Die
+Proben selbst haben getragen: jede hat den Test rot gefärbt, für den sie gebaut war, und die
+zusätzlich roten hingen nachweislich an derselben Ursache.
+
+**Getragene Grenzen nach `00b`.** Die Epochenkette bleibt ungebaut; wer eine veraltete Verfassung
+übergibt, bekommt einen veralteten Anker (D161). `membership` bekommt `authorized_keys` weiterhin
+von außen — neu ist, dass es genau **eine** Herleitungsstelle dafür gibt und der Beispielnukleus
+sie benutzt. Ein Nukleus mit einem echten `grant-membership@1` würde den Anschluss zum ersten Mal
+wirksam machen; der Beispielnukleus führt keines, und `check_anchor_resolution` prüft deshalb die
+hergeleitete Menge selbst statt ihrer Wirkung.

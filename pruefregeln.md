@@ -56,6 +56,10 @@ ausgerechnete Aufzählung, gilt der Satz, und die Aufzählung wird als abgeleite
 `02a §2.6`). Aufzählungen verlieren beim Wandern still ihren Geltungsbereich — D77, D83, D87,
 D91, D130, D135 sind alle diese Form. Ein allgemeiner Satz erbt den Geltungsbereich der
 Aufzählung, die ihm vorausgeht; Prosabedingungen gehen abgeleiteten Aufzählungen vor.
+Zusatz: dasselbe gilt für einen Satz, der einen älteren **ersetzt**. Wer eine Bedingung neu
+formuliert, benennt zuerst den Geltungsbereich der alten und prüft ihn gegen den Code, der sie
+umsetzt. In D165 wurde aus „die Kette von k ist an einem Punkt equivoziert" ein Satz über k
+allein; der Code prüfte weiter jedes Kettenglied, und die Spec stand hinter ihm.
 
 **20. Kostenaussage braucht Kostenmodell.** Ein Satz, der etwas „billig", „teuer" oder „ohnehin
 unattraktiv" nennt, ist eine Aussage über Angriffskosten. Steht in der Spec kein Kostenmodell,

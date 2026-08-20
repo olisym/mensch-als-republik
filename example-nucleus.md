@@ -297,6 +297,13 @@ diesen Hash (D60, `04 §6.1`). Nach 8 ist DORA `GRANT_ONLY`, nach 9 `MEMBER` —
 `GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand `GRANT_ONLY` oder
 `APPLICANT` — nie `MEMBER`.
 
+**Die autorisierten Schlüssel sind BRUNO und ANNA.** Keine Verfassung dieses Nukleus nennt ein
+Feld `nucleus_keys`, also ist der Anker `genesis_gov[1]` (`00 §6.4` Schritt 1), und es gibt keine
+Rotation, also ist die aufgelöste Menge der Anker selbst. Das Amendment auf `constitution_hash_2`
+bewegt sie nicht. Liegt das Verfassungsobjekt lokal nicht vor, ist die Menge dieselbe, aber mit
+dem Vermerk `CONSTITUTION_UNAVAILABLE` (D164). Der Nukleus führt kein `grant-membership@1`;
+die Mitgliedschaft hängt hier deshalb an `participants` und nicht an dieser Menge.
+
 **Im Ressourcen-Scope** (`N = N_res`, `p = nuc:4d78bcea…/vouch@1`), vier Kanten, jede mit
 `v = {0: 50}` — also `n = 50` nach `02 §3.1`:
 

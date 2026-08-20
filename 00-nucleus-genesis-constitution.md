@@ -413,8 +413,10 @@ ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
 3.  Hat k irgendeinen Claim im Zustand EQUIVOCATION_FLAGGED — an beliebiger Stelle
     seiner Autorenkette, nicht nur an einer Rotation (D162) —, liefert k keinen Kopf;
     Nukleus-Akte beider konkurrierender Schlüssel gelten als nicht autorisiert
-    (Detect-not-Prevent, Atom-Spec §A3). Eine Änderung von nucleus_keys löst den Fall
-    nicht auf, indem sie denselben Schlüssel erneut nennt, sondern einen anderen.
+    (Detect-not-Prevent, Atom-Spec §A3). Dasselbe gilt für jeden Schlüssel, den
+    Schritt 2 auf der Kette erreicht, nicht nur für k selbst (D165). Eine Änderung
+    von nucleus_keys löst den Fall nicht auf, indem sie denselben Schlüssel erneut
+    nennt, sondern einen anderen.
 4.  Rückgabe ist die Vereinigung der Köpfe aller k aus A.
 ```
 Der Rückgabewert ist die Menge der aktuell autorisierten Schlüssel. Jeder Verifizierer rechnet das
