@@ -138,17 +138,21 @@ brauchen kein eigenes Verfassungsobjekt.
 
 | ID | Eingabe | wirksame Menge | Vermerke |
 |---|---|---|---|
-| `P-A` | Profil A vollständig | `{obligation@1}` | — |
-| `P-B` | Profil B vollständig | `{obligation@1}` | — · `policy.warnings` trägt `UNSAFE_IRREVOCABLE_PREDICATE(vouch@1)` |
-| `P-C` | Profil C vollständig | `{obligation@1}` | — |
-| `P-D` | Genesis A, `constitution_obj=None` | `{obligation@1}` | `CONSTITUTION_UNAVAILABLE` |
-| `P-E` | Genesis A, Verfassung **B** | `{obligation@1}` | `CONSTITUTION_HASH_MISMATCH` |
+| `P-A` | Profil A vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — |
+| `P-B` | Profil B vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — · `policy.warnings` trägt `UNSAFE_IRREVOCABLE_PREDICATE(vouch@1)` |
+| `P-C` | Profil C vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — |
+| `P-D` | Genesis A, `constitution_obj=None` | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_UNAVAILABLE` |
+| `P-E` | Genesis A, Verfassung **B** | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_HASH_MISMATCH` |
 | `P-F` | Genesis B, `scope = N_A` | — | `ValueError` |
 | `P-G` | Genesis ohne Key `4`, `scope` daraus gerechnet | — | `ValueError` |
 
 **`P-B` ist der Kernvektor.** Er ist der einzige, der D58 und D70 gleichzeitig stellt: die
-deklarierte Menge ist `{vouch@1}`, das Ergebnis ist `{obligation@1}`. Eine Implementierung, die
-nur filtert, liefert `{}`; eine, die nur den Boden setzt, liefert `{obligation@1, vouch@1}`.
+deklarierte Menge ist `{vouch@1}`, das Ergebnis ist der Boden. Eine Implementierung, die
+nur filtert, liefert `{}`; eine, die nur den Boden setzt, liefert ihn zuzüglich `vouch@1`.
+
+Der Boden ist seit D153 dreielementig: `obligation@1`, `rotate-key@1`, `rotate-ack@1`. Die Werte
+oben sind entsprechend nachgezogen (D157) — nicht, um einen Test grün zu bekommen, sondern weil
+die Norm sich geändert hat.
 Beide sind hier rot, und zwar in verschiedene Richtungen.
 
 **`P-A`, `P-C` und `P-D` liefern dasselbe Ergebnis und sind trotzdem drei Vektoren.** Sie

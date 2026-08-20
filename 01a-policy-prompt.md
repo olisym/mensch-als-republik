@@ -154,6 +154,10 @@ zurück.
 | P-5 | `{vouch@1, foo@1}` | `{obligation@1, foo@1}` | `(UNSAFE_…,)` |
 | P-6 | `{revoke@1, supersede@1}` | `{obligation@1}` | `()` |
 
+> **Nachtrag (D153, D157).** Der Boden ist seit D153 `{obligation@1, rotate-key@1,
+> rotate-ack@1}`. Die Tabelle oben zeigt den Stand bei Erteilung dieses Auftrags und wird nicht
+> nachgezogen; die lebenden Erwartungswerte stehen in `03-golden-anchors.md`.
+
 **P-3 ist der D70-Vektor** und der einzige, der die alte Fassung von `00 §5.2` von der neuen
 trennt: nach altem Wortlaut griff der Default nur bei Schweigen, `obligation@1` wäre hier
 **nicht** enthalten gewesen.

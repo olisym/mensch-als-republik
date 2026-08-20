@@ -5344,3 +5344,80 @@ ein Equivocation-Paar aus zwei Rotationen ohne Gegenzeichnung blockiert ebenso. 
 im Diebstahlfall (`§6.3`) der kompromittierte Schlüssel selbst der Kopf, und die Entscheidung
 fiele nicht an die Mitglieder. Das steht bereits in der Spec und wird hier nur ausgeschrieben,
 weil der Zustandstest aus (b) allein es nicht leistet.
+
+### D156 — Der Protokoll-Boden gilt auch ohne Policy ⚠️
+
+**Der Befund**, aus der `00a`-Abnahme. `is_irrevocable(predicate, policy)` in `policy.py` gibt
+`False` zurück, sobald `policy is None` ist — vor jeder weiteren Prüfung. Der Boden aus
+`00 §5.2` und D70 hängt damit an der Anwesenheit einer aufgelösten Policy.
+
+**Das widerspricht normativem Text.** `01 §5.4.1` sagt: fehlt das Verfassungsobjekt lokal
+(Partition, noch nicht synchronisiert), gilt der Sicherheits-Default aus `00 §5.2`. Der Anker
+`P-D` in `03-golden-anchors.md` schreibt genau das aus: `constitution_obj=None`, Ergebnis
+trotzdem der Boden. Es wäre widersinnig, dass „gar keine Policy aufgelöst" weniger Schutz trägt
+als „Verfassung fehlt".
+
+**Die Wirkung trifft nicht nur die Rotationen.** Ohne Policy wirkt ein `core/revoke@1` auf eine
+`obligation@1` — das Schulden-Lösch-Loch aus D57, das D70 auf der Verfassungsebene geschlossen
+hat, eine Ebene höher wieder offen. Gefunden wurde es nur, weil `00a` einen zweiten Nutzer des
+Bodens bekam; für `obligation@1` allein war es fünfzig Registereinträge lang unsichtbar.
+
+**Beschluss.** `is_irrevocable` prüft bei `policy is None` gegen `PROTOCOL_IRREVOCABLE` statt
+gegen nichts. Die übrigen Bedingungen — `nuc:`-Präfix, Profilname nach dem letzten Schrägstrich
+— bleiben unverändert, ebenso D73 (Fehlpaarung bleibt laut) und D91 (scope-lokale Anwendung).
+
+**Verworfen — `keys.py` fingiert sich eine Policy.** Der Lauf `0c3f9ad` hat
+`NucleusPolicy(scope=scope)` konstruiert, um an der Stelle vorbeizukommen. Das Ergebnis war
+richtig, die Bauform nicht: eine Funktion, die keine Verfassung kennt, erfindet eine, und der
+Aufrufer kann die echte nicht mehr einspeisen. `resolve_current_key` bekommt stattdessen
+`policy` als durchgereichten Parameter, dieselbe Naht wie `membership` in `03 §4`.
+
+**Getragene Grenze.** Ein Aufrufer ohne Policy bekommt weiterhin nur den Boden, nicht die
+erweiterte Menge der Verfassung. Das ist richtig so: mehr kann er ohne das Objekt nicht wissen.
+
+### D157 — Die `03`-Anker zur wirksamen Menge werden nachgezogen, nicht die Tests gelöst
+
+**Der Fall.** D153 macht die wirksame Menge dreielementig. `03-golden-anchors.md` schreibt sie in
+`P-A` bis `P-E` als `{obligation@1}` aus. Der `00a`-Lauf hat die betroffenen Tests daraufhin
+gegen `PROTOCOL_IRREVOCABLE` verglichen statt gegen die Ankerwerte. Damit prüft `P-B` — der
+einzige Vektor, der D58 und D70 gleichzeitig stellt — nichts mehr: er vergleicht die Konstante
+mit sich selbst.
+
+**Der Prompt war schuld.** Das Nicht-Ziel „keine Änderung an den Golden Anchors irgendeiner
+Schicht" war unerfüllbar, sobald D153 im selben Lauf steht. Die Wirkungsprüfung zu D153 hat
+`is_irrevocable` als Konsumenten geführt und nicht gefragt, welche Datei die Menge **ausschreibt**.
+
+**Beschluss.** `P-A` bis `P-E` tragen `{obligation@1, rotate-ack@1, rotate-key@1}`, der
+`P-B`-Absatz entsprechend. Die Tests binden wieder an die Ankerwerte.
+
+**Warum das kein nachgezogener Anker im verbotenen Sinn ist.** Die Regel lautet: keinen Anker
+bewegen, um einen Test grün zu bekommen. Hier hat sich die **Norm** geändert (D153), und der
+Anker war ihr Abbild. Der Unterschied ist prüfbar: ein verbotener Nachzug hat keinen
+Registereintrag, der die Normänderung nennt. Dieser hat einen, und D153 steht vor dem Lauf.
+
+**Nicht geändert: `01a-policy-prompt.md §5.1` und `03-prompt.md`.** Beide schreiben die Menge
+ebenfalls aus, sind aber erteilte Aufträge und zum Zeitpunkt ihrer Erteilung richtig gewesen.
+Sie bekommen eine Hinweiszeile auf D153, keine neuen Zahlen. Eine erteilte Vorgabe
+umzuschreiben, damit sie heute stimmt, nimmt der Datei ihren Zweck als Beleg.
+
+### D158 — Berichtigung der Begründung von D152: der Vektor ist die Quittung, nicht der Widerruf
+
+**Der Beschluss von D152 bleibt.** Nur seine Begründung nannte einen Fall, den es nicht gibt.
+
+D152 argumentierte, „ein Claim `C` mit `C.I == K_n`, der die `claim_id` nennt" sei zu weit, weil
+ein `core/revoke@1` von `K_n` auf den Rotate von `K_{n-1}` ihn wörtlich erfülle. Ein solcher
+Claim ist nicht einlesbar: `_check_foreign_lifecycle` wirft `FOREIGN_LIFECYCLE`, weil das Ziel
+einen anderen Autor hat als der Widerruf (`01 §4`). Der Angriff war nicht konstruierbar, und der
+`00a`-Lauf hat es beim Bauen des Vektors gemessen.
+
+**Der tragende Vektor ist die Quittung.** Ein `nuc:N/receipt@1` von `K_n` mit
+`J = [claim-ref, claim_id(R)]` erfüllt **alle vier** Bedingungen aus D152 — Autor, Ziel, Scope,
+Zustand — und unterscheidet sich einzig in `p`. Er ist einlesbar, weil `receipt@1` kein
+`core`-Prädikat ist und der Lifecycle-Test ihn nicht sieht. Damit ist die Notwendigkeit des
+eigenen Prädikats schärfer belegt als vorher: die Belegung allein trennt nicht, erst der Name
+tut es.
+
+Dass ausgerechnet D63s Quittung die Form trifft, ist kein Zufall — D152 hat ihr Muster
+übernommen, und zwei Prädikate mit gleichem Muster sind ohne Namensprüfung ununterscheidbar.
+
+**Für `00a`:** Testlage 6 wird auf `receipt@1` umgebaut. Der Widerrufsvektor entfällt ersatzlos.

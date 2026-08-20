@@ -160,6 +160,9 @@ Sicherheits-Default heißt `NucleusPolicy(scope, declared=frozenset())` — der 
 `{obligation@1}` von selbst. **Nicht** `{"obligation@1"}` von Hand übergeben; das schriebe den
 Boden ein zweites Mal auf.
 
+> **Nachtrag (D153).** Der Boden trägt seit D153 zusätzlich `rotate-key@1` und `rotate-ack@1`.
+> Die Anweisung bleibt unverändert richtig: nichts von Hand übergeben.
+
 Fehlt der Key `irrevocable_predicates` in einem vorhandenen Verfassungsobjekt, ist das
 **kein** Sonderfall und **kein** Vermerk: `declared` ist leer, der Boden greift. Das ist Profil C
 und der Grund, warum `P-A`, `P-C` und `P-D` dieselbe Menge und verschiedene Vermerke liefern.
