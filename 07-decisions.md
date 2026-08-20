@@ -5867,3 +5867,47 @@ bleiben im Wortlaut stehen — sie sind erteilt und ihre Zahlen waren zum Zeitpu
 richtig —, und jede bekommt eine Zeile, die auf `03 §1.2` als normative Fassung zeigt. Nach
 Prüfregel 17 sind sie normativer Text, solange Code auf sie zeigt; ein stiller Umbau erteilter
 Prompts nähme jeder späteren Abnahme ihren Vergleichspunkt.
+
+### D169 — Abnahme `03b`: der Epochenschritt steht, die Zählung war abgelaufen
+
+**Was steht.** `resolve_policy` nimmt `constitution_hash` als Pflichtparameter, liest
+`genesis_obj[4]` nicht mehr und wirft bei Hash-Abweichung `ValueError`.
+`ProfileFinding.CONSTITUTION_HASH_MISMATCH` ist entfernt, zwanzig Aufrufstellen sind ergänzt,
+`P-E` und `P-G` sind nachgezogen, `P-H` ist neu, und `_policy` im Beispielnukleus geht durch den
+Auflöser statt die Policy von Hand zu bauen. Commits `fd408dd` und `c6d63e4`, gemergt. **542
+Tests** und **14** Eigenschaftstests unter `voll`, kalt auf `main` gemessen. Die Tabelle aus
+`tools/example_nucleus.py` ist bytegleich zum Stand davor.
+
+**Befund 1: eine Zahl im Prompt war nicht falsch getippt, sondern abgelaufen.** Der Prompt nannte
+sechs `_policy`-Aufrufstellen; gemessen waren es zehn. Die Zahl stammte aus einem `grep` über die
+Projektkopie, und die Kopie hing auf `c32b6e6` — dem Stand **vor** dem `00b`-Merge, der
+`check_anchor_resolution` überhaupt erst angelegt hat. Der Hashabgleich zu Sitzungsbeginn war
+richtig und galt für diesen Commit; ich habe die Datei danach über zwei Merges hinweg
+weiterbenutzt, ohne den Abgleich zu erneuern. Die übrigen Zahlen des Prompts stimmten genau
+deshalb, weil `00b` jene Dateien nicht angefasst hatte — die Methode war nicht teilweise richtig,
+sie war zufällig nicht falsch. Daraus **Prüfregel 26**.
+
+**Befund 2: eine Aufzählung im Prompt hat einen Fall mitgerissen.** Der Satz „die übrigen fünf
+übergeben `constitution_hash_gov, constitution_gov`" traf auch Lage 2 in
+`check_anchor_resolution` — den Aufruf, der den Anker gegen die **zweite** Epoche auflöst. Damit
+stand die Verschränkung zweier Epochen ausgerechnet in dem Vektor, der sie trennen soll, und zwar
+aus dem Grund, den D167 zwei Einträge vorher im selben Beispielnukleus beschrieben hat. Behoben in
+`c6d63e4` auf demselben Branch, vor dem Merge.
+
+Kein Ergebnis hat sich dadurch bewegt, und das ist der eigentliche Punkt: `constitution_2`
+entsteht als `dict(constitution_gov)` mit geändertem `participants`, `irrevocable_predicates` ist
+in beiden Fassungen dieselbe Liste, und der Store dieser Prüfung ist leer. **Zufällige
+Harmlosigkeit ist keine Richtigkeit.** Eine Rücknahmeprobe war deshalb nicht möglich; ein Test,
+der den Unterschied sähe, müsste die zwei Fassungen in `irrevocable_predicates` auseinanderziehen.
+
+**Getragene Grenze.** Genau das ist der Beispielnukleus heute nicht: er kann eine Policy der
+Epoche 1 nicht von einer der Epoche 2 unterscheiden, weil seine beiden Verfassungen in dem Feld
+übereinstimmen, um das es geht. Der Epochenschritt aus D167 wird deshalb ausschließlich von `P-H`
+gemessen. Ein Beispielnukleus, dessen Amendment `irrevocable_predicates` bewegt, wäre der zweite
+Messpunkt — eine eigene Entscheidung, weil er die dokumentierten Hashes in `example-nucleus.md`
+bewegt.
+
+**Der Supervisor war zweimal die Fehlerquelle, das Werkzeug null mal — dritte Sitzung in Folge.**
+Beide Male hat das Werkzeug gemessen und gemeldet statt still zu reparieren, und beide Male war
+die gemeldete Abweichung der Befund. Die Zahl `20` für die Aufrufstellen von `resolve_policy` hat
+gestimmt; sie kam aus Dateien, die seit dem Abgleich niemand angefasst hatte.

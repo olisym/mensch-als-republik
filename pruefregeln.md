@@ -158,6 +158,13 @@ Commit. Zustand außerhalb von git — `.hypothesis/`, `__pycache__`, warme Cach
 Behauptung über `main` gelöscht. `make check-all` führt `check_tree.py` und hat damit ein Tor
 gegen vergessene **Dateien**; gegen vergessene **Zustände** gibt es keines. Genau darin lag D137.
 
+**26. Ein Hashtest hat ein Verfallsdatum.** Der Abgleich einer Projektkopie gegen das Repo gilt
+für den Commit, an dem er gemacht wurde, und für keinen späteren. Jeder Merge, der eine Datei
+anfasst, entwertet ihn — die Kopie sieht danach unverändert lesbar aus, und nichts wird rot. Vor
+jeder Zählung, die in einen Prompt geht, wird gefragt: hat seit dem Abgleich ein Lauf diese Datei
+berührt? In D169 hat der Supervisor `_policy(` in einer Kopie von vor dem `00b`-Merge gezählt und
+sechs Aufrufstellen genannt, wo zehn standen; die vier fehlenden hatte `00b` selbst angelegt.
+
 ---
 
 ## Herkunft der Nummern
@@ -165,7 +172,7 @@ gegen vergessene **Dateien**; gegen vergessene **Zustände** gibt es keines. Gen
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
-D148, 24 und 25 aus D160.
+D148, 24 und 25 aus D160, 26 aus D169.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
