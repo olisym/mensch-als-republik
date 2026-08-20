@@ -148,6 +148,7 @@ unten ist es der Hash der **erwarteten** Verfassung, nicht der des übergebenen 
 | `P-E` | Genesis A, Hash A, Verfassung **B** | — | `ValueError` (D167) |
 | `P-F` | Genesis B, `scope = N_A` | — | `ValueError` |
 | `P-G` | Genesis A **ohne Key `4`**, `scope` daraus gerechnet, Verfassung A | `{obligation@1, rotate-ack@1, rotate-key@1}` | — (D168) |
+| `P-H` | Genesis A, Hash **B**, `constitution_obj=None` | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_UNAVAILABLE`, Subjekt Hash **B** (D167) |
 
 **`P-B` ist der Kernvektor.** Er ist der einzige, der D58 und D70 gleichzeitig stellt: die
 deklarierte Menge ist `{vouch@1}`, das Ergebnis ist der Boden. Eine Implementierung, die
@@ -166,6 +167,12 @@ unterscheiden sich in den Vermerken, und der Betreiber muss „die Verfassung sa
 „die Verfassung sagt es", sondern „das Genesis ist unvollständig und der Auflöser stört sich nicht
 daran". `resolve_policy` prüft, was es liest, und `genesis[4]` liest es nicht mehr. Ohne diesen
 Vektor prüft die Aussage niemand.
+
+**`P-H` ist der Vektor, ohne den D167 ungeprüft bliebe.** In `P-D` sind der übergebene
+`constitution_hash` und `genesis[4]` **derselbe Wert**; der Vektor kann deshalb nicht sehen,
+welchem von beiden die Auflösung folgt, und bliebe grün, wenn sie dem Genesis folgte. `P-H`
+trennt die zwei Größen und ist damit die einzige Stelle, an der der Epochenschritt aus `§1.2`
+gemessen wird. Ein Vektor, dessen beide Eingänge zufällig gleich sind, misst keinen von beiden.
 
 **Nicht hier geprüft:** die Prädikat-Normalisierung selbst (Boden, Negativliste, `core`-Filter).
 Sie liegt im Konstruktor von `NucleusPolicy` in Layer 01 und ist durch die Vektoren `P-1` bis
