@@ -78,6 +78,11 @@ Spec-Lücke — **Rückfrage, nicht entscheiden.**
 
 Vektor: `P-G`.
 
+> **Nachtrag (D167, D168).** `resolve_policy` liest `genesis_obj[4]` nicht mehr und prüft es
+> deshalb auch nicht; ein Genesis ohne Key `4` ist kein Fehler dieses Auflösers. `P-G` erwartet
+> seit D168 das normale Ergebnis statt `ValueError`. Der Wortlaut oben bleibt stehen, weil
+> dieser Prompt erteilt ist; normativ gilt `03-profiles.md §1.2`.
+
 ## 5. `profiles/findings.py` — `_dedupe_sort` (B5)
 
 Wird von vier Modulen importiert und trägt einen Unterstrich. Umbenennen in `dedupe_sort`,

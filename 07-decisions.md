@@ -5833,3 +5833,37 @@ nichts zu tun.
 **Der Code folgt in einem eigenen Lauf.** `resolve_policy`s Signatur ist in `§1.2` normativ, und
 rund fünfzehn Testaufrufstellen hängen daran. Die Spec geht voran, damit der Prompt „die Spec
 steht" sagen kann, ohne nach Prüfregel 24 unerfüllbar zu werden.
+
+### D168 — Ein Auflöser prüft, was er liest; die P-Vektoren folgen
+
+**Was D167 nicht ausgesprochen hat.** Die Lagentabelle in `03 §1.2` führte eine Zeile „Genesis
+ohne `constitution_hash` oder mit falschem Typ darin → `ValueError`". D167 hat sie gestrichen,
+weil `resolve_policy` `genesis[4]` nicht mehr liest. Die Folge stand nirgends: **wer das Feld
+nicht liest, prüft es auch nicht.** Ein Genesis ohne Key `4` ist nach `00 §4` defekt, aber das
+festzustellen ist nicht Aufgabe dieses Auflösers — sonst stünde die Wohlgeformtheit aus `00 §4`
+ein zweites Mal im Code, und genau das haben D111 und D147 abgeräumt.
+
+**Die Regel, die dahintersteht.** `resolve_authorized_keys` prüft `genesis[1]` streng, weil es
+den Wert liest, und prüft Key `4` überhaupt nicht (D161). `resolve_policy` prüft den Scope, weil
+es das ganze Genesis hasht. Beide prüfen genau ihre Eingabe. Das ist kein Sparen an Sorgfalt: eine
+Prüfung ohne Lesegrund ist eine zweite Kopie einer fremden Norm, und Kopien laufen auseinander.
+
+**Zwei Vektoren in `03-golden-anchors.md` §4 werden nachgezogen.** `P-E` erwartete den Boden plus
+`CONSTITUTION_HASH_MISMATCH` und erwartet jetzt `ValueError` — der Vermerk entfällt mit D167.
+`P-G` erwartete `ValueError` für ein Genesis ohne Key `4` und erwartet jetzt das **normale**
+Ergebnis; er ist damit der Vektor, der belegt, dass die Prüfung fort ist. Nachgezogen, weil die
+Norm sich geändert hat, nicht um einen Test grün zu bekommen (D157). Wäre eine Erwartung zu
+ändern gewesen, ohne dass eine Norm sie bewegt, wäre das der Abbruchgrund.
+
+**`P-G` ist nach der Änderung kein Doppel von `P-A`.** Beide liefern den Boden ohne Vermerk, aber
+`P-A` sagt „die Verfassung sagt es" und `P-G` sagt „das Genesis ist unvollständig und der
+Auflöser stört sich nicht daran". Der zweite Satz ist die Aussage, die ohne diesen Vektor
+niemand prüft.
+
+**Zwei erteilte Prompt-Dateien bekommen Nachträge, keine Korrekturen** (D157-Konvention).
+`03-prompt.md` führt die alte Lagentabelle und die alte Subjektregel; `03a-korrektur-prompt.md`
+begründet ausdrücklich, warum ein Genesis ohne `constitution_hash` `ValueError` sei. Beide
+bleiben im Wortlaut stehen — sie sind erteilt und ihre Zahlen waren zum Zeitpunkt der Erteilung
+richtig —, und jede bekommt eine Zeile, die auf `03 §1.2` als normative Fassung zeigt. Nach
+Prüfregel 17 sind sie normativer Text, solange Code auf sie zeigt; ein stiller Umbau erteilter
+Prompts nähme jeder späteren Abnahme ihren Vergleichspunkt.

@@ -156,6 +156,13 @@ und wird hier nicht wiederholt.
 | `genesis_obj[4] != SHA-256(cbor(constitution_obj))` | Sicherheits-Default, `CONSTITUTION_HASH_MISMATCH` |
 | beides passt | `NucleusPolicy(scope, declared=frozenset(irrevocable_predicates))` |
 
+> **Nachtrag (D167, D168).** `constitution_hash` ist Parameter von `resolve_policy`;
+> `genesis_obj[4]` wird nicht mehr gelesen und deshalb auch nicht geprüft. Die dritte Zeile der
+> Tabelle ist `ValueError` statt Vermerk, `CONSTITUTION_HASH_MISMATCH` entfällt ersatzlos, und
+> das Subjekt von `CONSTITUTION_UNAVAILABLE` ist der übergebene Hash, nicht `genesis_obj[4]`.
+> Der Wortlaut oben bleibt stehen, weil dieser Prompt erteilt ist; normativ gilt
+> `03-profiles.md §1.2`.
+
 Sicherheits-Default heißt `NucleusPolicy(scope, declared=frozenset())` — der Boden setzt
 `{obligation@1}` von selbst. **Nicht** `{"obligation@1"}` von Hand übergeben; das schriebe den
 Boden ein zweites Mal auf.

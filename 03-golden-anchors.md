@@ -134,17 +134,20 @@ brauchen kein eigenes Verfassungsobjekt.
 
 ## 4. Policy-Auflösung (D57, D70, D71, D82)
 
-`resolve_policy(scope=…, genesis_obj=…, constitution_obj=…)`.
+`resolve_policy(scope=…, genesis_obj=…, constitution_hash=…, constitution_obj=…)`.
+
+`constitution_hash` ist seit D167 Parameter; `genesis_obj[4]` wird nicht gelesen. In den Vektoren
+unten ist es der Hash der **erwarteten** Verfassung, nicht der des übergebenen Objekts.
 
 | ID | Eingabe | wirksame Menge | Vermerke |
 |---|---|---|---|
 | `P-A` | Profil A vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — |
 | `P-B` | Profil B vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — · `policy.warnings` trägt `UNSAFE_IRREVOCABLE_PREDICATE(vouch@1)` |
 | `P-C` | Profil C vollständig | `{obligation@1, rotate-ack@1, rotate-key@1}` | — |
-| `P-D` | Genesis A, `constitution_obj=None` | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_UNAVAILABLE` |
-| `P-E` | Genesis A, Verfassung **B** | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_HASH_MISMATCH` |
+| `P-D` | Genesis A, Hash A, `constitution_obj=None` | `{obligation@1, rotate-ack@1, rotate-key@1}` | `CONSTITUTION_UNAVAILABLE` |
+| `P-E` | Genesis A, Hash A, Verfassung **B** | — | `ValueError` (D167) |
 | `P-F` | Genesis B, `scope = N_A` | — | `ValueError` |
-| `P-G` | Genesis ohne Key `4`, `scope` daraus gerechnet | — | `ValueError` |
+| `P-G` | Genesis A **ohne Key `4`**, `scope` daraus gerechnet, Verfassung A | `{obligation@1, rotate-ack@1, rotate-key@1}` | — (D168) |
 
 **`P-B` ist der Kernvektor.** Er ist der einzige, der D58 und D70 gleichzeitig stellt: die
 deklarierte Menge ist `{vouch@1}`, das Ergebnis ist der Boden. Eine Implementierung, die
@@ -158,6 +161,11 @@ Beide sind hier rot, und zwar in verschiedene Richtungen.
 **`P-A`, `P-C` und `P-D` liefern dasselbe Ergebnis und sind trotzdem drei Vektoren.** Sie
 unterscheiden sich in den Vermerken, und der Betreiber muss „die Verfassung sagt es",
 „die Verfassung schweigt" und „ich habe die Verfassung nicht" auseinanderhalten können.
+
+**`P-G` liefert seit D168 dasselbe wie `P-A` und ist trotzdem ein eigener Vektor.** Er sagt nicht
+„die Verfassung sagt es", sondern „das Genesis ist unvollständig und der Auflöser stört sich nicht
+daran". `resolve_policy` prüft, was es liest, und `genesis[4]` liest es nicht mehr. Ohne diesen
+Vektor prüft die Aussage niemand.
 
 **Nicht hier geprüft:** die Prädikat-Normalisierung selbst (Boden, Negativliste, `core`-Filter).
 Sie liegt im Konstruktor von `NucleusPolicy` in Layer 01 und ist durch die Vektoren `P-1` bis
