@@ -5536,7 +5536,7 @@ eine Herleitung, die nirgends stattfindet.
 ```
 resolve_authorized_keys(store, *, scope, genesis_obj, constitution_hash,
                         constitution_obj=None, now, policy=None)
-    -> AnchorResolution(keys: frozenset[bytes], findings: tuple[Finding, ...])
+    -> KeyResolution(keys: frozenset[bytes], findings: tuple[Finding, ...])
 ```
 
 in `mensch_als_republik/keys.py`. Er rechnet Schritt 1 und reicht das Ergebnis als `anchor_keys`
@@ -5544,7 +5544,16 @@ an `resolve_current_key` weiter, das unverändert bleibt (D151). `scope` wird ge
 `SHA-256(DOM_NUC_GEN || cbor(genesis_obj))` nachgerechnet, `constitution_hash` gegen
 `H(constitution_obj)`, sofern das Objekt übergeben wird; beide Abweichungen sind `ValueError`,
 kein Vermerk — ein fehlzugeordnetes Objekt ist ein Aufruferfehler und keine Lage der Welt
-(D82, D92, D109).
+(D82, D92, D109). Der Typ heißt nach dem, was er trägt: die aufgelösten Schlüssel, nicht den
+Anker.
+
+**Ein formwidriges `genesis_obj[1]` ist ebenfalls `ValueError`.** Fehlt der Schlüssel, ist der
+Wert keine Liste, oder ist ein Eintrag nicht `bytes` der Länge 32, bricht die Auflösung ab. Der
+Unterschied zu `nucleus_keys` (D163) ist der **Ort**: die Verfassung ist ein Fund der Welt, den
+ein Leser vorfindet und dessen Defekte er ertragen muss; der Genesis ist das Objekt, aus dem
+derselbe Aufrufer eine Zeile vorher den Scope gerechnet hat. Ein Defekt dort ist kein Fund,
+sondern ein Widerspruch im eigenen Aufruf. Eine leere Liste ist kein Defekt und liefert einen
+leeren Anker.
 
 **Begründung.** `03 §4` hat denselben Fork bereits entschieden und begründet: „`constitution_hash`
 ist Parameter, keine Auflösung … welche Version gilt, entscheidet die Ratifizierung … eine
