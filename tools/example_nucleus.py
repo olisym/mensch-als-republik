@@ -19,6 +19,8 @@ from mensch_als_republik.governance import (
     verify_ratification,
 )
 from mensch_als_republik.governance.tally import threshold_class
+from mensch_als_republik.findings import Finding, NucleusFinding
+from mensch_als_republik.keys import resolve_authorized_keys
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from mensch_als_republik.profiles import MembershipState, membership
 from mensch_als_republik.trust.derive import derive
@@ -456,16 +458,68 @@ def claim_set(ex: ExampleNucleus) -> ClaimSet:
 
 
 def _member(ex: ExampleNucleus, store, subject: bytes, constitution_h: bytes, obj: dict):
+    resolved = resolve_authorized_keys(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=constitution_h,
+        constitution_obj=obj,
+        now=NOW,
+        policy=_policy(ex),
+    )
     return membership(
         store,
         subject=subject,
         scope=ex.N_gov,
         constitution_hash=constitution_h,
         now=NOW,
-        authorized_keys=frozenset(),
+        authorized_keys=resolved.keys,
         constitution_obj=obj,
         policy=_policy(ex),
     )
+
+
+def check_anchor_resolution(ex: ExampleNucleus) -> None:
+    """Anker aus der Verfassung; Amendment bewegt ihn nicht (00 §5.4, D164)."""
+    store = InMemoryStore()
+    expected = frozenset(ex.genesis_gov[1])
+    r1 = resolve_authorized_keys(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=ex.constitution_hash_gov,
+        constitution_obj=ex.constitution_gov,
+        now=NOW,
+        policy=_policy(ex),
+    )
+    if r1.keys != expected or r1.findings != ():
+        raise AssertionError(f"lage 1: keys={r1.keys!r} findings={r1.findings!r}")
+    r2 = resolve_authorized_keys(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=ex.constitution_hash_2,
+        constitution_obj=ex.constitution_2,
+        now=NOW,
+        policy=_policy(ex),
+    )
+    if r2.keys != expected or r2.findings != ():
+        raise AssertionError(f"lage 2: keys={r2.keys!r} findings={r2.findings!r}")
+    r3 = resolve_authorized_keys(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=ex.constitution_hash_gov,
+        constitution_obj=None,
+        now=NOW,
+        policy=_policy(ex),
+    )
+    if r3.keys != expected:
+        raise AssertionError(f"lage 3: keys={r3.keys!r}")
+    if r3.findings != (
+        Finding(NucleusFinding.CONSTITUTION_UNAVAILABLE, ex.constitution_hash_gov),
+    ):
+        raise AssertionError(f"lage 3 findings: {r3.findings!r}")
 
 
 def check_membership_epoch1(ex: ExampleNucleus) -> None:
@@ -731,6 +785,7 @@ def check_malformed_appended_dora(ex: ExampleNucleus) -> None:
 def verify_all() -> ExampleNucleus:
     """Alle Prüfungen aus example-nucleus.md; bricht bei der Bestandsanker-Probe zuerst."""
     ex = build()
+    check_anchor_resolution(ex)
     check_membership_epoch1(ex)
     check_tally(ex)
     check_ratification(ex)

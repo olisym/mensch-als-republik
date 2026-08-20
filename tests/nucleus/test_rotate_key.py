@@ -191,6 +191,59 @@ def test_equivocation_at_chain_point_drops_that_root() -> None:
     assert got == frozenset({other.pub})
 
 
+def test_complete_rotate_after_obligation_head_is_successor() -> None:
+    """Lauf A: Obligation, dann vollständiger Rotate — Kopf ist der Nachfolger (D162)."""
+    scope = scope_id("rk-d162")
+    root = Identity("rk-d162-root")
+    nxt = Identity("rk-d162-nxt")
+    filler = Identity("rk-d162-filler")
+    obl = root.claim(
+        p=_nuc(scope, "obligation"),
+        J=(1, filler.pub),
+        t=1,
+        N=scope,
+    )
+    rotate = _rotate(root, nxt, scope, t=2)
+    ack = _ack(nxt, rotate, scope, t=3)
+    store = store_with(obl, rotate, ack)
+    classified = classify_all(store, NOW, NucleusPolicy(scope=scope))
+    assert classified[claim_id(rotate)].state is State.ACTIVE
+    got = _resolve(store, scope, root)
+    assert got == frozenset({nxt.pub})
+
+
+def test_equivocation_on_non_rotate_drops_that_root() -> None:
+    """Lauf B: dieselbe Menge plus Equivocation an obligation@1 — leere Menge (D162).
+
+    Der Rotate selbst ist ACTIVE, nicht EQUIVOCATION_FLAGGED.
+    """
+    scope = scope_id("rk-d162")
+    root = Identity("rk-d162-root")
+    fork = Identity("rk-d162-root")
+    nxt = Identity("rk-d162-nxt")
+    filler = Identity("rk-d162-filler")
+    obl = root.claim(
+        p=_nuc(scope, "obligation"),
+        J=(1, filler.pub),
+        t=1,
+        N=scope,
+    )
+    rotate = _rotate(root, nxt, scope, t=2)
+    ack = _ack(nxt, rotate, scope, t=3)
+    twin = fork.claim(
+        p=_nuc(scope, "obligation"),
+        J=(1, Identity("rk-d162-twin-target").pub),
+        t=1,
+        N=scope,
+    )
+    store = store_with(obl, rotate, ack, twin)
+    classified = classify_all(store, NOW, NucleusPolicy(scope=scope))
+    assert classified[claim_id(rotate)].state is State.ACTIVE
+    assert classified[claim_id(rotate)].state is not State.EQUIVOCATION_FLAGGED
+    got = _resolve(store, scope, root)
+    assert got == frozenset()
+
+
 def test_two_complete_rotates_earlier_binds_with_link() -> None:
     """Zwei vollständige Rotationen, Zwischenglied vorhanden: die frühere bindet (D154)."""
     scope = scope_id("rk-10")

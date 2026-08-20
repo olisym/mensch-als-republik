@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from tools.example_nucleus import (
     build,
+    check_anchor_resolution,
     check_edge_capacity,
     check_malformed_appended_dora,
     check_membership_epoch1,
@@ -24,6 +25,10 @@ def test_stock_anchors() -> None:
 
 def test_objects_match_document() -> None:
     build()
+
+
+def test_anchor_resolution() -> None:
+    check_anchor_resolution(build())
 
 
 def test_membership_epoch1() -> None:

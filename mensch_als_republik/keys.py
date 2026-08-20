@@ -1,16 +1,30 @@
-"""Schlüsselkette: resolve_current_key (00-nucleus-genesis-constitution.md §6.4, D151–D159)."""
+"""Schlüsselkette: resolve_current_key, resolve_authorized_keys (00 §6.4, D151–D164)."""
 
 from __future__ import annotations
 
+import hashlib
+from dataclasses import dataclass
+
+from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id
+from mensch_als_republik.domains import DOM_NUC_GEN
+from mensch_als_republik.findings import Finding, NucleusFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy
+from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
 from mensch_als_republik.predicates import parse_predicate
 from mensch_als_republik.verifier import ClaimStore, State
 
 _J_TAG_IDENTITY = 1
 _J_TAG_CLAIM_REF = 2
 _COUNTING = frozenset({State.ACTIVE, State.EXPIRED})
+
+
+@dataclass(frozen=True, slots=True)
+class KeyResolution:
+    """Aufgelöste Schlüssel plus Vermerke (00 §6.4 Schritt 1, D161)."""
+
+    keys: frozenset[bytes]
+    findings: tuple[Finding, ...]
 
 
 def _is_nuc_name(claim: Claim, name: str) -> bool:
@@ -75,16 +89,18 @@ def resolve_current_key(
             if k_cur in visited:
                 return None
             visited.add(k_cur)
-            flagged = False
+            if any(
+                claim.I == k_cur
+                and by_cid[claim_id(claim)].state is State.EQUIVOCATION_FLAGGED
+                for claim in claims
+            ):
+                return None
             complete: list[Claim] = []
             for claim in claims:
                 if not _is_nuc_name(claim, "rotate-key"):
                     continue
                 if claim.I != k_cur or claim.N != scope:
                     continue
-                if by_cid[claim_id(claim)].state is State.EQUIVOCATION_FLAGGED:
-                    flagged = True
-                    break
                 if claim.J[0] != _J_TAG_IDENTITY:
                     continue
                 if by_cid[claim_id(claim)].state not in _COUNTING:
@@ -106,8 +122,6 @@ def resolve_current_key(
                     break
                 if ack_ok:
                     complete.append(claim)
-            if flagged:
-                return None
             if not complete:
                 return k_cur
             if len(complete) == 1:
@@ -124,3 +138,71 @@ def resolve_current_key(
         if head is not None:
             heads.add(head)
     return frozenset(heads)
+
+
+def resolve_authorized_keys(
+    store: ClaimStore,
+    *,
+    scope: bytes,
+    genesis_obj: dict,
+    constitution_hash: bytes,
+    constitution_obj: dict | None = None,
+    now: int,
+    policy: NucleusPolicy | None = None,
+) -> KeyResolution:
+    """Anker aus Genesis und Verfassung, dann Köpfe der Ketten (00 §6.4 Schritt 1, D161)."""
+    computed_scope = hashlib.sha256(
+        DOM_NUC_GEN + cbor_canon.encode(genesis_obj)
+    ).digest()
+    if scope != computed_scope:
+        raise ValueError("genesis_obj does not match scope")
+
+    if 1 not in genesis_obj:
+        raise ValueError("genesis_obj missing or invalid root_keys (key 1)")
+    raw_roots = genesis_obj[1]
+    if not isinstance(raw_roots, list):
+        raise ValueError("genesis_obj missing or invalid root_keys (key 1)")
+    for entry in raw_roots:
+        if not isinstance(entry, bytes) or len(entry) != 32:
+            raise ValueError("genesis_obj missing or invalid root_keys (key 1)")
+    root_keys = frozenset(raw_roots)
+
+    if constitution_obj is None:
+        keys = resolve_current_key(
+            store, scope=scope, anchor_keys=root_keys, now=now, policy=policy
+        )
+        return KeyResolution(
+            keys=keys,
+            findings=dedupe_sort(
+                [Finding(NucleusFinding.CONSTITUTION_UNAVAILABLE, constitution_hash)]
+            ),
+        )
+
+    if hash_constitution(constitution_obj) != constitution_hash:
+        raise ValueError("constitution_obj does not match constitution_hash")
+
+    if "nucleus_keys" not in constitution_obj:
+        keys = resolve_current_key(
+            store, scope=scope, anchor_keys=root_keys, now=now, policy=policy
+        )
+        return KeyResolution(keys=keys, findings=())
+
+    raw = constitution_obj["nucleus_keys"]
+    notes: list[Finding] = []
+    kept: list[bytes] = []
+    if not isinstance(raw, (list, tuple)):
+        notes.append(
+            Finding(NucleusFinding.MALFORMED_NUCLEUS_KEY, constitution_hash)
+        )
+    else:
+        for entry in raw:
+            if isinstance(entry, bytes) and len(entry) == 32:
+                kept.append(entry)
+            else:
+                notes.append(
+                    Finding(NucleusFinding.MALFORMED_NUCLEUS_KEY, constitution_hash)
+                )
+    keys = resolve_current_key(
+        store, scope=scope, anchor_keys=frozenset(kept), now=now, policy=policy
+    )
+    return KeyResolution(keys=keys, findings=dedupe_sort(notes))
