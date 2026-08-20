@@ -2,12 +2,12 @@
 
 ## 0. Branch und Basis
 
-Branch `00b-anker`, abgezweigt von `9e199b7` auf `main`. Ein Commit am Ende. Kein Merge, kein
+Branch `00b-anker`, abgezweigt vom Kopf von `main`. Ein Commit am Ende. Kein Merge, kein
 Push nach `main`.
 
 ## 1. Normative Grundlage
 
-- `00-nucleus-genesis-constitution.md` §5.4 und §6.4, Stand `9e199b7`. Die Spec ist bereits
+- `00-nucleus-genesis-constitution.md` §5.4 und §6.4, Stand des Branchpunkts. Die Spec ist bereits
   nachgezogen und wird in diesem Lauf **nicht** geändert.
 - `03-profiles.md` §4 (`authorized_keys` als Parameter), `04-governance.md` §5 (Schlüsselpfad).
 - Register D150, D151, D153, D154, D155, D161, D162, D163, D164.
@@ -178,7 +178,7 @@ Was hier steht, wird **gemeldet, nicht gebaut**.
 
 ## 5. Abschluss
 
-Ein Commit auf `00b-anker`. Im Bericht: `git diff --stat` gegen `9e199b7`, die Testzahlen, die
+Ein Commit auf `00b-anker`. Im Bericht: `git diff --stat` gegen den Branchpunkt (`git merge-base main 00b-anker`), die Testzahlen, die
 vier Proben, und alles, was nach Abschnitt 3 gemeldet statt gebaut werden musste.
 
 Rückfragen gehen an den Supervisor, nicht ins eigene Fenster. Sie sind Kandidaten für
