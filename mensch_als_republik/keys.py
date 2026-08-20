@@ -1,4 +1,4 @@
-"""Schlüsselkette: resolve_current_key (00-nucleus-genesis-constitution.md §6.4, D151–D155)."""
+"""Schlüsselkette: resolve_current_key (00-nucleus-genesis-constitution.md §6.4, D151–D156)."""
 
 from __future__ import annotations
 
@@ -59,9 +59,13 @@ def resolve_current_key(
     scope: bytes,
     anchor_keys: frozenset[bytes],
     now: int,
+    policy: NucleusPolicy | None = None,
 ) -> frozenset[bytes]:
-    """Köpfe der vollständigen Rotationsketten ab ``anchor_keys`` (00 §6.4 Schritt 2–4)."""
-    by_cid = classify_all(store, now, NucleusPolicy(scope=scope))
+    """Köpfe der vollständigen Rotationsketten ab ``anchor_keys`` (00 §6.4 Schritt 2–4).
+
+    ``policy`` wird unverändert an ``classify_all`` gereicht (03 §4, D156).
+    """
+    by_cid = classify_all(store, now, policy)
     claims = store.all_claims()
 
     def _head_from(k: bytes) -> bytes | None:

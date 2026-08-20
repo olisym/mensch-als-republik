@@ -43,6 +43,31 @@ def _resolve(store, scope: bytes, *keys: Identity):
     )
 
 
+def test_resolution_without_policy_matches_scope_policy() -> None:
+    """Kettenauflösung ohne Policy gleicht der mit Policy des Scopes (D156)."""
+    scope = scope_id("rk-policy")
+    root = Identity("rk-policy-root")
+    nxt = Identity("rk-policy-next")
+    rotate = _rotate(root, nxt, scope, t=1)
+    ack = _ack(nxt, rotate, scope, t=2)
+    store = store_with(rotate, ack)
+    without = resolve_current_key(
+        store,
+        scope=scope,
+        anchor_keys=frozenset({root.pub}),
+        now=NOW,
+    )
+    with_policy = resolve_current_key(
+        store,
+        scope=scope,
+        anchor_keys=frozenset({root.pub}),
+        now=NOW,
+        policy=NucleusPolicy(scope=scope),
+    )
+    assert without == with_policy
+    assert without == frozenset({nxt.pub})
+
+
 def test_no_rotate_returns_anchor_keys() -> None:
     """Kein Rotate im Store: Ergebnis ist anchor_keys."""
     scope = scope_id("rk-1")
@@ -103,18 +128,22 @@ def test_ack_with_foreign_n_is_incomplete() -> None:
     assert _resolve(store_with(rotate, ack), scope, root) == frozenset({root.pub})
 
 
-def test_ack_as_revoke_is_incomplete() -> None:
-    """Ack als core/revoke@1 statt rotate-ack@1: unvollständig (D152).
+def test_ack_as_receipt_is_incomplete() -> None:
+    """Quittung statt rotate-ack@1: unvollständig (D152, D158).
 
-    ``K_n``-signiertes ``core/revoke@1`` auf den Rotate von ``K_{n-1}`` wirft
-    ``ForeignLifecycle`` in ``classify_all`` (Layer 01). Der Test zeigt denselben
-    Defekt mit einem klassifizierbaren Widerruf desselben Autors.
+    ``nuc:N/receipt@1`` von ``K_n`` mit ``J = [claim-ref, claim_id(R)]`` erfüllt
+    die vier Bedingungen aus D152 und unterscheidet sich einzig im Prädikatnamen.
     """
     scope = scope_id("rk-6")
     root = Identity("rk-6-root")
     nxt = Identity("rk-6-next")
     rotate = _rotate(root, nxt, scope, t=1)
-    fake = root.revoke(rotate, t=2)
+    fake = nxt.claim(
+        p=_nuc(scope, "receipt"),
+        J=(2, claim_id(rotate)),
+        t=2,
+        N=scope,
+    )
     assert _resolve(store_with(rotate, fake), scope, root) == frozenset({root.pub})
 
 
@@ -184,31 +213,39 @@ def test_two_complete_rotates_earlier_binds_with_link() -> None:
 
 
 def test_two_complete_rotates_incomparable_without_link() -> None:
-    """Dieselbe Lage ohne Zwischenglied im Store: kein Kopf aus dieser Wurzel (D155 a).
+    """Zwei vollständige Rotationen, Lücke zwei Glieder vor R_b: kein Kopf (D155 a).
 
-    Messung: der spätere Rotate ist ``PENDING`` (Vorgänger fehlt), nur die frühere
-    Rotation ist vollständig — der Kopf ist deren Nachfolger, nicht die leere Menge.
+    Kette von K: R_a → c1 → c2 → R_b. Im Store: R_a, c2, R_b (c1 fehlt).
+    R_b ist ACTIVE, weil c2 bekannt ist; der Rückwärtslauf bricht bei c1 ab.
     """
     scope = scope_id("rk-11")
     root = Identity("rk-11-root")
     first = Identity("rk-11-first")
     second = Identity("rk-11-second")
-    filler = Identity("rk-11-filler")
+    filler_a = Identity("rk-11-filler-a")
+    filler_b = Identity("rk-11-filler-b")
     r_a = _rotate(root, first, scope, t=1)
     root.claim(
         p=_nuc(scope, "obligation"),
-        J=(1, filler.pub),
+        J=(1, filler_a.pub),
         t=2,
         N=scope,
     )
-    r_b = _rotate(root, second, scope, t=3)
-    ack_a = _ack(first, r_a, scope, t=4)
-    ack_b = _ack(second, r_b, scope, t=5)
-    store = store_with(r_a, r_b, ack_a, ack_b)
+    c2 = root.claim(
+        p=_nuc(scope, "obligation"),
+        J=(1, filler_b.pub),
+        t=3,
+        N=scope,
+    )
+    r_b = _rotate(root, second, scope, t=4)
+    ack_a = _ack(first, r_a, scope, t=5)
+    ack_b = _ack(second, r_b, scope, t=6)
+    store = store_with(r_a, c2, r_b, ack_a, ack_b)
     classified = classify_all(store, NOW, NucleusPolicy(scope=scope))
-    assert classified[claim_id(r_b)].state is State.PENDING
+    assert classified[claim_id(r_a)].state is State.ACTIVE
+    assert classified[claim_id(r_b)].state is State.ACTIVE
     got = _resolve(store, scope, root)
-    assert got == frozenset({first.pub})
+    assert got == frozenset()
 
 
 def test_head_rewinds_when_earlier_ack_arrives() -> None:

@@ -105,13 +105,17 @@ class NucleusPolicy:
 
 
 def is_irrevocable(predicate: str, policy: NucleusPolicy | None) -> bool:
-    """Wahr gdw. policy gesetzt, predicate ein nuc:-Prädikat ist und dessen Profilname
-    (Teil nach dem letzten "/") in policy.irrevocable liegt (§5.4.2)."""
-    if policy is None:
-        return False
+    """Wahr gdw. predicate ein nuc:-Prädikat ist und dessen Profilname
+    (Teil nach dem letzten "/") in der wirksamen Menge liegt (§5.4.2).
+
+    Die wirksame Menge ist ``policy.irrevocable``, falls ``policy`` gesetzt ist,
+    sonst ``PROTOCOL_IRREVOCABLE`` (01 §5.4.1, 00 §5.2, D156).
+    """
     if not predicate.startswith("nuc:"):
         return False
     name = predicate.rsplit("/", 1)[-1]
+    if policy is None:
+        return name in PROTOCOL_IRREVOCABLE
     return name in policy.irrevocable
 
 

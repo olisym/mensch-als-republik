@@ -97,6 +97,21 @@ def test_c1_obligation_revoked_without_policy():
     assert result.state == State.REVOKED
 
 
+def test_obligation_revoke_without_policy_not_revoked() -> None:
+    """core/revoke@1 auf obligation@1 ohne Policy bringt den Zustand nicht auf REVOKED (D156)."""
+    alice = Identity("alice-d156")
+    bob = Identity("bob-d156")
+    scope = scope_id("d156-none")
+    obl = alice.claim(p=f"nuc:{scope.hex()}/obligation@1", J=(1, bob.pub), t=1, N=scope)
+    rev = alice.revoke(obl, t=2)
+    store = store_with(obl, rev)
+
+    result = classify(obl, store, now=100, policy=None)
+
+    assert result.state is not State.REVOKED
+    assert result.state == State.ACTIVE
+
+
 def test_c2_obligation_active_with_policy():
     alice = Identity("alice-c2")
     bob = Identity("bob-c2")

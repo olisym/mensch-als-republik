@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.policy import PROTOCOL_IRREVOCABLE, PolicyWarning
+from mensch_als_republik.policy import PolicyWarning
 from mensch_als_republik.profiles import Finding, ProfileFinding, resolve_policy
 
 from .fixtures import (
@@ -41,13 +41,17 @@ def test_documented_hashes_match_computed() -> None:
 
 def test_P_A() -> None:
     r = resolve_policy(scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A)
-    assert r.policy.irrevocable == PROTOCOL_IRREVOCABLE
+    assert r.policy.irrevocable == frozenset(
+        {"obligation@1", "rotate-ack@1", "rotate-key@1"}
+    )
     assert r.findings == ()
 
 
 def test_P_B() -> None:
     r = resolve_policy(scope=N_B, genesis_obj=GENESIS_B, constitution_obj=CONSTITUTION_B)
-    assert r.policy.irrevocable == PROTOCOL_IRREVOCABLE
+    assert r.policy.irrevocable == frozenset(
+        {"obligation@1", "rotate-ack@1", "rotate-key@1"}
+    )
     assert r.findings == ()
     assert len(r.policy.warnings) == 1
     assert r.policy.warnings[0].code == PolicyWarning.UNSAFE_IRREVOCABLE_PREDICATE
@@ -56,13 +60,17 @@ def test_P_B() -> None:
 
 def test_P_C() -> None:
     r = resolve_policy(scope=N_C, genesis_obj=GENESIS_C, constitution_obj=CONSTITUTION_C)
-    assert r.policy.irrevocable == PROTOCOL_IRREVOCABLE
+    assert r.policy.irrevocable == frozenset(
+        {"obligation@1", "rotate-ack@1", "rotate-key@1"}
+    )
     assert r.findings == ()
 
 
 def test_P_D() -> None:
     r = resolve_policy(scope=N_A, genesis_obj=GENESIS_A, constitution_obj=None)
-    assert r.policy.irrevocable == PROTOCOL_IRREVOCABLE
+    assert r.policy.irrevocable == frozenset(
+        {"obligation@1", "rotate-ack@1", "rotate-key@1"}
+    )
     assert r.findings == (
         Finding(ProfileFinding.CONSTITUTION_UNAVAILABLE, CONSTITUTION_HASH_A),
     )
@@ -70,7 +78,9 @@ def test_P_D() -> None:
 
 def test_P_E() -> None:
     r = resolve_policy(scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_B)
-    assert r.policy.irrevocable == PROTOCOL_IRREVOCABLE
+    assert r.policy.irrevocable == frozenset(
+        {"obligation@1", "rotate-ack@1", "rotate-key@1"}
+    )
     assert r.findings == (
         Finding(ProfileFinding.CONSTITUTION_HASH_MISMATCH, CONSTITUTION_HASH_A),
     )
