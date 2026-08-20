@@ -5773,3 +5773,63 @@ der erste, der die Schwelle hübsch fände.
 **Zwei Nebenbefunde mitgezogen.** `§7` verwies für den Verfassungsknopf auf `§4`; das ist das
 Genesis-Schema, die Verfassung ist `§5`. Und `§9` zählte „nur vier Verfassungsfelder" als
 normativ; seit D150 sind es fünf, wie die Tabelle in `§5` schon zeigt.
+
+### D167 — Die Auflösungskette in `03 §1.2` hatte keinen Epochenschritt
+
+**Befund.** `03 §1.2` schreibt die Auflösung normativ als `C.N → Genesis → constitution_hash →
+Verfassungsobjekt → irrevocable_predicates`. Diese Kette führt auf `genesis[4]`, und `genesis[4]`
+ist nach `00 §4` der Hash der **initialen** Verfassung. `resolve_policy` setzt das genau so um:
+ein Verfassungsobjekt, das nicht zu `genesis[4]` passt, ergibt den Boden und den Vermerk
+`CONSTITUTION_HASH_MISMATCH`.
+
+Gleichzeitig sagt `00 §5.3`, ein Verfassungsupdate erzeuge ein neues Objekt mit neuem Hash, und
+die Ratifizierung sei die Re-Akzeptanz auf diesen Hash. `membership` honoriert das — im
+Beispielnukleus wird DORA gegen `constitution_hash_2` gerechnet. **Derselbe Nukleus hatte damit
+zwei geltende Verfassungen, je nachdem, welche Funktion man fragt.** Wer `resolve_policy` die
+ratifizierte Fassung 2 übergibt, bekommt einen Vermerk, der behauptet, das Objekt gehöre nicht zu
+diesem Nukleus. Es gehört dazu; es ist die aktuelle.
+
+Der Beispielnukleus trägt die Frage bereits, ohne sie zu stellen: `_policy(ex)` baut die Policy
+immer aus `constitution_gov`, auch für die Prüfungen der Epoche 2.
+
+**Beschluss.** `constitution_hash` wird Parameter von `resolve_policy`, wie in D161 für den Anker
+entschieden. Die Kette in `§1.2` bekommt den fehlenden Schritt: welche Fassung gilt, entscheidet
+die Ratifizierung, nicht das Genesis. `genesis[4]` bindet die **Epoche 1** und wird von
+`resolve_policy` nicht mehr gelesen.
+
+**Verworfen — genesisgebunden lassen und `§5.3` einschränken.** Die Begründung wäre D35 gewesen:
+läge `D` in der änderbaren Verfassung, würde ein Amendment Bestandssignaturen still umbewerten.
+Sie trägt hier nicht. `D` steckt als `n/D` **in** jeder Vouch-Signatur; `irrevocable_predicates`
+steckt in keiner Signatur, es wird beim Lesen angewandt. Prüfregel 25: die zitierte Begründung
+regelt den Nachbarfall.
+
+**Verworfen — monotone Vereinigung über die Epochenkette.** Wirksam wäre die Vereinigung aller
+ratifizierten Fassungen; mehr Wissen fügte Schutz hinzu und nähme nie welchen. Das ist die
+Designmonotonie dieses Projekts und parallel zu `§5.2`. Sie verlangt aber den Kettenlauf, den
+D161 ausdrücklich nicht gebaut hat, und sie macht jede Fehldeklaration unwiderruflich — eine
+Governance, die nichts zurücknehmen kann, ist die Capture-Fläche, die `00 §9` bei
+`amendment_rule` vermeiden wollte.
+
+**`CONSTITUTION_HASH_MISMATCH` entfällt ersatzlos.** Sind Hash und Objekt beide vom Aufrufer, ist
+eine Abweichung ein Widerspruch im eigenen Aufruf und damit `ValueError` — dieselbe Behandlung wie
+in `membership` und `resolve_authorized_keys` (D82, D92, D109, D161). Damit löst sich auch die in
+D165 als Befund 2 notierte Asymmetrie auf: drei Nähte, eine Bauform.
+
+Der Fall, den der Vermerk abdeckte, verschwindet nicht, er wandert: liefert ein Peer ein Objekt,
+dessen Hash nicht zum erwarteten passt, **hat man die Verfassung nicht** — der Aufrufer übergibt
+`None` und bekommt `CONSTITUTION_UNAVAILABLE`. Das ist die zutreffendere Aussage, weil sie den
+Zustand des Lesers benennt und nicht die Zugehörigkeit eines Objekts.
+
+**Was `genesis[4]` damit trägt.** Es ist der Hash, den ein Aufrufer in Epoche 1 übergibt. Das ist
+sein Träger, und die in D146 als ungebunden notierte Grenze ist damit beantwortet — als
+Nebenprodukt, nicht als Ziel. `GV-24` bleibt konstruierbar wie bisher; die Entscheidung berührt
+die Auszählung nicht.
+
+**Nicht in diesem Eintrag, eigene Frage:** ob ein Amendment ein in der Vorgängerfassung
+deklariertes Prädikat **weglassen** darf. Heute entschützt es damit Bestandsclaims, und zwar
+nicht sichtbar, sondern erst beim Widerruf. Das gehört an `04 §5` und hat mit dem Auflösungsort
+nichts zu tun.
+
+**Der Code folgt in einem eigenen Lauf.** `resolve_policy`s Signatur ist in `§1.2` normativ, und
+rund fünfzehn Testaufrufstellen hängen daran. Die Spec geht voran, damit der Prompt „die Spec
+steht" sagen kann, ohne nach Prüfregel 24 unerfüllbar zu werden.

@@ -133,7 +133,7 @@ Nukleus). Pflichtfelder:
 | 1 | `root_keys` | array[bytes32] | **Initial** autorisierte Signierschlüssel (§6.4). Ein Key **oder** ein FROST-Gruppenschlüssel. |
 | 2 | `key_mode` | uint | `0` = Einzelschlüssel, `1` = FROST-Gruppenschlüssel. |
 | 3 | `anchor_set` | array[bytes32] | Der **Nukleus-Seed** (Trust-Flow-Spec §6.3): das out-of-band etablierte Ankerset. |
-| 4 | `constitution_hash` | bytes32 | Hash der **initialen** Verfassung (§5). Spätere Versionen superseden per Governance. |
+| 4 | `constitution_hash` | bytes32 | Hash der Verfassung der **Epoche 1** (§5). Spätere Fassungen entstehen per Ratifizierung; welche gilt, ist Parameter der Auflösung und wird nicht aus dem Genesis gelesen (D167, Profile-II §1.2). |
 | 5 | `amendment_rule` | uint | Schwellenklasse für Verfassungsänderung (§5, Gov-Spec §5). `0` = `ordinary`, `1` = `membership`, `2` = `amendment` (D104). |
 | 6 | `weight_mode` | uint | `0` = Kopfzahl, `1` = zweck-gescopt gewichtet (Gov-Spec §4). |
 | 7 | `vote_mode` | uint | `0` = Komposition (Default), `1` = FROST-Opt-in (Gov-Spec §3). Löst DR-015. |

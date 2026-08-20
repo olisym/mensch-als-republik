@@ -52,9 +52,15 @@ Der Verifizierer **wählt** die Policy nicht; sie wird aus dem Claim aufgelöst 
 §5.4.1):
 
 ```
-C.N  →  Genesis-Objekt  →  constitution_hash  →  Verfassungsobjekt
-                                              →  irrevocable_predicates   (Nukleus-Spec §5)
+C.N  →  Genesis-Objekt          →  Scope-Nachrechnung
+        constitution_hash       →  Verfassungsobjekt
+                                →  irrevocable_predicates   (Nukleus-Spec §5)
 ```
+
+**`constitution_hash` ist Parameter, keine Auflösung (D167).** Welche Fassung gilt, entscheidet
+die Ratifizierung (Nukleus-Spec §5.3, Gov-Spec §5); `genesis[4]` bindet die **Epoche 1** und wird
+hier nicht gelesen. Dieselbe Naht wie in `membership` (§4) und `resolve_authorized_keys`
+(Nukleus-Spec §6.4).
 
 Jede Stufe ist content-adressiert und lokal nachrechenbar. Der Typ `NucleusPolicy` liegt in
 **Layer 01** — er muss von dort importierbar sein, sonst wird der Import zyklisch. Die
@@ -62,7 +68,8 @@ Jede Stufe ist content-adressiert und lokal nachrechenbar. Der Typ `NucleusPolic
 Layer 01 nicht kennt.
 
 ```python
-def resolve_policy(*, scope, genesis_obj, constitution_obj=None) -> PolicyResolution
+def resolve_policy(*, scope, genesis_obj, constitution_hash,
+                   constitution_obj=None) -> PolicyResolution
 ```
 
 `PolicyResolution` trägt `policy: NucleusPolicy` und `findings: tuple[Finding, ...]`.
@@ -77,22 +84,25 @@ sobald einer von beiden gepflegt wird.
 
 **Der Resolver rechnet nach, statt zu glauben** (Nukleus-Spec §3): er prüft
 `scope == SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj))` und, falls ein Verfassungsobjekt vorliegt,
-`genesis_obj.constitution_hash == SHA-256(cbor(constitution_obj))`. Sonst wäre die
-Content-Adressierung eine Behauptung.
+`constitution_hash == SHA-256(cbor(constitution_obj))`. Sonst wäre die Content-Adressierung eine
+Behauptung.
 
 | Lage | Antwort |
 |---|---|
 | Genesis passt nicht zu `scope` | `ValueError` |
-| Genesis ohne `constitution_hash` oder mit falschem Typ darin | `ValueError` |
+| Verfassungsobjekt passt nicht zum übergebenen `constitution_hash` | `ValueError` |
 | Verfassungsobjekt fehlt (Partition) | Sicherheits-Default, Vermerk `CONSTITUTION_UNAVAILABLE` |
-| Verfassungsobjekt passt nicht zum `constitution_hash` | Sicherheits-Default, Vermerk `CONSTITUTION_HASH_MISMATCH` |
 | beides passt | `irrevocable_predicates` der Verfassung, normalisiert |
 
-Die Asymmetrie ist beabsichtigt. Ein falsches **Genesis** ist eine falsche Zuordnung — der
-Zustand ist nicht unvollständig, sondern falsch, und dafür gibt es keine sichere
-Voreinstellung (Präzedenz: Scope-Fehlpaarung in Atom-Spec §5.4). Eine fehlende oder nicht
-passende **Verfassung** ist Teilwissen, und Teilwissen hat hier eine konservative Antwort:
-`{"obligation@1"}` und sonst nichts (Nukleus-Spec §5.2).
+Die Asymmetrie ist beabsichtigt. Eine **falsche Zuordnung** — Genesis passt nicht zum Scope,
+Objekt passt nicht zum Hash — ist kein unvollständiger, sondern ein falscher Zustand, und dafür
+gibt es keine sichere Voreinstellung (Präzedenz: Scope-Fehlpaarung in Atom-Spec §5.4). Beide
+Größen kommen vom Aufrufer; ihr Widerspruch ist einer im eigenen Aufruf und keine Lage der Welt
+(D167). Eine **fehlende** Verfassung dagegen ist Teilwissen, und Teilwissen hat hier eine
+konservative Antwort: `{"obligation@1"}` und sonst nichts (Nukleus-Spec §5.2).
+
+Ein Peer, der ein Objekt mit falschem Hash liefert, ist kein Sonderfall dieser Tabelle: wer ihn
+bemerkt, **hat die Verfassung nicht** und übergibt `None`.
 
 **Normalisierung** geschieht im Konstruktor von `NucleusPolicy`, nicht hier — Boden setzen
 (Nukleus-Spec §5.2), trust-gewährende Prädikate entfernen (Atom-Spec §5.4.3 b), `core`-Einträge
@@ -690,8 +700,9 @@ seinem Autor gefragt, nie nach seinem Zustand.
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
 *etwas* nicht stimmte, nicht *was*. `subject` ist in der Regel eine `claim_id`; wo kein Claim
 betroffen ist, ist es das Objekt, um das es geht: bei `CONSTITUTION_UNAVAILABLE` und
-`CONSTITUTION_HASH_MISMATCH` der im Genesis **deklarierte** `constitution_hash` — nicht der
-berechnete Hash des übergebenen Objekts, der mit jedem falschen Objekt wechselt, und nie `b""`. `findings` ist sortiert und dedupliziert. `ProfileFinding`
+`CONSTITUTION_UNAVAILABLE` der **übergebene** `constitution_hash` — nicht der berechnete Hash
+eines Objekts, das gar nicht vorliegt, und nie `b""`. `findings` ist sortiert und dedupliziert.
+`ProfileFinding`
 ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben Defekt bezeichnet wie in einer
 anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
 
@@ -704,7 +715,6 @@ anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht 
 | `INVALID_V_TYPE` | reservierter Key mit falschem Typ (§1.3) |
 | `SCOPE_MISMATCH` | zwei in Beziehung gesetzte Claims mit verschiedenem `N` (§1.4) |
 | `CONSTITUTION_UNAVAILABLE` | Verfassungsobjekt lokal unbekannt (§1.2) |
-| `CONSTITUTION_HASH_MISMATCH` | Verfassungsobjekt passt nicht zum `constitution_hash` (§1.2) |
 | `EXPIRING_OBLIGATION` | `obligation@1` mit `t_exp` (§3.3.1) |
 | `OBLIGATION_PENDING` | Obligation `pending` (§3.3.2) |
 | `OBLIGATION_AUTHOR_FLAGGED` | Autor der Obligation hat gegabelt (§3.3.2) |
