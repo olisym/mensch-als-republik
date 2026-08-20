@@ -5911,3 +5911,59 @@ bewegt.
 Beide Male hat das Werkzeug gemessen und gemeldet statt still zu reparieren, und beide Male war
 die gemeldete Abweichung der Befund. Die Zahl `20` für die Aufrufstellen von `resolve_policy` hat
 gestimmt; sie kam aus Dateien, die seit dem Abgleich niemand angefasst hatte.
+
+### D170 — Die Prompt-Verweise im Paketcode: fünf sind richtig, einer zeigt auf eine Spec-Lücke
+
+**Anlass.** Die offene Liste führte „`03-prompt.md`-Verweise im Paketcode — vier Stellen unter
+`mensch_als_republik/profiles/` und `policy.py`". Gemessen sind es **sieben**, und sie sind nicht
+eine Sorte.
+
+**Fünf nennen die Spec zuerst und den Prompt als zweiten Zeiger.** `profiles/credit.py`
+(`03 §3.3.2`), `profiles/verdict.py` (`03 §2.4.2`), `profiles/policy.py` (`03 §1.2`),
+`policy.py` (`00 §3`) und `tools/example_nucleus.py` (`01 §4`). Dort ist der Prompt Beleg, nicht
+Quelle; er zeigt, woher eine Entscheidung kam, und die normative Fassung steht davor. Diese fünf
+bleiben.
+
+**Einer ist ein reiner Zeigerfehler.** `profiles/payload.py` nennt ausschließlich
+`03-prompt.md §3.1`, obwohl `03 §1.3` die Kanonizitätsregel samt `NON_CANONICAL_V` im Volltext
+führt. Der Verweis wandert auf die Spec.
+
+**Einer ist kein Fehler, sondern der Beleg für eine Lücke.** `governance/findings.py` nennt
+`04-prompt.md §2`, und das ist die einzige Stelle, die es gibt: **`INV-04` kommt in
+`04-governance.md` nicht vor.** Die Invariantenreihe der Governance-Schicht lebt in
+`04-prompt.md`, `04-golden-anchors.md` und `04-abnahme.md` — also in erteilten Prompt- und
+Abnahmedateien, die per Konvention nicht mehr umgeschrieben werden (D157). Genau dafür ist
+Prüfregel 17 da: der Prompt ist normativ, **weil** Code auf ihn zeigt. Hier zeigt der Code auf
+ihn nicht aus Bequemlichkeit, sondern mangels Alternative.
+
+Das ist der eigentliche Fund dieser Runde und wird nicht hier behoben: die `INV-04`-Reihe in
+`04-governance.md` aufzunehmen ist eine Spec-Migration und ein eigener Zug. Sie berührt auch D117,
+wo zwei dieser Invarianten als schwächer beschrieben sind, als sie scheinen.
+
+**Nebenbefund: `dedupe_sort` existiert viermal.** `04b-korrektur-prompt.md` notierte drei; die
+vierte hat mein `00b`-Prompt beauftragt, ohne dass mir die Notiz präsent war. `profiles`,
+`governance` und die Nukleus-Schicht führen je eine für `Finding`, `policy.py` eine für
+`PolicyNote`. `trust/findings.py` hat **keine** und schreibt dieselbe Operation in
+`derive.py:80` inline aus: `tuple(sorted(set(a) | set(b) | set(c)))`.
+
+**Gemessen, nicht vermutet: kein Determinismusbruch.** `trust/graph.py` gibt
+`tuple(sorted(findings))` zurück — sortiert, aber nicht dedupliziert, was zunächst nach der Klasse
+`B-9` aus `04-abnahme.md` aussieht. Es ist keine: `sorted` ist unabhängig von der
+Eingabereihenfolge, und Duplikate sind dort strukturell unmöglich, weil jede
+`(author, subject)`-Gruppe im BFS genau einmal besucht wird (`seen` verhindert die
+Wiederaufnahme) und `kante_claim_id` je Gruppe eindeutig ist. Vier Schichten, vier Praxen, kein
+Schaden.
+
+**Beschluss.** Der Zeigerfehler in `payload.py` und die fehlende Zitatzeile für `dedupe_sort` in
+`mensch_als_republik/findings.py` sind zwei Docstrings; sie reiten beim nächsten Lauf mit, statt
+einen eigenen zu bekommen. Eine Zusammenlegung der vier `dedupe_sort` findet **nicht** statt: die
+vier Enums sind bewusst getrennt (D90), und eine gemeinsame Hilfsfunktion über vier
+`Finding`-Typen hinweg bräuchte entweder ein gemeinsames Protokoll oder `Any` — beides teurer als
+vier Zeilen, die je zwei Zeilen lang sind.
+
+**Zur Methode.** „Vier Stellen" stand seit Monaten in der offenen Liste und war schon beim
+Aufschreiben eine Zählung. Prüfregel 26 gilt auch für die eigene Merkliste: eine Zahl darin ist
+ein Messwert mit Verfallsdatum, kein Merkposten. Aufgefallen ist es nur, weil der Grep neu
+gelaufen ist — und ein zweiter Grep derselben Runde wäre beinahe untergegangen, weil eine Pipe
+auf `tail` seinen roten Status verschluckt hat. Dass `INV-04` nirgends in `04-governance.md`
+steht, war ein **leeres** Ergebnis, und leere Ergebnisse sind die, die eine Maskierung frisst.
