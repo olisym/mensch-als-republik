@@ -76,15 +76,19 @@ def test_predicate_match_version_is_part_of_name():
     assert is_irrevocable(f"nuc:{scope.hex()}/obligation@2", policy) is False
 
 
-def test_predicate_match_none_policy_never_irrevocable():
+def test_predicate_match_none_policy_protocol_irrevocable() -> None:
+    """Ohne Policy gilt PROTOCOL_IRREVOCABLE (00 §5.2, D156, D159)."""
     scope = scope_id("policy-match")
-    assert is_irrevocable(f"nuc:{scope.hex()}/obligation@1", None) is False
+    for name in PROTOCOL_IRREVOCABLE:
+        assert is_irrevocable(f"nuc:{scope.hex()}/{name}", None) is True
+    assert is_irrevocable(f"nuc:{scope.hex()}/vouch@1", None) is False
 
 
 # --- 5.3 Zustandsmaschine -----------------------------------------------------
 
 
-def test_c1_obligation_revoked_without_policy():
+def test_c1_obligation_active_without_policy() -> None:
+    """Obligation plus eigener Widerruf ohne Policy: active (D156, D159)."""
     alice = Identity("alice-c1")
     bob = Identity("bob-c1")
     scope = scope_id("c1")
@@ -93,6 +97,20 @@ def test_c1_obligation_revoked_without_policy():
     store = store_with(obl, rev)
 
     result = classify(obl, store, now=100, policy=None)
+
+    assert result.state == State.ACTIVE
+
+
+def test_non_boden_revoked_without_policy() -> None:
+    """Nicht-Bodenprädikat plus eigener Widerruf ohne Policy: revoked (D159)."""
+    alice = Identity("alice-d159")
+    bob = Identity("bob-d159")
+    scope = scope_id("d159-non-boden")
+    v = alice.vouch(bob, n=1, scope=scope, t=1, t_exp=5000)
+    rev = alice.revoke(v, t=2)
+    store = store_with(v, rev)
+
+    result = classify(v, store, now=100, policy=None)
 
     assert result.state == State.REVOKED
 
@@ -192,9 +210,9 @@ def test_c5_expired_beats_irrevocable():
     assert result.state == State.EXPIRED
 
 
-def test_c9_expired_and_revoked_without_policy_is_revoked():
-    """Ohne Policy greift der Widerruf-Zweig vor der Zeitprüfung (D76); Ist-Zustand, keine
-    Rangfolge aus Anhang B."""
+def test_c9_expired_and_revoked_without_policy_is_expired() -> None:
+    """Abgelaufen und widerrufen ohne Policy: expired — der Boden schützt, die Uhr nicht
+    (D156, D159, 01 §5.4.3 a)."""
     alice = Identity("alice-c9")
     bob = Identity("bob-c9")
     scope = scope_id("c9")
@@ -206,7 +224,7 @@ def test_c9_expired_and_revoked_without_policy_is_revoked():
 
     result = classify(obl, store, now=100, policy=None)
 
-    assert result.state == State.REVOKED
+    assert result.state == State.EXPIRED
 
 
 def test_c6_revoke_itself_stays_active():
