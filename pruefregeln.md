@@ -121,6 +121,15 @@ worden war; sie heißt `reached()`. Regel 14 trägt diesen Fall nicht — er ist
 sondern eine einzelne Angabe, und **gelesen** und **vollständig gelesen** sehen bei einem
 Funktionsrumpf gleich aus.
 
+**27. Ein Verweis im Prompt wird aufgeschlagen.** Bevor ein Zeiger auf eine Spec-Stelle in einen
+Prompt geht, wird die Stelle gelesen und geprüft, ob sie die Aussage trägt — auch und gerade
+dann, wenn der Zeiger aus dem eigenen Register stammt. `04-golden-anchors.md §8` hat vier
+Stationen durchlaufen: D170 nannte es als bessere Stelle, D171 ließ es stehen, der `00c`-Prompt
+zitierte es, das Werkzeug führte es aus. Keine Station hat die Datei aufgeschlagen; §8 ist die
+Invariantentabelle und sagt zu Vermerken nichts. Regel 22 trägt den Fall nicht — ein
+Abschnittsverweis ist kein Bezeichner: er lässt sich nicht aus der Quelle übernehmen, sondern
+nur gegen sie prüfen (D173).
+
 **16. Wirkungsprüfung.** Bevor einem Befund eine Folge zugeschrieben wird, wird der falsche Wert
 **bis zu seinem Verbraucher** verfolgt. Bei D135 war `Σ n_budget` ausgerechnet, aber nicht
 weiterverfolgt; der erste Wirkungsabsatz behauptete die Gegenrichtung, weil `derive.py` Schritt 5
@@ -172,7 +181,7 @@ sechs Aufrufstellen genannt, wo zehn standen; die vier fehlenden hatte `00b` sel
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
-D148, 24 und 25 aus D160, 26 aus D169.
+D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

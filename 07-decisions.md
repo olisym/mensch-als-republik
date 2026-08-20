@@ -6099,3 +6099,63 @@ Ein Eigenschaftstest, der dabei mitrötet, prüft den Wert und nicht die Norm.
 seit der Abnahme der Autorschaft. Dass daraus fünf Stellen und zwei Regeln wurden, ist Prüfregel
 8 — und dass sie beim ersten Anlauf nur drei waren, weil `00` und `04` nicht gegrept worden
 waren, ist derselbe Handgriff, einmal versäumt.
+
+
+### D173 — Abnahme `00c`: die Benennungsregel ist geprüft; Berichtigung zu D171
+
+**Was gebaut wurde.** `tests/trust/test_groups.py` hält den Wert fest — bei zwei aktiven Vouches
+derselben Gruppe mit gleichem `n` trägt die Kante die kleinste `claim_id`, und die Kandidatenmenge
+wird im Test aus dem Store abgeleitet, nicht getippt. `tests/trust/test_benennung.py` hält die
+Norm: zwei Welten, die sich allein im deklarierten `t` des zweiten Vouch unterscheiden, benennen
+verschiedene Claims und stimmen in allem übrigen byte-genau überein. 544 Tests, 14
+Eigenschaftstests.
+
+**Die Rücknahmeproben haben die beiden Prüfstücke getrennt**, und das war der Zweck des Laufs:
+
+| Eingriff | Vektor | Vertauschungsprobe |
+|---|---|---|
+| `groups.py`: `tied[0]` → `tied[-1]` | rot | grün |
+| `graph.py`: Kanten nach `claim_id` sortiert | grün | rot |
+
+Die erste Zeile verletzt den Wert, nicht die Norm: bei zwei Kandidaten ist `tied[-1]` weiterhin
+eine Auswahl aus der Kandidatenmenge und schlägt in beiden Welten um. Die zweite macht den Namen
+zur Eingabe in die Kantenreihenfolge. Wäre die Vertauschungsprobe in beiden Zeilen rot geworden,
+prüfte sie den Wert und nicht die Aussage — sie wäre dann wertlos gewesen, nicht doppelt gut.
+
+**Berichtigung zu D171: `04-golden-anchors.md §8` trägt die Aussage nicht.** D170 führte den
+Verweis auf `04-prompt.md §2` im Docstring von `governance/findings.py` als Zeigerfehler und
+nannte `04-golden-anchors.md §8` als bessere Stelle; D171 ließ das stehen. Gemessen: §8 ist die
+Invariantentabelle `INV-04.1` bis `INV-04.8` und sagt zu Vermerken nichts. Der Satz, um den es
+geht, steht in `04-prompt.md` Zeile 97, im Abschnitt `## 2. Modulschnitt`: `findings` ist überall
+sortiert und dedupliziert. Der ursprüngliche Zeiger war **richtig**; der Lauf hat ihn zuerst
+verschlechtert und im selben Branch zurückgenommen.
+
+**Die Bauform, die dabei sichtbar wurde.** Jedes `findings.py` zitiert die eigene Schicht:
+`trust/findings.py` auf `02a §5`, `profiles/findings.py` auf `03-profiles.md §6`,
+`governance/findings.py` auf `04-prompt.md §2`. Nur `mensch_als_republik/findings.py` hat keine
+Stelle in `00`, die den Satz trägt, und zitiert deshalb denselben schichtübergreifenden Satz —
+sichtbar als Ausnahme, nicht als Regel. Dass `00` die Form seiner Vermerke nirgends festhält,
+bleibt offen.
+
+**Woraus Prüfregel 27 kommt.** Der Verweis hat vier Stationen durchlaufen — D170, D171, den
+`00c`-Prompt und den Lauf —, und an keiner hat jemand die Datei aufgeschlagen. Prüfregel 8 hätte
+gereicht: die drei Nachbarn zitieren ihre eigene Schicht, `04-prompt.md §2` war für `governance/`
+genau das, und der vermeintliche Fehler war die Regel. Das ist derselbe Fehlertyp wie in D169 —
+eine Behauptung, die einmal richtig aussah und danach nicht mehr nachgemessen wurde —, nur ohne
+Verfallsdatum: dieser Verweis war nie richtig.
+
+**Zwei benannte Grenzen des Laufs.** Die Sondierwelt der Vertauschungsprobe erzeugt keine
+Vermerke: `Σ n_budget` bleibt bei allen drei Autoren innerhalb von `D`, also gibt es weder
+`OVERCOMMITTED_AUTHOR` noch `SUBGRANULAR_VOUCH`. Der Vermerksvergleich läuft damit leer, und die
+Ausnahmeliste — `Edge.claim_id` und das `subject` von `SUBGRANULAR_VOUCH` — ist nur zur Hälfte
+geprüft. Zweitens werden die Vermerke dort als Menge verglichen, nicht als Folge; Reihenfolge und
+Vielfachheit fallen weg. Bei leerer Menge folgenlos, bei einer künftigen Sondierwelt nicht mehr.
+
+**Was aus Auftrag A entfiel.** Der zweite Messpunkt für `SUBGRANULAR_VOUCH.subject` ist nicht
+gebaut worden: die Gleichstandsgruppe sitzt am Anker, dort gilt `C = C₀ = 16` und
+`cap = ⌊2·16/4⌋ = 8`, also nie null. Eine zweite, ankerferne Gruppe wäre Umbau gewesen. Das
+Werkzeug hat es gemeldet statt gebaut — richtig so; der Punkt gehört auf die offene Liste.
+
+**Zur Fehlerquelle.** Vierte Sitzung in Folge: der Supervisor war die Fehlerquelle, das Werkzeug
+nicht. Der Bericht war in jeder Zelle zutreffend, und der Defekt stand trotzdem im Diff — er
+stammte aus dem Prompt.
