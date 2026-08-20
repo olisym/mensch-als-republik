@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from mensch_als_republik.atom import claim_id
+from mensch_als_republik.index import classify_all
 from mensch_als_republik.trust import TrustFinding, TrustParams, trust
+from mensch_als_republik.trust.derive import derive
+from mensch_als_republik.verifier import State
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import T_EXP
@@ -214,3 +218,29 @@ def test_INV6_aggregation_is_idempotent() -> None:
 
     assert renewal_values == simple_values
     assert renewal_sim == simple_sim
+
+
+def test_tied_active_vouches_name_minimum_claim_id() -> None:
+    """Gleichstand: die Kante traegt min(claim_id) (01 §4.1, 02 §3.1, D172)."""
+    scope = scope_id("benennung-A")
+    alice = Identity("ben-A-alice")
+    bob = Identity("ben-A-bob")
+    v1 = alice.vouch(bob, n=2, scope=scope, t=1, t_exp=T_EXP)
+    v2 = alice.vouch(bob, n=2, scope=scope, t=2, t_exp=T_EXP)
+    store = store_with(v1, v2)
+    now = 1000
+    classified = classify_all(store, now)
+    id1, id2 = claim_id(v1), claim_id(v2)
+    assert classified[id1].state is State.ACTIVE
+    assert classified[id2].state is State.ACTIVE
+    candidates = {id1, id2}
+    der = derive(
+        store, anchors=frozenset({alice.pub}), scope=scope, now=now,
+        params=PARAMS, include_flagged=True,
+    )
+    group_edges = [
+        e for e in der.bfs.edges
+        if e.author == alice.pub and e.subject == bob.pub
+    ]
+    assert len(group_edges) == 1
+    assert group_edges[0].claim_id == min(candidates)

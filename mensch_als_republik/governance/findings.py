@@ -38,5 +38,5 @@ class Finding:
 
 
 def dedupe_sort(findings: list[Finding] | tuple[Finding, ...]) -> tuple[Finding, ...]:
-    """Findings sortiert und dedupliziert (04-prompt.md §2)."""
+    """Findings sortiert und dedupliziert (04-golden-anchors.md §8)."""
     return tuple(sorted(set(findings)))
