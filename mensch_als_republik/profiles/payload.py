@@ -7,7 +7,7 @@ from mensch_als_republik.profiles.findings import ProfileFinding
 
 
 def read_v(v: bytes | None) -> tuple[dict | None, tuple[ProfileFinding, ...]]:
-    """Dekodiert ``v`` und prüft Kanonizität; Subjekt setzt der Aufrufer (03-prompt.md §3.1).
+    """Dekodiert ``v`` und prüft Kanonizität; Subjekt setzt der Aufrufer (03-profiles.md §1.3).
 
     Reihenfolge ist normativ (D83): ``decode`` und ``is_canonical`` im selben ``try``.
     """
