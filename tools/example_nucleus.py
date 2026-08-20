@@ -507,7 +507,7 @@ def check_anchor_resolution(ex: ExampleNucleus) -> None:
         constitution_hash=ex.constitution_hash_2,
         constitution_obj=ex.constitution_2,
         now=NOW,
-        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
+        policy=_policy(ex, ex.constitution_hash_2, ex.constitution_2),
     )
     if r2.keys != expected or r2.findings != ():
         raise AssertionError(f"lage 2: keys={r2.keys!r} findings={r2.findings!r}")
