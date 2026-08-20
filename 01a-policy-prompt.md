@@ -116,6 +116,11 @@ das ausschließt. Ein lauter Fehler ist hier besser als ein leiser. Für `core/*
 Kein Override. Jeder Widerruf und jedes Supersede wirken wie bisher. Das ist der Pfad, den alle
 bestehenden Aufrufer nehmen.
 
+> **Nachtrag (D156, D159).** Abgelöst. Ohne Policy gilt seit D156 der Protokoll-Boden aus
+> `00 §5.2`; ein Widerruf auf ein Bodenprädikat wirkt nicht. Der Absatz oben war eine
+> Migrationsaussage aus einem Schritt ohne Resolver (§4) und wird nicht nachgezogen. Betroffen
+> sind die Vektoren `M-5`, `C-1` und `C-9`.
+
 ---
 
 ## 4. Ausdrücklich nicht in diesem Schritt
@@ -154,9 +159,10 @@ zurück.
 | P-5 | `{vouch@1, foo@1}` | `{obligation@1, foo@1}` | `(UNSAFE_…,)` |
 | P-6 | `{revoke@1, supersede@1}` | `{obligation@1}` | `()` |
 
-> **Nachtrag (D153, D157).** Der Boden ist seit D153 `{obligation@1, rotate-key@1,
-> rotate-ack@1}`. Die Tabelle oben zeigt den Stand bei Erteilung dieses Auftrags und wird nicht
-> nachgezogen; die lebenden Erwartungswerte stehen in `03-golden-anchors.md`.
+> **Nachtrag (D153, D157, D159).** Der Boden ist seit D153 `{obligation@1, rotate-key@1,
+> rotate-ack@1}` und gilt seit D156 auch ohne Policy. Die Tabellen dieses Abschnitts zeigen den
+> Stand bei Erteilung des Auftrags und werden nicht nachgezogen; die lebenden Erwartungswerte
+> stehen in `03-golden-anchors.md`, und `M-5`, `C-1` und `C-9` sind durch D159 abgelöst.
 
 **P-3 ist der D70-Vektor** und der einzige, der die alte Fassung von `00 §5.2` von der neuen
 trennt: nach altem Wortlaut griff der Default nur bei Schweigen, `obligation@1` wäre hier

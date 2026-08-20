@@ -5421,3 +5421,55 @@ Dass ausgerechnet D63s Quittung die Form trifft, ist kein Zufall — D152 hat ih
 übernommen, und zwei Prädikate mit gleichem Muster sind ohne Namensprüfung ununterscheidbar.
 
 **Für `00a`:** Testlage 6 wird auf `receipt@1` umgebaut. Der Widerrufsvektor entfällt ersatzlos.
+
+### D159 — M-5, C-1 und C-9 aus `01a` sind abgelöst; D156 trägt aus `00 §5.2`, nicht aus `§5.4.1`
+
+**Zwei Dinge auf einmal.** Der `00a`-Nachtrag (`11658b4`) hat drei Bestandstests rot gemacht,
+und keiner davon ist ein Kollateralschaden: alle drei schreiben aus, dass ohne Policy ein
+Widerruf auf eine `obligation@1` wirkt.
+
+| Vektor | Erwartung aus `01a` | unter D156 |
+|---|---|---|
+| `M-5` | `policy = None` ist nie irrevocable | Bodenprädikate sind es |
+| `C-1` | Obligation + eigener Revoke, `policy=None` → `revoked` | `active` |
+| `C-9` | abgelaufen und widerrufen ohne Policy → `revoked` | `expired` |
+
+**Die Begründung von D156 war zu stark und wird berichtigt.** D156 stützte sich auf `01 §5.4.1`
+(„fehlt das Verfassungsobjekt lokal, gilt der Sicherheits-Default"). Der Satz regelt den Fall
+eines **fehlenden Objekts**, nicht den eines Aufrufers, der die Auflösung gar nicht beschritten
+hat. Das ist nicht dasselbe, und die Gleichsetzung war ein Fehler.
+
+**Der Beschluss trägt aus `00 §5.2`.** Die Menge heißt dort **Protokoll**-Default. Eine Menge,
+die per Definition von keiner Verfassung abhängt, hinter einem Verfassungsparameter zu
+verstecken, ist die Fehlform — unabhängig davon, was `§5.4.1` über Partitionen sagt. `P-D` ist
+weiterhin ein Beleg, aber kein Beweis.
+
+**`01a §3.3` hat die Frage nie sicherheitsseitig entschieden.** Der Wortlaut: kein Override, alle
+Widerrufe wirken wie bisher, „das ist der Pfad, den alle bestehenden Aufrufer nehmen" — dazu die
+Eingangszeile des Prompts, die Bestandstests grün halten wollte, weil `policy=None` „exakt die
+heutige Semantik" sei. Das ist eine **Migrationsaussage** aus einem Schritt, in dem der Resolver
+noch fehlte (`01a §4`: der Resolver kommt mit `03`, D72). Seit D72 gibt es ihn; M-5 und C-1
+konservieren einen Übergangszustand, dessen Grund entfallen ist.
+
+**C-1 ist der schärfste Beleg gegen sich selbst:** Obligation plus eigener Widerruf, ohne Policy,
+Ergebnis `revoked`. Das Schulden-Lösch-Loch aus D57, als Vektor festgeschrieben.
+
+**Verworfen — `policy=None` bleibt override-frei.** Dann müsste `resolve_current_key` eine Policy
+verlangen, der Aufrufer müsste `resolve_policy` bemühen, und die Autoritätsauflösung hinge an der
+Verfügbarkeit einer Verfassung — obwohl D153 die Rotationsprädikate gerade als
+verfassungsunabhängigen Protokoll-Default gesetzt hat. Das zöge `00a` in genau das Layer 03/04,
+das D151 herausgehalten hat.
+
+**Beschluss.** Die drei Tests werden abgelöst und umbenannt; `..._never_irrevocable` kodiert die
+alte Norm im Namen. Nach der Trennung aus D157 bleiben die Vektortabellen in
+`01a-policy-prompt.md` unverändert stehen und bekommen eine Hinweiszeile: erteilte Aufträge sind
+Belege, keine lebenden Erwartungswerte.
+
+**Trennschärfe.** Die neuen Tests müssen belegen, dass ohne Policy **nicht** jeder Widerruf
+wirkungslos ist, sondern nur der auf Bodenprädikate. Ohne einen Gegenvektor mit einem
+Nicht-Bodenprädikat verkommt die Aussage zu „ohne Policy wirkt kein Widerruf", und das wäre
+falsch in die andere Richtung.
+
+**Zweite berichtigte Begründung in dieser Sitzung** (nach D158). Beide Male trug der Beschluss
+und die genannte Stelle nicht. Ein Beschluss, dessen Begründung erst beim Widerspruch geprüft
+wird, ist so weit gehärtet wie der erste Widerspruch reicht.
