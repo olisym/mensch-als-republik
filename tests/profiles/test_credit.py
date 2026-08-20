@@ -15,6 +15,8 @@ from tests.helpers import store_with
 from .fixtures import (
     CONSTITUTION_A,
     CONSTITUTION_B,
+    CONSTITUTION_HASH_A,
+    CONSTITUTION_HASH_B,
     GENESIS_A,
     GENESIS_B,
     N_A,
@@ -28,13 +30,19 @@ from .fixtures import (
 
 def _policy_a():
     return resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
 
 
 def _policy_b():
     return resolve_policy(
-        scope=N_B, genesis_obj=GENESIS_B, constitution_obj=CONSTITUTION_B
+        scope=N_B,
+        genesis_obj=GENESIS_B,
+        constitution_hash=CONSTITUTION_HASH_B,
+        constitution_obj=CONSTITUTION_B,
     ).policy
 
 

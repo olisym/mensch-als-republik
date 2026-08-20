@@ -22,7 +22,7 @@ from mensch_als_republik.governance.tally import threshold_class
 from mensch_als_republik.findings import Finding, NucleusFinding
 from mensch_als_republik.keys import resolve_authorized_keys
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.profiles import MembershipState, membership
+from mensch_als_republik.profiles import MembershipState, membership, resolve_policy
 from mensch_als_republik.trust.derive import derive
 from mensch_als_republik.trust.findings import TrustFinding
 from mensch_als_republik.trust.graph import capacity
@@ -313,10 +313,16 @@ def build() -> ExampleNucleus:
     )
 
 
-def _policy(ex: ExampleNucleus) -> NucleusPolicy:
-    return NucleusPolicy(
-        ex.N_gov, declared=ex.constitution_gov["irrevocable_predicates"]
+def _policy(ex: ExampleNucleus, constitution_h: bytes, obj: dict) -> NucleusPolicy:
+    r = resolve_policy(
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=constitution_h,
+        constitution_obj=obj,
     )
+    if r.findings != ():
+        raise AssertionError(f"resolve_policy findings: {r.findings!r}")
+    return r.policy
 
 
 def _vote(identity: _Author, ex: ExampleNucleus, *, choice: int, t: int) -> Claim:
@@ -349,7 +355,7 @@ def decide_votes(ex: ExampleNucleus, votes: list[Claim]) -> TallyState:
         target_constitution_obj=ex.constitution_2,
         known_proposals={ex.proposal.proposal_hash: ex.proposal},
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     ).state
 
 
@@ -465,7 +471,7 @@ def _member(ex: ExampleNucleus, store, subject: bytes, constitution_h: bytes, ob
         constitution_hash=constitution_h,
         constitution_obj=obj,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, constitution_h, obj),
     )
     return membership(
         store,
@@ -475,7 +481,7 @@ def _member(ex: ExampleNucleus, store, subject: bytes, constitution_h: bytes, ob
         now=NOW,
         authorized_keys=resolved.keys,
         constitution_obj=obj,
-        policy=_policy(ex),
+        policy=_policy(ex, constitution_h, obj),
     )
 
 
@@ -490,7 +496,7 @@ def check_anchor_resolution(ex: ExampleNucleus) -> None:
         constitution_hash=ex.constitution_hash_gov,
         constitution_obj=ex.constitution_gov,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if r1.keys != expected or r1.findings != ():
         raise AssertionError(f"lage 1: keys={r1.keys!r} findings={r1.findings!r}")
@@ -501,7 +507,7 @@ def check_anchor_resolution(ex: ExampleNucleus) -> None:
         constitution_hash=ex.constitution_hash_2,
         constitution_obj=ex.constitution_2,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if r2.keys != expected or r2.findings != ():
         raise AssertionError(f"lage 2: keys={r2.keys!r} findings={r2.findings!r}")
@@ -512,7 +518,7 @@ def check_anchor_resolution(ex: ExampleNucleus) -> None:
         constitution_hash=ex.constitution_hash_gov,
         constitution_obj=None,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if r3.keys != expected:
         raise AssertionError(f"lage 3: keys={r3.keys!r}")
@@ -560,7 +566,7 @@ def check_ratification(ex: ExampleNucleus) -> None:
         target_constitution_obj=ex.constitution_2,
         known_proposals={ex.proposal.proposal_hash: ex.proposal},
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if tally.state is not TallyState.PASSED:
         raise AssertionError(f"ratification tally: {tally.state}")
@@ -571,7 +577,7 @@ def check_ratification(ex: ExampleNucleus) -> None:
         proposal=ex.proposal,
         tally=tally,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if first.next_epoch is None:
         raise AssertionError("ANNA ratify produced no epoch")
@@ -592,7 +598,7 @@ def check_ratification(ex: ExampleNucleus) -> None:
         proposal=ex.proposal,
         tally=tally,
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if second.next_epoch is None:
         raise AssertionError("CHRIS ratify produced no epoch")
@@ -773,7 +779,7 @@ def check_malformed_appended_dora(ex: ExampleNucleus) -> None:
         target_constitution_obj=ex.constitution_2,
         known_proposals={proposal.proposal_hash: proposal},
         now=NOW,
-        policy=_policy(ex),
+        policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
     if tally.state is not TallyState.UNEVALUABLE:
         raise AssertionError(f"appended DORA: {tally.state}")

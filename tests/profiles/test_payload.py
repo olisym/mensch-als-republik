@@ -15,6 +15,7 @@ from tests.helpers import store_with
 
 from .fixtures import (
     CONSTITUTION_A,
+    CONSTITUTION_HASH_A,
     GENESIS_A,
     N_A,
     NOW,
@@ -29,7 +30,10 @@ from .fixtures import (
 def _settle_with_receipt_v(v):
     alice, bob = fresh_alice(), fresh_bob()
     pol = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
     O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A)
     R = bob.claim(p=nuc(N_A, "receipt"), J=(2, claim_id(O)), t=2, v=v, N=N_A)
@@ -78,7 +82,10 @@ def test_TV_R2() -> None:
 def test_TV_T1() -> None:
     alice, bob = fresh_alice(), fresh_bob()
     pol = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
     v = bytes.fromhex("a1006434373131")
     O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, v=v, N=N_A)

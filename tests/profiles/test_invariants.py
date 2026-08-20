@@ -29,6 +29,8 @@ from .fixtures import (
     CONSTITUTION_B,
     CONSTITUTION_C,
     CONSTITUTION_HASH_A,
+    CONSTITUTION_HASH_B,
+    CONSTITUTION_HASH_C,
     GENESIS_A,
     GENESIS_B,
     GENESIS_C,
@@ -45,42 +47,51 @@ from .fixtures import (
 
 def test_PR_INV_1() -> None:
     cases = [
-        (N_A, GENESIS_A, CONSTITUTION_A),
-        (N_B, GENESIS_B, CONSTITUTION_B),
-        (N_C, GENESIS_C, CONSTITUTION_C),
-        (N_A, GENESIS_A, None),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, CONSTITUTION_A),
+        (N_B, GENESIS_B, CONSTITUTION_HASH_B, CONSTITUTION_B),
+        (N_C, GENESIS_C, CONSTITUTION_HASH_C, CONSTITUTION_C),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, None),
     ]
-    for scope, genesis, constitution in cases:
+    for scope, genesis, ch, constitution in cases:
         r = resolve_policy(
-            scope=scope, genesis_obj=genesis, constitution_obj=constitution
+            scope=scope,
+            genesis_obj=genesis,
+            constitution_hash=ch,
+            constitution_obj=constitution,
         )
         assert "obligation@1" in r.policy.irrevocable
 
 
 def test_PR_INV_2() -> None:
     cases = [
-        (N_A, GENESIS_A, CONSTITUTION_A),
-        (N_B, GENESIS_B, CONSTITUTION_B),
-        (N_C, GENESIS_C, CONSTITUTION_C),
-        (N_A, GENESIS_A, None),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, CONSTITUTION_A),
+        (N_B, GENESIS_B, CONSTITUTION_HASH_B, CONSTITUTION_B),
+        (N_C, GENESIS_C, CONSTITUTION_HASH_C, CONSTITUTION_C),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, None),
     ]
-    for scope, genesis, constitution in cases:
+    for scope, genesis, ch, constitution in cases:
         r = resolve_policy(
-            scope=scope, genesis_obj=genesis, constitution_obj=constitution
+            scope=scope,
+            genesis_obj=genesis,
+            constitution_hash=ch,
+            constitution_obj=constitution,
         )
         assert r.policy.irrevocable & TRUST_GRANTING == frozenset()
 
 
 def test_PR_INV_3() -> None:
     cases = [
-        (N_A, GENESIS_A, CONSTITUTION_A),
-        (N_B, GENESIS_B, CONSTITUTION_B),
-        (N_C, GENESIS_C, CONSTITUTION_C),
-        (N_A, GENESIS_A, None),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, CONSTITUTION_A),
+        (N_B, GENESIS_B, CONSTITUTION_HASH_B, CONSTITUTION_B),
+        (N_C, GENESIS_C, CONSTITUTION_HASH_C, CONSTITUTION_C),
+        (N_A, GENESIS_A, CONSTITUTION_HASH_A, None),
     ]
-    for scope, genesis, constitution in cases:
+    for scope, genesis, ch, constitution in cases:
         r = resolve_policy(
-            scope=scope, genesis_obj=genesis, constitution_obj=constitution
+            scope=scope,
+            genesis_obj=genesis,
+            constitution_hash=ch,
+            constitution_obj=constitution,
         )
         for pred in r.policy.irrevocable:
             assert not pred.startswith("core")
@@ -90,11 +101,17 @@ def test_PR_INV_3() -> None:
 def test_PR_INV_4() -> None:
     with pytest.raises(ValueError):
         resolve_policy(
-            scope=N_A, genesis_obj=GENESIS_B, constitution_obj=CONSTITUTION_B
+            scope=N_A,
+            genesis_obj=GENESIS_B,
+            constitution_hash=CONSTITUTION_HASH_B,
+            constitution_obj=CONSTITUTION_B,
         )
 
     pol_b = resolve_policy(
-        scope=N_B, genesis_obj=GENESIS_B, constitution_obj=CONSTITUTION_B
+        scope=N_B,
+        genesis_obj=GENESIS_B,
+        constitution_hash=CONSTITUTION_HASH_B,
+        constitution_obj=CONSTITUTION_B,
     ).policy
     alice, bob = fresh_alice(), fresh_bob()
     O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A)
@@ -201,7 +218,10 @@ def test_PR_INV_6() -> None:
 def test_PR_INV_7() -> None:
     alice, bob = fresh_alice(), fresh_bob()
     pol = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
     O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A)
     R = bob.claim(
@@ -246,7 +266,10 @@ def test_PR_INV_8() -> None:
 
 def test_PR_INV_9() -> None:
     pol_a = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     )
     assert pol_a.findings == tuple(sorted(set(pol_a.findings)))
 
@@ -326,7 +349,10 @@ def test_PR_INV_12() -> None:
     ]
     store = store_with(*claims)
     pol = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
     classify_all(store, NOW, pol)
 
@@ -337,7 +363,10 @@ def test_PR_INV_13() -> None:
 
     alice, bob = fresh_alice(), fresh_bob()
     pol = resolve_policy(
-        scope=N_A, genesis_obj=GENESIS_A, constitution_obj=CONSTITUTION_A
+        scope=N_A,
+        genesis_obj=GENESIS_A,
+        constitution_hash=CONSTITUTION_HASH_A,
+        constitution_obj=CONSTITUTION_A,
     ).policy
     O = alice.claim(p=nuc(N_A, "obligation"), J=(1, bob.pub), t=1, N=N_A)
     store = store_with(O)
