@@ -178,7 +178,8 @@ Was hier steht, wird **gemeldet, nicht gebaut**.
 
 ## 5. Abschluss
 
-Ein Commit auf `00b-anker`. Im Bericht: `git diff --stat` gegen den Branchpunkt (`git merge-base main 00b-anker`), die Testzahlen, die
+Ein Commit auf `00b-anker`. Im Bericht: `git diff --stat` gegen den Branchpunkt
+(`git merge-base main 00b-anker`), die Testzahlen, die
 vier Proben, und alles, was nach Abschnitt 3 gemeldet statt gebaut werden musste.
 
 Rückfragen gehen an den Supervisor, nicht ins eigene Fenster. Sie sind Kandidaten für
