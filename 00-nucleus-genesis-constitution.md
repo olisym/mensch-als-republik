@@ -290,6 +290,18 @@ autorisiert. Das ist die sichere Richtung, dieselbe wie in §6.4 und §9; die Ge
 eine Governance, die absetzen will, ins Leere laufen. Der Preis ist, dass eine Verfassung den
 Nukleus per Amendment handlungsunfähig machen kann. Das ist ausdrückbar und wird nicht verhindert.
 
+**Wohlgeformtheit: der defekte Eintrag fällt weg, das Feld nicht (D163).** Wohlgeformt ist ein
+Eintrag, der `bytes` der Länge 32 ist. Ein formwidriger Eintrag wird verworfen und vermerkt
+(`MALFORMED_NUCLEUS_KEY`, ein Vermerk je Verfassung, Subjekt der `constitution_hash`); die übrigen
+bleiben wirksam. Duplikate fallen wortlos zusammen, weil `nucleus_keys` eine Menge bezeichnet und
+keine Auszählungsgrundlage ist — anders als `participants` in Gov-Spec §1.1, wo ein zu kleiner
+Nenner jede Schwelle senkt. Eine Sortierpflicht gibt es aus demselben Grund nicht.
+
+**Ein gesetztes Feld fällt nie auf `genesis.root_keys` zurück (D163).** Sind alle Einträge
+formwidrig, oder ist der Wert gar keine Liste, ist der Anker die leere Menge. Die Gegenrichtung
+wäre die Absetzungs-Umgehung: ein einziges formwidriges Byte holte die abgesetzten Wurzelschlüssel
+zurück, und die Deklaration höbe durch ihre eigene Fehlerhaftigkeit den Schutz auf, den sie setzt.
+
 ---
 
 ## 6. Schlüssel-Autorität & Rotation (DF-0-Folgeentscheidung: „Beides")
@@ -387,15 +399,22 @@ ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
 ### 6.4 `resolve_current_key(N)` — der autoritative Auflösungsalgorithmus
 
 ```
-1.  Anker A bestimmen: nennt die Verfassung der jüngsten ratifizierten Epoche (Gov-Spec
-    §1.1) ein Feld nucleus_keys (§5.4), ist A diese Menge; sonst ist A = genesis.root_keys
-    aus dem Objekt, dessen Hash == N.
+1.  Anker A bestimmen. Die Verfassung der jüngsten ratifizierten Epoche (Gov-Spec §1.1)
+    wird übergeben, nicht aus der Epochenkette hergeleitet (D161). Drei Lagen:
+    a) Sie liegt vor und nennt ein Feld nucleus_keys (§5.4): A ist die Menge ihrer
+       wohlgeformten Einträge, auch wenn diese leer ist (D163).
+    b) Sie liegt vor und nennt kein Feld nucleus_keys: A = genesis.root_keys aus dem
+       Objekt, dessen Hash == N.
+    c) Sie liegt lokal nicht vor: A = genesis.root_keys, mit Vermerk
+       CONSTITUTION_UNAVAILABLE (D164). Das ist die unsichere Richtung, nie still.
 2.  Für jedes k aus A der Kette der vollständigen Rotationen (§6.1) ab k folgen, bis zu
     dem Schlüssel, der keinen vollständigen Nachfolger hat. Dieser Schlüssel ist der
     Kopf der Kette von k.
-3.  Ist die Kette von k an einem Punkt equivoziert (§6.3) und löst keine Änderung von
-    nucleus_keys sie auf, liefert k keinen Kopf; Nukleus-Akte beider konkurrierender
-    Schlüssel gelten als nicht autorisiert (Detect-not-Prevent, Atom-Spec §A3).
+3.  Hat k irgendeinen Claim im Zustand EQUIVOCATION_FLAGGED — an beliebiger Stelle
+    seiner Autorenkette, nicht nur an einer Rotation (D162) —, liefert k keinen Kopf;
+    Nukleus-Akte beider konkurrierender Schlüssel gelten als nicht autorisiert
+    (Detect-not-Prevent, Atom-Spec §A3). Eine Änderung von nucleus_keys löst den Fall
+    nicht auf, indem sie denselben Schlüssel erneut nennt, sondern einen anderen.
 4.  Rückgabe ist die Vereinigung der Köpfe aller k aus A.
 ```
 Der Rückgabewert ist die Menge der aktuell autorisierten Schlüssel. Jeder Verifizierer rechnet das
@@ -433,9 +452,11 @@ Lücke.
 `authorized_keys` aus `03 §4` mit dem Ergebnis; wer eine veraltete Menge übergibt, bekommt ein
 veraltetes Ergebnis. Der Anschluss gehört zu `00b`, weil dort ohnehin der Anker hergeleitet wird.
 
-**Ebenfalls offen (D160).** Die Auflösung erkennt Equivocation nur an den **Rotationen** eines
-Schlüssels. Ob eine an anderer Stelle gespaltene Autorenkette die Wurzel ebenso entwerten soll —
-Schritt 3 sagt „die Kette", §6.3 definiert nur den Rotationsfall — wird in `00b` entschieden.
+**Jede Spaltung entwertet, nicht nur die an einer Rotation (D162).** Der Diebstahl zeigt sich
+zuerst an gewöhnlichen Akten und erst spät an einer doppelten Rotation; eine Regel, die nur
+Rotationen ansieht, deckt den auffälligen Angreifer und lässt den geduldigen durch. Der Preis ist,
+dass ein Client, der einmal zwei Claims auf dieselbe Spitze schreibt, die Autorität seines Nukleus
+kostet — mit demselben Ausweg §6.2, den auch der Diebstahl hat.
 
 ### 6.5 FROST-Re-Keying
 

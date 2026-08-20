@@ -5522,3 +5522,143 @@ geprüfte.
 Der Anlass für 25 war im letzten Sitzungsstart als offen geführt: „ob das eine eigene Regel
 braucht, ist beim nächsten Vorfall zu entscheiden — zweimal derselbe Fehlertyp war bisher das
 Kriterium". Er trat zweimal in derselben Sitzung ein.
+
+### D161 — Zuschnitt `00b`: der Anker wird hergeleitet, die Epochenkette nicht
+
+**Befund.** Keine Funktion liefert die jüngste ratifizierte Epoche. `verify_ratification` prüft
+**einen** Schritt und bekommt `epoch`, `proposal` und `tally` vom Aufrufer; die Kette baut
+ausschließlich `tools/example_nucleus.py` von Hand (`Epoch(scope=…, index=1, …)`, dann `index=2`).
+`00 §6.4` Schritt 1 sagt „die Verfassung der jüngsten ratifizierten Epoche" und versprach damit
+eine Herleitung, die nirgends stattfindet.
+
+**Beschluss.** Die Verfassung wird übergeben, nicht hergeleitet. Der Herleitungsort ist
+
+```
+resolve_authorized_keys(store, *, scope, genesis_obj, constitution_hash,
+                        constitution_obj=None, now, policy=None)
+    -> AnchorResolution(keys: frozenset[bytes], findings: tuple[Finding, ...])
+```
+
+in `mensch_als_republik/keys.py`. Er rechnet Schritt 1 und reicht das Ergebnis als `anchor_keys`
+an `resolve_current_key` weiter, das unverändert bleibt (D151). `scope` wird gegen
+`SHA-256(DOM_NUC_GEN || cbor(genesis_obj))` nachgerechnet, `constitution_hash` gegen
+`H(constitution_obj)`, sofern das Objekt übergeben wird; beide Abweichungen sind `ValueError`,
+kein Vermerk — ein fehlzugeordnetes Objekt ist ein Aufruferfehler und keine Lage der Welt
+(D82, D92, D109).
+
+**Begründung.** `03 §4` hat denselben Fork bereits entschieden und begründet: „`constitution_hash`
+ist Parameter, keine Auflösung … welche Version gilt, entscheidet die Ratifizierung … eine
+Governance-Frage. Diese Schicht vergleicht byte-weise." `resolve_policy` und `membership` tragen
+dieselbe Naht in derselben Signaturform. Eine dritte Bauform an derselben Stelle wäre genau die
+Asymmetrie, nach der Prüfregel 8 sucht.
+
+**Warum `constitution_hash` neben `constitution_obj` steht.** `genesis[4]` trägt die Verfassung
+der **ersten** Epoche; nach einem Amendment weicht die geltende Fassung zulässig davon ab, und es
+gibt lokal nichts, wogegen sie zu prüfen wäre. Der Hash ist deshalb Parameter und nicht aus dem
+Genesis ableitbar. Er trägt zugleich das Subjekt des Vermerks aus D164 — dieselbe Rolle wie
+`declared_hash` in `resolve_policy`.
+
+**`membership` behält seinen Parameter.** `authorized_keys` intern aufzulösen bräche die normative
+Signatur in `03 §4`; stünde beides im selben Prompt, wäre es ein unerfüllbares Nicht-Ziel nach
+Prüfregel 24.
+
+**Benannte Grenze: die Epochenkette bleibt ungebaut.** Wer `resolve_authorized_keys` eine veraltete
+Verfassung übergibt, bekommt einen veralteten Anker. Das ist dieselbe Grenze, die `03 §4` für
+`constitution_hash` schon trägt, und sie wandert mit dieser Entscheidung nicht weiter nach unten.
+
+**Was „angeschlossen" hier heißen kann.** Im Paket ruft **niemand** `membership` auf; gegrept sind
+die Aufrufer `tests/profiles/test_membership.py`, `tests/profiles/test_invariants.py`,
+`tests/governance/test_vectors.py`, `tools/example_nucleus.py` (Zeilen 459 und 658) und
+`tools/sim/szenario.py` (Zeile 221). Das Paket ist eine Bibliothek von Auflösern, komponiert wird
+am Rand. Angeschlossen heißt deshalb: es gibt genau **eine** Stelle, die Schritt 1 rechnet, und der
+Beispielnukleus benutzt sie. Dort steht heute `authorized_keys=frozenset()`, und die Mitgliedschaft
+läuft über `participants`; die hergeleitete Menge ist `{BRUNO, ANNA}` aus `genesis_gov[1]` und
+ändert am Zustand nichts. Die Wirkung liegt in der **Prüfung** der hergeleiteten Menge, nicht im
+Durchreichen — ein falscher Schritt 1 fiele an der Mitgliedschaft dieses Nukleus nicht auf, weil
+er kein `grant-membership@1` führt.
+
+### D162 — Eine Spaltung der Autorenkette an beliebiger Stelle entwertet die Wurzel
+
+**Messung.** `_is_in_equivocation_pair` prüft **den Claim** — Autor und `h_prev` —, nicht den
+Autor. `_predecessor_known_and_valid` prüft nur, ob der Vorgänger vorliegt und denselben Autor
+hat; ein geflaggter Vorgänger vererbt nichts. Nachfahren einer Spaltung sind `ACTIVE`. Damit
+behält heute ein nachweislich verdoppelter Nukleusschlüssel seinen Kopf, und jedes
+`grant-membership@1`, das er signiert, ist autorisiert.
+
+**Beschluss.** Hat `k` irgendeinen Claim im Zustand `EQUIVOCATION_FLAGGED`, liefert `k` keinen
+Kopf. Ohne Einschränkung auf Rotationen und ohne Einschränkung auf den Scope: die Autorenkette
+ist identitäts- und nicht scopegebunden, eine Spaltung ist die Spaltung dieser Identität.
+
+**Begründung.** `§6.3` unterstellt, der Diebstahl zeige sich an einer doppelten Rotation. Das ist
+der **späte** Fall. Ein Dieb benutzt den Schlüssel für Akte, lange bevor er um eine Rotation
+rennt, und solange beide Halter schreiben, entstehen Paare überall in der Kette. Die Regel „nur
+Rotationen" deckt den auffälligen Angreifer und lässt den geduldigen durch.
+
+**Was nicht trägt.** „D155 fängt das ohnehin" gilt nur, wenn zwei Rotationen auf verschiedenen
+Zweigen liegen und dadurch unvergleichbar werden. Bei **einer** Rotation und einer Spaltung
+anderswo greift D155 nicht — und das ist genau der Fall, um den es geht (Prüfregel 25).
+
+**Preis.** Ein ehrlicher Nukleus, dessen Client einmal zwei Claims auf dieselbe Spitze schreibt,
+verliert seine Autorität. Der Ausweg ist `§6.2`, derselbe wie beim Diebstahl, und die
+Governance-Rotation braucht den Nukleusschlüssel nicht: `ratify@1` kommt aus `P`. Der Preis ist
+also ein bereits vorhandener, erreichbarer Pfad und kein neuer Schaden.
+
+**Richtung.** Monoton in der sicheren Richtung: mehr Wissen nimmt Autorität, gibt keine. Dieselbe
+Klasse wie D154.
+
+**Umsetzung.** Die neue Prüfung subsumiert die bisherige — eine equivozierte Rotation ist ein
+Claim ihres Autors. Eine Änderung von `nucleus_keys` löst den Fall nicht dadurch auf, dass sie
+denselben Schlüssel erneut nennt; sie löst ihn, indem sie einen anderen nennt.
+
+**Literaturprüfung (Prüfregel 15).** Die Fork-Regel von Secure Scuttlebutt wäre der Präzedenzfall.
+Eine Suche hat sie nicht belegt; sie wird deshalb nicht als Begründung geführt.
+
+### D163 — Ein gesetztes `nucleus_keys` fällt nie auf den Genesis zurück
+
+**Frage.** Was tut ein Eintrag in `nucleus_keys`, der kein `bytes32` ist.
+
+**Der Bestand kennt beide Muster.** `irrevocable_predicates` verwirft eintragsweise und behält den
+Rest (D95); `participants` in `profiles/membership.py` verwirft bei einem einzigen defekten Eintrag
+die **ganze** Liste. Das Unterscheidungskriterium ist die sichere Richtung des jeweiligen Feldes,
+nicht die Form.
+
+**Hier ist sie eindeutig.** Die ganze Liste zu verwerfen hieße nach `§5.4` „Feld fehlt" und damit
+`genesis.root_keys`. Ein einziges formwidriges Byte holte die abgesetzten Wurzelschlüssel zurück.
+Das ist die Absetzungs-Umgehung und dieselbe Bauform wie das Schulden-Lösch-Loch aus D57 und D156:
+eine Deklaration, die durch ihre eigene Fehlerhaftigkeit den Schutz aufhebt, den sie setzt.
+
+**Beschluss.** Wohlgeformt ist ein Eintrag, der `bytes` der Länge 32 ist. Formwidrige Einträge
+werden verworfen und vermerkt (`MALFORMED_NUCLEUS_KEY`), die übrigen bleiben wirksam. Duplikate
+fallen wortlos zusammen: `nucleus_keys` bezeichnet eine Menge und ist keine Auszählungsgrundlage —
+anders als `participants`, wo ein zu kleiner Nenner jede Schwelle senkt (D96). Eine
+Sortierpflicht gibt es aus demselben Grund nicht.
+
+**Ein gesetztes Feld fällt nie auf den Genesis zurück.** Sind alle Einträge formwidrig, oder ist
+der Wert gar keine Liste, ist der Anker die **leere** Menge und die Nukleus-Autorität stillgelegt.
+
+**Der Vermerk ist einer je Verfassung.** Subjekt ist `constitution_hash`, nicht der defekte
+Eintrag — er ist im Allgemeinen kein `bytes` und passt nicht in `Finding.subject`. Mehrere
+formwidrige Einträge erzeugen denselben Vermerk, den `dedupe_sort` zusammenzieht. Die Anzahl geht
+verloren; das ist entschieden und kein Versehen.
+
+**Der Preis steht schon in `§5.4`:** „Der Preis ist, dass eine Verfassung den Nukleus per Amendment
+handlungsunfähig machen kann. Das ist ausdrückbar und wird nicht verhindert." Dieselbe Zeile trägt
+den Tippfehlerfall mit, und der Ausweg ist `§6.2`.
+
+### D164 — Die lokal unbekannte Verfassung ist nicht „die Verfassung nennt kein Feld"
+
+**Befund.** `§6.4` Schritt 1 kennt zwei Lagen — das Feld ist genannt oder nicht. Es gibt eine
+dritte: die Verfassung liegt lokal nicht vor. `resolve_policy` führt für sie
+`CONSTITUTION_UNAVAILABLE`; im Anker fiel sie stillschweigend in denselben Zweig wie „nennt kein
+Feld" und lieferte `genesis.root_keys` — genau die Menge, die eine Absetzung ersetzt haben könnte.
+Prüfregel 25: der Satz, auf den man sich berief, regelt den Nachbarfall.
+
+**Beschluss.** Genesis-Rückfall **mit Vermerk** `CONSTITUTION_UNAVAILABLE`, Subjekt
+`constitution_hash`. Nicht die leere Menge.
+
+**Begründung gegen die leere Menge.** `nucleus_keys = []` bedeutet seit D150 „die Mitglieder haben
+abgesetzt" — eine Aussage. Unwissen als dieselbe Aussage zu kodieren wäre genau die Verwechslung,
+die D163 an der anderen Flanke behebt. Der Vermerk trägt den Zweifel; ein Aufrufer, der Findings
+als fatal behandelt, bekommt die sichere Richtung, ohne dass die Auflösung sie ihm aufzwingt.
+
+**Damit hat Schritt 1 drei Lagen und nicht zwei.** Der Wortlaut wird nachgezogen.
