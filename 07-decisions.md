@@ -5715,3 +5715,61 @@ von außen — neu ist, dass es genau **eine** Herleitungsstelle dafür gibt und
 sie benutzt. Ein Nukleus mit einem echten `grant-membership@1` würde den Anschluss zum ersten Mal
 wirksam machen; der Beispielnukleus führt keines, und `check_anchor_resolution` prüft deshalb die
 hergeleitete Menge selbst statt ihrer Wirkung.
+
+### D166 — Autoritätslisten tragen keine Schwelle; die Frage wird umformuliert, nicht beantwortet
+
+**Herkunft.** D126 ließ offen, ob ein Nukleus statt „einer genügt" ein `k`-von-`n` verlangen
+können soll. D149 verortete die Frage in der Verfassung, D150 schuf mit `nucleus_keys` das Feld,
+an dem eine Schwelle hinge.
+
+**Befund: die Frage war falsch gestellt.** Es gibt drei Autoritätslisten, und alle drei sagen
+dasselbe. `genesis.root_keys` und `nucleus_keys` über `§7` — „bei mehreren autorisierten
+Schlüsseln genügt einer" —, `arbitration.arbitrators` über `§5.1`, wo ein `verdict@1` bindet,
+sobald sein Autor in der Liste steht, ohne Zahl. Eine Schwelle nur für `nucleus_keys` wäre genau
+die Asymmetrie, nach der Prüfregel 8 sucht: dieselbe Bauform, verschieden behandelt, ohne
+benannten Grund. **Die Frage wird deshalb von `nucleus_keys` gelöst und auf alle drei Listen
+gestellt.** Beantwortet wird sie einmal, oder gar nicht.
+
+**Beschluss.** In v1 trägt keine Autoritätsliste eine Schwelle. `§7` wird auf diesen Stand
+gezogen.
+
+**Warum nicht jetzt.** Zwei Wege geben einem Nukleus heute `k`-von-`n`: `key_mode = 1` mit FROST
+(`§6.5`) auf der Signaturebene, und der Governance-Pfad `propose`/`vote`/`ratify` gegen
+`thresholds` (Gov-Spec §5). `grant-membership@1` unter dem Nukleusschlüssel ist die **Abkürzung**
+für Nuklei, die keine Abstimmung fahren wollen; eine Schwelle darauf zu legen machte daraus eine
+langsame Abstimmung mit weniger Maschinerie — eine zweite, schwächere Kopie von `04`.
+
+**Was ein protokollseitiges `k`-von-`n` zusätzlich entscheiden müsste.** Die Bauform selbst ist
+nicht fremd — `rotate-ack@1` (D152) und die Auszählung in `04` sind sie zweimal. Offen wären vier
+Wechselwirkungen, jede eine eigene Entscheidung:
+
+1. Ein Assent wird später widerrufen — fällt der Akt rückwirkend?
+2. Ein Signierender equivoziert später und verliert nach D162 seine Autorität. Verliert der Akt,
+   der bereits zählte, sie auch?
+3. `nucleus_keys` schrumpft per Amendment unter `k`. Was gilt für Akte davor, was für danach?
+4. Sind Assents scopelokal und fristgebunden, oder gelten sie unbefristet?
+
+Das ist eine Schicht, kein Knopf.
+
+**Der tragende Grund ist `08 §2.2`, nicht der Aufwand.** Es gibt keinen Nukleus, der die Frage
+stellt. Ein Mechanismus ohne Kollisionsdichte ist Spezifikationstiefe, und die ist in diesem
+Projekt der teurere Fehler.
+
+**Die Gegenposition, ausdrücklich (Prüfregel 15).** TUF entscheidet an derselben Stelle anders:
+jede Rolle trägt `keys` **und** `threshold`, `k`-von-`n` auf der Metadatenebene statt per
+Schwellensignatur, und die Begründung dort ist, dass ein einzelner kompromittierter Root-Key
+nicht allein handeln können soll. Das ist derselbe Bedrohungsfall, der D162 getragen hat. Ist
+Diebstahl die Bedrohung, dann **ist** „einer genügt" die Lücke, und die Schwelle ist die
+Standardantwort. Dazu kommt, dass FROST für zwei Gründer schwer ist — eine DKG-Zeremonie — und
+dass `key_mode` im Genesis steht: später wechseln heißt neuer Nukleus. Der Beispielnukleus hat
+heute genau diese Lage; jeder seiner zwei Gründer kann allein aufnehmen, und es ist nicht
+belegt, dass sie das gemeint haben.
+
+**Diese Zurückstellung ist deshalb kein erledigtes Nein.** Wer sie aufhebt, beantwortet sie für
+alle drei Listen zugleich und entscheidet die vier Wechselwirkungen. Der Anlass, auf den zu warten
+sich lohnt, ist der erste Nukleus mit mehr als einem Halter, der einen Diebstahl fürchtet — nicht
+der erste, der die Schwelle hübsch fände.
+
+**Zwei Nebenbefunde mitgezogen.** `§7` verwies für den Verfassungsknopf auf `§4`; das ist das
+Genesis-Schema, die Verfassung ist `§5`. Und `§9` zählte „nur vier Verfassungsfelder" als
+normativ; seit D150 sind es fünf, wie die Tabelle in `§5` schon zeigt.

@@ -487,10 +487,14 @@ akt.I ∈ resolve_current_key(akt.N)
   Signaturform, nicht die Zahl der autorisierten Schlüssel.** Für `key_mode = 0` ist das eine
   gewöhnliche Ed25519-Signatur, für `key_mode = 1` eine FROST-Gruppensignatur unter dem aktuellen
   Gruppenschlüssel; in beiden Fällen trägt der Akt **eine** Signatur.
-- **Bei mehreren autorisierten Schlüsseln genügt einer.** `root_keys` ist eine Liste — der
+- **Bei mehreren autorisierten Schlüsseln genügt einer (D166).** `root_keys` ist eine Liste — der
   Beispiel-Nukleus in `example-nucleus.md` hat zwei (D149) —, und jeder von ihnen darf allein
-  handeln. Ob ein Nukleus stattdessen eine Schwelle verlangen können soll, ist **nicht
-  entschieden** und wäre ein Verfassungsknopf nach §4, kein Protokolldefault.
+  handeln. Dasselbe gilt für `nucleus_keys` (§5.4) und für `arbitration.arbitrators` (§5.1): drei
+  Autoritätslisten, dieselbe Regel. **Eine Schwelle trägt in v1 keine von ihnen.** Wer `k`-von-`n`
+  will, hat zwei Wege, die es schon gibt: `key_mode = 1` mit FROST (§6.5) auf der Signaturebene,
+  oder den Governance-Pfad gegen `thresholds` (Gov-Spec §5). Ein dritter Weg wäre ein
+  Verfassungsknopf nach §5 und kein Protokolldefault — und er wäre für alle drei Listen zugleich
+  zu entscheiden, nicht für eine.
 - `akt.N` MUSS gesetzt sein und zum aufgelösten Scope passen (Atom-Spec §2.2, Bindungsregel).
 
 Das ist die konkrete Code-Konsequenz von DF-0: die heutige Prüfung `atom.I == scope` in
@@ -537,7 +541,13 @@ radiale Prinzip bleibt intakt.
   nicht per Governance aufgelöst ist, sind Nukleus-Akte ab dem Fork *nicht autorisiert* — die
   sichere Richtung (lieber kein gültiger Akt als ein falsch autorisierter), konsistent mit dem
   „Unter-Vertrauen"-Prinzip aus Trust-Flow-Spec §7.
-- **Schema-Minimalismus (DF-3).** Nur vier Verfassungsfelder sind normativ; alles andere bleibt
+- **Keine Schwelle auf Autoritätslisten (D166).** Ein einzelner kompromittierter Schlüssel aus
+  `root_keys`, `nucleus_keys` oder `arbitration.arbitrators` kann allein handeln. TUF entscheidet
+  an derselben Stelle anders — jede Rolle trägt `keys` **und** `threshold` —, und die Begründung
+  dort ist genau der Diebstahlfall aus §6.3. Getragen, weil kein Nukleus die Frage stellt
+  (`08 §2.2`) und weil FROST (§6.5) und der Governance-Pfad den absichtlichen Fall abdecken.
+  Nicht getragen als erledigt: die Frage steht offen für alle drei Listen zugleich.
+- **Schema-Minimalismus (DF-3).** Nur fünf Verfassungsfelder sind normativ; alles andere bleibt
   opak. Das ist ein *bewusster, begrenzter* Bruch der „Verfassung = reiner opaker Hash"-Linie — der
   minimal nötige, um P-1/E-1 maschinenlesbar zu schließen, ohne die Interpretationsschicht ins
   Protokoll zu ziehen.
