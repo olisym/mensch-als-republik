@@ -111,6 +111,19 @@ def is_nuc_predicate(claim: Claim) -> bool:
         return False
 
 
+def is_nuc_name(claim: Claim, name: str) -> bool:
+    """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (§2.2, Anhang A, D181)."""
+    try:
+        parsed = parse_predicate(claim.p)
+    except Exception:
+        return False
+    return (
+        parsed.namespace == "nuc"
+        and parsed.name == name
+        and parsed.version == "1"
+    )
+
+
 def check_scope_binding(claim: Claim) -> None:
     """Bindungsregel §2.2 Regel 3 prüfen; wirft bei Verletzung."""
     parsed = parse_predicate(claim.p)

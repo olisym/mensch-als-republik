@@ -15,7 +15,7 @@ from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.governance.tally import TallyResult, TallyState, reached
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.verifier import ClaimStore, State
 
 
@@ -25,18 +25,6 @@ class RatificationResult:
 
     next_epoch: Epoch | None
     findings: tuple[Finding, ...]
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def _cited(ratify: Claim) -> list[object] | None:
@@ -107,7 +95,7 @@ def verify_ratification(
     participants = tally.participants
     if ratify.N != epoch.scope or ratify.J != (3, proposal.proposal_hash):
         return _unsupported(ratify)
-    if not _is_nuc_name(ratify, "ratify"):
+    if not is_nuc_name(ratify, "ratify"):
         return _unsupported(ratify)
     if ratify.I not in participants:
         return _unsupported(ratify)
