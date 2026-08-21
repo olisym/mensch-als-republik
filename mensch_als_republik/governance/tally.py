@@ -341,7 +341,12 @@ def decide(
                 continue
             if other.J[0] == 3 and other.J[1] in known_proposals:
                 other_prop = known_proposals[other.J[1]]
-                if other_prop.predecessor == epoch.epoch_id:
+                if other_prop.proposal_hash != other.J[1]:
+                    findings.append(
+                        Finding(kind=GovernanceFinding.UNKNOWN_PROPOSAL, subject=other_cid)
+                    )
+                    excluded.add(author)
+                elif other_prop.predecessor == epoch.epoch_id:
                     findings.append(
                         Finding(
                             kind=GovernanceFinding.CONFLICTING_APPROVAL,
