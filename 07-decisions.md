@@ -6329,3 +6329,48 @@ Lücke im Entwurf. Sie gehört auf die offene Liste, nicht in einen Lauf.
 
 **Nicht entschieden.** Ob ein Mitglied, das wiederholt auf unveröffentlichte Vorschläge stimmt,
 eine Folge tragen soll, ist eine Frage an Layer 05 und hier ausdrücklich offen.
+
+### D179 — Abnahme `00d`: die Epochenkette steht; vier Kriterien waren unmöglich
+
+**Was gebaut wurde.** `governance/chain.py` mit `resolve_epoch` und `EpochResolution`; zwei neue
+Vermerke `EPOCH_PROPOSAL_UNAVAILABLE` und `EPOCH_FORK`; die Schlüsselprüfung für
+`known_proposals` in `decide` (D175). 556 Tests, davon zwölf neue in
+`tests/governance/test_chain.py`. `resolve_authorized_keys` hat damit erstmals eine Quelle für
+`constitution_hash`, die nicht von außen kommt — der Anschluss selbst bleibt ein eigener Lauf.
+
+**Die Zählung.** Von neun Testfällen, die aus den Prompts dieses Laufs stammten, waren **vier
+falsch**, und alle vier waren vor dem Werkzeug entschieden. Kein einziger Defekt lag in der
+Umsetzung. Das ist die fünfte Sitzung in Folge mit dieser Verteilung.
+
+**Die vier, nach Fehlerform.**
+
+1. *Ein Objekt, das für den Übergang bekannt und für das Ergebnis unbekannt ist.* Die Verfassung
+   von `i+1` ist zugleich das Zielobjekt des Übergangs. Nachgezogen in `§4.5`.
+2. *Zwei Objekte unter einem Schlüssel.* Ein falsch geschlüsseltes `C3` unter dem Hash von `C2`
+   heißt, dass `C2` fehlt — die Kette kommt aus Epoche 1 nicht heraus.
+3. *Eine Rückwirkung, die überlappende Teilnehmermengen ausschließen.* Daraus wurde D178.
+4. *Der Widerruf eines Prädikats, das die Verfassung zwingend schützt.* D107 verlangt `ratify@1`
+   in `irrevocable_predicates` und erklärt einen Nukleus ohne diesen Eintrag für nicht auszählbar.
+   Der Aktivitätsfilter der Kette ist deshalb **nur über Equivocation** prüfbar — und genau das
+   steht seit D107 im Register, unter der verworfenen Alternative. Der Supervisor hatte den
+   Eintrag nicht aufgeschlagen.
+
+**Daraus Prüfregel 28.** Ein Abnahmekriterium behauptet einen Weltzustand, nicht nur eine Aussage.
+Vor dem Prompt ist der Zustand zu konstruieren, nicht nur die Erwartung zu prüfen. Alle vier
+Fälle lasen sich schlüssig; Schlüssigkeit ist an dieser Stelle kein Prüfmittel.
+
+**Wie mit den Messungen verfahren wurde.** Die drei fehlgeschlagenen Kriterien wurden **nicht**
+durch bequemere ersetzt, sondern als Vektoren mit der gemessenen Erwartung festgeschrieben, jeder
+mit einem Docstring, der den Grund nennt. Daneben stehen drei isolierende Tests für die Normen,
+die eigentlich gemeint waren. Der Operator hat diese Trennung verlangt; der erste Entwurf des
+Supervisors hätte die Beobachtungen gelöscht. Ein nachgezogener Anker löscht die Messung, ein
+aufgeschriebener Vektor bewahrt sie — und im Fall von Kriterium 2 war die Messung einen eigenen
+Registereintrag wert.
+
+**Die Rücknahmeproben.** Drei von vier haben getrennt. Die vierte konnte es nicht, weil sie einen
+unmöglichen Zustand ansteuerte; nach dem Umbau auf Equivocation trennt sie. Eine Probe, die einen
+nicht konstruierbaren Zustand prüft, ist keine Probe — sie bleibt rot, egal was man zurücknimmt.
+
+**Offen geblieben.** `chain.py` importiert `_is_nuc_name` aus `epoch.py`. Der führende Unterstrich
+sagt modulprivat, der Import sagt geteilt; eines von beiden stimmt nicht. Nicht blockierend,
+gehört auf die offene Liste.

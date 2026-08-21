@@ -504,10 +504,22 @@ Auszählungen nach `§3` gibt sie nicht weiter: ihr Kontext fehlt dem Aufrufer, 
 erreicht ihn über `TALLY_UNEVALUABLE`. Ist die Verfassung der erreichten Epoche unbekannt, bleibt
 das Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
 
+**Das leere Feld ist nur an Epoche 1 erreichbar.** Die Verfassung von `i+1` ist zugleich das
+Zielobjekt des Übergangs von `i` nach `i+1`; fehlt sie, ist die Auszählung nach `§3.5` nicht
+auswertbar und der Übergang trägt nicht. Ab Epoche 2 ist das Objekt also notwendig bekannt, sonst
+wäre die Epoche nicht erreicht. Nur an Epoche 1 nennt das Genesis einen Hash, dessen Objekt fehlen
+darf (D179).
+
 **Ist das Vorschlagsobjekt einer sonst tragenden Ratifizierung unbekannt**, lautet der Vermerk
 `EPOCH_PROPOSAL_UNAVAILABLE`, Subjekt der `proposal_hash`. `UNKNOWN_PROPOSAL` aus `§4.4` trägt
 hier nicht: dort ist das Subjekt die `claim_id` einer Stimme, hier ein Objekthash, und derselbe
 Vermerkstyp mit verschiedenem Subjekttyp ist die falsche Kollision aus D172.
+
+Der Vermerk erscheint an der **erreichten** Epoche, obwohl die Epochenzugehörigkeit des fehlenden
+Vorschlags gerade unbestimmt ist — sie steht in `proposal[1]`, und genau dieses Objekt fehlt. Die
+Richtung ist dieselbe wie in `§4.4`: unbekannt heißt möglicherweise einschlägig, nicht
+möglicherweise fremd. Die Gegenannahme würde den Vermerk still fallen lassen, sobald die Kette
+weiterläuft, und damit die Auskunft verlieren, dass ein Objekt fehlt (D179).
 
 **Terminierung.** Jeder Übergang braucht mindestens ein `ratify@1`, dessen `J` auf einen Vorschlag
 mit `predecessor == epoch_id(i)` zeigt. Beide Felder sind fest, also passt jeder Claim zu genau

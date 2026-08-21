@@ -174,6 +174,15 @@ jeder Zählung, die in einen Prompt geht, wird gefragt: hat seit dem Abgleich ei
 berührt? In D169 hat der Supervisor `_policy(` in einer Kopie von vor dem `00b`-Merge gezählt und
 sechs Aufrufstellen genannt, wo zehn standen; die vier fehlenden hatte `00b` selbst angelegt.
 
+**28. Ein Abnahmekriterium behauptet einen Weltzustand.** Bevor ein Kriterium in einen Prompt
+geht, wird nicht nur gefragt, ob die erwartete Aussage stimmen soll, sondern ob der Zustand, in
+dem sie geprüft würde, überhaupt konstruierbar ist. Der Prüfgriff ist, ihn vor dem Schreiben zu
+bauen: welche Claims, welche Objekte, welche Verfassung. Vier der neun Testfälle aus `00d`
+behaupteten unmögliche Lagen — ein Objekt, das für den Übergang bekannt und für das Ergebnis
+unbekannt ist; zwei Objekte unter einem Schlüssel; eine Rückwirkung, die überlappende
+Teilnehmermengen ausschließen; der Widerruf eines Prädikats, das die Verfassung zwingend schützt.
+Alle vier lasen sich schlüssig und alle vier waren vor dem Lauf entschieden.
+
 ---
 
 ## Herkunft der Nummern
@@ -181,7 +190,7 @@ sechs Aufrufstellen genannt, wo zehn standen; die vier fehlenden hatte `00b` sel
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
-D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173.
+D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
