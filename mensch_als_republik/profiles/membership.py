@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from mensch_als_republik.atom import Claim, claim_id
+from mensch_als_republik.atom import claim_id
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
 from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
