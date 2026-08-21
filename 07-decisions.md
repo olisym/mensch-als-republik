@@ -6452,3 +6452,40 @@ sahen nach pytest-Fixtures aus, was ein bekannter Falschbefund dieser Regel ist 
 nicht: `fresh_alice` und die vier Nachbarn tragen kein `@pytest.fixture`, sind gewöhnliche
 Funktionen und wirklich ungenutzt. Die `__init__.py` der Unterpakete führen `__all__` und lösen
 deshalb nichts aus. Ohne diese Messung wäre die Regelmenge blind gewählt worden.
+
+### D183 — `resolve_state`: die Fassade über Kette, Policy und Schlüssel
+
+**Was sie tut.** `resolve_state` in `mensch_als_republik/resolve.py` nimmt Speicher, Scope, Genesis
+und die beiden Objektabbildungen, ruft `resolve_epoch`, leitet daraus die Policy der **geltenden**
+Epoche her und löst damit die Autoritätsliste auf. Sie hört vor `membership` auf — soviel, wie ein
+Node beim Empfang eines fremden Claims braucht (D180), keinen Schritt mehr.
+
+**Der Rückgabetyp trägt die Invariante.** `NucleusState` hält Epoche, Verfassungsobjekt, Policy und
+`authorized_keys` — und die Zusage, dass alle vier aus derselben aufgelösten Kette stammen. Diese
+Zusage trägt heute niemand: wer die Aufrufe selbst verkettet, kann `constitution_hash` aus dem
+Genesis nehmen und bekommt nach einem Amendment still die Policy der ersten Epoche. Das Vorbild ist
+`TrustedMetadataSet` aus `python-tuf` — ein Typ, dessen Inhalt per Konstruktion konsistent ist, mit
+einem angeleiteten Weg darüber.
+
+**Sie entscheidet nichts (D172).** Ersetzt man jeden Zwischenwert durch den, den der jeweilige
+Primitivaufruf ohnehin liefert, ist das Ergebnis byte-gleich. Die Fassade ist Benennung, kein
+Mechanismus; das Aufnahmekriterium aus `08 §3` ist auf sie deshalb nicht anwendbar. Setzte sie
+irgendwo eine Vorgabe — eine Policy, eine Reihenfolge, eine Schwelle —, verteilte sie Macht und
+gehörte nicht hierher.
+
+**Die Primitive bleiben.** `resolve_epoch`, `resolve_policy`, `resolve_authorized_keys` und
+`membership` behalten ihre expliziten Parameter, ohne Default, der still eine Kette unterstellt;
+`membership` behält insbesondere `authorized_keys` (D161). Die Fassade ist ein Angebot neben den
+Primitiven und zugleich der einzige empfohlene Weg.
+
+**Vermerke bleiben getrennt.** Die drei Aufrufe liefern drei verschiedene `Finding`-Typen:
+`GovernanceFinding`, `NucleusFinding`, `ProfileFinding`. `NucleusState` führt sie in drei Feldern,
+nicht in einem Strom. Die Herkunft ist Information — `EPOCH_FORK` und ein Vermerk zum
+`constitution_hash` verlangen Verschiedenes vom Aufrufer. Ein vereinheitlichter Vermerkstyp würde
+`00`, `03` und `04` aneinander koppeln, ohne dass die Spec das verlangt. Der Preis ist benannt: der
+Aufrufer trägt drei Listen statt einer.
+
+**Offen, nicht in diesem Lauf.** Vier `Finding`-Klassen — in `findings.py`, `governance/`,
+`profiles/` und `trust/` — sind strukturell identisch und unterscheiden sich nur im `kind`-Enum;
+`dedupe_sort` steht dreimal mit gleicher Signatur daneben. Derselbe Befund wie D181, aber über vier
+Schichten. Er braucht eine eigene Entscheidung.
