@@ -10,7 +10,6 @@ from mensch_als_republik.policy import TRUST_GRANTING
 from mensch_als_republik.profiles import (
     Finding,
     MembershipState,
-    ProfileFinding,
     SettlementState,
     VerdictStatus,
     classify_all,

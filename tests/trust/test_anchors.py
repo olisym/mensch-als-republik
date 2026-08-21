@@ -6,7 +6,7 @@ import pytest
 
 from mensch_als_republik.trust import TrustFinding, trust
 
-from .tp02 import NOW, PARAMS, T_EXP, build, build_A_prime
+from .tp02 import NOW, PARAMS, build, build_A_prime
 
 # Var -> (trust g1, trust g2, trust g3, simultan)
 EXPECTED = {

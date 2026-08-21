@@ -6,7 +6,7 @@ import itertools
 
 import pytest
 
-from mensch_als_republik.trust import RelaxParams, TrustParams, rank, trust
+from mensch_als_republik.trust import RelaxParams, rank, trust
 from mensch_als_republik.trust.derive import derive
 
 from tests.helpers import Identity, scope_id, store_with
