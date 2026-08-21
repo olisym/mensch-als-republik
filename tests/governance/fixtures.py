@@ -14,12 +14,14 @@ from tests.helpers import SEED_ALICE, SEED_BOB, SEED_CAROL, Identity
 
 SEED_DAVE = bytes([0x04] * 32)
 SEED_EVE = bytes([0x05] * 32)
+SEED_FRANK = bytes([0x06] * 32)
 
 ALICE = Identity("ALICE", seed=SEED_ALICE)
 BOB = Identity("BOB", seed=SEED_BOB)
 CAROL = Identity("CAROL", seed=SEED_CAROL)
 DAVE = Identity("DAVE", seed=SEED_DAVE)
 EVE = Identity("EVE", seed=SEED_EVE)
+FRANK = Identity("FRANK", seed=SEED_FRANK)
 
 DOC_CONSTITUTION_HASH_1 = bytes.fromhex(
     "8e7762ef9a8b9a414cbec44ad0b4658e3ae17d2663c6d3fc12af64a8ac78f3b0"
@@ -188,6 +190,10 @@ def fresh_dave() -> Identity:
 
 def fresh_eve() -> Identity:
     return Identity("EVE", seed=SEED_EVE)
+
+
+def fresh_frank() -> Identity:
+    return Identity("FRANK", seed=SEED_FRANK)
 
 
 def fresh_p1() -> tuple[Identity, Identity, Identity, Identity]:

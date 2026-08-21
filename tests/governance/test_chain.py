@@ -32,6 +32,7 @@ from .fixtures import (
     PROPOSAL_ALT_A,
     STOCK_N,
     _tally,
+    fresh_frank,
     fresh_p2,
     ratify_claim,
     vote,
@@ -250,11 +251,13 @@ def test_chain_miskeyed_current_constitution_no_valueerror() -> None:
     assert result.constitution_obj is None
 
 
-def test_chain_revoked_unknown_ratify_is_silent() -> None:
+def test_chain_equivocated_unknown_ratify_is_silent() -> None:
+    """D107: Equivocation nimmt ratify@1 aus ACTIVE, Widerruf nicht."""
     world = _two_transitions()
-    r_alt = ratify_claim(world.bob, PROPOSAL_ALT_A, witnesses=[], t=31)
-    world.store.add(r_alt)
-    world.store.add(world.bob.revoke(r_alt, t=32))
+    a = fresh_frank()
+    b = fresh_frank()
+    world.store.add(ratify_claim(a, PROPOSAL_ALT_A, witnesses=[], t=31))
+    world.store.add(ratify_claim(b, PROPOSAL_ALT_A, witnesses=[], t=32))
     result = _resolve(world.store)
     assert result.epoch.epoch_id == EPOCH_3.epoch_id
     assert result.findings == ()
