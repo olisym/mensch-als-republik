@@ -6374,3 +6374,51 @@ nicht konstruierbaren Zustand prüft, ist keine Probe — sie bleibt rot, egal w
 **Offen geblieben.** `chain.py` importiert `_is_nuc_name` aus `epoch.py`. Der führende Unterstrich
 sagt modulprivat, der Import sagt geteilt; eines von beiden stimmt nicht. Nicht blockierend,
 gehört auf die offene Liste.
+
+### D180 — Der Aufrufer der Kettenauflösung ist der Node; die Bibliothek kennt ihn nicht
+
+**Die Frage.** Wer verkettet `resolve_epoch`, `resolve_authorized_keys` und `membership`? Solange
+niemand als Aufrufer benannt ist, lässt sich der Zuschnitt einer Fassade nicht begründen — jede
+Grenze ist dann gleich gut vertretbar.
+
+**Die Antwort steht seit VISION §5 und `06 §2`.** Der Lebensraum eines Atoms ist ein Node; „Node"
+ist Betriebs-Vokabular, keine Protokoll-Entität — im Protokoll erscheint er allein als Identity mit
+`service-announce`. Dieser Eintrag entscheidet nichts Neues; er **benennt** den Empfänger für die
+Vertagungen aus `08 §3`.
+
+**Was daraus folgt.** Der Zuschnitt der Auflösung ist damit abgeleitet statt gesetzt. Ein Node hat
+eine wiederkehrende Aufgabe: ein fremder Claim kommt herein, und er muss wissen, unter welcher
+Verfassung und mit welchen Schlüsseln er ihn prüft. Soviel tut die Fassade, keinen Schritt mehr.
+
+**Die Gegenrichtung ist normativ.** Die Bibliothek darf den Node nicht kennen. Kein Pfad, kein
+Socket, kein Daemon in `mensch_als_republik/`; `store` bleibt eine Abbildung, `now` bleibt
+Parameter. Unix ist nicht Teil von TCP/IP — ein Protokoll, das seine Umgebung voraussetzt, hat sie
+global gemacht.
+
+**Kein Bauauftrag.** Der Node selbst wird nicht gebaut. `08 §2.2` gilt unverändert; ein Lebensraum
+ohne Leben darin ist Infrastruktur auf Vorrat.
+
+### D181 — `is_nuc_name` steht einmal, in `predicates.py`, und trägt keinen Unterstrich
+
+**Der Befund.** `_is_nuc_name` ist **sechsmal** definiert — `governance/tally.py`,
+`governance/epoch.py`, `profiles/verdict.py`, `profiles/credit.py`, `profiles/membership.py` und
+`keys.py` —, alle sechs byte-identisch, dazu ein modulübergreifender Import in
+`governance/chain.py`. Gemessen: 18 Vorkommen in 7 Dateien, davon 11 Aufrufstellen. Die Übergabe
+`00e` hatte den Fall als einen Import über eine Modulgrenze notiert; das war zu klein gemessen.
+
+**Warum das ein Befund ist.** Die Funktion kodiert die Prädikat-Grammatik aus `01 §2.2` und
+Anhang A — eine normative Regel, sechsmal geschrieben. Die sechs Fassungen divergieren heute nicht.
+Genau das war der Zustand vor D147 und vor D175.
+
+**Der Ort.** `mensch_als_republik/predicates.py`, kein neues Modul. Zwei Messungen tragen das:
+dort stehen `is_core_predicate` und `is_nuc_predicate` bereits in derselben Form, und
+`parse_predicate` wird in allen sechs Dateien **ausschließlich** von `_is_nuc_name` gebraucht —
+die sechs Importe fallen mit weg.
+
+**Das Verhalten bleibt.** Der Rumpf fängt `Exception`, nicht `VerifierError`, und das bleibt so.
+Ein Claim aus `claim_from_map`, dessen `p` kein `str` ist, gilt damit weiterhin als nicht passend,
+statt eine Ausnahme durch den Aufrufer zu tragen — die sichere Richtung. Eine Angleichung an
+`is_nuc_predicate` wäre eine Verhaltensänderung und ist ausdrücklich **nicht** Teil dieses Laufs.
+
+**Offen.** `is_nuc_predicate` und `is_core_predicate` fangen `VerifierError`, `is_nuc_name` fängt
+`Exception`: drei Funktionen nebeneinander, zwei Fangbreiten. Das gehört auf die offene Liste.
