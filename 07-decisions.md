@@ -6285,3 +6285,47 @@ nachgezogen worden. Er entfällt ersatzlos.
 nicht mehr nachgemessen wurde. Anders als bei D173 gab es hier ein Verfallsdatum — der Satz war
 bis `00a` zutreffend. Das ist Prüfregel 26 in ihrer allgemeinen Form: auch ein Spec-Satz gilt für
 den Stand, an dem er geschrieben wurde.
+
+### D178 — Die Aussetzung aus D103 wirkt über Epochengrenzen
+
+**Befund, gemessen im Lauf `00d`.** D103 nennt als getragene Grenze, dass eine Ja-Stimme auf einen
+nie verbreiteten Vorschlag ihren Autor „für diese Epoche" aussetzt. Die Formulierung ist zu eng.
+`decide` prüft für Epoche `i` alle aktiven Ja-Stimmen eines Autors und kann bei einem unbekannten
+Vorschlag nicht feststellen, zu welcher Epoche er gehört — das ist gerade die Lage, die D103
+regelt. Eine Stimme aus `i+1` schlägt deshalb auf die Auszählung in `i` durch.
+
+**Wie es sichtbar wurde.** Ein Abnahmekriterium des Laufs erwartete, dass die Kette bei
+unbekanntem zweitem Vorschlag bei Epoche 2 endet. Gemessen wurde Epoche 1. Ursache: die
+Teilnehmermenge der ersten Verfassung ist Teilmenge der zweiten, also stimmen dieselben Autoren in
+beiden Runden. Ist der zweite Vorschlag unbekannt, blockieren ihre Stimmen aus Runde zwei ihre
+Stimmen aus Runde eins, alle vier landen in `excluded`, und schon der erste Übergang trägt nicht
+mehr. Das Kriterium war falsch, nicht der Code; der Vektor hält die Messung fest.
+
+**Die Rechnung.** Bei vier Teilnehmern und `amendment = [3, 4]` verlangt `§3.2`
+`yes * 4 > 3 * 4`, also alle vier Stimmen. Ein einziger ausgesetzter Autor genügt, damit kein
+Übergang mehr trägt.
+
+**Der Angriff.** Ein Mitglied kann die Epochenkette rückwirkend anhalten, indem es auf einen
+Vorschlag Ja stimmt, dessen Objekt es nie veröffentlicht. Heilbar nur dadurch, dass jemand das
+Objekt nachreicht — und wenn nur der Autor es besitzt, tut das niemand. Verhindern kann die
+Gruppe es nicht: die Stimme ist wohlgeformt, signiert und aktiv.
+
+**Warum die Richtung trotzdem bleibt.** Die Gegenannahme — unbekannt heißt fremde Epoche — lässt
+bei Teilwissen zwei gültige Nachfolger derselben Epoche entstehen und bricht `INV-04.3`. Die
+Wirkung ist stets abwärts: eine erreichte Epoche fällt zurück, es entsteht nie eine. Und sie
+heilt bei Wissenszuwachs.
+
+**Literatur (Prüfregel 15).** Die Verfügbarkeitsschicht moderner Ketten trifft dieselbe Wahl:
+fehlende Daten heißen nicht vorrücken, und ein Block, dessen Daten fehlen, wird verworfen statt
+angehängt. LazyLedger macht Verfügbarkeit sogar zum einzigen Gültigkeitskriterium. Ein
+Unterschied ist zu benennen: dort darf Gültigkeit sich **nicht durch Zeitablauf** ändern, weil das
+Abwarten belohnen würde; hier ändert sie sich durch **Wissenszuwachs**, was Faulheit nicht
+belohnt.
+
+**Die Grenze, die bleibt.** Dort ist Verfügbarkeit erzwingbar — Stichprobenverfahren, Erasure
+Coding, Strafen. Diese Schicht gibt es hier nicht und wird es nicht geben; `08 §3` ordnet sie als
+Policy ein, nicht als Protokoll. Die Selbstaussetzung ist damit eine getragene Grenze, keine
+Lücke im Entwurf. Sie gehört auf die offene Liste, nicht in einen Lauf.
+
+**Nicht entschieden.** Ob ein Mitglied, das wiederholt auf unveröffentlichte Vorschläge stimmt,
+eine Folge tragen soll, ist eine Frage an Layer 05 und hier ausdrücklich offen.

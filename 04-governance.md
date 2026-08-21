@@ -466,6 +466,13 @@ derselben Epoche entstehen, und das ist die Über-Ratifizierungsrichtung. Geheil
 indem jemand das Vorschlagsobjekt nachreicht — es ist content-adressiert und damit nicht
 fälschbar (D103).
 
+**Die Aussetzung ist nicht epochenlokal.** Eine Auszählung in `i` prüft sämtliche aktiven
+Ja-Stimmen eines Autors und kann bei einem unbekannten Vorschlag gerade nicht feststellen, zu
+welcher Epoche er gehört. Eine Stimme, die in Wahrheit zu `i+1` gehört, schlägt deshalb auf die
+Auszählung in `i` durch. Der Autor ist nicht für eine Epoche ausgesetzt, sondern für jede, die
+eine Kettenauflösung nach `§4.5` noch braucht — und das schließt bereits erreichte Epochen ein
+(D178).
+
 ### 4.5 Die Kette
 
 `§4.1` bis `§4.4` prüfen **einen** Übergang. Welche Epoche gilt, ergibt sich daraus erst, wenn
