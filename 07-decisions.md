@@ -6524,3 +6524,66 @@ hat D182 ausgelöst; seither prüft `make check` diese Klasse mit. Die anderen b
 Supervisor — ein Grep-Kriterium, das Namen vorschrieb statt Zustände zu messen, und die
 überzeichnete Begründung oben. Dazu eine Untermessung in der Übergabe `00e`, die `_is_nuc_name` als
 Einzelfall führte, wo sechs Kopien standen.
+
+### D185 — Berichtigung an D184: der Fassadentest war nicht zirkulär, sondern reglos
+
+**Der Vorbehalt war zu eng gefasst.** D184 notierte, dass
+`test_resolve_state_authorized_keys_match_direct` mit `policy=state.policy` in den
+Vergleichsaufruf geht und damit nur prüfe, dass gleiche Policy gleiches Ergebnis liefert. Die
+Nachmessung zeigt mehr: keine der drei Verfassungen der Prüfwelt — `C1`, `C2`, `C3` in
+`tests/governance/fixtures.py` — führt `nucleus_keys`, und ihre `irrevocable_predicates` stehen
+alle drei auf dem Default aus `_constitution()`. Der Anker ist deshalb in jedem Fall
+`genesis_obj[1]`, ein einziger Schlüssel, und die drei Policies sind byte-gleich. Der
+Vergleichsaufruf liefert unter der **falschen** Verfassung dasselbe Ergebnis wie unter der
+richtigen. Der Test war also nicht nur zirkulär gebaut; seine Behauptung ist in dieser Welt für
+jede beliebige Verfassung wahr. Kein Umbau des Vergleichsaufrufs ändert daran etwas.
+
+**Was `policy` auf diesem Pfad überhaupt bewegen kann.** `resolve_authorized_keys` reicht die
+Policy allein an `classify_all` weiter. `rotate-key@1` und `rotate-ack@1` liegen in
+`PROTOCOL_IRREVOCABLE` und werden in `NucleusPolicy.__post_init__` weder von `TRUST_GRANTING` noch
+von den core-Einträgen abgezogen; sie können `policy.irrevocable` also nie verlassen. Widerrufe
+gegen Rotationsclaims greifen unabhängig von der Policy nie. Der einzige verbliebene Hebel ist
+`EQUIVOCATION_FLAGGED`: `resolve_current_key` prüft ihn über **alle** Claims mit
+`claim.I == k_cur`, nicht nur über Rotationen. Ob eine Policy diesen Zustand für einen anderen
+Claim desselben Autors bewegen kann, ist **nicht gemessen** und hier nicht entschieden.
+
+**Was dieser Lauf ändert.** Erstens: der Vergleichsaufruf leitet seine Policy unabhängig aus `C3`
+her statt sie aus `state` zu entnehmen — die Zirkularität fällt weg, auch wenn sie in dieser Welt
+folgenlos ist. Zweitens trägt der Test den Namen seiner Aussage; die stärkere Aussage trägt er
+nicht und behauptet sie nicht mehr. Drittens bekommt `policy_findings` einen Test.
+
+**Die Prüflage für `policy_findings`.** Derselbe Speicher, aber `C1` fehlt in
+`known_constitutions`. Dann hält die Kette bei `EPOCH_1`, `constitution_obj` ist `None`, und alle
+drei Vermerklisten sind besetzt: `epoch_findings` mit `TALLY_UNEVALUABLE`, `policy_findings` mit
+`ProfileFinding.CONSTITUTION_UNAVAILABLE` auf `CONSTITUTION_HASH_1`, `key_findings` mit
+`NucleusFinding.CONSTITUTION_UNAVAILABLE` auf demselben Subjekt. Die beiden letzten sind
+inhaltsgleich und trotzdem unterscheidbar, weil es zwei verschiedene Dataclasses aus zwei Modulen
+sind: Gleichheit zwischen ihnen ist falsch. Ein Vertauschen der beiden Felder in `resolve_state`
+wird damit rot — vorab gemessen, nicht angenommen (Prüfregel 28).
+
+**Warum die Welt nicht in diesem Lauf ersetzt wird.** Siehe D186.
+
+### D186 — Zurückgestellt: eine Kettenwelt, in der die Verfassung den Schlüsselsatz bewegt
+
+**Was fehlt.** Es gibt im Baum keine Prüflage, in der zwei aufeinanderfolgende Epochen
+verschiedene `authorized_keys` haben. `tests/nucleus/test_anchor.py` prüft `nucleus_keys`
+gründlich, aber ohne Epochenkette; `tests/governance/fixtures.py` hat die Kette, aber Verfassungen
+ohne `nucleus_keys`. Solange beides getrennt bleibt, ist die Zusage aus D183 — alle vier Werte
+stammen aus derselben Kette — an der Stelle, an der sie am meisten wert wäre, nicht prüfbar.
+
+**Warum die vorhandenen Fixtures gesperrt sind.** `CONSTITUTION_HASH_1` bis `3` sind über
+`DOC_CONSTITUTION_HASH_1` bis `3` als Golden Anchors festgelegt, und `DOC_PROPOSAL_HASH_2` sowie
+`DOC_EPOCH_ID_3` hängen daran. Ein `nucleus_keys` in `C1`, `C2` oder `C3` verschöbe sie alle.
+Anker werden nicht nachgezogen, um einen Test zu ermöglichen. Die Welt müsste also neben der
+bestehenden stehen, mit eigenem Genesis und eigenem Scope — und damit mit eigenen Claim-Bauern,
+denn `vote` und `ratify_claim` in den Fixtures haben `N=N_D` fest verdrahtet.
+
+**Warum jetzt nicht.** Der Ertrag dieser Welt liegt nicht bei den Fassadentests, sondern beim
+Beispielnukleus: D169 hält fest, dass er Epoche-1- von Epoche-2-Policy nicht unterscheiden kann,
+und `_member` in `tools/example_nucleus.py` bekommt `constitution_hash` und Verfassungsobjekt bis
+heute von aussen. Wer die Welt baut, sollte sie dort bauen, wo sie gebraucht wird. Sie an einen
+Aufräumlauf an `tests/test_resolve.py` zu hängen, wäre stiller Scope-Zuwachs an der falschen
+Stelle.
+
+**Die Bedingung.** Diese Entscheidung wird zusammen mit der Frage beantwortet, ob der
+Beispielnukleus eine aufgelöste Kette bekommt — nicht davor und nicht getrennt.
