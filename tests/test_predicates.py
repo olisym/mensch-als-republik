@@ -1,5 +1,7 @@
 """Tests für Prädikat-Grammatik und Scope-Bindung."""
 
+from dataclasses import replace
+
 import pytest
 
 from mensch_als_republik.atom import Claim
@@ -8,7 +10,7 @@ from mensch_als_republik.errors import (
     ReservedCorePredicate,
     UnknownNamespace,
 )
-from mensch_als_republik.predicates import parse_predicate, resolve_scope
+from mensch_als_republik.predicates import is_nuc_name, parse_predicate, resolve_scope
 
 N = bytes.fromhex("65309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d2f5557")
 ALICE = bytes.fromhex("8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c")
@@ -84,3 +86,33 @@ def test_alias_that_looks_like_hex_but_wrong_n():
     parsed = parse_predicate(p)
     assert parsed.scope_hex is not None
     assert parsed.scope_alias is None
+
+
+def test_nuc_name_matching() -> None:
+    claim = _claim(f"nuc:{N.hex()}/vouch@1")
+    assert is_nuc_name(claim, "vouch") is True
+
+
+def test_nuc_name_wrong_name() -> None:
+    claim = _claim(f"nuc:{N.hex()}/vouch@1")
+    assert is_nuc_name(claim, "vote") is False
+
+
+def test_nuc_name_version_not_1() -> None:
+    claim = _claim(f"nuc:{N.hex()}/vouch@2")
+    assert is_nuc_name(claim, "vouch") is False
+
+
+def test_nuc_name_core_predicate() -> None:
+    claim = _claim("core/revoke@1", N_field=None)
+    assert is_nuc_name(claim, "revoke") is False
+
+
+def test_nuc_name_malformed() -> None:
+    claim = _claim("not-a-predicate")
+    assert is_nuc_name(claim, "vouch") is False
+
+
+def test_nuc_name_bytes_p_returns_false() -> None:
+    claim = replace(_claim(f"nuc:{N.hex()}/vouch@1"), p=b"nuc:x/vouch@1")
+    assert is_nuc_name(claim, "vouch") is False

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.epoch import _is_nuc_name, verify_ratification
+from mensch_als_republik.governance.epoch import verify_ratification
 from mensch_als_republik.governance.findings import (
     Finding,
     GovernanceFinding,
@@ -19,6 +19,7 @@ from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.governance.tally import decide
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import constitution_hash
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.policy import resolve_policy
 from mensch_als_republik.verifier import ClaimStore, State
 
@@ -79,7 +80,7 @@ def resolve_epoch(
         findings: list[Finding] = []
         by_proposal: dict[bytes, tuple[Proposal, list[Claim]]] = {}
         for claim in store.all_claims():
-            if not _is_nuc_name(claim, "ratify") or claim.N != scope:
+            if not is_nuc_name(claim, "ratify") or claim.N != scope:
                 continue
             if by_cid[claim_id(claim)].state is not State.ACTIVE:
                 continue

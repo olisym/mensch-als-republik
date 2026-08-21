@@ -19,7 +19,7 @@ from mensch_als_republik.governance.findings import (
 from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.verifier import ClaimStore, State
 
 _CLASS_BY_INDEX = {0: "ordinary", 1: "membership", 2: "amendment"}
@@ -85,18 +85,6 @@ def applied_threshold(old_obj: dict, new_obj: dict, klass: str) -> tuple[int, in
     old_th = old_obj["thresholds"][klass]
     new_th = new_obj["thresholds"][klass]
     return ratio_max((old_th[0], old_th[1]), (new_th[0], new_th[1]))
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def _choice(vote: Claim) -> object:
@@ -283,7 +271,7 @@ def decide(
     participants = frozenset(ordered)
     by_cid = classify_all(store, now, policy)
     findings: list[Finding] = []
-    votes = [c for c in store.all_claims() if _is_nuc_name(c, "vote")]
+    votes = [c for c in store.all_claims() if is_nuc_name(c, "vote")]
     candidates: list[Claim] = []
     for vote in votes:
         cid = claim_id(vote)

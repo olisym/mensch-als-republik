@@ -6,7 +6,7 @@ from mensch_als_republik.trust import rank
 
 from tests.helpers import Identity, scope_id, store_with
 from .pr02 import RP
-from .tp02 import NOW, T_EXP
+from .tp02 import T_EXP
 
 
 def _build(n_v1: int, v1_state: str, n_v2: int, label: str):

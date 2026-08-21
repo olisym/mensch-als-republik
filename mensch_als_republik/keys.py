@@ -11,7 +11,7 @@ from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.findings import Finding, NucleusFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.verifier import ClaimStore, State
 
 _J_TAG_IDENTITY = 1
@@ -25,18 +25,6 @@ class KeyResolution:
 
     keys: frozenset[bytes]
     findings: tuple[Finding, ...]
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def _on_author_chain(earlier: Claim, later: Claim, store: ClaimStore) -> bool:
@@ -97,7 +85,7 @@ def resolve_current_key(
                 return None
             complete: list[Claim] = []
             for claim in claims:
-                if not _is_nuc_name(claim, "rotate-key"):
+                if not is_nuc_name(claim, "rotate-key"):
                     continue
                 if claim.I != k_cur or claim.N != scope:
                     continue
@@ -108,7 +96,7 @@ def resolve_current_key(
                 rid = claim_id(claim)
                 ack_ok = False
                 for ack in claims:
-                    if not _is_nuc_name(ack, "rotate-ack"):
+                    if not is_nuc_name(ack, "rotate-ack"):
                         continue
                     if ack.J != (_J_TAG_CLAIM_REF, rid):
                         continue

@@ -8,9 +8,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "hypothesis>=6.0"]
+dev = ["pytest>=8.0", "hypothesis>=6.0", "ruff>=0.16"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--import-mode=importlib"
 pythonpath = ["."]
+
+[tool.ruff.lint]
+select = ["F401", "F811"]

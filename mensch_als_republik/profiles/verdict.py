@@ -8,7 +8,7 @@ from enum import Enum
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.verifier import Classification, ClaimStore, State
 
@@ -26,18 +26,6 @@ class VerdictResult:
     findings: tuple[Finding, ...]
 
 
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
-
-
 def _active_submission(
     store: ClaimStore,
     classifications: dict[bytes, Classification],
@@ -50,7 +38,7 @@ def _active_submission(
     """Wahr gdw. eine aktive submit-arbitration@1 von party auf arbitrator im Scope existiert."""
     found = False
     for c in store.all_claims():
-        if not _is_nuc_name(c, "submit-arbitration"):
+        if not is_nuc_name(c, "submit-arbitration"):
             continue
         if c.I != party or c.J != (1, arbitrator):
             continue
@@ -75,7 +63,7 @@ def verdict_status(
     policy: NucleusPolicy | None = None,
 ) -> VerdictResult:
     """Entscheidet BINDING vs. ATTRIBUTED_OPINION (03-profiles.md §2.4.2, 03-prompt.md §7)."""
-    if not _is_nuc_name(verdict, "verdict") or verdict.N != scope:
+    if not is_nuc_name(verdict, "verdict") or verdict.N != scope:
         raise ValueError("verdict must be verdict@1 in scope")
     if policy is not None and policy.scope != scope:
         raise ValueError("policy scope does not match scope")

@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: test test-prop check-specs check-tree check check-all clean
+.PHONY: test test-prop check-specs check-tree check-lint check check-all clean
 
 test:
 	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +
@@ -15,9 +15,12 @@ check-specs:
 check-tree:
 	$(PY) tools/check_tree.py
 
-check: check-tree check-specs test
+check-lint:
+	.venv/bin/ruff check mensch_als_republik tests tools
 
-check-all: check-tree check-specs test test-prop
+check: check-tree check-specs check-lint test
+
+check-all: check-tree check-specs check-lint test test-prop
 
 clean:
 	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +

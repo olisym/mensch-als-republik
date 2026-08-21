@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from mensch_als_republik.atom import Claim, claim_id
+from mensch_als_republik.atom import claim_id
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.verifier import ClaimStore, State
@@ -28,18 +28,6 @@ class MembershipResult:
     accept_claim_id: bytes | None
     grant_claim_id: bytes | None
     findings: tuple[Finding, ...]
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def membership(
@@ -68,7 +56,7 @@ def membership(
     for c in store.all_claims():
         cid = claim_id(c)
 
-        if _is_nuc_name(c, "accept-rules") and c.I == subject:
+        if is_nuc_name(c, "accept-rules") and c.I == subject:
             if c.N != scope:
                 findings.append(
                     Finding(kind=ProfileFinding.SCOPE_MISMATCH, subject=cid)
@@ -88,7 +76,7 @@ def membership(
             accept_ids.append(cid)
             continue
 
-        if _is_nuc_name(c, "grant-membership") and c.J == (1, subject):
+        if is_nuc_name(c, "grant-membership") and c.J == (1, subject):
             if c.N != scope:
                 findings.append(
                     Finding(kind=ProfileFinding.SCOPE_MISMATCH, subject=cid)

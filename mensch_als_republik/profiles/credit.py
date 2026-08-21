@@ -7,7 +7,7 @@ from enum import Enum
 
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.predicates import parse_predicate
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.profiles.payload import read_v
@@ -28,18 +28,6 @@ class SettlementResult:
     state: SettlementState
     receipt_claim_id: bytes | None
     findings: tuple[Finding, ...]
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def _is_valid_uint(value: object) -> bool:
@@ -78,7 +66,7 @@ def settlement(
 
     ``policy`` ist Pflicht-Keyword ohne Default (D80).
     """
-    if not _is_nuc_name(obligation, "obligation") or obligation.N != scope:
+    if not is_nuc_name(obligation, "obligation") or obligation.N != scope:
         raise ValueError("obligation must be obligation@1 in scope")
     if policy.scope != scope:
         raise ValueError("policy scope does not match scope")
@@ -127,7 +115,7 @@ def settlement(
 
     matching: list[Claim] = []
     for c in store.all_claims():
-        if not _is_nuc_name(c, "receipt"):
+        if not is_nuc_name(c, "receipt"):
             continue
         if c.J != (2, o_cid):
             continue
