@@ -432,9 +432,25 @@ Nein-Stimmen sind unbeschränkt. Gegen mehrere Vorschläge gleichzeitig zu sein 
 verschiedene Dokumente gleichzeitig als das geltende zu benennen ist es nicht.
 
 **Diese Regel ist sicherheitstragend, nicht ordnungspolitisch.** Aus ihr folgt, dass zwei
-rivalisierende Nachfolger derselben Epoche arithmetisch unmöglich sind: bei einer Schwelle über
-der Hälfte müssten sich ihre Ja-Mengen überschneiden. Ohne sie entstünde genau das Split Brain,
-das Raft bei nebenläufigen Konfigurationswechseln beschreibt (D102).
+rivalisierende Nachfolger derselben Epoche arithmetisch unmöglich sind. Der Beweis läuft über
+dieselbe Schranke wie in `§3.5` — `2 * num >= den` — und zerfällt in zwei Fälle.
+
+**Disjunkte Ja-Mengen** sind bereits durch `§3.5` ausgeschlossen; die Rechnung steht dort.
+
+**Überschneidende Ja-Mengen** schlägt diese Regel. Seien `A` und `B` die Ja-Mengen zweier
+Vorschläge derselben Epoche, beide durchgekommen, und sei `S` ihr Schnitt. Nach `§3.5` ist `S`
+nicht leer. Jeder Autor in `S` hat zwei aktive Ja-Stimmen auf verschiedene Vorschläge derselben
+Epoche; `CONFLICTING_APPROVAL` entfernt ihn aus **beiden** Mengen. Für den Rest von `A` gilt
+`|A| - |S| <= n - |B|`, und aus `|B| * den > num * n` folgt `n - |B| < n * (den - num) / den`.
+Damit dieser Rest die Schwelle noch erreicht, müsste `den - num > num` gelten, also
+`den > 2 * num` — ausgeschlossen. Beide Reste fallen unter die Schwelle.
+
+Nicht „bei einer Schwelle über der Hälfte": die Schranke ist `2 * num >= den`, also **ab** der
+Hälfte. Bei `num / den = 1/2` trägt die Aussage trotzdem, weil `durchgekommen` in `§3.2` strikt
+vergleicht und `|Ja| * 2 > n` eine echte Mehrheit verlangt.
+
+Ohne diese Regel entstünde genau das Split Brain, das Raft bei nebenläufigen
+Konfigurationswechseln beschreibt (D102).
 
 Niemand muss Nein zu A sagen, um Ja zu B sagen zu können, und ein Ja zu A wird B **nicht** als
 Nein angerechnet.
@@ -449,6 +465,55 @@ Die Richtung ist erzwungen, nicht gewählt: die Gegenannahme lässt bei Teilwiss
 derselben Epoche entstehen, und das ist die Über-Ratifizierungsrichtung. Geheilt wird der Fall,
 indem jemand das Vorschlagsobjekt nachreicht — es ist content-adressiert und damit nicht
 fälschbar (D103).
+
+### 4.5 Die Kette
+
+`§4.1` bis `§4.4` prüfen **einen** Übergang. Welche Epoche gilt, ergibt sich daraus erst, wenn
+alle Übergänge nacheinander gelaufen sind. Das leistet `resolve_epoch` (D174):
+
+```
+resolve_epoch(store, scope, genesis_obj, known_constitutions, known_proposals, now)
+    ->  (epoch, constitution_obj, findings)
+```
+
+**Start** ist Epoche 1 nach `§1.1`: `index = 1`, `constitution_hash = genesis[4]`, `N = scope`.
+Der übergebene `scope` wird gegen `genesis_obj` geprüft; eine Abweichung ist ein Aufruferfehler
+und MUSS werfen, nicht vermerken — dieselbe Asymmetrie wie in `§3.5`.
+
+**Schritt.** Zu einer Epoche `i` sucht die Kette alle aktiven `ratify@1`, deren Vorschlag
+`predecessor == epoch_id(i)` trägt, und prüft jede nach `§4.1`. Trägt genau eine, ist `i+1`
+erreicht und der Schritt wiederholt sich. Trägt keine, endet die Kette bei `i`.
+
+**Beschaffung.** Verfassungs- und Vorschlagsobjekte kommen als Abbildung vom Hash auf das Objekt.
+Jeder Zugriff wird gegen den Schlüssel geprüft: ein Eintrag, dessen Objekt nicht auf seinen
+Schlüssel hasht, gilt als **unbekannt**. Der Aufrufer kontrolliert den Inhalt fremder Objekte
+nicht; deshalb Vermerk und nicht Ausnahme. Dieselbe Prüfung gilt für `known_proposals` in `§3`
+(D175).
+
+**Vermerke.** Die Kette beantwortet, welche Epoche gilt; ihre Vermerke sagen, warum sie dort
+endet — nicht, was in einer überholten Epoche geschah. Sie gibt daher ausschließlich die Vermerke
+der Prüfungen nach `§4.1` weiter, die auf die **erreichte** Epoche zeigen. Vermerke der
+Auszählungen nach `§3` gibt sie nicht weiter: ihr Kontext fehlt dem Aufrufer, und die Tatsache
+erreicht ihn über `TALLY_UNEVALUABLE`. Ist die Verfassung der erreichten Epoche unbekannt, bleibt
+das Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
+
+**Ist das Vorschlagsobjekt einer sonst tragenden Ratifizierung unbekannt**, lautet der Vermerk
+`EPOCH_PROPOSAL_UNAVAILABLE`, Subjekt der `proposal_hash`. `UNKNOWN_PROPOSAL` aus `§4.4` trägt
+hier nicht: dort ist das Subjekt die `claim_id` einer Stimme, hier ein Objekthash, und derselbe
+Vermerkstyp mit verschiedenem Subjekttyp ist die falsche Kollision aus D172.
+
+**Terminierung.** Jeder Übergang braucht mindestens ein `ratify@1`, dessen `J` auf einen Vorschlag
+mit `predecessor == epoch_id(i)` zeigt. Beide Felder sind fest, also passt jeder Claim zu genau
+einer Epoche; und da `epoch_id` den streng wachsenden Index mithasht, ist jede Epoche der Kette
+verschieden. Die Zahl der Schritte ist damit durch die Zahl der `ratify@1` im Speicher begrenzt.
+Eine Zyklusprüfung ist **nicht** vorzusehen — anders als bei der Rotationskette in `00 §6.4`, die
+autorverkettet ist und zyklisch werden kann.
+
+**Zwei tragende Ratifizierungen auf verschiedene Nachfolger** sind nach `§4.4` unmöglich. Der
+Ausgang ist gleichwohl zu definieren: kein Kopf ab `i`, Ergebnis ist `i`, Vermerk `EPOCH_FORK` je
+`epoch_id` der beiden Nachfolger (D176). Das ist die Form, die Tendermint für den erkannten Fork
+wählt — anhalten und Beweis erzeugen statt wählen — und sie hat wie dort **keinen erreichbaren
+Produktivfall**. Ein Test darauf ist ausdrücklich nicht zu bauen; er prüfte eine unmögliche Lage.
 
 ---
 
@@ -466,13 +531,16 @@ Stellen verschieden formuliert; die folgende Zuordnung ist die normative:
 | `0` | Epochenpfad | die Verfassung der Epoche trägt die Wirkung; jedes Mitglied darf materialisieren | `04 §4` |
 | `1` | Schlüsselpfad | `akt.I` ist Element von `resolve_current_key(akt.N)` | `00 §7`, umgesetzt in `03 §4` |
 
-`03 §4` implementiert damit den **Schlüsselpfad**: sein Parameter `authorized_keys` ist die Menge
-aus `resolve_current_key`. Das war nie ausgeschrieben und ist der Grund, aus dem `03 §5` eine
-Lücke melden musste.
+`03 §4` implementiert damit den **Schlüsselpfad**: sein Parameter `authorized_keys` ist die Menge,
+die `resolve_authorized_keys` aus dem Anker und den Rotationsketten bildet (`00 §6.4`).
+`resolve_current_key` ist darin der Schritt, der je Anker den geltenden Kopf bestimmt — nicht die
+ganze Auflösung. Das war nie ausgeschrieben und ist der Grund, aus dem `03 §5` eine Lücke melden
+musste.
 
-`resolve_current_key` ist seit `00a` gebaut (D160), hat aber noch keinen Aufrufer: `03 §4` bekommt
-`authorized_keys` weiterhin von außen. Der Schlüsselpfad ist damit normiert und rechenbar, aber
-nicht angeschlossen.
+Beide sind seit `00a` und `00b` gebaut (D160, D161). Was fehlt, ist die Herleitung der Verfassung:
+`resolve_authorized_keys` bekommt den `constitution_hash` von außen, und wer eine veraltete Menge
+übergibt, bekommt ein veraltetes Ergebnis. `§4.5` normiert die Kette, die ihn herleitet; der
+Anschluss ist damit beschrieben und noch nicht gebaut.
 
 ---
 
@@ -615,5 +683,4 @@ Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentati
   das Föderationspanel (`§7.2`).
 
 - **Vertagt und ausdrücklich nicht in v1:** gewichtete Auszählung (D98), Zweck-Tag am Vouch
-  (D56, `02d`), `resolve_current_key` (D62), Kettenbindung von Ämtern nach VR-04.1 (D26), das
-  Zeugenquorum für Fristen (D100).
+  (D56, `02d`), Kettenbindung von Ämtern nach VR-04.1 (D26), das Zeugenquorum für Fristen (D100).

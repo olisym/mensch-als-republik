@@ -6159,3 +6159,129 @@ Werkzeug hat es gemeldet statt gebaut — richtig so; der Punkt gehört auf die 
 **Zur Fehlerquelle.** Vierte Sitzung in Folge: der Supervisor war die Fehlerquelle, das Werkzeug
 nicht. Der Bericht war in jeder Zelle zutreffend, und der Defekt stand trotzdem im Diff — er
 stammte aus dem Prompt.
+
+### D174 — Die Epochenkette: `resolve_epoch` leitet die geltende Epoche her
+
+**Entscheidung.** `mensch_als_republik/governance/chain.py` erhält `resolve_epoch`. Die Funktion
+beginnt bei Epoche 1 aus dem Genesis (`04 §1.1`), sucht zu jeder Epoche die tragenden `ratify@1`
+und läuft, bis keine mehr trägt. Ergebnis ist ein `EpochResolution` aus geltender Epoche,
+zugehörigem Verfassungsobjekt und Vermerken. Normiert in `04 §4.5`.
+
+**Warum eine eigene Datei.** `epoch.py` prüft **einen** Übergang und ist damit fertig; die Kette
+läuft **alle**. Zwei Fragen, zwei Dateien.
+
+**Kein `policy`-Parameter.** Die Policy wird je Epoche aus deren Verfassung über `resolve_policy`
+hergeleitet. Eine von außen gereichte Policy gälte für alle Epochen der Kette; nach einem
+Amendment, das `irrevocable_predicates` ändert, wäre sie falsch — und zwar still. `04 §1.2`
+verlangt ausdrücklich, dass eine Auszählung in Epoche `i` gegen die Verfassung von `i` rechnet.
+
+**Die neue Kante.** `governance/` importiert bisher nirgends aus `profiles/`; nur `tools/`
+verbindet beide. `chain.py` importiert `resolve_policy` und zieht damit die erste Kante dieser
+Art. Sie ist schichtungskonform (04 über 03). Die Alternative wäre, `NucleusPolicy` in `chain.py`
+selbst zu bauen — dieselbe Regel an zwei Stellen, also derselbe Defekt, den D147 für
+`TrustParams.__post_init__` bereits notiert hat.
+
+**`scope` bleibt Parameter** und wird gegen `genesis_obj` geprüft, mit `ValueError` bei
+Abweichung. Das ist die Form, die `resolve_authorized_keys`, `resolve_policy` und `decide` alle
+drei schon haben; eine vierte Form wäre eine Sonderregel ohne Grund.
+
+**Terminierung ohne Zyklusprüfung.** Jeder Übergang braucht mindestens ein `ratify@1`, dessen `J`
+auf einen Vorschlag mit `predecessor == epoch_id(i)` zeigt. Beide Felder sind fest, also trägt
+jeder Claim höchstens einen Übergang; und `epoch_id` hasht den streng wachsenden Index mit, also
+ist jede Epoche der Kette verschieden. Die Schrittzahl ist durch die Zahl der `ratify@1` im
+Speicher begrenzt. Eine `visited`-Menge wie in `_head_from` (`keys.py`) ist deshalb **nicht** zu
+bauen: die Rotationskette dort ist autorverkettet und kann zyklisch werden, diese Kette nicht.
+Der Punkt gehört ausdrücklich in den Prompt, sonst baut das Werkzeug die Prüfung aus Analogie mit.
+
+**`constitution_obj` gehört in die Rückgabe.** Ein leeres Feld ist selbst die Meldung, dass die
+Verfassung der geltenden Epoche unbekannt ist; der Aufrufer reicht es unverändert an
+`resolve_authorized_keys` weiter, wo D164 den Rückfall auf `genesis.root_keys` regelt. Ein eigener
+Vermerk dafür wäre dieselbe Auskunft ein zweites Mal.
+
+**Vermerke nur zur erreichten Epoche.** Die Kette gibt die Vermerke der Prüfungen nach `04 §4.1`
+weiter, soweit sie auf die erreichte Epoche zeigen, und die Vermerke der Auszählungen nach
+`04 §3` gar nicht. Begründung: die Kette beantwortet, welche Epoche gilt. Ein Vermerk über eine
+Ratifizierung, die in einer längst überholten Epoche nicht trug, beantwortet eine Frage, die
+niemand gestellt hat; und ein Auszählungsvermerk ohne die zugehörige Auszählung ist für den
+Aufrufer nicht lesbar. Die Tatsache erreicht ihn über `TALLY_UNEVALUABLE`.
+
+**Neuer Vermerk `EPOCH_PROPOSAL_UNAVAILABLE`**, Subjekt der `proposal_hash`, wenn das
+Vorschlagsobjekt einer sonst tragenden Ratifizierung fehlt. `UNKNOWN_PROPOSAL` ist dafür nicht
+wiederverwendbar: dort ist das Subjekt die `claim_id` einer Stimme. Derselbe Vermerkstyp mit
+verschiedenem Subjekttyp nennt auf zwei ehrlichen Knoten Verschiedenes — die falsche Kollision
+aus D172.
+
+### D175 — Objektbeschaffung wird gegen den Schlüssel geprüft (berichtigt `04 §3`)
+
+**Befund.** `decide` nimmt vier Objekte von außen. Drei werden gegen ihren Hash geprüft:
+`genesis_obj` gegen `epoch.scope`, `constitution_obj` gegen `epoch.constitution_hash`,
+`target_constitution_obj` gegen `proposal.constitution_hash`. Das vierte, `known_proposals`, wird
+geglaubt: `known_proposals[other.J[1]]` wird gelesen, ohne dass `proposal_hash` des Werts gegen
+den Schlüssel geprüft wird.
+
+**Wirkung.** Bildet das Mapping einen Hash auf ein `Proposal` mit falschem `predecessor` ab, so
+unterbleibt `CONFLICTING_APPROVAL`, und ein Autor stimmt in derselben Epoche zweimal Ja. Damit
+fällt `04 §4.4` — die Regel, die die Spec selbst „sicherheitstragend, nicht ordnungspolitisch"
+nennt und gegen Split Brain stellt. Die Wirkung greift gegen einen Aufrufer, der ein empfangenes
+Objekt unter dem mitgelieferten Hash ablegt statt unter dem gerechneten; die drei Nachbarstellen
+zeigen, dass die Codebasis diesen Aufrufer sonst nirgends voraussetzt.
+
+**Entscheidung.** Jeder Zugriff auf eine Objektabbildung prüft den Wert gegen den Schlüssel. Ein
+Eintrag, der nicht passt, gilt als **unbekannt** und läuft in den bestehenden Zweig — bei
+`known_proposals` also in `UNKNOWN_PROPOSAL`, die sichere Richtung nach `04 §4.4`. Kein
+`ValueError`: der Aufrufer kontrolliert den Inhalt fremder Objekte nicht. Das ist die Asymmetrie,
+die `04 §3.5` für Genesis gegen Verfassungsobjekte bereits aufschreibt.
+
+**Form der Beschaffung.** Abbildung vom Hash auf das Objekt, kein eigenes Protocol. `decide` führt
+`known_proposals` bereits so; die Kette ergänzt `known_constitutions`. Nach `08 §3` entscheidet
+Beschaffung nichts und senkt keine Kollisionskosten — sie ist Werkzeug, nicht Protokoll, und
+bekommt die kleinste Oberfläche, die trägt.
+
+### D176 — Zwei Nachfolger derselben Epoche sind unerreichbar (vervollständigt `04 §4.4`)
+
+**Der Fork, der keiner war.** Die Designrunde hatte gefragt, welche Ordnung einen Gleichstand
+zwischen zwei tragenden Nachfolgern bricht, und D172 als Antwort erwogen: die Vertauschungsprobe
+hält nicht, also darf keine abgeleitete Ordnung wählen. Die Prämisse war falsch. `04 §3.5`
+verlangt `2 * num >= den` auf den Rohwerten beider Verfassungen; eine Schwelle unter der Hälfte
+ergibt `MALFORMED_THRESHOLD`, und die Auszählung läuft nicht. Es gibt keinen Gleichstand.
+
+**Der Beweis, in beiden Fällen.** `durchgekommen` ist strikt (`04 §3.2`), also ist jede erreichte
+Schwelle eine echte Mehrheit von `P`. Disjunkte Ja-Mengen schließt `04 §3.5` aus und führt die
+Rechnung dort. Überschneidende Mengen schlägt `04 §4.4`: `CONFLICTING_APPROVAL` entfernt den
+Schnitt `S` aus beiden, für den Rest von `A` gilt `|A| - |S| <= n - |B|`, und aus
+`|B| * den > num * n` folgt `n - |B| < n * (den - num) / den`. Die Schwelle zu erreichen verlangte
+`den > 2 * num` — ausgeschlossen. Erschöpfend gegengerechnet für alle `n <= 40` und alle
+wohlgeformten Schwellen mit `den <= 40`: kein Paar bleibt stehen.
+
+**Nachzug an `04 §4.4`.** Der Abschnitt behauptete die Unmöglichkeit mit halbem Beweis — er endete
+bei der Überschneidung und nannte den tötenden Schritt nicht. Und er schrieb „bei einer Schwelle
+über der Hälfte", während die Schranke `2 * num >= den` lautet, also **ab** der Hälfte; bei genau
+`1/2` trägt die Aussage über die Striktheit von `§3.2`, nicht über die Schwelle.
+
+**Der Ausgang bleibt definiert.** `resolve_epoch` hält bei zwei tragenden Nachfolgern an: kein
+Kopf ab `i`, Ergebnis ist `i`, Vermerk `EPOCH_FORK` je `epoch_id`. Das ist die Form, die
+Tendermint für den erkannten Fork wählt — der Light Client hält an, sendet den Beweis und
+verifiziert nicht weiter —, und sie deckt sich mit der Quorum-Literatur: wo die Überschneidung
+fehlt, ist die Konfiguration kaputt und nicht auflösbar; wo sie da ist, ist Divergenz unmöglich.
+Ein Tiebreak über eine abgeleitete Ordnung kommt in keiner der gesichteten Quellen vor.
+
+**Ohne Produktivträger, ausdrücklich.** `EPOCH_FORK` wird nie erzeugt. Ein Test darauf ist nicht
+zu bauen: er prüfte eine unmögliche Lage und wäre ein Regressionstest, der keine Regression sieht.
+Präzedenz ist `FOREIGN_LIFECYCLE` (D138), das aus demselben Grund im Enum steht und nirgends
+ausgelöst wird. Der Punkt gehört als Nicht-Ziel in den Prompt.
+
+### D177 — Berichtigung `04 §8`: `resolve_current_key` ist gebaut, nicht vertagt
+
+**Befund.** `04 §8` führte `resolve_current_key` (D62) in der Liste „Vertagt und ausdrücklich
+nicht in v1". Die Funktion ist seit `00a` gebaut (D160), und `04 §5` schreibt das zwei Abschnitte
+weiter oben selbst. Zwei Sätze derselben Datei widersprachen einander.
+
+**Prüfregel 8 erfüllt.** Die Nachbarn derselben Aufzählung — gewichtete Auszählung (D98),
+Zweck-Tag am Vouch (D56), Kettenbindung nach VR-04.1 (D26), Zeugenquorum für Fristen (D100) —
+sind sämtlich unverändert gültig. Nur dieser eine Eintrag war von `00a` überholt und nie
+nachgezogen worden. Er entfällt ersatzlos.
+
+**Fehlertyp.** Derselbe wie in D169 und D173: eine Behauptung, die einmal richtig war und danach
+nicht mehr nachgemessen wurde. Anders als bei D173 gab es hier ein Verfallsdatum — der Satz war
+bis `00a` zutreffend. Das ist Prüfregel 26 in ihrer allgemeinen Form: auch ein Spec-Satz gilt für
+den Stand, an dem er geschrieben wurde.
