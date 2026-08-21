@@ -1,4 +1,4 @@
-"""Epochenkette — resolve_epoch (04-governance.md §4.5, D174, D175)."""
+"""Epochenkette — resolve_epoch (04-governance.md §4.5, D174, D175, D178)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from mensch_als_republik.governance import (
     GovernanceFinding,
     resolve_epoch,
 )
+from mensch_als_republik.governance.findings import dedupe_sort
 from mensch_als_republik.governance.tally import TallyState
 from tests.helpers import store_with
 
@@ -20,6 +21,7 @@ from .fixtures import (
     CONSTITUTION_HASH_1,
     CONSTITUTION_HASH_2,
     CONSTITUTION_HASH_3,
+    EPOCH_1,
     EPOCH_2,
     EPOCH_3,
     GENESIS_D,
@@ -36,30 +38,37 @@ from .fixtures import (
 )
 
 
-def _two_transitions(*, extra_epoch1_ratify: bool = False):
-    alice, bob, carol, dave, eve = fresh_p2()
-    v1 = [
-        vote(alice, PROPOSAL_1, choice=1, t=1),
-        vote(bob, PROPOSAL_1, choice=1, t=1),
-        vote(carol, PROPOSAL_1, choice=1, t=1),
-        vote(dave, PROPOSAL_1, choice=1, t=1),
-    ]
-    yes1 = [claim_id(v) for v in v1]
-    r1 = ratify_claim(alice, PROPOSAL_1, witnesses=yes1[:3], t=10)
-    claims = [*v1, r1]
-    if extra_epoch1_ratify:
-        claims.append(ratify_claim(bob, PROPOSAL_1, witnesses=[], t=11))
-    v2 = [
-        vote(alice, PROPOSAL_2, choice=1, t=20),
-        vote(bob, PROPOSAL_2, choice=1, t=20),
-        vote(carol, PROPOSAL_2, choice=1, t=20),
-        vote(dave, PROPOSAL_2, choice=1, t=20),
-        vote(eve, PROPOSAL_2, choice=1, t=20),
-    ]
-    yes2 = [claim_id(v) for v in v2]
-    r2 = ratify_claim(alice, PROPOSAL_2, witnesses=yes2[:4], t=30)
-    claims.extend([*v2, r2])
-    return store_with(*claims)
+class _World:
+    def __init__(self, *, extra_epoch1_ratify: bool = False) -> None:
+        alice, bob, carol, dave, eve = fresh_p2()
+        self.alice = alice
+        self.bob = bob
+        v1 = [
+            vote(alice, PROPOSAL_1, choice=1, t=1),
+            vote(bob, PROPOSAL_1, choice=1, t=1),
+            vote(carol, PROPOSAL_1, choice=1, t=1),
+            vote(dave, PROPOSAL_1, choice=1, t=1),
+        ]
+        self.yes1 = [claim_id(v) for v in v1]
+        self.r1 = ratify_claim(alice, PROPOSAL_1, witnesses=self.yes1[:3], t=10)
+        claims = [*v1, self.r1]
+        if extra_epoch1_ratify:
+            claims.append(ratify_claim(bob, PROPOSAL_1, witnesses=[], t=11))
+        v2 = [
+            vote(alice, PROPOSAL_2, choice=1, t=20),
+            vote(bob, PROPOSAL_2, choice=1, t=20),
+            vote(carol, PROPOSAL_2, choice=1, t=20),
+            vote(dave, PROPOSAL_2, choice=1, t=20),
+            vote(eve, PROPOSAL_2, choice=1, t=20),
+        ]
+        yes2 = [claim_id(v) for v in v2]
+        self.r2 = ratify_claim(alice, PROPOSAL_2, witnesses=yes2[:4], t=30)
+        claims.extend([*v2, self.r2])
+        self.store = store_with(*claims)
+
+
+def _two_transitions(*, extra_epoch1_ratify: bool = False) -> _World:
+    return _World(extra_epoch1_ratify=extra_epoch1_ratify)
 
 
 def _resolve(
@@ -92,7 +101,7 @@ def _resolve(
 
 
 def test_chain_two_transitions() -> None:
-    result = _resolve(_two_transitions())
+    result = _resolve(_two_transitions().store)
     assert result.epoch.epoch_id == EPOCH_3.epoch_id
     assert result.constitution_obj == C3
     assert result.findings == ()
@@ -112,53 +121,78 @@ def test_chain_without_ratification_stays_at_epoch_1() -> None:
     assert result.findings == ()
 
 
-def test_chain_missing_c3_still_reaches_epoch_3() -> None:
+def test_chain_missing_c3_stops_at_epoch_2() -> None:
+    """Das Verfassungsobjekt von i+1 ist das Zielobjekt des Übergangs (04 §3.5, §4.1)."""
+    world = _two_transitions()
     result = _resolve(
-        _two_transitions(),
+        world.store,
         constitutions={
             CONSTITUTION_HASH_1: C1,
             CONSTITUTION_HASH_2: C2,
         },
     )
-    assert result.epoch.epoch_id == EPOCH_3.epoch_id
-    assert result.constitution_obj is None
-    assert result.findings == ()
+    assert result.epoch.epoch_id == EPOCH_2.epoch_id
+    assert result.constitution_obj == C2
+    assert result.findings == dedupe_sort(
+        [
+            Finding(
+                GovernanceFinding.TALLY_UNEVALUABLE,
+                claim_id(world.r2),
+            )
+        ]
+    )
 
 
 def test_chain_missing_proposal_2() -> None:
+    """D178: Ja auf unbekannten Vorschlag von i+1 setzt denselben Autor in i aus."""
+    world = _two_transitions()
     result = _resolve(
-        _two_transitions(),
+        world.store,
         proposals={PROPOSAL_1.proposal_hash: PROPOSAL_1},
     )
-    assert result.epoch.epoch_id == EPOCH_2.epoch_id
-    assert result.findings == (
+    assert result.epoch.epoch_id == EPOCH_1.epoch_id
+    expected = [
         Finding(
             GovernanceFinding.EPOCH_PROPOSAL_UNAVAILABLE,
             PROPOSAL_2.proposal_hash,
-        ),
-    )
+        )
+    ]
+    for cid in world.yes1[:3]:
+        expected.append(
+            Finding(GovernanceFinding.UNSUPPORTED_RATIFICATION, cid)
+        )
+    assert result.findings == dedupe_sort(expected)
 
 
-def test_chain_miskeyed_c3_like_missing() -> None:
+def test_chain_miskeyed_c3_stops_at_epoch_1() -> None:
+    """C3 unter dem Hash von C2: das Zielobjekt des ersten Übergangs fehlt (04 §3.5)."""
+    world = _two_transitions()
     result = _resolve(
-        _two_transitions(),
+        world.store,
         constitutions={
             CONSTITUTION_HASH_1: C1,
             CONSTITUTION_HASH_2: C3,
         },
     )
-    assert result.epoch.epoch_id == EPOCH_3.epoch_id
-    assert result.constitution_obj is None
-    assert result.findings == ()
+    assert result.epoch.epoch_id == EPOCH_1.epoch_id
+    assert result.constitution_obj == C1
+    assert result.findings == dedupe_sort(
+        [
+            Finding(
+                GovernanceFinding.TALLY_UNEVALUABLE,
+                claim_id(world.r1),
+            )
+        ]
+    )
 
 
 def test_chain_wrong_scope_raises() -> None:
     with pytest.raises(ValueError):
-        _resolve(_two_transitions(), scope=STOCK_N)
+        _resolve(_two_transitions().store, scope=STOCK_N)
 
 
 def test_chain_stale_epoch_findings_absent() -> None:
-    result = _resolve(_two_transitions(extra_epoch1_ratify=True))
+    result = _resolve(_two_transitions(extra_epoch1_ratify=True).store)
     assert result.epoch.epoch_id == EPOCH_3.epoch_id
     assert result.findings == ()
 
@@ -184,3 +218,43 @@ def test_decide_miskeyed_proposal_is_unknown() -> None:
     assert Finding(GovernanceFinding.UNKNOWN_PROPOSAL, claim_id(other)) in result.findings
     kinds = {f.kind for f in result.findings}
     assert GovernanceFinding.CONFLICTING_APPROVAL not in kinds
+
+
+def test_chain_epoch_1_constitution_missing() -> None:
+    result = _resolve(store_with(), constitutions={})
+    assert result.epoch.epoch_id == EPOCH_1.epoch_id
+    assert result.constitution_obj is None
+    assert result.findings == ()
+
+
+def test_chain_unknown_proposal_without_section_4_4() -> None:
+    world = _two_transitions()
+    r_alt = ratify_claim(world.bob, PROPOSAL_ALT_A, witnesses=[], t=31)
+    world.store.add(r_alt)
+    result = _resolve(world.store)
+    assert result.epoch.epoch_id == EPOCH_3.epoch_id
+    assert result.findings == (
+        Finding(
+            GovernanceFinding.EPOCH_PROPOSAL_UNAVAILABLE,
+            PROPOSAL_ALT_A.proposal_hash,
+        ),
+    )
+
+
+def test_chain_miskeyed_current_constitution_no_valueerror() -> None:
+    result = _resolve(
+        store_with(),
+        constitutions={CONSTITUTION_HASH_1: C2},
+    )
+    assert result.epoch.epoch_id == EPOCH_1.epoch_id
+    assert result.constitution_obj is None
+
+
+def test_chain_revoked_unknown_ratify_is_silent() -> None:
+    world = _two_transitions()
+    r_alt = ratify_claim(world.bob, PROPOSAL_ALT_A, witnesses=[], t=31)
+    world.store.add(r_alt)
+    world.store.add(world.bob.revoke(r_alt, t=32))
+    result = _resolve(world.store)
+    assert result.epoch.epoch_id == EPOCH_3.epoch_id
+    assert result.findings == ()

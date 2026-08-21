@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim
+from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.epoch import verify_ratification
+from mensch_als_republik.governance.epoch import _is_nuc_name, verify_ratification
 from mensch_als_republik.governance.findings import (
     Finding,
     GovernanceFinding,
@@ -17,10 +17,10 @@ from mensch_als_republik.governance.findings import (
 )
 from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.governance.tally import decide
+from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import constitution_hash
-from mensch_als_republik.predicates import parse_predicate
 from mensch_als_republik.profiles.policy import resolve_policy
-from mensch_als_republik.verifier import ClaimStore
+from mensch_als_republik.verifier import ClaimStore, State
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,18 +30,6 @@ class EpochResolution:
     epoch: Epoch
     constitution_obj: dict | None
     findings: tuple[Finding, ...]
-
-
-def _is_nuc_name(claim: Claim, name: str) -> bool:
-    try:
-        parsed = parse_predicate(claim.p)
-    except Exception:
-        return False
-    return (
-        parsed.namespace == "nuc"
-        and parsed.name == name
-        and parsed.version == "1"
-    )
 
 
 def _known_constitution(known: Mapping[bytes, dict], h: bytes) -> dict | None:
@@ -73,11 +61,6 @@ def resolve_epoch(
         raise ValueError("genesis_obj does not match scope")
 
     epoch = Epoch(scope=scope, index=1, constitution_hash=genesis_obj[4])
-    ratifies = [
-        c
-        for c in store.all_claims()
-        if _is_nuc_name(c, "ratify") and c.N == scope
-    ]
 
     while True:
         constitution_obj = _known_constitution(
@@ -89,10 +72,17 @@ def resolve_epoch(
             constitution_hash=epoch.constitution_hash,
             constitution_obj=constitution_obj,
         ).policy
+        by_cid = classify_all(store, now, policy)
 
+        # Nur Vermerke der erreichten Epoche: die Liste entsteht je Schritt neu,
+        # überholte Epochen fallen durch Verwerfen weg (04-governance.md §4.5).
         findings: list[Finding] = []
         by_proposal: dict[bytes, tuple[Proposal, list[Claim]]] = {}
-        for claim in ratifies:
+        for claim in store.all_claims():
+            if not _is_nuc_name(claim, "ratify") or claim.N != scope:
+                continue
+            if by_cid[claim_id(claim)].state is not State.ACTIVE:
+                continue
             proposal = _known_proposal(known_proposals, claim.J[1])
             if proposal is None:
                 findings.append(
