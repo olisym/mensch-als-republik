@@ -6422,3 +6422,33 @@ statt eine Ausnahme durch den Aufrufer zu tragen — die sichere Richtung. Eine 
 
 **Offen.** `is_nuc_predicate` und `is_core_predicate` fangen `VerifierError`, `is_nuc_name` fängt
 `Exception`: drei Funktionen nebeneinander, zwei Fangbreiten. Das gehört auf die offene Liste.
+
+### D182 — `ruff` unter `dev`, mit genau zwei Regeln: F401 und F811
+
+**Der Anlass.** Der Lauf `00e-benennung` hat in `profiles/membership.py` einen toten Import
+hinterlassen: `Claim` kam dort genau zweimal vor, im Import und in der Signatur der entfernten
+Funktion. Kein Test fängt das, `make check` hatte keinen Linter, und gefunden wurde es allein
+durch das Lesen des Diffs. Diese Fehlerklasse wächst mit jedem Refactoring, und sie ist die
+einzige bisher gefundene, die eine Maschine zuverlässiger sieht als der Supervisor.
+
+**Die Entscheidung.** `ruff` kommt unter `[project.optional-dependencies] dev`, mit einer
+ausdrücklich benannten Regelmenge: **F401** (ungenutzter Import) und **F811** (Redefinition eines
+ungenutzten Namens). `make check` bekommt ein Ziel `check-lint` und ruft es mit auf.
+
+**Warum nur zwei Regeln.** Ein Formatter oder eine breite Stilmenge trüge Formatierung in jeden
+künftigen Diff und verteuerte die Abnahmen — Abnahme heißt hier Lesen, und gelesen wird
+schlechter, wenn Rauschen danebensteht. `E501` bleibt ausdrücklich aus: die 100 Zeichen sind
+Konvention, kein Tor, und `check_specs.py` prüft sie aus demselben Grund nicht.
+
+**Der Preis, benannt.** Das ist die erste Abhängigkeit, die nicht aus dem Protokoll folgt, und sie
+ist eine Rust-Binärdistribution. Sie steht unter `dev`, nie unter `dependencies`; wer die
+Bibliothek benutzt, zieht sie nicht mit. Die geprüfte Alternative — ein eigenes
+`tools/check_unused.py` über `ast` — wurde verworfen: selbst gewarteter Prüfcode kann selbst
+falsch sein, und dann prüft niemand den Prüfer.
+
+**Die Messung vor der Entscheidung.** `ruff check --select F401,F811` gegen `d75a499` liefert
+**16 Funde**, alle in `tests/` und `tools/`, keinen einzigen in `mensch_als_republik/`. Fünf davon
+sahen nach pytest-Fixtures aus, was ein bekannter Falschbefund dieser Regel ist — sie sind es
+nicht: `fresh_alice` und die vier Nachbarn tragen kein `@pytest.fixture`, sind gewöhnliche
+Funktionen und wirklich ungenutzt. Die `__init__.py` der Unterpakete führen `__all__` und lösen
+deshalb nichts aus. Ohne diese Messung wäre die Regelmenge blind gewählt worden.
