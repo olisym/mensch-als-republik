@@ -6463,9 +6463,10 @@ Node beim Empfang eines fremden Claims braucht (D180), keinen Schritt mehr.
 **Der Rückgabetyp trägt die Invariante.** `NucleusState` hält Epoche, Verfassungsobjekt, Policy und
 `authorized_keys` — und die Zusage, dass alle vier aus derselben aufgelösten Kette stammen. Diese
 Zusage trägt heute niemand: wer die Aufrufe selbst verkettet, kann `constitution_hash` aus dem
-Genesis nehmen und bekommt nach einem Amendment still die Policy der ersten Epoche. Das Vorbild ist
-`TrustedMetadataSet` aus `python-tuf` — ein Typ, dessen Inhalt per Konstruktion konsistent ist, mit
-einem angeleiteten Weg darüber.
+Genesis nehmen und rechnet dann unter der Verfassung der ersten Epoche weiter. Ob das auffällt oder
+still bleibt, hängt davon ab, ob er `constitution_obj` mitgibt — **berichtigt in D184**. Das
+Vorbild ist `TrustedMetadataSet` aus `python-tuf` — ein Typ, dessen Inhalt per Konstruktion
+konsistent ist, mit einem angeleiteten Weg darüber.
 
 **Sie entscheidet nichts (D172).** Ersetzt man jeden Zwischenwert durch den, den der jeweilige
 Primitivaufruf ohnehin liefert, ist das Ergebnis byte-gleich. Die Fassade ist Benennung, kein
@@ -6489,3 +6490,37 @@ Aufrufer trägt drei Listen statt einer.
 `profiles/` und `trust/` — sind strukturell identisch und unterscheiden sich nur im `kind`-Enum;
 `dedupe_sort` steht dreimal mit gleicher Signatur daneben. Derselbe Befund wie D181, aber über vier
 Schichten. Er braucht eine eigene Entscheidung.
+
+### D184 — Abnahme `00f`: die Fassade steht; eine Begründung war zu breit
+
+**Was gebaut wurde.** `mensch_als_republik/resolve.py` mit `resolve_state` und `NucleusState`, 73
+Zeilen, dazu 145 Zeilen Tests in `tests/test_resolve.py`. 567 Tests. Die Fassade enthält **null**
+Verzweigungen. Das war das schärfste Abnahmekriterium des Laufs, weil eine Fassade, die verzweigt,
+entscheidet — und dann trüge die Substitutionsprobe aus D172 nicht mehr.
+
+**Die Berichtigung.** D183 begründete die Fassade damit, dass ein Aufrufer, der
+`constitution_hash` aus dem Genesis nimmt, still die Policy der ersten Epoche bekomme. Die
+Rücknahmeprobe hat das widerlegt: in der Prüfwelt sind die Policies von `C1` und `C3` byte-gleich,
+und der Fehlgriff fliegt als `ValueError` auf, weil `constitution_obj` nicht zum Hash passt. Still
+wird er nur, wenn der Aufrufer `constitution_obj` weglässt — dann fehlt das Gegenstück, an dem der
+Widerspruch auffiele. Die Begründung war an einen Fehlermodus gebunden und hat beim Aufschreiben
+Umfang gewonnen, den sie nicht hat. Dasselbe Muster wie D77, D83, D130 und D172.
+
+Die Entscheidung selbst trägt weiter: die Verkettung stand an zwei Stellen, und die Invariante
+„alle vier Werte stammen aus derselben Kette" trug niemand. Überzeichnet war allein die
+Dringlichkeit.
+
+**Zwei Vorbehalte an den Tests.** `test_resolve_state_authorized_keys_match_direct` übergibt
+`policy=state.policy` an den Vergleichsaufruf und prüft damit, dass bei gleicher Policy dasselbe
+herauskommt — nicht, dass die Fassade die richtige weiterreicht; diese Aussage trägt allein
+`test_resolve_state_policy_from_current_constitution`. Und `policy_findings` ist von keinem Test
+berührt: Test 4 prüft zwei der drei Vermerklisten, und die zweite Rücknahmeprobe tauschte
+entsprechend nur `epoch_findings` gegen `key_findings`. Ein Vertauschen mit `policy_findings`
+bliebe unbemerkt. Beides notiert, nicht blockierend.
+
+**Die Zählung dieser Sitzung.** Drei Defekte, davon einer beim Werkzeug: ein toter `Claim`-Import
+in `profiles/membership.py`, den weder ein Test noch ein Kriterium des Prompts gesehen hätte. Er
+hat D182 ausgelöst; seither prüft `make check` diese Klasse mit. Die anderen beiden lagen beim
+Supervisor — ein Grep-Kriterium, das Namen vorschrieb statt Zustände zu messen, und die
+überzeichnete Begründung oben. Dazu eine Untermessung in der Übergabe `00e`, die `_is_nuc_name` als
+Einzelfall führte, wo sechs Kopien standen.

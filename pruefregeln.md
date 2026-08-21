@@ -183,6 +183,14 @@ unbekannt ist; zwei Objekte unter einem Schlüssel; eine Rückwirkung, die über
 Teilnehmermengen ausschließen; der Widerruf eines Prädikats, das die Verfassung zwingend schützt.
 Alle vier lasen sich schlüssig und alle vier waren vor dem Lauf entschieden.
 
+**29. Ein Grep-Kriterium verbietet Namen.** Ein Abnahmekriterium der Form „`grep X` liefert null"
+trifft nicht nur den Zustand, den es verbieten soll, sondern jede Zeichenkette, die `X` enthält. In
+`00e` verlangte das Kriterium für `_is_nuc_name` null Treffer; ein Test namens
+`test_is_nuc_name_...` hätte es rot gemacht, ohne dass etwas falsch gewesen wäre. Das Werkzeug hat
+die Testnamen deshalb danach ausgerichtet und es gemeldet. Ein Kriterium, das die Namensgebung
+lenkt, misst nicht mehr. Ein Grep-Kriterium wird so eng gefasst, dass nur der verbotene Zustand
+hineinfällt: `def _is_nuc_name` statt `_is_nuc_name`.
+
 ---
 
 ## Herkunft der Nummern
@@ -190,7 +198,7 @@ Alle vier lasen sich schlüssig und alle vier waren vor dem Lauf entschieden.
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
-D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179.
+D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
