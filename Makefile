@@ -1,4 +1,5 @@
 PY := .venv/bin/python
+RUFF := .venv/bin/ruff
 
 .PHONY: test test-prop check-specs check-tree check-lint check check-all clean
 
@@ -16,7 +17,7 @@ check-tree:
 	$(PY) tools/check_tree.py
 
 check-lint:
-	.venv/bin/ruff check mensch_als_republik tests tools
+	$(RUFF) check mensch_als_republik tests tools
 
 check: check-tree check-specs check-lint test
 

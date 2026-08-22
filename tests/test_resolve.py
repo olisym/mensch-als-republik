@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from mensch_als_republik import findings as nucleus_findings
 from mensch_als_republik.atom import claim_id
+from mensch_als_republik.governance import findings as governance_findings
 from mensch_als_republik.governance.chain import resolve_epoch
 from mensch_als_republik.keys import resolve_authorized_keys
+from mensch_als_republik.profiles import findings as profiles_findings
 from mensch_als_republik.profiles.policy import resolve_policy
 from mensch_als_republik.resolve import resolve_state
 from tests.helpers import store_with
@@ -17,6 +20,7 @@ from tests.governance.fixtures import (
     CONSTITUTION_HASH_1,
     CONSTITUTION_HASH_2,
     CONSTITUTION_HASH_3,
+    EPOCH_1,
     EPOCH_2,
     EPOCH_3,
     GENESIS_D,
@@ -98,9 +102,21 @@ def test_resolve_state_policy_from_current_constitution() -> None:
     assert state.policy == from_c3
 
 
-def test_resolve_state_authorized_keys_match_direct() -> None:
+def test_resolve_state_authorized_keys_match_primitive_call() -> None:
+    """Schlüsselsatz gleicht dem Primitivaufruf; die Verfassung bewegt ihn hier nicht (D185).
+
+    In dieser Prüfwelt führt keine Verfassung ``nucleus_keys``, alle drei Policies sind
+    gleich, und der Vergleichsaufruf liefert unter der falschen Verfassung dasselbe
+    Ergebnis.
+    """
     store = _two_transitions()
     state = _resolve(store)
+    from_c3 = resolve_policy(
+        scope=N_D,
+        genesis_obj=GENESIS_D,
+        constitution_hash=EPOCH_3.constitution_hash,
+        constitution_obj=C3,
+    ).policy
     direct = resolve_authorized_keys(
         store,
         scope=N_D,
@@ -108,7 +124,7 @@ def test_resolve_state_authorized_keys_match_direct() -> None:
         constitution_hash=EPOCH_3.constitution_hash,
         constitution_obj=C3,
         now=NOW,
-        policy=state.policy,
+        policy=from_c3,
     )
     assert state.authorized_keys == direct.keys
 
@@ -124,6 +140,36 @@ def test_resolve_state_missing_c3_keeps_findings_separate() -> None:
     assert state.epoch == EPOCH_2
     assert state.epoch_findings != ()
     assert state.key_findings == ()
+
+
+def test_resolve_state_missing_c1_keeps_findings_separate() -> None:
+    """Drei Vermerklisten sind nicht vertauschbar, wenn C1 fehlt (D185)."""
+    state = _resolve(
+        _two_transitions(),
+        constitutions={
+            CONSTITUTION_HASH_2: C2,
+            CONSTITUTION_HASH_3: C3,
+        },
+    )
+    assert state.epoch == EPOCH_1
+    assert state.constitution_obj is None
+    assert state.policy_findings == (
+        profiles_findings.Finding(
+            profiles_findings.ProfileFinding.CONSTITUTION_UNAVAILABLE,
+            CONSTITUTION_HASH_1,
+        ),
+    )
+    assert state.key_findings == (
+        nucleus_findings.Finding(
+            nucleus_findings.NucleusFinding.CONSTITUTION_UNAVAILABLE,
+            CONSTITUTION_HASH_1,
+        ),
+    )
+    assert state.epoch_findings != ()
+    assert (
+        state.epoch_findings[0].kind
+        == governance_findings.GovernanceFinding.TALLY_UNEVALUABLE
+    )
 
 
 def test_resolve_state_wrong_scope_raises_like_resolve_epoch() -> None:
