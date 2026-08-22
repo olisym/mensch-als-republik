@@ -6755,3 +6755,43 @@ haben in MaR ein Gegenstück und gehören in die Reihe, sobald der Bauer steht:
 **Zuschnitt des ersten Laufs.** Der Bauer und **eine** Welt, in der der Schlüsselsatz sich
 zwischen Epoche 1 und Epoche 2 bewegt, dazu die Tests, die das festhalten. Die beiden Fälle oben
 sind benannt und folgen danach, nicht in demselben Lauf.
+
+### D191 — Abnahme `00j`: die Reglosigkeit ist nicht mehr behauptet, sondern vorgeführt
+
+**Was gebaut wurde.** `tests/kettenwelt.py` und `tests/test_kettenwelt.py`, zusammen 205 Zeilen,
+beide neu. Ein Bauer, der aus Identitäten, Wurzelschlüsseln und einer Folge von Verfassungen eine
+Kette baut, und eine Welt, deren zweite Verfassung `nucleus_keys` führt. 571 Tests. Gemergt als
+Fast-Forward über zwei Commits, `main` bei `dbe4f9a`.
+
+**Die Probe ist das Ergebnis, nicht der Test.** Probe A hat in `resolve_state` die Verfassung der
+geltenden Epoche gegen die des Genesis getauscht — den Fehlgriff also, gegen den D183 den Typ
+`NucleusState` stellt. Der neue Test wurde rot; **alle** Tests in `tests/test_resolve.py` und
+`tests/test_example_nucleus.py` blieben grün. Damit ist zweierlei am Artefakt belegt statt
+behauptet: die Zusage aus D183 ist zum ersten Mal prüfbar, und die Reglosigkeit der übrigen
+Prüfwelten, die D185 und D188 nur gemessen hatten, ist vorgeführt. Eine Probe, die genau eine von
+drei Prüfschichten trifft, sagt mehr über die anderen zwei als jede Zusicherung darin.
+
+**Der Prompt schrieb einen unmöglichen Weltzustand vor.** Die Feldliste für die beiden
+Verfassungen nannte Schwellen, Schlichter, `participants` und `nucleus_keys` — und ließ
+`irrevocable_predicates` weg. Ohne `vote@1` liefert `decide` den Vermerk `VOTE_REVOCABLE` und
+Zustand `UNEVALUABLE`, ohne `ratify@1` entsprechend `RATIFY_REVOCABLE`; nachgemessen ist jeder
+der beiden für sich zu wenig. Das steht seit langem in `04 §3.5`, als `GV-27` und `GV-31` in
+`04-golden-anchors.md` und im Fließtext von `example-nucleus.md`. Die Sondierwelt der Designrunde
+hatte beide Einträge; verloren gingen sie beim Abschreiben in den Prompt. Das Werkzeug hat es
+bemerkt, richtig ergänzt und gemeldet. Daraus die Schärfung von Prüfregel 28 — keine neue Regel,
+weil die alte den Fall schon meint und nur an der falschen Stelle endete.
+
+**Drei Abnahmedefekte, keiner davon durch Test oder Kriterium gefallen.** Erstens war `now` ein
+toter Parameter: er stand in der Signatur und kam im Rumpf nicht vor, während die Tests zweimal
+`1000` als Literal tippten. Zweitens lief der Vergleichsaufruf ohne `policy`, womit sich die
+beiden verglichenen Aufrufe in zwei Dingen unterschieden und der Test den Unterschied einem davon
+zuschrieb — dieselbe Klasse wie der Vorbehalt aus D184, folgenlos gemessen, aber die Aussage wird
+erst mit der Behebung eindeutig. Drittens war die Vorbedingung ungeschrieben, dass
+`identitaeten[0]` unter der jeweils geltenden Epoche autorisiert sein muss; ist sie es nicht, baut
+der Bauer stillschweigend eine Kette, die nicht vorrückt. Alle drei auf demselben Branch behoben.
+
+**Offen, als Messung und nicht als Regel.** `ruff` kennt mit `ARG` eine Regelgruppe für
+ungenutzte Argumente, die den ersten Defekt maschinell gefangen hätte. D182 hat den Linter
+bewusst auf F401 und F811 festgelegt, und eine dritte Gruppe braucht denselben Nachweis wie die
+ersten beiden: erst die Zahl der Funde im Baum messen, dann entscheiden. Vorher ist es eine
+Vermutung.

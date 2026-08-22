@@ -182,6 +182,11 @@ behaupteten unmögliche Lagen — ein Objekt, das für den Übergang bekannt und
 unbekannt ist; zwei Objekte unter einem Schlüssel; eine Rückwirkung, die überlappende
 Teilnehmermengen ausschließen; der Widerruf eines Prädikats, das die Verfassung zwingend schützt.
 Alle vier lasen sich schlüssig und alle vier waren vor dem Lauf entschieden.
+Und: die Welt, die im Prompt steht, ist Feld für Feld die Welt, die gemessen wurde. In `00j` war
+sie in der Designrunde richtig gebaut und ging beim Abschreiben verloren — die Feldliste nannte
+Schwellen, Schlichter, `participants` und `nucleus_keys` und ließ `irrevocable_predicates` weg,
+ohne die nach `04 §3.5` keine Auszählung evaluierbar ist. Konstruieren ist die eine Hälfte,
+vollständig übertragen die andere.
 
 **29. Ein Grep-Kriterium verbietet Namen.** Ein Abnahmekriterium der Form „`grep X` liefert null"
 trifft nicht nur den Zustand, den es verbieten soll, sondern jede Zeichenkette, die `X` enthält. In
