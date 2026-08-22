@@ -6587,3 +6587,36 @@ Stelle.
 
 **Die Bedingung.** Diese Entscheidung wird zusammen mit der Frage beantwortet, ob der
 Beispielnukleus eine aufgelöste Kette bekommt — nicht davor und nicht getrennt.
+
+### D187 — Abnahme `00h`: die zwei Vorbehalte aus D184 sind geschlossen
+
+**Was gebaut wurde.** `tests/test_resolve.py` und `Makefile`, sonst nichts;
+`mensch_als_republik/resolve.py` blieb unangetastet. 568 Tests. Der Vergleichsaufruf in
+`test_resolve_state_authorized_keys_match_primitive_call` leitet seine Policy jetzt unabhängig
+aus `C3` her, und `test_resolve_state_missing_c1_keeps_findings_separate` hält die drei
+Vermerklisten auseinander. Damit sind beide Vorbehalte aus D184 erledigt. Gemergt als
+Fast-Forward, `main` bei `056728f`.
+
+**Die Reglosigkeitsprobe ist der Ertrag, nicht die Reparatur.** Probe B hat den direkten Aufruf
+auf `CONSTITUTION_HASH_1` und `C1` gesetzt — die falsche Verfassung — und der Test blieb grün.
+Damit ist die Aussage aus D185 nicht mehr nur eine Messung des Supervisors an einer Sondierwelt,
+sondern eine geprüfte Eigenschaft des committeten Tests. Der Docstring, der die Schwäche benennt,
+ist belegt und nicht behauptet. Das ist die Form, in der eine Reglosigkeit stehen bleiben darf:
+benannt, gemessen, mit dem Ausweg in D186 verknüpft.
+
+**Der Test sichert mehr als das Kriterium verlangte.** Der Auftrag hat `epoch_findings` nur auf
+„nicht leer plus `kind` des ersten Eintrags“ festgelegt, weil das Subjekt eine `claim_id` ist.
+Dadurch sind trotzdem alle drei Vertauschungen gefangen und nicht nur die eine aus Probe A: ein
+Tausch von `epoch_findings` gegen `policy_findings` bricht die `kind`-Zusicherung und zusätzlich
+die Gleichheit auf `policy_findings`, weil dort dann ein Vermerk aus `governance/findings.py`
+stünde. Ein schwächeres Kriterium kann einen stärkeren Test ergeben, wenn es den Zustand
+beschreibt statt die Form vorzuschreiben.
+
+**Der Name kam vom Werkzeug.** `test_resolve_state_missing_c1_keeps_findings_separate` stand
+nicht im Auftrag; das Werkzeug hat ihn gesetzt und gemeldet. Er beschreibt die Prüflage und nicht
+das Kriterium — die Rückwirkung, aus der Prüfregel 29 entstand, ist hier nicht eingetreten.
+
+**Die Zählung.** Kein Werkzeugdefekt. Ein Supervisorfehler: die Zeilenzahl des D185-Splice war mit
+64 angegeben, `git diff --numstat` meldet 63. Die Messvorschrift zählte das leere Element vor dem
+führenden Umbruch mit. Dieselbe Klasse wie die geschätzten Zeilenzahlen früherer Sitzungen, nur
+diesmal in der Vorschrift selbst statt in der Schätzung.
