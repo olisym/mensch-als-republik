@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from mensch_als_republik.atom import claim_id
+from mensch_als_republik.governance import Finding, GovernanceFinding
+from mensch_als_republik.governance.findings import dedupe_sort
 from mensch_als_republik.keys import resolve_authorized_keys
+from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.profiles.policy import resolve_policy
 from mensch_als_republik.resolve import resolve_state
 from tests.helpers import Identity
@@ -32,6 +36,35 @@ def _welt() -> tuple[Kettenwelt, Identity, Identity, Identity]:
         identitaeten=(a, b, c),
         root_keys=(a.pub,),
         verfassungen=(erste, zweite),
+    )
+    return welt, a, b, c
+
+
+def _welt3() -> tuple[Kettenwelt, Identity, Identity, Identity]:
+    a = Identity("A")
+    b = Identity("B")
+    c = Identity("C")
+    people = sorted([a.pub, b.pub, c.pub])
+    schwellen = {
+        "ordinary": [1, 2],
+        "membership": [1, 2],
+        "amendment": [1, 2],
+    }
+    basis = {
+        "irrevocable_predicates": ["obligation@1", "ratify@1", "vote@1"],
+        "thresholds": schwellen,
+        "arbitration": {"arbitrators": people},
+        "participants": people,
+    }
+    erste = dict(basis)
+    zweite = dict(basis)
+    zweite["nucleus_keys"] = [b.pub]
+    dritte = dict(basis)
+    dritte["nucleus_keys"] = [c.pub]
+    welt = kettenwelt(
+        identitaeten=(a, b, c),
+        root_keys=(a.pub,),
+        verfassungen=(erste, zweite, dritte),
     )
     return welt, a, b, c
 
@@ -83,3 +116,41 @@ def test_kettenwelt_chain_has_no_findings() -> None:
     assert state.epoch_findings == ()
     assert state.policy_findings == ()
     assert state.key_findings == ()
+
+
+def test_kettenwelt_missing_middle_constitution_blocks_chain() -> None:
+    """Fehlende Zwischenverfassung sperrt die Kette (D195)."""
+    welt, _a, _b, _c = _welt3()
+    known = dict(welt.known_constitutions)
+    del known[welt.verfassungs_hashes[1]]
+    state = resolve_state(
+        welt.store,
+        scope=welt.scope,
+        genesis_obj=welt.genesis_obj,
+        known_constitutions=known,
+        known_proposals=welt.known_proposals,
+        now=welt.now,
+    )
+    erster_ratify = next(
+        claim
+        for claim in welt.store.all_claims()
+        if is_nuc_name(claim, "ratify")
+        and claim.J == (3, welt.vorschlaege[0].proposal_hash)
+    )
+    assert state.epoch == welt.epochen[0]
+    assert state.constitution_obj == welt.verfassungen[0]
+    assert state.authorized_keys == frozenset(welt.genesis_obj[1])
+    assert state.policy_findings == ()
+    assert state.key_findings == ()
+    assert state.epoch_findings == dedupe_sort(
+        [
+            Finding(
+                GovernanceFinding.PROPOSAL_CONSTITUTION_UNAVAILABLE,
+                welt.verfassungs_hashes[1],
+            ),
+            Finding(
+                GovernanceFinding.TALLY_UNEVALUABLE,
+                claim_id(erster_ratify),
+            ),
+        ]
+    )

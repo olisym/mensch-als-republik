@@ -165,11 +165,10 @@ def test_resolve_state_missing_c1_keeps_findings_separate() -> None:
             CONSTITUTION_HASH_1,
         ),
     )
-    assert state.epoch_findings != ()
-    assert (
-        state.epoch_findings[0].kind
-        == governance_findings.GovernanceFinding.TALLY_UNEVALUABLE
-    )
+    assert {f.kind for f in state.epoch_findings} == {
+        governance_findings.GovernanceFinding.TALLY_UNEVALUABLE,
+        governance_findings.GovernanceFinding.CONSTITUTION_UNAVAILABLE,
+    }
 
 
 def test_resolve_state_wrong_scope_raises_like_resolve_epoch() -> None:

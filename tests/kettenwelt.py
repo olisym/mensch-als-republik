@@ -41,8 +41,10 @@ def kettenwelt(
 ) -> Kettenwelt:
     """Baut Genesis, Übergänge und Speicher aus einer Folge von Verfassungen (D190).
 
-    ``identitaeten[0]`` signiert jedes ``propose`` und jedes ``ratify`` und muss unter
-    der jeweils geltenden Epoche autorisiert sein; sonst rückt die Kette nicht vor.
+    ``identitaeten[0]`` signiert jedes ``propose`` und jedes ``ratify`` und muss
+    Teilnehmer der jeweils geltenden Verfassung sein, also in ``participants`` stehen;
+    sonst rückt die Kette nicht vor. Autorisiert im Sinne von ``authorized_keys`` muss
+    der Autor nicht sein (D193).
     """
     if not verfassungen:
         raise ValueError("verfassungen must not be empty")

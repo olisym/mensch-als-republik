@@ -139,7 +139,11 @@ def test_chain_missing_c3_stops_at_epoch_2() -> None:
             Finding(
                 GovernanceFinding.TALLY_UNEVALUABLE,
                 claim_id(world.r2),
-            )
+            ),
+            Finding(
+                GovernanceFinding.PROPOSAL_CONSTITUTION_UNAVAILABLE,
+                PROPOSAL_2.constitution_hash,
+            ),
         ]
     )
 
@@ -182,7 +186,11 @@ def test_chain_miskeyed_c3_stops_at_epoch_1() -> None:
             Finding(
                 GovernanceFinding.TALLY_UNEVALUABLE,
                 claim_id(world.r1),
-            )
+            ),
+            Finding(
+                GovernanceFinding.PROPOSAL_CONSTITUTION_UNAVAILABLE,
+                PROPOSAL_1.constitution_hash,
+            ),
         ]
     )
 

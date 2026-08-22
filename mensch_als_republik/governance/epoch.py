@@ -76,7 +76,8 @@ def verify_ratification(
                     Finding(
                         kind=GovernanceFinding.TALLY_UNEVALUABLE,
                         subject=claim_id(ratify),
-                    )
+                    ),
+                    *tally.findings,
                 ]
             ),
         )
