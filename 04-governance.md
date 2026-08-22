@@ -397,6 +397,8 @@ Ein `ratify@1`-Claim etabliert die Folgeepoche genau dann, wenn:
 3. jede `claim_id` in `v[0]` bezeichnet eine Stimme, die nach `§3.1` zählt, mit `choice == 1`
 4. keine zwei bezeichnen Stimmen desselben Autors
 5. die Anzahl überschreitet die Schwelle nach `§3.2` und `§3.4`
+6. die Zielverfassung ist **regierbar**: `participants` ist deklariert und wohlgeformt nach
+   `§3.5`, und `irrevocable_predicates` führt `vote@1` und `ratify@1`
 
 Trifft eine Bedingung nicht zu, etabliert der Claim keine Epoche. Er ist deshalb kein Angriff und
 kein Protokollverstoß, sondern eine Behauptung, die sich nicht bestätigt.
@@ -410,6 +412,42 @@ Zwei Vermerke, weil die Diagnose verschieden ist (D94, D106):
 
 Die Wirkung ist in beiden Fällen dieselbe: keine Epoche. Im ersten Fall weiß der Beobachter, welche
 `claim_id` er holen muss; im zweiten weiß er, dass Holen nichts nützt.
+
+**Bedingung 6 — die Zielverfassung muss regieren können** (D200).
+
+| Lage in der Zielverfassung | Vermerk, Subjekt `proposal.constitution_hash` |
+|---|---|
+| `participants` nicht deklariert | `PARTICIPANTS_UNDECLARED` |
+| `participants` formwidrig nach `§3.5` | `MALFORMED_PARTICIPANTS` |
+| `irrevocable_predicates` führt `vote@1` nicht | `VOTE_REVOCABLE` |
+| `irrevocable_predicates` führt `ratify@1` nicht | `RATIFY_REVOCABLE` |
+
+Es sind dieselben vier Lagen wie in `§3.5`, dort an der Verfassung der Epoche gemessen, hier an
+der Zielverfassung. Das Subjekt benennt nach D198 das zurückgewiesene Objekt, also die
+Zielverfassung; die Verfassung der Epoche ist in dieser Lage heil.
+
+**Warum hier und nicht in `§3.5`.** Die Regierbarkeit des Ziels wird für die Auszählung nicht
+gebraucht — Klasse und angewandte Schwelle stehen ohne sie fest. Stünde die Prüfung in `§3.5`,
+meldete die Auszählung `UNEVALUABLE`, obwohl sie ausgewertet hat: gemessen an der Welt aus D197
+drei Ja-Stimmen von drei Mitgliedern gegen die Schwelle `[1,2]`, also `PASSED`. Eine Auszählung,
+die `UNEVALUABLE` sagt, wo sie `PASSED` meint, ist eine falsche Adresse, und dafür gilt dieselbe
+Begründung wie in D198: einer falschen folgt der Beobachter.
+
+**Warum zuletzt.** Trägt der `ratify@1` schon nach 1 bis 5 nicht, ist der Zustand der
+Zielverfassung ohne Belang; ein Vermerk über sie verdeckte dann den Defekt am Claim. Die
+Reihenfolge ist aus demselben Grund normativ wie die in `§3.5`.
+
+**Das Zielobjekt gehört zur Auszählung.** Ist `tally.state` nicht `UNEVALUABLE` und trägt das
+gereichte Zielobjekt nicht den Hash `proposal.constitution_hash`, ist das ein **`ValueError`** wie
+in Bedingung 0: ein fehlzugeordnetes Objekt ist ein Aufruferfehler und keine Lage der Welt. Ohne
+diese Bindung prüfte Bedingung 6 eine andere Verfassung als die, über die abgestimmt wurde.
+
+**Was Bedingung 6 nicht leistet.** Sie sperrt die Sackgasse, in der die Zielverfassung nie eine
+Auszählung tragen kann. Die `thresholds` der Zielverfassung prüft sie nicht — das tut `§3.5`
+bereits, aber nur für die angewandte Klasse, nicht für die Klasse, die ein späterer Übergang
+brauchen wird. Eine Zielverfassung ohne `thresholds` der Klasse `membership` bleibt also ein
+zulässiges Ziel und sperrt erst den übernächsten Übergang, und zwar nur den einer Klasse. Ob
+`§4.1` das mitprüfen soll, ist offen und in D200 benannt.
 
 Die Prüfung ist **offline und vollständig lokal**: wer den Vorschlag, das neue Verfassungsobjekt
 und die zitierten Stimmen hat, rechnet das Ergebnis nach, ohne jemanden zu fragen und ohne eine

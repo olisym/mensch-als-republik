@@ -7030,3 +7030,75 @@ Nachgemessen, bevor das ein Defekt genannt wurde: `pyproject.toml` wählt `F401`
 Für Python gibt es also keine Zeilenlängenregel, gegen die das verstoßen könnte. Ob es eine geben
 soll, gehört zu der schon offenen Frage nach einer dritten `ruff`-Gruppe und wird dort mit
 entschieden, nicht hier nebenbei.
+
+### D200 — Die Zielverfassung muss regieren können, geprüft am Übergang
+
+**Der Fork aus D197.** `decide` prüft die Zielverfassung heute auf Vorhandensein, Hash und die
+Schwelle der angewandten Klasse. Auf `participants` und auf `irrevocable_predicates` prüft es nur
+die Verfassung der Epoche. Eine Zielverfassung ohne `participants` ist damit ein zulässiges Ziel:
+die Kette rückt in sie ein, sie liefert `authorized_keys`, und erst der nächste Übergang
+scheitert — festgehalten im Prüffall zur untauglichen Zwischenverfassung in
+`tests/test_kettenwelt.py`.
+
+**Gemessen, drei Varianten**, jede im Baum des Supervisors gegen die Welt aus D197 gefahren:
+
+| Variante | Epoche | Schlüssel | Auszählung 1 nach 2 | Vermerke | rot |
+|---|---|---|---|---|---|
+| heute | 2, `C1` regiert | aus `C1` | `UNEVALUABLE` erst bei 2 nach 3 | zwei | — |
+| `§3.5`, eng | 1, `C0` | Genesis-Wurzel | `UNEVALUABLE` | zwei | 1 |
+| `§3.5`, mit Schwellenklassen | 1, `C0` | Genesis-Wurzel | `UNEVALUABLE` | zwei | 1 |
+| `§4.1`, eng | 1, `C0` | Genesis-Wurzel | `PASSED`, 3 von 3, `[1,2]` | einer | 1 |
+
+Jede Variante kostet denselben einen Test — den Prüffall aus D197 selbst, kein Kollateral im
+576er Korpus. Die Kosten entscheiden die Gabel also nicht.
+
+**Entschieden: ja, prüfen — in `§4.1`, in der engen Fassung.** Bedingung 6 dort.
+
+**Der Grund für das Ob.** Heute liefert der Zustand Schlüssel aus einer Verfassung, aus der der
+Nukleus nie wieder herauskommt, und `policy_findings` wie `key_findings` sind dabei **leer**
+(gemessen). Wer die Schlüssel liest und die Epochenvermerke nicht, hält eine Aussage, die mit
+nichts kollidieren kann. `08 §2.2` verlangt das Gegenteil.
+
+**Der Grund für das Wo.** Die Regierbarkeit des Ziels geht in die Auszählung nicht ein. In `§3.5`
+eingebaut, meldete sie `UNEVALUABLE`, wo `PASSED` gemessen ist — dieselbe Art Fehladressierung,
+die D194 und D198 abgestellt haben. Der Übergang scheitert, nicht die Zählung.
+
+**Literatur.** python-tuf hat dieselbe Stelle. Im Client-Workflow fehlte Schritt 1.3: neu geladene
+Root-Metadaten wurden nicht gegen die Schwelle der Schlüssel geprüft, die in der neuen Root selbst
+stehen, und dadurch konnte eine ungültige Root zur vertrauten werden — GHSA-f8mr-jv2c-v8mg,
+behoben in PR 1101, enthalten ab v0.14.0. Die strukturelle Lehre ist dieselbe: das Rotationsziel
+muss die Regeln erfüllen, die es selbst auferlegen wird, bevor es übernommen wird.
+
+**Benannt und abgelehnt: die Signaturfassung.** TUFs Schritt 1.3 ist eine Signaturprüfung, das
+Ziel muss von den eigenen Schlüsseln getragen sein. In MaR hieße das: die Zielverfassung muss
+unter ihren eigenen `participants` und ihrer eigenen Schwelle Zustimmung finden. Das wird **nicht**
+übernommen, und zwar aus benanntem Grund. TUFs Bedrohungsmodell ist ein Dritter, der Metadaten
+ausliefert; in MaR wählt die laufende Epoche das Ziel und ist die legitime Autorität. Es gibt
+keinen Dritten. Die Lehre überträgt sich, das Modell nicht.
+
+**Die Gegenseite.** Auch TUF nimmt unerreichbare Endzustände hin: ein Repository, dessen
+Rotationen in einen Zyklus laufen, wird als ungültig markiert, ohne Weg zurück. Der Unterschied
+trägt die Entscheidung — ein Zyklus ist erst hinterher erkennbar, die untaugliche Zielverfassung
+schon vorher.
+
+**Ein Helfer, nicht zwei Fassungen.** Die vier Lagen stehen in `§3.5` als eine Tabelle und
+bekommen eine Implementierung: `constitution_governable` in `tally.py`, aufgerufen von `decide`
+mit dem Subjekt `epoch.constitution_hash` und von `verify_ratification` mit dem Subjekt
+`proposal.constitution_hash`. Der andere Weg — die vier Prüfungen in `§4.1` noch einmal
+schreiben — hätte eine Regel mit zwei Fassungen hinterlassen, und die driften.
+
+**Nebenbefund, mit erledigt: die vier Subjekte in `decide` waren unbewacht.** Beim Bau der
+Rücknahmeproben gemessen: stellt man die Adresse dieser vier Vermerke von
+`epoch.constitution_hash` auf `proposal.constitution_hash` um, läuft die volle Reihe grün durch.
+D198 hat drei Subjekte in `decide` besetzt, die Schwellenschleife und die beiden
+Genesis-Subjekte; diese vier nicht. Dieselbe Form wie der Befund aus D199 — ein Test kann die Art
+prüfen und die Adresse nie. Der Lauf zu D200 schließt die Lücke mit einem Prüffall in
+`tests/governance/test_vermerk_subjekte.py`.
+
+**Offen und hier benannt: wie weit die Regierbarkeit reicht.** Die enge Fassung prüft
+`participants` und die beiden Unwiderruflichkeiten. Die vollständige prüfte zusätzlich die
+Schwellenklassen, und erreichbar sind genau zwei — `membership` und die Klasse aus `genesis[5]`,
+weil `threshold_class` keine dritte liefern kann. Sie ist also konstruierbar und kostet dasselbe,
+braucht aber `genesis_obj` als zweiten neuen Parameter in `§4.1`. Dagegen spricht, dass eine
+fehlende von zwei Klassen keine Sackgasse ist, sondern eine Teilsperre. Die Frage wird beantwortet,
+wenn ein Fall auftritt, der sie braucht, nicht vorher.

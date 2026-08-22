@@ -213,6 +213,12 @@ nachgezogen. Die Regel stand seit langem in der dauerhaften Anweisung und in jed
 war aber nicht nummeriert — und was hier nicht steht, wird beim Schreiben eines Prompts nicht
 geprüft. Dieselbe Begründung wie bei den Nummern 8 und 9 in D144.
 
+**32. Wo eine Prüfung sitzt, ist eine eigene Gabel.** Steht fest, dass geprüft werden soll, ist die
+Stelle damit nicht entschieden. Die Gegenprobe wird an jeder plausiblen Stelle gebaut, und
+verglichen werden die **erzeugten Aussagen**, nicht die Zahl der gefallenen Tests. In D200 kosteten
+alle drei Varianten genau einen Test; die Wahl fiel erst, als die Vermerke nebeneinander lagen und
+zwei Varianten `UNEVALUABLE` meldeten, wo `PASSED` gemessen war.
+
 ---
 
 ## Herkunft der Nummern
@@ -221,7 +227,7 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192, 31 aus D196.
+30 aus D192, 31 aus D196, 32 aus D200.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
