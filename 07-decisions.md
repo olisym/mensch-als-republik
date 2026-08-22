@@ -6795,3 +6795,119 @@ ungenutzte Argumente, die den ersten Defekt maschinell gefangen hätte. D182 hat
 bewusst auf F401 und F811 festgelegt, und eine dritte Gruppe braucht denselben Nachweis wie die
 ersten beiden: erst die Zahl der Funde im Baum messen, dann entscheiden. Vorher ist es eine
 Vermutung.
+
+### D192 — Der Vorlaufbefund zur dreiepochigen Ratifizierung war eine verunreinigte Welt
+
+**Was behauptet war.** `sitzungsstart-00k.md` führte als ersten offenen Punkt einen möglichen
+Produktivbefund: in einer Welt mit drei Verfassungen halte die Kette bei Epoche 1 mit zwei
+`UNSUPPORTED_RATIFICATION`, sobald B statt A den zweiten Übergang ratifiziert — und es falle auch
+der erste Übergang, obwohl sich die beiden Welten nur im Autor eines Claims aus dem zweiten
+unterschieden. Dazu ein ungeklärter Widerspruch: der Subjektabgleich löste die Vermerke auf
+`vote@1`-Claims auf, während `_unsupported` in `governance/epoch.py` `claim_id(ratify)` als
+Subjekt setzt.
+
+**Der Widerspruch ist keiner.** `verify_ratification` hat zwei Ausgänge mit demselben Vermerk.
+`_unsupported` setzt `claim_id(ratify)`; die Schleife über die zitierten Stimmen setzt
+`subject=cid` der **Stimme**, im Zweig `cid not in tally.yes`. Beide Lesarten sind richtig, sie
+gehören zu verschiedenen Pfaden. Ein Stimm-Subjekt bedeutet nicht „die Ratifizierung trägt
+nicht", sondern „diese zitierte Stimme liegt im Speicher und zählt nicht mit".
+
+**Die Ursache liegt im Bau, nicht im Code.** `Identity` in `tests/helpers.py` ist eine
+fortlaufende Autorenkette; ihr Docstring sagt es: jeder Aufruf hängt an, `h_prev` wird intern
+fortgeführt. Die zweite Welt wurde aus denselben `Identity`-Objekten gebaut wie die erste. Ihre
+Claims zeigten auf Vorgänger, die in ihrem eigenen Speicher nicht liegen; die Stimmen waren damit
+nicht `ACTIVE`, fielen aus `tally.yes` und lösten in der Zitatschleife je Stimme einen Vermerk
+aus. Dass auch der erste Übergang fiel, hat keinen Grund in einer Fernwirkung des zweiten: die
+Verunreinigung begann schon bei den Stimmen des ersten.
+
+**Gemessen.** Mit frischen Identitäten je Welt ist die Nachbildung des Bauers mit A als
+Ratifizierer beider Übergänge claim-ID-genau der Bauer und löst auf Epoche 3 auf, alle drei
+Vermerklisten leer. Ratifiziert B den zweiten Übergang, ebenfalls Epoche 3 ohne Vermerke.
+Dieselbe Nachbildung mit wiederverwendeten Identitäten liefert Epoche 1 mit zwei
+`UNSUPPORTED_RATIFICATION`, und zwar unabhängig davon, wer ratifiziert. Der Ratifizierer war nie
+die Ursache.
+
+**Folge.** Kein Produktivdefekt, keine richtige Sperre, kein Auftrag. Daraus Prüfregel 30: eine
+Variantenwelt wird zuerst mit unverändertem Feld gebaut und gegen die Referenzwelt nachgewiesen.
+
+### D193 — Berichtigung an D191: die Vorbedingung des Kettenbauers trifft nicht zu
+
+D191 verzeichnet als dritten Abnahmedefekt von `00j`, es sei ungeschrieben geblieben, dass
+`identitaeten[0]` unter der jeweils geltenden Epoche autorisiert sein müsse, weil der Bauer sonst
+stillschweigend eine Kette baue, die nicht vorrückt. Behoben wurde der Defekt, indem genau diese
+Zusage in den Docstring von `kettenwelt()` geschrieben wurde. Die Zusage ist falsch.
+
+**Gemessen.** In einer Welt mit drei Verfassungen, deren zweite `nucleus_keys` auf B und deren
+dritte auf C setzt, sind die autorisierten Schlüssel je Epoche `{A}`, `{B}` und `{C}`. A ist Autor
+jedes `propose` und jedes `ratify` und ab Epoche 2 nicht mehr autorisiert — die Kette erreicht
+dennoch Epoche 3, ohne einen einzigen Vermerk.
+
+**Was stattdessen trägt, ist Teilnehmerschaft.** `04 §4.1` verlangt `ratify.I` als Element von
+`P`, und `decide` vermerkt eine Stimme von außerhalb als `NON_MEMBER_VOTE`. Wird A aus
+`participants` der zweiten Verfassung genommen und sonst nichts verändert, hält die Kette bei
+Epoche 2 mit einem `UNSUPPORTED_RATIFICATION`. Der Docstring wird entsprechend berichtigt: der
+Autor muss Teilnehmer der jeweils geltenden Verfassung sein, autorisiert muss er nicht sein.
+
+**Die Klasse.** Eine Zusage, die einmal geschrieben und nie nachgemessen wurde, ist eine
+Verbindlichkeit — hier eine, die im selben Zug entstanden ist, in dem ein Defekt behoben wurde.
+Prüfregel 25 zielt auf Begründungen; dies ist ihr Gegenstück für Vorbedingungen.
+
+### D194 — Die Auszählung weiß, was fehlt; die Ratifizierung gibt es weiter
+
+**Der Befund.** Fehlt einem Beobachter eine Verfassung mitten in der Kette, liefert `decide` den
+Zustand `UNEVALUABLE` und genau einen Vermerk, der benennt, was fehlt — etwa
+`PROPOSAL_CONSTITUTION_UNAVAILABLE` mit dem Hash der fehlenden Verfassung als Subjekt.
+`verify_ratification` verwirft diesen Vermerk und setzt an seine Stelle `TALLY_UNEVALUABLE` auf
+dem `ratify`. `04 §4.1` begründet seine beiden Vermerke ausdrücklich damit, dass der Beobachter im
+einen Fall weiß, welche `claim_id` er holen muss, und im anderen weiß, dass Holen nichts nützt.
+Hier ist die zweite Auskunft unwahr: die fehlende Verfassung zu holen behebt alles.
+
+**Die Literatur.** RFC 8914 (Extended DNS Errors, 2020) beschreibt denselben Fehler im Großen.
+DNS hat mit SERVFAIL ein einziges grobes Signal für viele verschiedene Lagen; Anwendungen müssen
+raten, und der übliche Ausweg ist der nächste Resolver — der entweder wieder scheitert oder, falls
+er nicht validiert, ein potenziell schädliches Ergebnis liefert. Die Lösung ist ein getrenntes,
+additives Feld: der Info-Code steht neben dem RCODE, verändert dessen Verarbeitung nicht und darf
+sie nach den Security Considerations auch nicht verändern; mehrere Einträge sind zugelassen.
+Diagnose informiert, sie steuert nicht. Genau diese Trennung wird hier übernommen.
+
+**Die Entscheidung.** `verify_ratification` gibt im Zweig `tally.state is UNEVALUABLE` die
+Vermerke der Auszählung zusätzlich weiter, als `dedupe_sort` über `TALLY_UNEVALUABLE` auf
+`claim_id(ratify)` und die Einträge aus `tally.findings`. `TALLY_UNEVALUABLE` bleibt unverändert
+stehen, `next_epoch` bleibt `None` in genau denselben Fällen, die Kettenauflösung wird nicht
+angefasst. `_unevaluable` in `governance/tally.py` baut an seiner einzigen Stelle genau einen
+Vermerk; die Zahl der Vermerke steigt also um genau eins.
+
+**Was das kostet.** Erstens wird der Subjektraum sichtbar untypisiert: `epoch_findings` führt dann
+eine `claim_id` und einen Verfassungshash nebeneinander. Das ist schon heute so, fällt aber erst
+an der Fassade auf, und es hängt an dem mit D173 offenen Punkt, dass `00` die Form seiner Vermerke
+nirgends festhält. Zweitens ändern sich drei Tests, alle gemessen:
+`test_chain_missing_c3_stops_at_epoch_2` und `test_chain_miskeyed_c3_stops_at_epoch_1` vergleichen
+exakt und bekommen einen Vermerk mehr, `test_resolve_state_missing_c1_keeps_findings_separate`
+greift auf `epoch_findings[0]` einer sortierten Folge zu und behauptet damit eine Position statt
+einer Aussage.
+
+**Der Schnitt ist eng, und das ist eine Entscheidung.** Weitergegeben wird nur bei `UNEVALUABLE`.
+Scheitert die Ratifizierung auf einer auswertbaren Auszählung, etwa weil Stimmen als
+`NON_MEMBER_VOTE` ausgefallen sind, bleibt der Beobachter weiter ohne Adresse. RFC 8914 lässt sein
+Feld ausdrücklich auch bei fehlerfreien Antworten zu; die Literatur zielt also auf die breite
+Fassung. Sie bleibt hier offen und wird nicht stillschweigend mitgenommen.
+
+### D195 — Eine fehlende Zwischenverfassung sperrt die Kette, in MaR aber nicht aus Politik
+
+**Die Prüfwelt.** Drei Verfassungen, sonst feldgleich: C1 ohne `nucleus_keys`, C2 mit `[B]`, C3
+mit `[C]`, `irrevocable_predicates` überall mit `vote@1` und `ratify@1`. Bekannt sind C1 und C3,
+C2 fehlt. Gemessen löst `resolve_state` auf `epochen[0]` auf, `constitution_obj` ist C1,
+`authorized_keys` sind die Wurzelschlüssel aus `genesis_obj[1]`, `policy_findings` und
+`key_findings` sind leer, und `epoch_findings` führt nach D194 zwei Einträge:
+`PROPOSAL_CONSTITUTION_UNAVAILABLE` auf dem Hash von C2 und `TALLY_UNEVALUABLE` auf der
+`claim_id` des ersten `ratify`. Beide Subjekte werden im Test abgeleitet, nicht getippt.
+
+**Die Literatur, und wo MaR abweicht.** python-tuf 2669 beschreibt denselben Umriss: eine
+fehlerhafte Root-Version N sperrt jede spätere gültige Version, weil der Client über alle neueren
+Versionen läuft und bei jeder ungültigen abbricht — bis hin zu Fällen, in denen der Fehler für die
+Sperre gar nicht einschlägig ist, etwa zehn gültige und ein ungültiger Schlüssel bei Schwelle
+fünf. Die dort gestellte Frage lautet, ob ein Client überhaupt scheitern soll, wenn N ungültig und
+N+1 gültig ist. In MaR ist diese Frage nicht offen: Epoche 2 auszuwerten verlangt das
+Verfassungsobjekt von Epoche 2, und fehlt es, ist auch das Überspringen versperrt. Die Sperre ist
+strukturell und keine Politik. Damit ist der Fall in MaR der schwächere: es gibt keine Wahl zu
+treffen, sondern nur die Pflicht, die Adresse mitzuliefern — und die erfüllt D194.

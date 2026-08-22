@@ -196,6 +196,14 @@ die Testnamen deshalb danach ausgerichtet und es gemeldet. Ein Kriterium, das di
 lenkt, misst nicht mehr. Ein Grep-Kriterium wird so eng gefasst, dass nur der verbotene Zustand
 hineinfällt: `def _is_nuc_name` statt `_is_nuc_name`.
 
+**30. Eine Variantenwelt braucht eine Nullprobe.** Wer eine Welt baut, um darin genau ein Feld zu
+verändern, baut sie zuerst mit **unverändertem** Feld und weist nach, dass sie die Referenzwelt
+reproduziert — bei Claims claim-ID-genau. Ohne diese Nullprobe misst die Variantenmessung den
+Bauapparat und nicht die Variante. In `00k` hat sie im ersten Messwert gefangen, dass beide Welten
+aus denselben `Identity`-Objekten gebaut waren: `Identity` führt `h_prev` intern fort, die zweite
+Welt zeigte auf Vorgänger, die in ihrem eigenen Speicher nicht liegen, ihre Stimmen waren nicht
+`ACTIVE`, und der daraus gelesene Befund war ein Artefakt des Baus.
+
 ---
 
 ## Herkunft der Nummern
@@ -203,7 +211,8 @@ hineinfällt: `def _is_nuc_name` statt `_is_nuc_name`.
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
-D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184.
+D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
+30 aus D192.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
