@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from mensch_als_republik.keys import resolve_authorized_keys
+from mensch_als_republik.profiles.policy import resolve_policy
 from mensch_als_republik.resolve import resolve_state
 from tests.helpers import Identity
 from tests.kettenwelt import Kettenwelt, kettenwelt
@@ -44,7 +45,7 @@ def test_kettenwelt_authorized_keys_follow_epoch() -> None:
         genesis_obj=welt.genesis_obj,
         known_constitutions=welt.known_constitutions,
         known_proposals=welt.known_proposals,
-        now=1000,
+        now=welt.now,
     )
     assert state.epoch == welt.epochen[1]
     assert state.constitution_obj == welt.verfassungen[1]
@@ -55,7 +56,13 @@ def test_kettenwelt_authorized_keys_follow_epoch() -> None:
         genesis_obj=welt.genesis_obj,
         constitution_hash=welt.verfassungs_hashes[0],
         constitution_obj=welt.verfassungen[0],
-        now=1000,
+        now=welt.now,
+        policy=resolve_policy(
+            scope=welt.scope,
+            genesis_obj=welt.genesis_obj,
+            constitution_hash=welt.verfassungs_hashes[0],
+            constitution_obj=welt.verfassungen[0],
+        ).policy,
     )
     assert from_first.keys == frozenset(welt.genesis_obj[1])
     assert from_first.keys == frozenset([a.pub])
@@ -71,7 +78,7 @@ def test_kettenwelt_chain_has_no_findings() -> None:
         genesis_obj=welt.genesis_obj,
         known_constitutions=welt.known_constitutions,
         known_proposals=welt.known_proposals,
-        now=1000,
+        now=welt.now,
     )
     assert state.epoch_findings == ()
     assert state.policy_findings == ()

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
+from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.domains import DOM_NUC_GEN
 from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.policy import constitution_hash
@@ -29,6 +29,7 @@ class Kettenwelt:
     store: InMemoryStore
     known_constitutions: dict[bytes, dict]
     known_proposals: dict[bytes, Proposal]
+    now: int
 
 
 def kettenwelt(
@@ -38,11 +39,21 @@ def kettenwelt(
     verfassungen: Sequence[dict],
     now: int = 1000,
 ) -> Kettenwelt:
-    """Baut Genesis, Übergänge und Speicher aus einer Folge von Verfassungen (D190)."""
+    """Baut Genesis, Übergänge und Speicher aus einer Folge von Verfassungen (D190).
+
+    ``identitaeten[0]`` signiert jedes ``propose`` und jedes ``ratify`` und muss unter
+    der jeweils geltenden Epoche autorisiert sein; sonst rückt die Kette nicht vor.
+    """
     if not verfassungen:
         raise ValueError("verfassungen must not be empty")
     if len(verfassungen) > 1 and not identitaeten:
         raise ValueError("identitaeten must not be empty")
+    max_t = 3 * (len(verfassungen) - 1)
+    if max_t >= now:
+        raise ValueError(
+            f"now={now} is not greater than max t={max_t} "
+            f"for {len(verfassungen) - 1} transitions"
+        )
 
     hashes = tuple(constitution_hash(obj) for obj in verfassungen)
     genesis_obj = {
@@ -58,7 +69,7 @@ def kettenwelt(
     scope = hashlib.sha256(DOM_NUC_GEN + cbor_canon.encode(genesis_obj)).digest()
     epochen = [Epoch(scope=scope, index=1, constitution_hash=hashes[0])]
     vorschlaege: list[Proposal] = []
-    claims = []
+    claims: list[Claim] = []
     t = 1
     for i in range(1, len(verfassungen)):
         proposal = Proposal(
@@ -105,4 +116,5 @@ def kettenwelt(
         store=store_with(*claims),
         known_constitutions=dict(zip(hashes, objs)),
         known_proposals={p.proposal_hash: p for p in vorschlaege},
+        now=now,
     )
