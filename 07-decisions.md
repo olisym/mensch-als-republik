@@ -6911,3 +6911,34 @@ N+1 gültig ist. In MaR ist diese Frage nicht offen: Epoche 2 auszuwerten verlan
 Verfassungsobjekt von Epoche 2, und fehlt es, ist auch das Überspringen versperrt. Die Sperre ist
 strukturell und keine Politik. Damit ist der Fall in MaR der schwächere: es gibt keine Wahl zu
 treffen, sondern nur die Pflicht, die Adresse mitzuliefern — und die erfüllt D194.
+
+### D196 — Abnahme `00k`: der Defekt lag im Kriterium, nicht im Lauf
+
+**Was gebaut wurde.** Die Weitergabe der Auszählungsvermerke nach D194, der Prüffall nach D195 und
+die Berichtigung des Kettenbauer-Docstrings nach D193. Gemessen mit `git diff --numstat` gegen den
+Prompt-Commit `2a02104`: fünf Dateien, 91 eingefügte und 10 entfernte Zeilen. Der Produktivteil
+ist zwei Zeilen gegen eine — `*tally.findings` in einer Liste, die es schon gab. 572 Tests.
+Gemergt als Fast-Forward über zwei Commits, `main` bei `f6720b1`.
+
+**Die Proben.** Probe A nahm die Weitergabe zurück: genau vier rote Tests, der neue und die drei
+nachgezogenen, 568 grün. Probe B ließ die mittlere Verfassung in der Kopie stehen: genau ein roter
+Test, der neue, 571 grün, und die Kette lief bis Epoche 3. Beide Mengen standen vorher im Prompt.
+Prüfregel 23 verlangt, dass außer dem geprüften Test nichts anderes rot wird; wo vier Tests
+zwangsläufig fallen, wird die Vierermenge selbst zum Kriterium, sonst wäre die Probe zweideutig
+statt eindeutig. Der Supervisor hat den Lauf zusätzlich in einem eigenen Baum nachgebaut und beide
+Proben unabhängig gefahren; sie reproduzieren.
+
+**Der einzige Defekt war ein Abnahmekriterium.** Es nannte `32c55c9` als Vergleichspunkt, also den
+Registercommit, während der Prompt auf `2a02104` liegt. Der Prompt ist selbst eine Datei im
+Wurzelverzeichnis und erscheint deshalb im Diff gegen den Commit darunter; gemessen wurden sechs
+Dateien statt der geforderten fünf. Das Werkzeug hat den Unterschied gemeldet, die Herkunft der
+sechsten benannt und nichts nachgezogen. Gegen den richtigen Vergleichspunkt ist das Kriterium
+erfüllt. Daraus Prüfregel 31: die Regel stand seit langem in der dauerhaften Anweisung und in
+jedem Sitzungsstart, aber nicht in `pruefregeln.md` — und was dort nicht steht, wird beim
+Schreiben eines Prompts nicht geprüft.
+
+**Notiert, nicht behoben.** Der neue Test vergleicht `state.epoch_findings` gegen `dedupe_sort`
+über eine handgebaute Liste. Für den Inhalt trägt das; für die Reihenfolge steht auf beiden Seiten
+dieselbe Sortierfunktion, die Aussage über die Ordnung ist also zirkulär. Das ist der Hausstil von
+`tests/governance/test_chain.py` und wurde hier nicht ausgenommen. Wer die Ordnung von
+`dedupe_sort` je prüfen will, braucht dafür einen eigenen Ort.

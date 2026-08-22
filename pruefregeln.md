@@ -204,6 +204,15 @@ aus denselben `Identity`-Objekten gebaut waren: `Identity` führt `h_prev` inter
 Welt zeigte auf Vorgänger, die in ihrem eigenen Speicher nicht liegen, ihre Stimmen waren nicht
 `ACTIVE`, und der daraus gelesene Befund war ein Artefakt des Baus.
 
+**31. Der Vergleichspunkt eines Laufs ist der Prompt-Commit.** Ein Abnahmekriterium über einen
+Diff nennt den Commit, auf dem der Prompt liegt, nicht den Registercommit darunter. Der Prompt ist
+selbst eine Datei im Wurzelverzeichnis und erscheint sonst in genau dem Diff, den er beschreibt.
+In `00k` setzte der Supervisor `32c55c9` als Basis, obwohl der Prompt auf `2a02104` lag, und maß
+das Kriterium „genau fünf Dateien" gegen sechs; das Werkzeug hat es gemeldet und nichts
+nachgezogen. Die Regel stand seit langem in der dauerhaften Anweisung und in jedem Sitzungsstart,
+war aber nicht nummeriert — und was hier nicht steht, wird beim Schreiben eines Prompts nicht
+geprüft. Dieselbe Begründung wie bei den Nummern 8 und 9 in D144.
+
 ---
 
 ## Herkunft der Nummern
@@ -212,7 +221,7 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192.
+30 aus D192, 31 aus D196.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
