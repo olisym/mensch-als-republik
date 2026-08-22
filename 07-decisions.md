@@ -6620,3 +6620,43 @@ das Kriterium — die Rückwirkung, aus der Prüfregel 29 entstand, ist hier nic
 64 angegeben, `git diff --numstat` meldet 63. Die Messvorschrift zählte das leere Element vor dem
 führenden Umbruch mit. Dieselbe Klasse wie die geschätzten Zeilenzahlen früherer Sitzungen, nur
 diesmal in der Vorschrift selbst statt in der Schätzung.
+
+### D188 — Der Beispielnukleus führt die Kette vor; D186 bleibt gebunden
+
+**Die Messung zuerst.** `resolve_state` läuft gegen den Beispielnukleus, ohne dass dort etwas
+geändert werden müsste: Speicher aus `claim_set`, `known_constitutions` aus `constitution_gov` und
+`constitution_2`, `known_proposals` aus `ex.proposal`. Ergebnis `epoch_2`, alle drei
+Vermerklisten leer. Die Kette trägt also heute schon, es fehlt allein der Aufruf. Gemessen wurde
+weiter: die beiden Verfassungen unterscheiden sich in **genau einem** Feld, `participants`.
+`irrevocable_predicates`, `thresholds` und `arbitration` sind gleich.
+
+**Damit ist D169 beantwortet, und zwar negativ.** `resolve_state` löst nicht auf, dass der
+Beispielnukleus Epoche-1- von Epoche-2-Policy nicht unterscheiden kann — es verschiebt den Befund.
+Policy und Schlüsselsatz sind über beide Epochen byte-gleich, aus demselben Grund wie in den
+Governance-Fixtures (D185). Was die Kette hier bewegt, ist `participants`, und das wirkt erst in
+`membership`, also hinter der Stelle, an der die Fassade nach D183 aufhört.
+
+**Die Entscheidung.** Der Beispielnukleus bekommt eine zusätzliche Prüfung, die den Zustand
+ableitet statt ihn vorauszusetzen. Sie tritt neben die bestehenden Prüfungen; keine von ihnen
+wird umgestellt. `_member` bedient Epoche 1 und Epoche 2 mit derselben Funktion, und
+`check_membership_epoch1` braucht ausdrücklich die Verfassung, die **nicht** die geltende ist;
+`check_anchor_resolution` hält absichtlich verschiedene Verfassungen gegeneinander. Eine halbe
+Umstellung erzeugte Asymmetrie ohne Gewinn und entwertete eine bestehende Prüfung.
+
+**Was die Prüfung trägt und was nicht.** Epochenscharf sind allein zwei Zusicherungen: dass der
+abgeleitete Zustand `epoch_2` ist und dass sein Verfassungsobjekt `constitution_2` ist. Der
+Vergleich der Policy und des Schlüsselsatzes ist **reglos** — beide Werte stimmen auch unter der
+Verfassung der ersten Epoche, und der Anker ist in jedem Fall `genesis_gov[1]`. Diese beiden
+Vergleiche stehen deshalb nicht als Epochenprüfung da, sondern als Substitutionsprobe im Sinne von
+D172: die Fassade liefert byte-gleich das, was die Primitivaufrufe liefern. So benannt sind sie
+ehrlich; unbenannt wären sie derselbe Fehler wie der Vorbehalt aus D184.
+
+**Der Ertrag.** D183 und D187 halten fest, dass die Fassade keinen Träger hat. Mit dieser Prüfung
+hat sie ihren ersten Aufrufer ausserhalb der Tests. Der Beispielnukleus bleibt dabei, was er ist:
+eine Vorführung, kein Node. D180 gilt unverändert — kein Pfad, kein Socket, kein Daemon.
+
+**D186 bleibt gebunden.** Die zurückgestellte Frage ist nicht, ob eine Prüfung die Kette
+vorführt, sondern ob die Verfassungen so gebaut werden, dass die Kette Policy oder Schlüsselsatz
+wirklich bewegt. Das verschöbe `constitution_hash_2`, den `proposal_hash` und `epoch_id_2`, die
+alle in `example-nucleus.md` stehen. Es ist ein Spec-Nachzug mit eigener Golden-Number-Rechnung
+und keine Zugabe zu einem Prüfungslauf.
