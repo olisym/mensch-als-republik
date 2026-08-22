@@ -6942,3 +6942,64 @@ Schreiben eines Prompts nicht geprüft.
 dieselbe Sortierfunktion, die Aussage über die Ordnung ist also zirkulär. Das ist der Hausstil von
 `tests/governance/test_chain.py` und wurde hier nicht ausgenommen. Wer die Ordnung von
 `dedupe_sort` je prüfen will, braucht dafür einen eigenen Ort.
+
+### D197 — Die untaugliche Zwischenverfassung sperrt anders als die fehlende
+
+**Der zweite Fall aus D190 ist einer, und ein anderer als angenommen.** Gedacht war er als „ein
+Schlüssel, den erst die neue Epoche autorisiert"; D193 hat das erledigt, weil Autorisierung für
+den Ratifizierer keine Rolle spielt. Gemessen an der Kettenwelt aus D195, jeweils nur C2
+verändert:
+
+| C2 | aufgelöste Epoche | Vermerk neben `TALLY_UNEVALUABLE` |
+|---|---|---|
+| fehlt ganz | 1 | `PROPOSAL_CONSTITUTION_UNAVAILABLE` auf H(C2) |
+| ohne `participants` | 2 | `PARTICIPANTS_UNDECLARED` auf H(C2) |
+| `participants` leer | 2 | `MALFORMED_PARTICIPANTS` auf H(C2) |
+| ohne `vote@1` | 2 | `VOTE_REVOCABLE` auf H(C2) |
+| Schwelle `[3, 2]` | 1 | `MALFORMED_THRESHOLD` auf H(C1) |
+
+**Die fehlende Verfassung sperrt davor, die untaugliche danach.** `decide` prüft den Inhalt nur
+der geltenden Verfassung; von der Zielverfassung werden Vorhandensein, Hash und Schwelle geprüft,
+sonst nichts (`04 §3.5`). Eine Verfassung ohne `participants` ist damit ein zulässiges
+Übergangsziel. Die Kette rückt in sie ein — und sie regiert: gemessen ist `constitution_obj` das
+untaugliche C2, `authorized_keys` sind Bs Schlüssel, `policy_findings` und `key_findings` sind
+leer. Der Nukleus steht in einer Epoche, in der nie wieder eine Entscheidung ausgewertet werden
+kann, und nur die Epochenschicht weiß davon.
+
+**Das ist das MaR-Gegenstück zu python-tuf 2669**, und ein schärferes als D195: dort ist die
+Zwischenversion abwesend, hier ist sie vorhanden und unbrauchbar. Genau das beschreibt 2669 — eine
+fehlerhafte Version N, die jede spätere gültige sperrt.
+
+**Was hier entschieden wird und was nicht.** Entschieden ist der Prüffall: die Welt mit C2 ohne
+`participants`, auf Kettenebene. Nicht entschieden ist, ob `decide` die Zielverfassung auf Inhalt
+prüfen soll, bevor sie Übergangsziel wird. Das änderte, welche Epoche die Kette erreicht, und ist
+keine kleine Runde; es bleibt als benannter Fork offen.
+
+### D198 — Das Subjekt eines Auszählungsvermerks benennt das zurückgewiesene Objekt
+
+**Der Befund.** `decide` hat zwölf `UNEVALUABLE`-Ausgänge; gemessen übergeben zehn davon
+`epoch.constitution_hash` als Subjekt, gleich wo der Fehler sitzt. Dreimal ist das die falsche
+Adresse. Bei `UNSUPPORTED_WEIGHT_MODE` und bei dem `MALFORMED_THRESHOLD` aus `genesis[5]` liegt
+der Fehler im Genesis, nicht in einer Verfassung. Und die Schwellenprüfung, die `04 §3.5`
+ausdrücklich in beiden Verfassungen verlangt, kann die Zielverfassung zurückweisen: eine Schwelle
+`[3, 2]` in C2 ergibt gemessen `MALFORMED_THRESHOLD` auf dem Hash von C1, dessen Schwelle
+einwandfrei ist.
+
+**Keine Verletzung, eine unbesetzte Stelle.** `04 §3.5` nannte ein Subjekt nur für
+`STALE_EPOCH_VOTE`. `04-golden-anchors.md` nennt für `GV-24`, `GV-29` und `GV-47` Art und Zustand,
+kein Subjekt. Der Code war frei und hat die Freiheit ungünstig genutzt.
+
+**Nichts bewacht es.** Die vorhandenen Vektortests prüfen über einen `_kinds`-Helfer
+ausschließlich die Art des Vermerks. Alle drei Subjekte umzustellen lässt die volle Reihe mit 572
+grün durchlaufen. Eine Änderung, die drei Diagnosen umlenkt, läuft heute still durch — dieselbe
+Klasse wie die reglosen Tests aus D185, nur eine Ebene tiefer.
+
+**Die Entscheidung.** `04 §3.5` bekommt die Regel, dass das Subjekt das zurückgewiesene Objekt
+benennt, mit den beiden nicht offensichtlichen Fällen ausgeschrieben. `decide` zieht an drei
+Stellen nach: die Schwellenschleife führt den Hash des jeweils geprüften Objekts mit, die beiden
+Genesis-Fälle adressieren den Scope. Die drei Subjekte bekommen Tests, sonst bleiben sie
+unbewacht.
+
+**Der Anschluss an D173.** Dort steht offen, dass die Form der Vermerke nirgends festgehalten ist.
+Dieser Eintrag schließt das für `04 §3.5` und für nichts sonst; die übrigen Vermerkorte bleiben
+unbestimmt.

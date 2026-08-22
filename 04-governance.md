@@ -325,6 +325,16 @@ liefe eine Auszählung über ein unpassendes Paar **ohne** Stimmen glatt durch u
 | `genesis[6] != 0` (Gewichtungsmodus nicht Kopfzahl) | `UNSUPPORTED_WEIGHT_MODE` |
 | `genesis[5] > 2`, Schwellenklasse fehlt, oder Schwelle nicht wohlgeformt | `MALFORMED_THRESHOLD` |
 
+**Das Subjekt benennt das Objekt, das die Prüfung zurückweist** (D198). Bei den Zeilen über den
+Inhalt einer Verfassung ist das ihr Hash, bei `STALE_EPOCH_VOTE` der `proposal_hash`. Zwei Fälle
+sind nicht offensichtlich und werden deshalb ausgeschrieben. Liegt der Fehler in `genesis[5]` oder
+`genesis[6]`, ist das Subjekt der **Scope**: der Scope ist der Hash des Genesis und damit die
+einzige Adresse, unter der ein Beobachter es holen kann. Und wird die Schwelle in beiden
+Verfassungen geprüft, benennt das Subjekt die **zurückgewiesene** — bei der Zielverfassung also
+`proposal.constitution_hash`, nicht `epoch.constitution_hash`. Ein Vermerk, der auf ein heiles
+Objekt zeigt, schickt den Beobachter an die falsche Stelle, und das ist schlechter als gar keine
+Adresse: einer fehlenden folgt er nicht.
+
 **Eine leere `participants`-Liste ist formwidrig.** Sie ist sortiert und duplikatfrei und käme
 sonst durch; mit `n = 0` wäre jeder Vorschlag sofort `FAILED`, und die Diagnose sagte „abgelehnt",
 wo „niemand konnte abstimmen" gemeint ist.
