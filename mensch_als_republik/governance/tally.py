@@ -238,7 +238,7 @@ def decide(
     if genesis_obj.get(6) != 0:
         return _unevaluable(
             GovernanceFinding.UNSUPPORTED_WEIGHT_MODE,
-            epoch.constitution_hash,
+            epoch.scope,
             epoch=epoch,
             proposal=proposal,
         )
@@ -246,24 +246,27 @@ def decide(
     if type(idx) is not int or idx not in _CLASS_BY_INDEX:
         return _unevaluable(
             GovernanceFinding.MALFORMED_THRESHOLD,
-            epoch.constitution_hash,
+            epoch.scope,
             epoch=epoch,
             proposal=proposal,
         )
     klass = threshold_class(constitution_obj, target_constitution_obj, genesis_obj)
-    for obj in (constitution_obj, target_constitution_obj):
+    for obj, obj_hash in (
+        (constitution_obj, epoch.constitution_hash),
+        (target_constitution_obj, proposal.constitution_hash),
+    ):
         thresholds = obj.get("thresholds")
         if not isinstance(thresholds, dict) or klass not in thresholds:
             return _unevaluable(
                 GovernanceFinding.MALFORMED_THRESHOLD,
-                epoch.constitution_hash,
+                obj_hash,
                 epoch=epoch,
                 proposal=proposal,
             )
         if not _is_ratio(thresholds[klass]):
             return _unevaluable(
                 GovernanceFinding.MALFORMED_THRESHOLD,
-                epoch.constitution_hash,
+                obj_hash,
                 epoch=epoch,
                 proposal=proposal,
             )

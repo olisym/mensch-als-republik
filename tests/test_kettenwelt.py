@@ -40,7 +40,7 @@ def _welt() -> tuple[Kettenwelt, Identity, Identity, Identity]:
     return welt, a, b, c
 
 
-def _welt3() -> tuple[Kettenwelt, Identity, Identity, Identity]:
+def _welt3(*, c2_ohne_participants: bool = False) -> tuple[Kettenwelt, Identity, Identity, Identity]:
     a = Identity("A")
     b = Identity("B")
     c = Identity("C")
@@ -59,6 +59,8 @@ def _welt3() -> tuple[Kettenwelt, Identity, Identity, Identity]:
     erste = dict(basis)
     zweite = dict(basis)
     zweite["nucleus_keys"] = [b.pub]
+    if c2_ohne_participants:
+        del zweite["participants"]
     dritte = dict(basis)
     dritte["nucleus_keys"] = [c.pub]
     welt = kettenwelt(
@@ -151,6 +153,42 @@ def test_kettenwelt_missing_middle_constitution_blocks_chain() -> None:
             Finding(
                 GovernanceFinding.TALLY_UNEVALUABLE,
                 claim_id(erster_ratify),
+            ),
+        ]
+    )
+
+
+def test_kettenwelt_unusable_middle_constitution_governs() -> None:
+    """Die Kette rückt in die untaugliche Verfassung ein, und diese regiert (D197)."""
+    welt, _a, _b, _c = _welt3(c2_ohne_participants=True)
+    state = resolve_state(
+        welt.store,
+        scope=welt.scope,
+        genesis_obj=welt.genesis_obj,
+        known_constitutions=welt.known_constitutions,
+        known_proposals=welt.known_proposals,
+        now=welt.now,
+    )
+    zweiter_ratify = next(
+        claim
+        for claim in welt.store.all_claims()
+        if is_nuc_name(claim, "ratify")
+        and claim.J == (3, welt.vorschlaege[1].proposal_hash)
+    )
+    assert state.epoch == welt.epochen[1]
+    assert state.constitution_obj == welt.verfassungen[1]
+    assert state.authorized_keys == frozenset(welt.verfassungen[1]["nucleus_keys"])
+    assert state.policy_findings == ()
+    assert state.key_findings == ()
+    assert state.epoch_findings == dedupe_sort(
+        [
+            Finding(
+                GovernanceFinding.PARTICIPANTS_UNDECLARED,
+                welt.verfassungs_hashes[1],
+            ),
+            Finding(
+                GovernanceFinding.TALLY_UNEVALUABLE,
+                claim_id(zweiter_ratify),
             ),
         ]
     )
