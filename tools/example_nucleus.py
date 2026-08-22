@@ -23,6 +23,7 @@ from mensch_als_republik.findings import Finding, NucleusFinding
 from mensch_als_republik.keys import resolve_authorized_keys
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from mensch_als_republik.profiles import MembershipState, membership, resolve_policy
+from mensch_als_republik.resolve import resolve_state
 from mensch_als_republik.trust.derive import derive
 from mensch_als_republik.trust.findings import TrustFinding
 from mensch_als_republik.trust.graph import capacity
@@ -606,6 +607,57 @@ def check_ratification(ex: ExampleNucleus) -> None:
         raise AssertionError("two ratify claims produced different epoch_id")
 
 
+def check_resolved_chain(ex: ExampleNucleus) -> None:
+    """Ableitung des geltenden Zustands; Policy- und Schlüsselvergleich sind reglos (D188).
+
+    Die Substitutionsprobe zu D172 gilt auch unter ``ex.constitution_gov``, und der Anker
+    ist in jedem Fall ``frozenset(ex.genesis_gov[1])``.
+    """
+    store = _store(*claim_set(ex).claims.values())
+    known_constitutions = {
+        ex.constitution_hash_gov: ex.constitution_gov,
+        ex.constitution_hash_2: ex.constitution_2,
+    }
+    known_proposals = {ex.proposal.proposal_hash: ex.proposal}
+    state = resolve_state(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        known_constitutions=known_constitutions,
+        known_proposals=known_proposals,
+        now=NOW,
+    )
+    if state.epoch != ex.epoch_2:
+        raise AssertionError(f"resolved epoch: {state.epoch!r}")
+    if state.constitution_obj != ex.constitution_2:
+        raise AssertionError("constitution_obj is not constitution_2")
+    if (
+        state.epoch_findings != ()
+        or state.policy_findings != ()
+        or state.key_findings != ()
+    ):
+        raise AssertionError(
+            f"findings: epoch={state.epoch_findings!r} "
+            f"policy={state.policy_findings!r} key={state.key_findings!r}"
+        )
+    policy = _policy(ex, ex.constitution_hash_2, ex.constitution_2)
+    if state.policy != policy:
+        raise AssertionError(f"policy: {state.policy!r}")
+    direct = resolve_authorized_keys(
+        store,
+        scope=ex.N_gov,
+        genesis_obj=ex.genesis_gov,
+        constitution_hash=ex.constitution_hash_2,
+        constitution_obj=ex.constitution_2,
+        now=NOW,
+        policy=policy,
+    )
+    if state.authorized_keys != direct.keys:
+        raise AssertionError(f"authorized_keys: {state.authorized_keys!r}")
+    if direct.findings != ():
+        raise AssertionError(f"resolve_authorized_keys findings: {direct.findings!r}")
+
+
 def check_membership_epoch2(ex: ExampleNucleus) -> None:
     """D116: Gründer GRANT_ONLY, DORA GRANT_ONLY vor und MEMBER nach Annahme."""
     claims = claim_set(ex).claims
@@ -795,6 +847,7 @@ def verify_all() -> ExampleNucleus:
     check_membership_epoch1(ex)
     check_tally(ex)
     check_ratification(ex)
+    check_resolved_chain(ex)
     check_membership_epoch2(ex)
     check_trust_flow(ex)
     check_overcommit(ex)

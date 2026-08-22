@@ -11,6 +11,7 @@ from tools.example_nucleus import (
     check_membership_epoch2,
     check_overcommit,
     check_ratification,
+    check_resolved_chain,
     check_scope_separation,
     check_tally,
     check_trust_flow,
@@ -41,6 +42,10 @@ def test_tally_three_runs() -> None:
 
 def test_ratification() -> None:
     check_ratification(build())
+
+
+def test_resolved_chain() -> None:
+    check_resolved_chain(build())
 
 
 def test_membership_epoch2() -> None:
