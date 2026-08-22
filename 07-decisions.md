@@ -7003,3 +7003,30 @@ unbewacht.
 **Der Anschluss an D173.** Dort steht offen, dass die Form der Vermerke nirgends festgehalten ist.
 Dieser Eintrag schließt das für `04 §3.5` und für nichts sonst; die übrigen Vermerkorte bleiben
 unbestimmt.
+
+### D199 — Abnahme `00l`: die Proben belegen mehr als den Code, den sie prüfen
+
+**Was gebaut wurde.** Die drei Subjekte aus D198 in `decide`, der Prüffall aus D197 auf
+Kettenebene und drei Prüffälle auf `decide`-Ebene in der neuen Datei
+`tests/governance/test_vermerk_subjekte.py`. Gemessen mit `git diff --numstat` gegen den
+Prompt-Commit `dc5c04d`: drei Dateien, 137 eingefügte und 6 entfernte Zeilen. 576 Tests. Gemergt
+als Fast-Forward über zwei Commits, `main` bei `bf50375`.
+
+**Die Proben.** Drei Rücknahmen, drei vorher festgelegte Rotmengen, alle drei getroffen: die
+Schwellenschleife einen roten Test, die beiden Genesis-Subjekte zwei, die Variantenwelt des
+Kettentests einen. Kein bestehender Test ist mitgefallen — und genau das ist die Aussage. Die
+Proben zeigen nicht nur, dass die neuen Tests greifen, sondern am Artefakt, dass vor diesem Lauf
+**nichts** die drei Adressen gehalten hat. Dieselbe Form wie Probe A in `00j`, wo eine Rücknahme
+die Reglosigkeit zweier älterer Prüfschichten vorführte.
+
+**Kein Defekt.** Der Supervisor hat den Lauf in einem eigenen Baum nachgebaut, die volle Reihe und
+alle drei Proben unabhängig gefahren, `ruff` mit der Projektauswahl laufen lassen; alles
+reproduziert. Es ist der erste Lauf dieser Sitzung ohne Befund in der Abnahme — der einzige Defekt
+von `00k` lag im Kriterium des Supervisors, nicht im Werkzeug.
+
+**Eine Beobachtung, kein Befund.** Die neue Signatur von `_welt3()` ist 101 Zeichen lang.
+Nachgemessen, bevor das ein Defekt genannt wurde: `pyproject.toml` wählt `F401` und `F811`,
+`line-length` ist nicht gesetzt, und die Hundert-Zeichen-Regel des Projekts gilt Spec-Dateien.
+Für Python gibt es also keine Zeilenlängenregel, gegen die das verstoßen könnte. Ob es eine geben
+soll, gehört zu der schon offenen Frage nach einer dritten `ruff`-Gruppe und wird dort mit
+entschieden, nicht hier nebenbei.
