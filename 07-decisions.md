@@ -6698,3 +6698,60 @@ ausdrücklich Nicht-Ziel gewesen, aber es ist eine Lücke und gehört zum Spec-N
 für D186 ansteht.
 
 **Die Zählung.** Kein Werkzeugdefekt, kein Supervisorfehler in diesem Lauf.
+
+### D190 — D186 beantwortet: die Welt entsteht in `tests/`, nach dem Vorbild des RepositorySimulator
+
+**Was D186 offenliess.** Ob die Kettenwelt, in der die Verfassung Policy oder Schlüsselsatz
+bewegt, im Beispielnukleus oder in den Tests entsteht. D188 hat die Vorfrage beantwortet — der
+Beispielnukleus führt die Kette vor, ohne umgestellt zu werden —, damit ist diese hier fällig.
+
+**Der Beispielnukleus scheidet aus, und zwar aus einem gemessenen Grund.** `threshold_class`
+liefert `membership` nur, wenn beide Verfassungsobjekte ausserhalb von `participants` byte-gleich
+sind; jede andere Änderung fällt auf `genesis_gov[5]`, und das ist `2`, also `amendment`. `build()`
+prüft `klass == "membership"` und wirft sonst. Der eine Übergang des Beispielnukleus **ist** die
+Aufnahme Doras. Policy oder Anker liessen sich dort nur unterbringen, indem man aus der Aufnahme
+ein Amendment macht oder eine dritte Epoche anhängt. Beides ändert, was die Vorführung vorführt.
+Die Arithmetik bliebe unbeeindruckt — alle drei Schwellen stehen dort auf `[1, 2]` —, die
+Kollision ist erzählerisch und normativ, nicht rechnerisch.
+
+**Berichtigung an D186.** Dort steht, `vote` und `ratify_claim` in den Fixtures hätten `N=N_D`
+fest verdrahtet. Für `vote` ist das falsch: die Funktion nimmt seit jeher ein optionales
+`scope`-Argument. Fest verdrahtet sind nur `ratify_claim` und `propose_claim`. Die Behauptung war
+beim Aufschreiben nicht nachgemessen. Dieselbe Klasse wie die Fehler aus `00e`, diesmal im
+eigenen Register.
+
+**Die Welt ist billiger als angenommen.** Gemessen an einer Sondierwelt: Genesis mit einem
+`root_key`, zwei Verfassungen, deren zweite `nucleus_keys` führt, ein `propose`, drei `vote`, ein
+`ratify`. `resolve_state` löst auf Epoche 2 auf, alle drei Vermerklisten leer, und
+`authorized_keys` ist der in der zweiten Verfassung benannte Schlüssel — **nicht** der Wurzel-
+schlüssel aus dem Genesis. Damit ist die Zusage aus D183 zum ersten Mal prüfbar: die vier Werte
+stammen nachweislich aus derselben Kette, weil ein Fehlgriff in der Epoche einen anderen
+Schlüsselsatz ergäbe. Rund zwanzig Zeilen Aufbau, keine neuen Claim-Bauer.
+
+**Das Vorbild ist dasselbe wie in D183.** `python-tuf` hält seine Prüfwelten nicht als
+festgeschriebene Dateien, sondern in einem `RepositorySimulator`: ein Aufbau im Speicher, der
+Metadatenstände auf Zuruf erzeugt, mit Hilfsmethoden für Schlüsselwechsel und Veröffentlichung,
+ohne Dateizugriff und ohne Netz. Nichts darin ist von Hand festgeschrieben; die Tests behaupten
+Beziehungen, keine Literale. Übernommen wird die Form, nicht der Umfang: MaR braucht keinen
+Simulator, sondern einen Kettenbauer, der aus einer Liste von Verfassungen einen Speicher, ein
+Genesis, die beiden Objektabbildungen und die Epochen liefert.
+
+**Beide Arten von Prüfdaten bleiben nebeneinander stehen.** `tests/governance/fixtures.py` ist
+über die `DOC_*`-Anker an das Spec-Dokument gebunden und wird deshalb **nicht** angefasst; der
+Bauer bedient das Verhalten. `python-tuf` hält dieselbe Trennung — festgeschriebene Daten für die
+Übereinstimmung mit der Spezifikation, ein Aufbau im Speicher für das Verhalten. Die Duplikation
+ist damit begründet und nicht bloss geduldet; der Einwand aus D181 gegen strukturgleiche Kopien
+zielt auf Produktivcode ohne Grund, nicht auf zwei Prüfschichten mit verschiedenen Aufgaben.
+
+**Die Prüffälle kommen aus der Literatur, nicht aus der Fantasie.** Zwei Befunde aus `python-tuf`
+haben in MaR ein Gegenstück und gehören in die Reihe, sobald der Bauer steht:
+
+- Eine unbrauchbare Zwischenversion sperrt alle späteren gültigen (`python-tuf` Nr. 2669). In MaR:
+  eine Verfassung, die mitten in der Kette in `known_constitutions` fehlt.
+- Der neueste Stand ist mit Schlüsseln signiert, die zu Beginn nicht bekannt waren
+  (`python-tuf` Nr. 885). In MaR: eine Epoche, deren `nucleus_keys` erst den Schlüssel
+  autorisieren, der den nächsten Übergang trägt.
+
+**Zuschnitt des ersten Laufs.** Der Bauer und **eine** Welt, in der der Schlüsselsatz sich
+zwischen Epoche 1 und Epoche 2 bewegt, dazu die Tests, die das festhalten. Die beiden Fälle oben
+sind benannt und folgen danach, nicht in demselben Lauf.
