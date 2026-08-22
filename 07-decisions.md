@@ -7102,3 +7102,37 @@ weil `threshold_class` keine dritte liefern kann. Sie ist also konstruierbar und
 braucht aber `genesis_obj` als zweiten neuen Parameter in `§4.1`. Dagegen spricht, dass eine
 fehlende von zwei Klassen keine Sackgasse ist, sondern eine Teilsperre. Die Frage wird beantwortet,
 wenn ein Fall auftritt, der sie braucht, nicht vorher.
+
+### D201 — Abnahme `00m`: der Verweis stimmte, die Anweisung lag daneben
+
+**Was gebaut wurde.** Zwei Läufe auf einem Branch. Der erste gegen den Prompt-Commit `46eba03`:
+zehn Dateien, 214 eingefügt und 75 entfernt, Testzahl von 576 auf 582, Commit `beddac8`. Der
+Nachlauf gegen den Prompt-Commit `459581a`: zwei Dateien, 37 eingefügt und 5 entfernt, Testzahl
+583, Commit `72dfebb`.
+
+**Sechs Proben, sechs vorher festgelegte Rotmengen, alle sechs getroffen.** Den
+Regierbarkeitsblock entfernen und das Subjekt in `verify_ratification` umstellen treffen dieselben
+fünf Fälle; der ValueError-Wächter, das Subjekt in `decide` und die Ortsprobe des Nachlaufs je
+einen; den Wächter ganz entfernen zwei. Kein bestehender Test ist mitgefallen.
+
+**Der Nebenbefund aus D200 hat sich bestätigt.** Vor dem Lauf ließ sich das Subjekt der vier
+Regierbarkeitsvermerke in `decide` von `epoch.constitution_hash` auf `proposal.constitution_hash`
+umstellen, ohne dass ein Test rot wurde. Nach dem Lauf trifft dieselbe Umstellung genau einen.
+
+**Der Defekt lag im Prompt, nicht im Lauf.** `04 §4.1` knüpft den `ValueError` auf ein
+fehlzugeordnetes Zielobjekt an keine der Bedingungen 1 bis 5; der Prompt schrieb den Wächter
+ausdrücklich dahinter. Das Werkzeug hat den Prompt korrekt umgesetzt. Die Folge war beobachtbar:
+trug der `ratify@1` nicht, kehrte `verify_ratification` mit `UNSUPPORTED_RATIFICATION` zurück und
+sah das Zielobjekt nie an — ein Aufruferfehler als Lage der Welt, genau das, was Bedingung 0
+verhindert. Gemessen mit einem `ratify@1` ohne Zeugen und dem Zielobjekt `C1` bei einem Vorschlag
+auf `C2`: erwartet `ValueError`, bekommen kein Fehler.
+
+**Was die Ortsprobe vorführt.** Wird der Wächter an die verworfene Stelle zurückgeschoben, fällt
+**nur** der neue Prüffall; `test_mismatched_target_object_raises` bleibt grün. Der ältere Fall hat
+also die Prüfung gehalten und ihren Ort nie. Dieselbe Form wie der Befund aus D199 — dort prüfte
+ein Helfer die Art und verdeckte die Adresse, hier prüfte ein Fall die Prüfung und verdeckte die
+Stelle. Daraus Prüfregel 34.
+
+**Der Supervisor bleibt die Fehlerquelle.** Zum wiederholten Mal lag der einzige Defekt eines
+Laufs im Prompt. Prüfregel 27 hat ihn nicht gefangen: sie verlangt, dass ein Verweis die
+behauptete Aussage trägt, und das tat er. Daraus Prüfregel 33.

@@ -219,6 +219,20 @@ verglichen werden die **erzeugten Aussagen**, nicht die Zahl der gefallenen Test
 alle drei Varianten genau einen Test; die Wahl fiel erst, als die Vermerke nebeneinander lagen und
 zwei Varianten `UNEVALUABLE` meldeten, wo `PASSED` gemessen war.
 
+**33. Der Prompt wird gegen den Spec-Satz gelesen, den er umsetzt.** Prüfregel 27 verlangt, dass
+ein Verweis die behauptete Aussage trägt. Das genügt nicht: der Verweis kann stimmen und die
+Anweisung daneben liegen. In `00m` zitierte der Prompt `04 §4.1` richtig und schrieb den
+ValueError-Wächter trotzdem hinter die Bedingungen 1 bis 5, wo die Spec ihn an keine Bedingung
+knüpft. Das Werkzeug hat den Prompt korrekt umgesetzt, und der Defekt wurde erst in der Abnahme
+sichtbar. Wo ein Prompt eine Reihenfolge oder einen Ort festlegt, wird der Spec-Satz danebengelegt,
+nicht nur aufgeschlagen.
+
+**34. Eine Rücknahmeprobe, die eine Prüfung entfernt, belegt nicht ihren Ort.** Wer eine Prüfung an
+eine bestimmte Stelle setzt, nimmt sie in der Probe nicht heraus, sondern **verschiebt** sie an die
+verworfene Stelle. In `00m` fielen bei entfernter Prüfung beide Fälle rot, bei verschobener nur der
+neue — und erst das zeigte, dass der ältere die Stelle nie gehalten hat. Dieselbe Begründung wie
+bei Prüfregel 23: die Probe muss die unbewachte Seite treffen.
+
 ---
 
 ## Herkunft der Nummern
@@ -227,7 +241,7 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192, 31 aus D196, 32 aus D200.
+30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
