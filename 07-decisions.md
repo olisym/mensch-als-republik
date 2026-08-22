@@ -6660,3 +6660,41 @@ vorführt, sondern ob die Verfassungen so gebaut werden, dass die Kette Policy o
 wirklich bewegt. Das verschöbe `constitution_hash_2`, den `proposal_hash` und `epoch_id_2`, die
 alle in `example-nucleus.md` stehen. Es ist ein Spec-Nachzug mit eigener Golden-Number-Rechnung
 und keine Zugabe zu einem Prüfungslauf.
+
+### D189 — Abnahme `00i`: die Fassade hat einen Träger
+
+**Was gebaut wurde.** `check_resolved_chain` in `tools/example_nucleus.py`, eingehängt in
+`verify_all` nach `check_ratification`, dazu ein Test nach dem Modulmuster. 569 Tests. Der Diff
+ist rein additiv — 53 und 5 eingefügte Zeilen, **keine** gelöschte —, womit auch mechanisch belegt
+ist, dass keine der bestehenden Prüfungen angefasst wurde. Gemergt als Fast-Forward, `main` bei
+`68807ed`.
+
+**Der Befund aus D183 und D187 ist geschlossen.** `resolve_state` hatte bis hierher keinen
+Aufrufer ausserhalb der Tests. Jetzt steht einer in einem Werkzeug und nicht in der Bibliothek —
+die Richtung, die D180 vorschreibt. Die Fassade wird damit von etwas benutzt, das ihr Ergebnis
+gegen unabhängig gerechnete Werte hält, nicht nur von einem Test, der sie beschreibt.
+
+**Die Substitutionsprobe ist nicht zirkulär gebaut.** Die Policy entsteht aus
+`_policy(ex, constitution_hash_2, constitution_2)`, wird gegen `state.policy` geprüft und erst
+danach in den direkten Schlüsselaufruf gereicht. Der Vergleichswert steht also fest, bevor er
+benutzt wird. Genau diese Reihenfolge musste in `00h` an `tests/test_resolve.py` erst nachgezogen
+werden; hier stand sie von Anfang an richtig.
+
+**Probe A hat schärfer getroffen als vorhergesagt.** Der Auftrag hat mit einem `AssertionError`
+gerechnet. Gefallen ist die **erste** Zusicherung, also die epochenscharfe, nicht eine der
+reglosen. Die Probe hat damit nicht nur belegt, dass die Prüfung reagiert, sondern auch, dass sie
+an der tragenden Stelle reagiert. `test_verify_all` fiel mit und bestätigt den Einhängepunkt.
+Probe B blieb grün und bestätigt die Reglosigkeit aus D188 am gebauten Artefakt.
+
+**Eine Beobachtung, keine Regel.** Zum zweiten Mal in Folge hat ein Auftrag einen Test verlangt,
+ohne ihn zu benennen, und zum zweiten Mal hat das Werkzeug den Namen gesetzt und gemeldet statt
+ihn stillschweigend zu wählen. Beide Namen waren richtig. Daraus folgt keine Prüfregel: die
+Rückwirkung, vor der Prüfregel 29 warnt, entsteht aus Namen in **Messkriterien**, nicht aus Namen
+in Aufträgen. Eine Regel gegen ein Verhalten, das zweimal folgenlos blieb, wäre Zeremonie.
+
+**Neu offen.** `example-nucleus.md` hat für diese Prüfung keinen Abschnitt. Der Docstring verweist
+deshalb auf das Register statt auf einen Paragraphen. Das ist so gewollt und in diesem Lauf
+ausdrücklich Nicht-Ziel gewesen, aber es ist eine Lücke und gehört zum Spec-Nachzug, der ohnehin
+für D186 ansteht.
+
+**Die Zählung.** Kein Werkzeugdefekt, kein Supervisorfehler in diesem Lauf.
