@@ -99,6 +99,11 @@ def verify_ratification(
                 ]
             ),
         )
+    if (
+        target_constitution_obj is None
+        or constitution_hash(target_constitution_obj) != proposal.constitution_hash
+    ):
+        raise ValueError("target_constitution_obj does not match proposal")
     participants = tally.participants
     if ratify.N != epoch.scope or ratify.J != (3, proposal.proposal_hash):
         return _unsupported(ratify)
@@ -150,11 +155,6 @@ def verify_ratification(
     num, den = tally.threshold
     if not reached(len(cited), tally.n, num, den):
         return _unsupported(ratify)
-    if (
-        target_constitution_obj is None
-        or constitution_hash(target_constitution_obj) != proposal.constitution_hash
-    ):
-        raise ValueError("target_constitution_obj does not match proposal")
     kind = constitution_governable(target_constitution_obj)
     if kind is not None:
         return RatificationResult(

@@ -113,3 +113,35 @@ def test_mismatched_target_object_raises() -> None:
             now=NOW,
             policy=policy_of(C1),
         )
+
+
+def test_mismatched_target_with_unsupported_ratify() -> None:
+    alice, bob, carol, dave = fresh_p1()
+    ziel = C2
+    proposal = Proposal(
+        scope=EPOCH_1.scope,
+        predecessor=EPOCH_1.epoch_id,
+        constitution_hash=constitution_hash(ziel),
+    )
+    votes = [
+        vote(alice, proposal, choice=1, t=1),
+        vote(bob, proposal, choice=1, t=1),
+        vote(carol, proposal, choice=1, t=1),
+        vote(dave, proposal, choice=1, t=1),
+    ]
+    store = store_with(*votes)
+    tally = _tally(store, proposal=proposal, constitution=C1, target=ziel)
+    r = ratify_claim(alice, proposal, witnesses=[], t=10)
+    store.add(r)
+    assert tally.state is TallyState.PASSED
+    with pytest.raises(ValueError):
+        verify_ratification(
+            store,
+            ratify=r,
+            epoch=EPOCH_1,
+            proposal=proposal,
+            tally=tally,
+            target_constitution_obj=C1,
+            now=NOW,
+            policy=policy_of(C1),
+        )
