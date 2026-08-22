@@ -124,6 +124,7 @@ def resolve_epoch(
                     epoch=epoch,
                     proposal=proposal,
                     tally=tally,
+                    target_constitution_obj=target,
                     now=now,
                     policy=policy,
                 )

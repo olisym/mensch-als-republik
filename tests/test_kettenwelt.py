@@ -158,8 +158,8 @@ def test_kettenwelt_missing_middle_constitution_blocks_chain() -> None:
     )
 
 
-def test_kettenwelt_unusable_middle_constitution_governs() -> None:
-    """Die Kette rückt in die untaugliche Verfassung ein, und diese regiert (D197)."""
+def test_kettenwelt_unusable_middle_constitution_blocks_chain() -> None:
+    """Die untaugliche Zwischenverfassung sperrt die Kette vor dem Übergang (D200)."""
     welt, _a, _b, _c = _welt3(c2_ohne_participants=True)
     state = resolve_state(
         welt.store,
@@ -169,15 +169,9 @@ def test_kettenwelt_unusable_middle_constitution_governs() -> None:
         known_proposals=welt.known_proposals,
         now=welt.now,
     )
-    zweiter_ratify = next(
-        claim
-        for claim in welt.store.all_claims()
-        if is_nuc_name(claim, "ratify")
-        and claim.J == (3, welt.vorschlaege[1].proposal_hash)
-    )
-    assert state.epoch == welt.epochen[1]
-    assert state.constitution_obj == welt.verfassungen[1]
-    assert state.authorized_keys == frozenset(welt.verfassungen[1]["nucleus_keys"])
+    assert state.epoch == welt.epochen[0]
+    assert state.constitution_obj == welt.verfassungen[0]
+    assert state.authorized_keys == frozenset(welt.genesis_obj[1])
     assert state.policy_findings == ()
     assert state.key_findings == ()
     assert state.epoch_findings == dedupe_sort(
@@ -185,10 +179,6 @@ def test_kettenwelt_unusable_middle_constitution_governs() -> None:
             Finding(
                 GovernanceFinding.PARTICIPANTS_UNDECLARED,
                 welt.verfassungs_hashes[1],
-            ),
-            Finding(
-                GovernanceFinding.TALLY_UNEVALUABLE,
-                claim_id(zweiter_ratify),
             ),
         ]
     )

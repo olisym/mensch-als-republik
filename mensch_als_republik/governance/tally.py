@@ -142,6 +142,35 @@ def _unevaluable(
     )
 
 
+def constitution_governable(obj: dict) -> GovernanceFinding | None:
+    """Gibt die Vermerksart zurück, wenn ``obj`` keine Auszählung tragen kann (04-governance.md §3.5, D200)."""
+    if "participants" not in obj:
+        return GovernanceFinding.PARTICIPANTS_UNDECLARED
+    raw_p = obj["participants"]
+    if not isinstance(raw_p, (list, tuple)):
+        return GovernanceFinding.MALFORMED_PARTICIPANTS
+    seen: set[bytes] = set()
+    ordered: list[bytes] = []
+    malformed = False
+    for entry in raw_p:
+        if not isinstance(entry, bytes) or len(entry) != 32:
+            malformed = True
+            break
+        if entry in seen:
+            malformed = True
+            break
+        seen.add(entry)
+        ordered.append(entry)
+    if malformed or not ordered or ordered != sorted(ordered):
+        return GovernanceFinding.MALFORMED_PARTICIPANTS
+    raw_irr = obj.get("irrevocable_predicates", [])
+    if not isinstance(raw_irr, (list, tuple)) or "vote@1" not in raw_irr:
+        return GovernanceFinding.VOTE_REVOCABLE
+    if "ratify@1" not in raw_irr:
+        return GovernanceFinding.RATIFY_REVOCABLE
+    return None
+
+
 def decide(
     store: ClaimStore,
     *,
@@ -186,51 +215,10 @@ def decide(
             epoch=epoch,
             proposal=proposal,
         )
-    if "participants" not in constitution_obj:
+    kind = constitution_governable(constitution_obj)
+    if kind is not None:
         return _unevaluable(
-            GovernanceFinding.PARTICIPANTS_UNDECLARED,
-            epoch.constitution_hash,
-            epoch=epoch,
-            proposal=proposal,
-        )
-    raw_p = constitution_obj["participants"]
-    if not isinstance(raw_p, (list, tuple)):
-        return _unevaluable(
-            GovernanceFinding.MALFORMED_PARTICIPANTS,
-            epoch.constitution_hash,
-            epoch=epoch,
-            proposal=proposal,
-        )
-    seen: set[bytes] = set()
-    ordered: list[bytes] = []
-    malformed = False
-    for entry in raw_p:
-        if not isinstance(entry, bytes) or len(entry) != 32:
-            malformed = True
-            break
-        if entry in seen:
-            malformed = True
-            break
-        seen.add(entry)
-        ordered.append(entry)
-    if malformed or not ordered or ordered != sorted(ordered):
-        return _unevaluable(
-            GovernanceFinding.MALFORMED_PARTICIPANTS,
-            epoch.constitution_hash,
-            epoch=epoch,
-            proposal=proposal,
-        )
-    raw_irr = constitution_obj.get("irrevocable_predicates", [])
-    if not isinstance(raw_irr, (list, tuple)) or "vote@1" not in raw_irr:
-        return _unevaluable(
-            GovernanceFinding.VOTE_REVOCABLE,
-            epoch.constitution_hash,
-            epoch=epoch,
-            proposal=proposal,
-        )
-    if "ratify@1" not in raw_irr:
-        return _unevaluable(
-            GovernanceFinding.RATIFY_REVOCABLE,
+            kind,
             epoch.constitution_hash,
             epoch=epoch,
             proposal=proposal,
@@ -271,7 +259,7 @@ def decide(
                 proposal=proposal,
             )
     threshold = applied_threshold(constitution_obj, target_constitution_obj, klass)
-    participants = frozenset(ordered)
+    participants = frozenset(constitution_obj["participants"])
     by_cid = classify_all(store, now, policy)
     findings: list[Finding] = []
     votes = [c for c in store.all_claims() if is_nuc_name(c, "vote")]

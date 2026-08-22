@@ -12,9 +12,14 @@ from mensch_als_republik.governance.findings import (
     dedupe_sort,
 )
 from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import TallyResult, TallyState, reached
+from mensch_als_republik.governance.tally import (
+    TallyResult,
+    TallyState,
+    constitution_governable,
+    reached,
+)
 from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy
+from mensch_als_republik.policy import NucleusPolicy, constitution_hash
 from mensch_als_republik.predicates import is_nuc_name
 from mensch_als_republik.verifier import ClaimStore, State
 
@@ -58,10 +63,11 @@ def verify_ratification(
     epoch: Epoch,
     proposal: Proposal,
     tally: TallyResult,
+    target_constitution_obj: dict | None,
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112)."""
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200)."""
     if (
         proposal.scope != epoch.scope
         or tally.epoch_id != epoch.epoch_id
@@ -144,6 +150,19 @@ def verify_ratification(
     num, den = tally.threshold
     if not reached(len(cited), tally.n, num, den):
         return _unsupported(ratify)
+    if (
+        target_constitution_obj is None
+        or constitution_hash(target_constitution_obj) != proposal.constitution_hash
+    ):
+        raise ValueError("target_constitution_obj does not match proposal")
+    kind = constitution_governable(target_constitution_obj)
+    if kind is not None:
+        return RatificationResult(
+            next_epoch=None,
+            findings=dedupe_sort(
+                [Finding(kind=kind, subject=proposal.constitution_hash)]
+            ),
+        )
     return RatificationResult(
         next_epoch=Epoch(
             scope=epoch.scope,

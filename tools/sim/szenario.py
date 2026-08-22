@@ -332,6 +332,7 @@ def _ratify_row(ctx: Kontext, label: str) -> dict[str, str | None]:
                 epoch=ctx.ex.epoch_1,
                 proposal=ctx.ex.proposal,
                 tally=tally,
+                target_constitution_obj=ctx.ex.constitution_2,
                 now=tp.read_now(),
                 policy=_policy(ctx.ex, ctx.ex.N_gov),
             )

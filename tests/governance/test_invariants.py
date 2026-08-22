@@ -87,10 +87,10 @@ def test_INV_04_4_same_epoch_id() -> None:
     store.add(r2)
     policy = policy_of(C1)
     a = verify_ratification(
-        store, ratify=r1, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r1, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     b = verify_ratification(
-        store, ratify=r2, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r2, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     assert a.next_epoch is not None and b.next_epoch is not None
     assert a.next_epoch.epoch_id == b.next_epoch.epoch_id
@@ -143,7 +143,7 @@ def test_INV_04_8_established_epoch_persists() -> None:
     store.add(r)
     policy = policy_of(C1)
     established = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     assert established.next_epoch is not None
     extras = [
@@ -154,7 +154,7 @@ def test_INV_04_8_established_epoch_persists() -> None:
     for claim in extras:
         store.add(claim)
         again = verify_ratification(
-            store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+            store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
         )
         assert again.next_epoch is not None
         assert again.next_epoch.epoch_id == established.next_epoch.epoch_id
@@ -172,6 +172,6 @@ def test_ratify_requires_passed_tally() -> None:
     r = ratify_claim(alice, PROPOSAL_1, witnesses=[claim_id(v) for v in votes], t=10)
     store.add(r)
     result = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy_of(C1)
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy_of(C1)
     )
     assert result.next_epoch is None

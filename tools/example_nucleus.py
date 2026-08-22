@@ -577,6 +577,7 @@ def check_ratification(ex: ExampleNucleus) -> None:
         epoch=ex.epoch_1,
         proposal=ex.proposal,
         tally=tally,
+        target_constitution_obj=ex.constitution_2,
         now=NOW,
         policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )
@@ -598,6 +599,7 @@ def check_ratification(ex: ExampleNucleus) -> None:
         epoch=ex.epoch_1,
         proposal=ex.proposal,
         tally=tally,
+        target_constitution_obj=ex.constitution_2,
         now=NOW,
         policy=_policy(ex, ex.constitution_hash_gov, ex.constitution_gov),
     )

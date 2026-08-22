@@ -98,10 +98,10 @@ def test_GV_1() -> None:
     store.add(r2)
     policy = policy_of(C1)
     a = verify_ratification(
-        store, ratify=r1, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r1, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     b = verify_ratification(
-        store, ratify=r2, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r2, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     assert a.next_epoch is not None
     assert b.next_epoch is not None
@@ -122,7 +122,7 @@ def test_GV_2() -> None:
     r = ratify_claim(alice, PROPOSAL_1, witnesses=cited, t=10)
     store.add(r)
     result = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy_of(C1)
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy_of(C1)
     )
     assert result.next_epoch is None
     assert GovernanceFinding.UNSUPPORTED_RATIFICATION in _kinds(result)
@@ -597,7 +597,7 @@ def test_GV_30() -> None:
     )
     store.add(r)
     result = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy_of(C1)
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy_of(C1)
     )
     assert result.next_epoch is None
     assert GovernanceFinding.UNKNOWN_WITNESS_VOTE in _kinds(result)
@@ -633,12 +633,12 @@ def test_GV_32() -> None:
     store.add(r)
     policy = policy_of(C1)
     first = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     assert first.next_epoch is not None
     store.add(alice.revoke(r, t=11))
     second = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy
     )
     assert second.next_epoch is not None
     assert second.next_epoch.epoch_id == first.next_epoch.epoch_id
@@ -659,7 +659,7 @@ def test_GV_33() -> None:
     )
     store.add(r)
     result = verify_ratification(
-        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, now=NOW, policy=policy_of(C1)
+        store, ratify=r, epoch=EPOCH_1, proposal=PROPOSAL_1, tally=tally, target_constitution_obj=C2, now=NOW, policy=policy_of(C1)
     )
     assert result.next_epoch is None
     assert GovernanceFinding.RATIFY_WITH_EXPIRY in _kinds(result)
@@ -790,6 +790,7 @@ def test_GV_43() -> None:
         epoch=EPOCH_1,
         proposal=PROPOSAL_1,
         tally=tally,
+        target_constitution_obj=C2,
         now=NOW,
         policy=policy_of(C1),
     )
@@ -814,6 +815,7 @@ def test_GV_44() -> None:
             epoch=EPOCH_2,
             proposal=PROPOSAL_2,
             tally=tally,
+            target_constitution_obj=C3,
             now=NOW,
             policy=policy_of(C2),
         )
@@ -867,6 +869,7 @@ def test_GV_46_verify_ratification() -> None:
             epoch=EPOCH_1,
             proposal=foreign,
             tally=tally,
+            target_constitution_obj=C2,
             now=NOW,
             policy=policy_of(C1),
         )

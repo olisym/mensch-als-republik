@@ -88,3 +88,23 @@ def test_malformed_genesis_threshold_addresses_scope() -> None:
     assert len(result.findings) == 1
     assert result.findings[0].kind == GovernanceFinding.MALFORMED_THRESHOLD
     assert result.findings[0].subject == epoch.scope
+
+
+def test_participants_undeclared_addresses_epoch_constitution() -> None:
+    """participants fehlt in der Epochenverfassung: Subjekt ist deren Hash (D200)."""
+    cons = dict(C2)
+    del cons["participants"]
+    epoch, proposal = _paar(cons, C3)
+    result = _tally(
+        store_with(),
+        epoch=epoch,
+        proposal=proposal,
+        constitution=cons,
+        target=C3,
+        known={proposal.proposal_hash: proposal},
+    )
+    assert result.state is TallyState.UNEVALUABLE
+    assert len(result.findings) == 1
+    assert result.findings[0].kind == GovernanceFinding.PARTICIPANTS_UNDECLARED
+    assert result.findings[0].subject == epoch.constitution_hash
+    assert result.findings[0].subject != proposal.constitution_hash
