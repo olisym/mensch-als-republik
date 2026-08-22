@@ -239,6 +239,37 @@ damit noch nicht Mitglied** — sie steht in `participants`, aber ohne ihre eige
 samt Pflichten zuschreiben, die er nicht eingegangen ist. Zwei Mitglieder dürfen unabhängig materialisieren; sie erzeugen denselben `epoch_id`,
 weil dessen Identität das Ergebnis hasht und nicht den Beleg (D99).
 
+### 5.1 Der aufgelöste Zustand
+
+Wer das Claim-Set aus `§7` hält, dazu beide Verfassungsobjekte und das Vorschlagsobjekt, rechnet
+den geltenden Zustand mit `resolve_state` aus, ohne eine weitere Quelle zu befragen
+(`04 §4.5`, D183):
+
+```
+epoch             = epoch_2, also index 2 mit constitution_hash_2
+constitution_obj  = constitution_gov, ergänzt um DORA in participants
+authorized_keys   = { BRUNO, ANNA }, gleich genesis_gov[1]
+epoch_findings    = leer
+policy_findings   = leer
+key_findings      = leer
+```
+
+`check_resolved_chain` in `tools/example_nucleus.py` rechnet genau das nach und hält den
+Schlüsselsatz zusätzlich gegen einen direkten Aufruf von `resolve_authorized_keys` unter
+`constitution_hash_2`.
+
+**Der Schlüsselsatz bewegt sich nicht**, und das ist die Lage, nicht ein Versäumnis: keine der
+beiden Verfassungen deklariert `nucleus_keys`, also fällt `authorized_keys` in beiden Epochen auf
+`genesis_gov[1]` zurück. Der Vergleich zwischen Epoche 1 und Epoche 2 ist an dieser Stelle
+**reglos** — er ginge auch mit vertauschter Verfassung durch (D188). Wer die Epochenschärfe des
+Schlüsselsatzes vorgeführt sehen will, findet sie nicht hier, sondern in der Kettenwelt der Tests,
+wo die zweite Verfassung `nucleus_keys` setzt (D190).
+
+**Bedingung 6 hält hier still.** Die Zielverfassung deklariert `participants` und führt `vote@1`
+wie `ratify@1` unwiderruflich; sie kann also selbst regieren, und der Übergang findet statt. Ließe
+man in ihr `participants` weg, rückte die Kette nicht in Epoche 2 ein, sondern hielte bei Epoche 1
+mit dem Vermerk `PARTICIPANTS_UNDECLARED` auf `constitution_hash_2` (`04 §4.1`, D200).
+
 ---
 
 ## 6. Der Trennungsfall

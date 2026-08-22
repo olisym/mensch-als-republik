@@ -7136,3 +7136,21 @@ Stelle. Daraus Prüfregel 34.
 **Der Supervisor bleibt die Fehlerquelle.** Zum wiederholten Mal lag der einzige Defekt eines
 Laufs im Prompt. Prüfregel 27 hat ihn nicht gefangen: sie verlangt, dass ein Verweis die
 behauptete Aussage trägt, und das tat er. Daraus Prüfregel 33.
+
+### D202 — Der aufgelöste Zustand des Beispielnukleus hat einen Abschnitt
+
+**Der offene Punkt aus D189 ist geschlossen.** `check_resolved_chain` rechnete seit `00i` einen
+Zustand nach, den `example-nucleus.md` nirgends behauptete. Ein Prüfer ohne Text im Dokument prüft
+sich selbst: er kann nicht mit der Spec kollidieren, weil die Spec zu ihm schweigt. `§5.1` schreibt
+die fünf Werte hin, gegen die er rechnet.
+
+**Die Reglosigkeit wird im Abschnitt benannt, nicht überspielt.** Keine der beiden Verfassungen
+des Beispiels setzt `nucleus_keys`; `authorized_keys` ist deshalb in beiden Epochen
+`genesis_gov[1]`. Ein Leser, der `§5.1` für eine Vorführung der Epochenschärfe hält, zöge daraus
+einen falschen Schluss, und der Verweis auf die Kettenwelt (D190) sagt ihm, wo sie zu finden ist.
+D169 bleibt damit offen wie bisher: dass der Beispielnukleus Epoche-1- von Epoche-2-Policy nicht
+unterscheiden kann, ist ein benannter Zustand.
+
+**Kein Lauf, keine Entscheidung.** Der Abschnitt beschreibt bestehenden, geprüften Code. Er
+verändert weder `tools/example_nucleus.py` noch eine Layer-Datei. Registriert wird er trotzdem,
+weil D189 den Punkt als offen führt und ein stilles Schließen ihn dort stehen ließe.
