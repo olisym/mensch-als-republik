@@ -7248,3 +7248,24 @@ es um die Lesbarkeit des Diffs eines Fließtexts. Der Ausreißerschwanz über 12
 `test_vectors.py` und `test_invariants.py` und stammt aus den mechanischen Einschüben des Laufs
 `00m`; er ist Folge eines Auftrags, nicht eines fehlenden Linters. Damit ist die von D199
 zurückgestellte Frage beantwortet und nicht wieder aufzumachen, solange die Zahlen so liegen.
+
+### D206 — Abnahme `00o`, kein Defekt
+
+**Was gebaut wurde.** Ein Lauf gegen den Prompt-Commit `c82a652`: drei Dateien, 9 eingefügt und 3
+entfernt, Testzahl unverändert **587**, Commit `621f202`. `ruff check` mit `ARG` meldet null Funde.
+
+**Drei Proben, drei vorher festgelegte Ergebnisse, alle drei getroffen.** Ein Transkriptionsfehler
+in der `n`-Spalte und einer in der `cap`-Spalte färben je genau die betroffene Tabellenzeile rot;
+der wieder eingeführte tote Parameter erzeugt genau einen `ARG001`. Damit ist am Artefakt gezeigt,
+dass die neue Gruppe beisst und nicht nur in der Konfiguration steht.
+
+**Eine Lücke im Bericht, vom Supervisor geschlossen.** Das Werkzeug konnte die Proben N und O nur
+gegen `tests/trust/test_bootstrap.py` fahren, nicht gegen die volle Reihe, und hat das gemeldet
+statt es zu verschweigen. Der Supervisor hat beide im eigenen Baum gegen alle 587 nachgefahren: je
+genau ein roter Fall, 586 grün. Die Einschränkung hat nichts verdeckt. Gemeldete Unvollständigkeit
+ist billiger als eine unvollständige Messung, die als vollständig auftritt.
+
+**Ein Zug, der im Prompt nicht stand.** Die Gruppen werden aus `store.all_claims()` gebildet, nicht
+aus der lokalen Claim-Liste des Weltbauers. Gleichwertig, weil der Speicher aus eben dieser Liste
+entsteht, und eine Spur strenger: gemessen wird, was im Speicher liegt, nicht was hineingereicht
+wurde.
