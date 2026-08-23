@@ -16,4 +16,4 @@ addopts = "--import-mode=importlib"
 pythonpath = ["."]
 
 [tool.ruff.lint]
-select = ["F401", "F811"]
+select = ["ARG", "F401", "F811"]

@@ -112,7 +112,7 @@ def check_decisions(text: str) -> list[str]:
     return problems
 
 
-def check_references(text: str, path_name: str, known: set[int]) -> list[str]:
+def check_references(text: str, known: set[int]) -> list[str]:
     """Verweise auf D-Nummern, die es im Register nicht gibt."""
     referenced = {int(n) for n in re.findall(r"\bD(\d+)\b", text)}
     unknown = sorted(referenced - known)
@@ -148,7 +148,7 @@ def main() -> int:
         if name == "07-decisions.md":
             problems += check_decisions(text)
         if known:
-            problems += check_references(text, name, known)
+            problems += check_references(text, known)
 
         if problems:
             print(f"FEHLER {name}")

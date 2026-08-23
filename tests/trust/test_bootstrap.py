@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from mensch_als_republik.index import classify_all
 from mensch_als_republik.trust import TrustFinding, TrustParams, trust
+from mensch_als_republik.trust.groups import build_groups
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, T_EXP
@@ -55,6 +57,10 @@ def test_bootstrap_rows(
     founders, newcomers, claims = _build(m, scope)
     store = store_with(*claims)
     anchors = frozenset(f.pub for f in founders)
+    classifications = classify_all(store, NOW, None)
+    groups, _ = build_groups(store.all_claims(), classifications, scope, PARAMS.D, NOW)
+    assert {g.n_kante for g in groups.values()} == {expected_n}
+    assert expected_trust == m * expected_cap
 
     for newcomer in newcomers:
         r = trust(
