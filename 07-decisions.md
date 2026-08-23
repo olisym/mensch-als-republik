@@ -7189,3 +7189,27 @@ bestehenden `test_chain_stale_epoch_findings_absent`. Daraus Prüfregel 35.
 `TALLY_UNEVALUABLE` über `test_chain`, `UNSUPPORTED_RATIFICATION` und Bedingung 6 über die neue
 Datei. `RATIFY_WITH_EXPIRY` und der Zeugenpfad tragen die Regel ungeprüft. Das ist eine Wahl aus
 Verhältnismässigkeit, kein Versehen, und steht hier, damit niemand sie für Deckung hält.
+
+### D204 — Abnahme `00n`, kein Defekt
+
+**Was gebaut wurde.** Ein Lauf gegen den Prompt-Commit `f07cf3d`: drei Dateien, 195 eingefügt und
+15 entfernt, Testzahl von 583 auf 587, Commit `0699bbf`. Acht Aufrufe von `_unsupported`
+umgestellt, fünf Rückgaben ohne Folgeepoche hängen die Auszählungsvermerke an, die tragende bleibt
+`findings=()`, `chain.py` unberührt.
+
+**Vier Proben, vier vorher festgelegte Rotmengen, alle vier getroffen.** Die Weitergabe aus
+`_unsupported` und aus dem Regierbarkeitsblock zu entfernen trifft je einen Fall; sie zusätzlich
+auf die tragende Rückgabe zu legen ebenfalls einen, und der Kettentest bleibt dabei grün wie
+vorhergesagt; die verworfene Bauform in `chain.py` trifft zwei, darunter den bestehenden
+`test_chain_stale_epoch_findings_absent`. Kein bestehender Test ist mitgefallen.
+
+**Die abgeleitete Erwartung hat gehalten.** In `test_chain_missing_proposal_2` werden die
+`UNKNOWN_PROPOSAL`-Subjekte aus dem Speicher der Welt gefiltert statt getippt, und das Werkzeug hat
+die gemessene Vier mit einem eigenen `assert` festgehalten. Damit fällt der Fall auf, wenn die Welt
+sich ändert, statt still eine andere Aussage zu prüfen.
+
+**Ein Zug, der im Prompt nicht stand und besser ist als das Vorbild.** Die fremde Identität der
+neuen Prüffälle entsteht über einen Helfer, der mit `assert fremd.pub not in C1["participants"]`
+seine eigene Voraussetzung sichert. Der Entwurf des Supervisors hatte die Nichtteilnahme nur
+angenommen. Das ist Prüfregel 30 an der richtigen Stelle: die Variantenwelt weist nach, was sie
+voraussetzt.
