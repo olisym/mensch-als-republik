@@ -47,11 +47,14 @@ def _cited(ratify: Claim) -> list[object] | None:
     return cited
 
 
-def _unsupported(ratify: Claim) -> RatificationResult:
+def _unsupported(ratify: Claim, tally: TallyResult) -> RatificationResult:
     return RatificationResult(
         next_epoch=None,
         findings=dedupe_sort(
-            [Finding(kind=GovernanceFinding.UNSUPPORTED_RATIFICATION, subject=claim_id(ratify))]
+            [
+                Finding(kind=GovernanceFinding.UNSUPPORTED_RATIFICATION, subject=claim_id(ratify)),
+                *tally.findings,
+            ]
         ),
     )
 
@@ -67,7 +70,7 @@ def verify_ratification(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200)."""
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200, D203)."""
     if (
         proposal.scope != epoch.scope
         or tally.epoch_id != epoch.epoch_id
@@ -95,7 +98,8 @@ def verify_ratification(
                     Finding(
                         kind=GovernanceFinding.TALLY_UNEVALUABLE,
                         subject=claim_id(ratify),
-                    )
+                    ),
+                    *tally.findings,
                 ]
             ),
         )
@@ -106,25 +110,28 @@ def verify_ratification(
         raise ValueError("target_constitution_obj does not match proposal")
     participants = tally.participants
     if ratify.N != epoch.scope or ratify.J != (3, proposal.proposal_hash):
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     if not is_nuc_name(ratify, "ratify"):
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     if ratify.I not in participants:
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     if ratify.t_exp is not None:
         return RatificationResult(
             next_epoch=None,
             findings=dedupe_sort(
-                [Finding(kind=GovernanceFinding.RATIFY_WITH_EXPIRY, subject=claim_id(ratify))]
+                [
+                    Finding(kind=GovernanceFinding.RATIFY_WITH_EXPIRY, subject=claim_id(ratify)),
+                    *tally.findings,
+                ]
             ),
         )
     by_cid = classify_all(store, now, policy)
     rid = claim_id(ratify)
     if rid not in by_cid or by_cid[rid].state is not State.ACTIVE:
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     cited = _cited(ratify)
     if cited is None:
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     witness_findings: list[Finding] = []
     authors: list[bytes] = []
     for cid in cited:
@@ -146,21 +153,24 @@ def verify_ratification(
             authors.append(present.I)
     if witness_findings:
         return RatificationResult(
-            next_epoch=None, findings=dedupe_sort(witness_findings)
+            next_epoch=None, findings=dedupe_sort([*witness_findings, *tally.findings])
         )
     if len(authors) != len(set(authors)):
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     if tally.threshold is None or tally.n is None:
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     num, den = tally.threshold
     if not reached(len(cited), tally.n, num, den):
-        return _unsupported(ratify)
+        return _unsupported(ratify, tally)
     kind = constitution_governable(target_constitution_obj)
     if kind is not None:
         return RatificationResult(
             next_epoch=None,
             findings=dedupe_sort(
-                [Finding(kind=kind, subject=proposal.constitution_hash)]
+                [
+                    Finding(kind=kind, subject=proposal.constitution_hash),
+                    *tally.findings,
+                ]
             ),
         )
     return RatificationResult(

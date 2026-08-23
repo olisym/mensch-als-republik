@@ -12,6 +12,7 @@ from mensch_als_republik.governance import (
 )
 from mensch_als_republik.governance.findings import dedupe_sort
 from mensch_als_republik.governance.tally import TallyState
+from mensch_als_republik.predicates import is_nuc_name
 from tests.helpers import store_with
 
 from .fixtures import (
@@ -166,6 +167,16 @@ def test_chain_missing_proposal_2() -> None:
         expected.append(
             Finding(GovernanceFinding.UNSUPPORTED_RATIFICATION, cid)
         )
+    unknown = [
+        claim
+        for claim in world.store.all_claims()
+        if is_nuc_name(claim, "vote")
+        and claim.J == (3, PROPOSAL_2.proposal_hash)
+        and claim.I in C1["participants"]
+    ]
+    assert len(unknown) == 4
+    for claim in unknown:
+        expected.append(Finding(GovernanceFinding.UNKNOWN_PROPOSAL, claim_id(claim)))
     assert result.findings == dedupe_sort(expected)
 
 
