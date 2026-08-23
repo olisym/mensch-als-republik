@@ -7213,3 +7213,38 @@ neuen Prüffälle entsteht über einen Helfer, der mit `assert fremd.pub not in 
 seine eigene Voraussetzung sichert. Der Entwurf des Supervisors hatte die Nichtteilnahme nur
 angenommen. Das ist Prüfregel 30 an der richtigen Stelle: die Variantenwelt weist nach, was sie
 voraussetzt.
+
+### D205 — Eine dritte `ruff`-Gruppe: `ARG` ja, Zeilenlänge nein
+
+**Der Nachweis, den D182 verlangt hat.** D182 hat den Linter bewusst auf `F401` und `F811`
+festgelegt und für jede weitere Gruppe verlangt, zuerst die Zahl der Funde im Baum zu messen.
+Gemessen: **drei** `ARG001`, **null** davon im Produktivcode.
+
+**Zwei der drei sind kein Rauschen.** `tests/trust/test_bootstrap.py` parametrisiert die fünf
+Spalten der `TP-BOOT`-Tabelle aus `02-golden-anchors.md` — `m`, `n`, `cap`, `trust`, `disjoint` —
+und vergleicht **zwei**. `expected_n` und `expected_cap` werden geparst und nie benutzt. Das ist
+die Form aus D199: die Tabelle sieht aus, als prüfe sie den Anker, und prüft die Hälfte. Beide
+Spalten wurden gegen die gebaute Welt nachgerechnet und stimmen: `n` aus den erzeugten
+`vouch`-Claims ist 4, 2, 1 und `⌊n·C₀/D⌋` ist 2, 1, 0. Der dritte Fund, `path_name` in
+`tools/check_specs.py`, ist ein toter Parameter und wird entfernt, nicht unterdrückt.
+
+**Was die Reparatur hinzufügt, ist eine Adresse und keine Erkennung.** Gemessen durch Vergleich der
+Rotmengen: wird in `_build` ein falsches `n` emittiert, fallen mit und ohne die neuen Behauptungen
+**dieselben fünf** Fälle. Ein falsches `n` bricht ohnehin jeden Vertrauenswert; die neue Zeile sagt
+nur früher und genauer, woran es liegt. Was die beiden Behauptungen wirklich halten, ist die
+Übertragung der Ankertabelle in den Test: ein Transkriptionsfehler in der `n`-Spalte oder in der
+`cap`-Spalte färbt je genau eine Zeile rot. Zwei Kopien derselben Tabelle, und die Drift zwischen
+ihnen ist bewacht. Daraus Prüfregel 36.
+
+**Entschieden: `ARG` wird zugeschaltet.** `check-lint` ruft `ruff check` ohne eigene Select-Liste,
+die Gruppe aus `pyproject.toml` greift also unmittelbar. Nachgewiesen mit dem wieder eingeführten
+toten Parameter: ein Fehler.
+
+**Entschieden: keine Zeilenlängenregel für Python.** Der Baum führt 16.898 Python-Zeilen. Über 88
+Zeichen liegen **300** in 76 Dateien, über 100 **26** in 13, über 120 **12** in zwei. Bei 88 wären
+das 300 Umbrüche für null gefundene Defekte; das ist Formatierung ohne Ertrag. Die 100-Zeichen-
+Regel gilt für Spec-Dateien aus einem Grund, der für Python nicht dasselbe Gewicht hat — dort geht
+es um die Lesbarkeit des Diffs eines Fließtexts. Der Ausreißerschwanz über 120 sitzt zudem in
+`test_vectors.py` und `test_invariants.py` und stammt aus den mechanischen Einschüben des Laufs
+`00m`; er ist Folge eines Auftrags, nicht eines fehlenden Linters. Damit ist die von D199
+zurückgestellte Frage beantwortet und nicht wieder aufzumachen, solange die Zahlen so liegen.

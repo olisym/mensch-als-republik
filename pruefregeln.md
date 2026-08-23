@@ -240,6 +240,13 @@ Kettentest grün, als die Weitergabe auf den tragenden Pfad von `§4.1` gelegt w
 `resolve_epoch` dessen Vermerke gar nicht liest. Wer eine Grenze prüft, misst zuerst, wie viele
 Stellen sie halten.
 
+**36. Eine neue Behauptung wird danach eingeordnet, was sie hinzufügt: Erkennung oder Adresse.**
+Gemessen wird das, indem die Welt falsch gemacht und die Rotmenge mit und ohne die neue Behauptung
+verglichen wird. Sind beide gleich, kommt keine Erkennung hinzu, sondern eine bessere Auskunft.
+Das ist ein zulässiger Zweck, aber ein anderer, und der Registereintrag sagt welchen. In D205 waren
+die Rotmengen identisch — ein falsches `n` bricht ohnehin jeden Vertrauenswert; was die neuen
+Behauptungen halten, ist die Übertragung der Ankertabelle in den Test.
+
 ---
 
 ## Herkunft der Nummern
@@ -248,7 +255,7 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203.
+30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
