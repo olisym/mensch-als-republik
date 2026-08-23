@@ -449,6 +449,23 @@ brauchen wird. Eine Zielverfassung ohne `thresholds` der Klasse `membership` ble
 zulässiges Ziel und sperrt erst den übernächsten Übergang, und zwar nur den einer Klasse. Ob
 `§4.1` das mitprüfen soll, ist offen und in D200 benannt.
 
+**Entsteht keine Epoche, trägt das Ergebnis die Vermerke der Auszählung mit** (D203). Sie werden
+additiv angehängt, in derselben Form wie bei `TALLY_UNEVALUABLE` (D194): der eigene Vermerk bleibt
+stehen, die Verarbeitung ändert sich nicht, `dedupe_sort` führt zusammen. Das gilt für **jeden**
+Pfad ohne Folgeepoche, also auch für `UNSUPPORTED_RATIFICATION`, `UNKNOWN_WITNESS_VOTE`,
+`RATIFY_WITH_EXPIRY` und Bedingung 6.
+
+Der Grund ist die Adresse. `UNSUPPORTED_RATIFICATION` sagt, dass diese Ratifizierung nicht trägt;
+es sagt nicht, warum die Zählung zu kurz ist. Gemessen an vier Teilnehmern mit Schwelle `[2,3]`,
+zwei gültigen Ja und einem Ja von jemandem ausserhalb von `participants`: die Auszählung steht auf
+`PENDING` und führt `NON_MEMBER_VOTE` mit der `claim_id` der fremden Stimme, die Ratifizierung
+zitiert die beiden gültigen und erreicht die Schwelle nicht. Ohne die Weitergabe erfährt der
+Beobachter nur die `claim_id` des `ratify@1` — die einzige Stelle, an der nichts zu holen ist.
+
+**Entsteht eine Epoche, werden sie nicht weitergegeben.** Der Übergang hat getragen; was in seiner
+Auszählung vermerkt wurde, beantwortet nicht die Frage, die `§4.5` stellt. Diese Grenze ist die aus
+`§4.5` und wird hier nicht verschoben.
+
 Die Prüfung ist **offline und vollständig lokal**: wer den Vorschlag, das neue Verfassungsobjekt
 und die zitierten Stimmen hat, rechnet das Ergebnis nach, ohne jemanden zu fragen und ohne eine
 Uhr zu lesen.
@@ -548,8 +565,11 @@ nicht; deshalb Vermerk und nicht Ausnahme. Dieselbe Prüfung gilt für `known_pr
 **Vermerke.** Die Kette beantwortet, welche Epoche gilt; ihre Vermerke sagen, warum sie dort
 endet — nicht, was in einer überholten Epoche geschah. Sie gibt daher ausschließlich die Vermerke
 der Prüfungen nach `§4.1` weiter, die auf die **erreichte** Epoche zeigen. Vermerke der
-Auszählungen nach `§3` gibt sie nicht weiter: ihr Kontext fehlt dem Aufrufer, und die Tatsache
-erreicht ihn über `TALLY_UNEVALUABLE`. Ist die Verfassung der erreichten Epoche unbekannt, bleibt
+Auszählungen nach `§3` holt sie sich nicht selbst; sie erreichen den Aufrufer nur, soweit `§4.1`
+sie an ein Ergebnis **ohne** Folgeepoche angehängt hat (D194, D203). Was in einer Auszählung
+vermerkt wurde, deren Übergang getragen hat, fällt damit weg — es beantwortet nicht, warum die
+Kette dort endet, wo sie endet. Diese Verwerfung leistet der Neuaufbau der Liste in jedem
+Schleifenschritt; sie ist keine Zeile, die man streichen könnte. Ist die Verfassung der erreichten Epoche unbekannt, bleibt
 das Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
 
 **Das leere Feld ist nur an Epoche 1 erreichbar.** Die Verfassung von `i+1` ist zugleich das

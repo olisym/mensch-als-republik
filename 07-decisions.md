@@ -7154,3 +7154,38 @@ unterscheiden kann, ist ein benannter Zustand.
 **Kein Lauf, keine Entscheidung.** Der Abschnitt beschreibt bestehenden, geprüften Code. Er
 verändert weder `tools/example_nucleus.py` noch eine Layer-Datei. Registriert wird er trotzdem,
 weil D189 den Punkt als offen führt und ein stilles Schließen ihn dort stehen ließe.
+
+### D203 — Die Auszählungsvermerke gehen mit, wenn keine Epoche entsteht
+
+**Der offene Punkt aus D194.** Weitergegeben wurde bisher nur bei `UNEVALUABLE`. Scheitert eine
+Ratifizierung, während die Auszählung auswertbar ist, blieb der Beobachter ohne Adresse.
+
+**Eine Korrektur am eigenen Aufschlag.** Gemessen wurde zuerst ein weiter gefasster Verlust: läuft
+ein Übergang durch, während die Auszählung `NON_MEMBER_VOTE` führt, meldet `resolve_state` gar
+nichts. Das ist kein Loch, sondern die benannte Grenze aus `§4.5` — die Vermerke der Kette sind
+keine Chronik, sondern die Begründung des Halts, und ein Vermerk aus einem Übergang, der getragen
+hat, beantwortet diese Frage nicht. Der zweite Grund der Spec trägt in der engen Fassung dagegen
+nicht mehr: bei `PASSED` gibt es kein `TALLY_UNEVALUABLE`, über das die Tatsache den Beobachter
+erreicht.
+
+**Entschieden: Weitergabe auf jedem Pfad ohne Folgeepoche, auf keinem mit.** Eine Regel, kein
+Katalog. Die Form ist die aus D194 nach RFC 8914: additiv, der eigene Vermerk bleibt, die
+Verarbeitung ändert sich nicht.
+
+**Gemessen.** In der Welt aus D178 wächst die Diagnose von vier auf acht Vermerke: die vier
+`UNKNOWN_PROPOSAL` benennen die Stimmen, die ein fehlendes Vorschlagsobjekt ausgesetzt hat, und
+erklären damit die drei `UNSUPPORTED_RATIFICATION`, die heute unbegründet dastehen. Ein einziger
+bestehender Prüffall musste seine Erwartung erweitern.
+
+**Die Grenze wird von zwei Schichten gehalten.** Der erste Grenztest lag auf Kettenebene und blieb
+**grün**, als die Weitergabe versuchsweise auf den tragenden Pfad von `§4.1` gelegt wurde:
+`resolve_epoch` liest `result.findings` dort nicht. Erst ein zweiter Wächter auf `§4.1`-Ebene fängt
+das. Die Kettenebene wiederum wird nicht von einer Zeile gehalten, sondern vom Neuaufbau der
+Vermerkliste je Schleifenschritt; die Probe dafür ist die verworfene Bauform — Liste aus der
+Schleife heben und auf dem tragenden Pfad füllen —, und sie trifft zwei Fälle, darunter den
+bestehenden `test_chain_stale_epoch_findings_absent`. Daraus Prüfregel 35.
+
+**Benannt und nicht gebaut.** Von den fünf Pfaden ohne Folgeepoche halten Prüffälle drei:
+`TALLY_UNEVALUABLE` über `test_chain`, `UNSUPPORTED_RATIFICATION` und Bedingung 6 über die neue
+Datei. `RATIFY_WITH_EXPIRY` und der Zeugenpfad tragen die Regel ungeprüft. Das ist eine Wahl aus
+Verhältnismässigkeit, kein Versehen, und steht hier, damit niemand sie für Deckung hält.

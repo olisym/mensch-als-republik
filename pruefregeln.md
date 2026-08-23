@@ -233,6 +233,13 @@ verworfene Stelle. In `00m` fielen bei entfernter Prüfung beide Fälle rot, bei
 neue — und erst das zeigte, dass der ältere die Stelle nie gehalten hat. Dieselbe Begründung wie
 bei Prüfregel 23: die Probe muss die unbewachte Seite treffen.
 
+**35. Eine Grenze auf zwei Schichten braucht auf jeder einen Wächter.** Wird ein Verhalten von zwei
+Stellen zugleich erzwungen, hält ein Prüffall auf der äusseren die innere nicht: die Probe an der
+inneren Stelle bleibt grün, weil die äussere das Ergebnis ohnehin verwirft. In D203 blieb der
+Kettentest grün, als die Weitergabe auf den tragenden Pfad von `§4.1` gelegt wurde, weil
+`resolve_epoch` dessen Vermerke gar nicht liest. Wer eine Grenze prüft, misst zuerst, wie viele
+Stellen sie halten.
+
 ---
 
 ## Herkunft der Nummern
@@ -241,7 +248,7 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201.
+30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
