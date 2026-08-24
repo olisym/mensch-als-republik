@@ -5,14 +5,30 @@ from __future__ import annotations
 import hashlib
 
 from mensch_als_republik import cbor_canon
+from mensch_als_republik.atom import claim_id
 from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.findings import GovernanceFinding
+from mensch_als_republik.governance.epoch import verify_ratification
+from mensch_als_republik.governance.findings import Finding, GovernanceFinding, dedupe_sort
 from mensch_als_republik.governance.objects import Epoch, Proposal
 from mensch_als_republik.governance.tally import TallyState
 from mensch_als_republik.policy import constitution_hash
 from tests.helpers import store_with
 
-from .fixtures import C2, C3, GENESIS_D, N_D, _tally
+from .fixtures import (
+    C1,
+    C2,
+    C3,
+    EPOCH_1,
+    GENESIS_D,
+    N_D,
+    NOW,
+    PROPOSAL_1,
+    _tally,
+    fresh_p1,
+    policy_of,
+    ratify_claim,
+    vote,
+)
 
 
 def _paar(cons, ziel, *, scope=N_D, index=2):
@@ -108,3 +124,34 @@ def test_participants_undeclared_addresses_epoch_constitution() -> None:
     assert result.findings[0].kind == GovernanceFinding.PARTICIPANTS_UNDECLARED
     assert result.findings[0].subject == epoch.constitution_hash
     assert result.findings[0].subject != proposal.constitution_hash
+
+
+def test_cited_non_claim_id_and_non_yes_are_unsupported_ratification() -> None:
+    """Ein Nicht-claim_id-Eintrag und eine Nein-Stimme: zwei UNSUPPORTED_RATIFICATION (04 §4.1, D207)."""
+    alice, bob, _c, _d = fresh_p1()
+    ja = vote(alice, PROPOSAL_1, choice=1, t=1)
+    nein = vote(bob, PROPOSAL_1, choice=0, t=1)
+    store = store_with(ja, nein)
+    tally = _tally(store)
+    ratify = ratify_claim(alice, PROPOSAL_1, witnesses=[claim_id(nein), 42], t=10)
+    store.add(ratify)
+    result = verify_ratification(
+        store,
+        ratify=ratify,
+        epoch=EPOCH_1,
+        proposal=PROPOSAL_1,
+        tally=tally,
+        target_constitution_obj=C2,
+        now=NOW,
+        policy=policy_of(C1),
+    )
+    assert tally.state is TallyState.PENDING
+    assert tally.findings == ()
+    assert claim_id(nein) not in tally.yes
+    assert result.next_epoch is None
+    assert result.findings == dedupe_sort(
+        [
+            Finding(GovernanceFinding.UNSUPPORTED_RATIFICATION, claim_id(nein)),
+            Finding(GovernanceFinding.UNSUPPORTED_RATIFICATION, claim_id(ratify)),
+        ]
+    )
