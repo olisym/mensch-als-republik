@@ -656,3 +656,41 @@ Policy-Knöpfe und bleiben Feld von `RelaxParams` neben dem hergeleiteten `base`
   positional ist (§1). Zusätzlich ist das Muster in der Widerrufs-Historie lesbar.
 - **Seed-Kompromittierung** (§6.3). Wer `e_N` kompromittiert, kompromittiert jeden, der diese
   Linse benutzt. Der Fallback auf `e_s` ist **Eindämmung, keine Abwehr**.
+
+---
+
+## 10. Vermerke und ihre Subjekte
+
+Die Ableitung wirft keine Ausnahmen für schadhafte Eingaben; sie legt Vermerke ab und rechnet
+weiter. Ein Vermerk benennt in seinem `subject` das zurückgewiesene Objekt — notfalls gröber, wenn
+das Objekt ein Feld ist und keine eigene Adresse hat (D198, `04 §3.5`).
+
+| Vermerk | Subjekt |
+|---|---|
+| `UNPARSABLE_VOUCH_PAYLOAD` | `claim_id` des Vouch |
+| `NON_CANONICAL_V` | `claim_id` des Vouch |
+| `INVALID_VOUCH_WEIGHT` | `claim_id` des Vouch |
+| `VOUCH_WITHOUT_TEXP` | `claim_id` des Vouch |
+| `SUBGRANULAR_VOUCH` | `claim_id` des Mitglieds mit `n == n_kante` |
+| `OVERCOMMITTED_AUTHOR` | **Identity des Autors** |
+
+Die vier ersten Lagen entstehen beim Dekodieren von `v` (`02a §2.3`): `v` ist nicht dekodierbar,
+ist kein Map, führt den Schlüssel 0 nicht oder trägt dort keinen nichtnegativen `int` — das ergibt
+`UNPARSABLE_VOUCH_PAYLOAD`; `v` dekodiert, ist aber nicht kanonisch kodiert — `NON_CANONICAL_V`;
+`n` liegt ausserhalb von `1 ≤ n ≤ D` — `INVALID_VOUCH_WEIGHT`; der Vouch trägt kein `t_exp` —
+`VOUCH_WITHOUT_TEXP`. `SUBGRANULAR_VOUCH` entsteht beim Aufbau des Graphen, wenn die
+Kantenkapazität `⌊n_kante·C_author/D⌋` auf null fällt. `OVERCOMMITTED_AUTHOR` entsteht danach,
+wenn die Summe der Budgets eines Autors `D` überschreitet.
+
+**`OVERCOMMITTED_AUTHOR` ist die Ausnahme, und sie ist nicht am Typ erkennbar.** Sein Subjekt ist
+ein öffentlicher Schlüssel, kein `claim_id`. Beide sind 32 Byte; wer `subject` pauschal im Speicher
+nachschlägt, greift genau dort ins Leere. Der Grund ist derselbe wie überall sonst: das
+zurückgewiesene Objekt ist hier der Autor und nicht ein einzelner Claim, denn kein einzelner Vouch
+ist der überzählige — erst ihre Summe verletzt das Budget.
+
+**`SUBGRANULAR_VOUCH` betrifft eine Gruppe, nicht einen Claim.** Als Adresse dient die `claim_id`
+des Mitglieds mit `n == n_kante`, bei Gleichstand die lexikographisch kleinste. Damit ist der
+Vermerk deterministisch, auch wenn mehrere Claims dasselbe `n` tragen (`02a §5`).
+
+Ein Claim mit einem der vier Dekodier-Vermerke trägt nichts zum Fluss bei; er wird übersprungen,
+nicht zurückgewiesen.
