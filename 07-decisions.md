@@ -7269,3 +7269,74 @@ ist billiger als eine unvollständige Messung, die als vollständig auftritt.
 aus der lokalen Claim-Liste des Weltbauers. Gleichwertig, weil der Speicher aus eben dieser Liste
 entsteht, und eine Spur strenger: gemessen wird, was im Speicher liegt, nicht was hineingereicht
 wurde.
+
+### D207 — Die Vermerkslage ohne eigene Adresse: zwei Tabellenzeilen, kein Formeingriff
+
+**Die Bestandsaufnahme, die D173 verlangt hat.** Vier Vermerks-Enums, **44 Arten**, jede mit
+Produktivträger. Die Deckung des Subjekttyps in der normativen Schicht ist ungleich: `04` nennt ihn
+vollständig (`§3.5`, D198, mit zwei ausgeschriebenen Sonderfällen), `03` nennt in `§6` eine
+allgemeine Regel ohne Spalte je Art, `00` nennt ihn für eine seiner zwei Arten (`§5.4`), und `02`
+nennt ihn in der Layer-Datei überhaupt nicht — die einzige Aussage steht in
+`02a-maxflow-prompt.md §5` und kennt `NON_CANONICAL_V` und `VOUCH_WITHOUT_TEXP` nicht. Die fünf
+Treffer auf „Subjekt" in `02-trust-flow.md` meinen sämtlich das Vouch-Subjekt `J` — dieselbe
+Namenskollision wie in `01 §2.1` und bei `Edge.subject`, das dritte Mal in derselben Messung.
+
+**Der gemeldete Rollenwechsel ist keiner. Die Meldung wird zurückgenommen.** Gemessen wurde
+zunächst, dass drei Stellen den Vermerksträger statt des zurückgewiesenen Objekts benennen:
+`epoch.py:140`, `verdict.py:84` und `verdict.py:117`. Beim Nachlesen gegen `04 §4.1` und
+`03 §2.4.4` fällt die Klassifikation. In allen drei Fällen ist das defekte Objekt ein **Feld** —
+`verdict.J`, `accusation.J`, die Zeugenliste des `ratify@1`. Felder haben keine eigene Adresse. Das
+Subjekt benennt also dasselbe Objekt, nur gröber, und das ist genau der Fall, den `04 §3.5` für
+`genesis[5]` und `genesis[6]` bereits normiert hat. **D198 ist vollständig**; eine zweite Rolle gibt
+es nicht und ist nicht zu schreiben.
+
+**Drei Varianten gebaut und gemessen, alle drei verworfen.** Die Rotmenge unterscheidet sie nicht —
+jede kostet genau einen Test, `test_VS_11`. Entschieden hat der Rest.
+
+- **A, `subject: bytes | None`** nach SARIF `§3.27.12` (null oder mehr Orte; EXAMPLE 1 ist der
+  Analysator, der kein globales `main` findet) und JSON:API (`source` wird weggelassen statt
+  ersetzt). Kostet zwei Feldtypen, drei Erzeugungsstellen — und **zwingt in `dedupe_sort`**, weil
+  `order=True` `bytes` gegen `None` vergleicht. Ohne diesen Eingriff wirft der Produktivpfad einen
+  `TypeError`, und die volle Reihe sieht ihn nicht: 586 grün. Damit fasste A auch D183 an.
+- **B, ein zweites Feld für die Rolle** nach SARIF `§3.27.13` (`analysisTarget` neben `locations`).
+  28 Erzeugungsstellen in vier Modulen für eine Unterscheidung, die nach der Widerlegung oben gar
+  nicht besteht.
+- **D, eigene `kind` je Bedingung.** Bricht drei benannte Entscheidungen auf: `04 §4.1` legt die
+  Zweiteilung mit Kriterium fest („welche `claim_id` er holen muss" gegen „dass Holen nichts
+  nützt"), `03 §2.4.4` fasst zwei Lagen bewusst zusammen und begründet, warum nur die dritte Zeile
+  abgetrennt wird, und `04a-korrektur-prompt.md §6` stellt die feinere Aufschlüsselung von
+  `UNSUPPORTED_RATIFICATION` ausdrücklich zurück — „benannt und nicht übersehen".
+
+**Was wirklich fehlt, sind zwei Tabellenzeilen.** Beide Lagen treten im Produktivcode auf und haben
+in der zuständigen Tabelle keine Zeile; der Code fällt jeweils auf eine Sammelzeile zurück, die ihn
+nicht deckt.
+
+| Ort | Lage ohne Zeile | Was der Code heute meldet |
+|---|---|---|
+| `04 §4.1` | ein zitierter Eintrag in `ratify` ist keine `claim_id` | `UNSUPPORTED_RATIFICATION` |
+| `03 §2.4.4` | `accusation.J.tag` ist weder `identity` noch `claim-ref` | `UNRESOLVED_ACCUSED` |
+
+Die Sammelzeile in `04 §4.1` lautet „der Claim ist da und trägt nicht". Im ersten Fall ist kein
+Claim da; es ist keine `claim_id`. Die Zeile trifft nicht zu, das Verhalten ist trotzdem richtig —
+der Beobachter erfährt, dass Holen nichts nützt. Fehlt nur die Begründung in der Spec.
+
+**Drei Pfade ohne Prüffall — der Befund, der schwerer wiegt als die Gabel.** In allen drei Varianten
+war `test_VS_11` der einzige rote Test. Nur `verdict.py:84` ist gedeckt. `epoch.py:140` und
+`verdict.py:117` lassen sich beliebig umstellen, ohne dass die 587er Reihe reagiert; deshalb ging
+auch der `TypeError` aus Variante A durch. Was fehlt, ist nicht eine Regel, sondern Abdeckung.
+
+**Zwei Korrekturen an früheren Aussagen.** Erstens: der offene Punkt zu D183 lautet „vier
+`Finding`-Klassen, vier `dedupe_sort`". Gemessen sind es vier Klassen und **drei** `dedupe_sort` —
+`trust/findings.py` hat keins; das vierte gehört `PolicyNote` in `policy.py`, einer fünften
+Vermerksfamilie mit anderer Feldform (`code` / `predicate: str`), deren Trennung `03 §1.2`
+ausdrücklich begründet. Zweitens: `sitzungsstart-00p.md` begründet D173 damit, dass `08 §2.2`
+daran hänge, weil Vermerke kollidieren können sollen. `§2.2` handelt ausschließlich von
+**signierten Claims**; Vermerke sind unsignierte lokale Ableitungen und kollidieren in seinem Sinne
+nicht. Die Begründung trägt nicht und wird nicht weitergeschrieben. Was D173 trägt, ist schwächer
+und ausreichend: Konsistenz über 44 Arten in vier Modulen, und die Weitergabe über die Grenze aus
+D203, bei der Auszählungsvermerke in ein `RatificationResult` gelangen.
+
+**Entschieden: kein Formeingriff.** Weder `subject` optional noch ein Rollenfeld noch neue `kind`.
+Der Lauf `00q` schreibt die zwei Tabellenzeilen mit benannter Begründung und legt für die drei
+Pfade Prüffälle an. Die Subjektspalten je Layer aus D173 bleiben offen und werden danach billiger,
+weil jede Art dann genau einen Subjekttyp führt.
