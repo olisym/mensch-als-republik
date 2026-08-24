@@ -326,18 +326,26 @@ auswertbar**; Pfad (i) bleibt es. Trägt auch er nicht, lautet die Antwort
 `ATTRIBUTED_OPINION`. Teilwissen senkt, was ich behaupten kann, und die schwächere Behauptung
 ist hier die sichere.
 
-Vier Fälle, vier Vermerke — die Wirkung ist dieselbe, die Diagnose nicht:
+Fünf Lagen, drei Vermerke — die Wirkung ist dieselbe, die Diagnose nicht:
 
 | Lage | Vermerk |
 |---|---|
 | `verdict.J.tag` ist nicht `claim-ref` | `UNKNOWN_ACCUSATION` |
 | die Anklage ist lokal unbekannt | `UNKNOWN_ACCUSATION` |
 | die Anklage liegt in einem anderen Nukleus | `SCOPE_MISMATCH` |
+| `accusation.J.tag` ist weder `identity` noch `claim-ref` | `UNRESOLVED_ACCUSED` |
 | der bestrittene Claim ist lokal unbekannt | `UNRESOLVED_ACCUSED` |
 
 Die dritte Zeile ist der Grund für die Tabelle. Eine Anklage aus fremdem Scope ist **bekannt**;
 sie zählt nur nicht. `UNKNOWN_ACCUSATION` schickte den Betreiber in die Partitionsecke, während
 das Objekt vor ihm liegt.
+
+**Die vierte Zeile stand bis D207 nicht in der Tabelle.** Eine Anklage, deren `J` weder eine
+Identität noch einen Claim benennt, hat keinen Beschuldigten, den man auflösen könnte — dieselbe
+Auskunft wie in der fünften Zeile, aus anderer Ursache. Das Subjekt ist die `claim_id` der
+Anklage und nicht der nicht vorhandene bestrittene Claim, denn `accusation.J` ist ein Feld und hat
+keine eigene Adresse. Der Kopfsatz sprach zuvor von vier Fällen und vier Vermerken; es waren schon
+damals vier Lagen und drei Vermerksarten.
 
 **Der Zustand der Anklage ist irrelevant.** Sie wird nur gelesen, um die Parteien zu
 bestimmen; ob der Ankläger sie inzwischen widerrufen hat, ändert nichts daran, wer die Parteien

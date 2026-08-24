@@ -408,10 +408,18 @@ Zwei Vermerke, weil die Diagnose verschieden ist (D94, D106):
 | Lage | Vermerk |
 |---|---|
 | eine zitierte `claim_id` ist lokal nicht vorhanden | `UNKNOWN_WITNESS_VOTE` |
+| ein zitierter Eintrag ist überhaupt keine `claim_id` | `UNSUPPORTED_RATIFICATION` |
 | alles Übrige — der Claim ist da und trägt nicht | `UNSUPPORTED_RATIFICATION` |
 
-Die Wirkung ist in beiden Fällen dieselbe: keine Epoche. Im ersten Fall weiß der Beobachter, welche
-`claim_id` er holen muss; im zweiten weiß er, dass Holen nichts nützt.
+Die Wirkung ist in allen drei Fällen dieselbe: keine Epoche. Im ersten Fall weiß der Beobachter,
+welche `claim_id` er holen muss; in den beiden anderen weiß er, dass Holen nichts nützt.
+
+**Die zweite Zeile stand bis D207 nicht in der Tabelle.** Ein Eintrag, der keine `claim_id` ist,
+ist kein Claim, der da wäre und nicht trüge; die dritte Zeile trifft ihn nicht. Er fällt trotzdem
+auf `UNSUPPORTED_RATIFICATION`, weil das Kriterium dieser Tabelle die Auskunft an den Beobachter
+ist und nicht die Ursache: Holen nützt nichts, weil es nichts zu holen gibt. Das Subjekt ist die
+`claim_id` des `ratify@1` — die Zeugenliste ist ein Feld und hat keine eigene Adresse, wie
+`genesis[5]` und `genesis[6]` in `§3.5`.
 
 **Bedingung 6 — die Zielverfassung muss regieren können** (D200).
 
