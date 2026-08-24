@@ -247,6 +247,14 @@ Das ist ein zulässiger Zweck, aber ein anderer, und der Registereintrag sagt we
 die Rotmengen identisch — ein falsches `n` bricht ohnehin jeden Vertrauenswert; was die neuen
 Behauptungen halten, ist die Übertragung der Ankertabelle in den Test.
 
+**37. Die Basis eines Laufs ist der Commit, der den Prompt enthält.**
+Ein Prompt, der geschrieben wird, bevor er committet ist, kann seine eigene Basis nicht nennen; wer
+den Registercommit darunter einträgt, lässt den Lauf an einem Punkt verzweigen, an dem der Prompt
+noch nicht existiert. Die Abnahme bleibt davon oft unberührt, der Merge nicht: ein Fast-Forward
+setzt voraus, dass die Zielspitze der Branchpunkt ist, und das ist bei dieser Reihenfolge nie
+gegeben. Deshalb wird der Prompt zuerst committet und die Basis danach eingetragen. In `00q` fiel
+es erst beim Merge auf (D208).
+
 ---
 
 ## Herkunft der Nummern
@@ -255,7 +263,8 @@ Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-a
 aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`, 19 aus
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
-30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205.
+30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
+37 aus D208.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

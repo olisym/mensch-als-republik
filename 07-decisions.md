@@ -7340,3 +7340,35 @@ D203, bei der Auszählungsvermerke in ein `RatificationResult` gelangen.
 Der Lauf `00q` schreibt die zwei Tabellenzeilen mit benannter Begründung und legt für die drei
 Pfade Prüffälle an. Die Subjektspalten je Layer aus D173 bleiben offen und werden danach billiger,
 weil jede Art dann genau einen Subjekttyp führt.
+
+### D208 — Abnahme `00q`, kein Defekt im Lauf; der Defekt lag in der Prompt-Basis
+
+**Der Lauf.** `d3d7197` auf `00q`, zwei Prüffälle, 587 auf **589**. `git diff --numstat` meldet
+`49 2` in `tests/governance/test_vermerk_subjekte.py` und `45 0` in
+`tests/profiles/test_vermerk_subjekte.py`. Die zwei gelöschten Zeilen sind zwei Importzeilen, die
+zu Mehrzeilern erweitert wurden; kein Produktivpfad ist berührt. Beide Welten stehen Feld für Feld
+wie vor dem Prompt gemessen. Die Erwartung in PF-1 ist über `dedupe_sort` abgeleitet und nicht in
+Reihenfolge getippt, und der Prüffall sichert seine eigene Voraussetzung mit `tally.findings == ()`
+ab. Beide Rücknahmeproben trafen genau ihren Prüffall, je `1 failed, 588 passed`.
+
+**Der Defekt lag in der Basis, die der Prompt vorgab.** `00q` verzweigt von `cc29a2d`, dem Commit
+mit den zwei Tabellenzeilen — der Prompt-Commit liegt darüber. Prüfregel 31 verlangt den
+Prompt-Commit als Vergleichspunkt; hier war es der Spec-Commit darunter. Für die Abnahme ist das
+folgenlos, denn `00q` fasst keine Datei an, die der Prompt-Commit anfasst. Für den Merge ist es
+nicht folgenlos: ein Fast-Forward setzt voraus, dass `main` seit `cc29a2d` nicht weitergelaufen
+ist, und das ist bei dieser Reihenfolge nie gegeben.
+
+**Daraus Prüfregel 37.** Die Basis eines Laufs ist der Commit, der den Prompt enthält. Wer einen
+Prompt schreibt, bevor er ihn committet, nennt darin eine Basis, die es noch nicht gibt — der
+Prompt wird deshalb zuerst committet und die Basis danach eingetragen, nicht umgekehrt.
+
+**Die überlangen Docstrings sind zulässig.** Zwei Zeilen in den neuen Prüffällen laufen über
+hundert Zeichen. D205 hat die Zeilenlängenregel für Python mit Zahlen verneint; die Regel gilt für
+Spec- und Prompt-Dateien im Wurzelverzeichnis, nicht für Testcode. Kein Befund.
+
+**Was der Lauf belegt.** Vor `00q` liessen sich beide Stellen umstellen, ohne dass die Reihe
+reagierte: der Nicht-Bytes-Zweig in `verify_ratification` durfte seinen Vermerk verlieren und das
+Subjekt im `else`-Zweig von `verdict_status` durfte auf Nullbytes wechseln, beides bei 587 grün.
+Jetzt sieht die Reihe beides. Damit ist der Teil von D173 erledigt, der Abdeckung war; der Teil,
+der Subjektspalten je Layer verlangt, bleibt offen und beginnt bei `02`, wo die Layer-Datei
+überhaupt keine Aussage über Subjekttypen führt.
