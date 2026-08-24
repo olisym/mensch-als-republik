@@ -122,6 +122,62 @@ def check_references(text: str, known: set[int]) -> list[str]:
     return []
 
 
+# Zuordnung Präfix → Layer-Datei. Explizite Tabelle, kein Glob: 03 und 04
+# bezeichnen je vier Dateien (D209).
+LAYER_FILES = {
+    "00": "00-nucleus-genesis-constitution.md",
+    "01": "01-claim-atom.md",
+    "02": "02-trust-flow.md",
+    "03": "03-profiles.md",
+    "04": "04-governance.md",
+    "05": "05-enforcement.md",
+    "06": "06-services.md",
+    "07": "07-decisions.md",
+    "08": "08-scope.md",
+}
+
+HEADING_NUM = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)", re.M)
+SECTION_REF = re.compile(r"(?<![A-Za-z0-9])(0[0-8]) §(\d+(?:\.\d+)*)")
+
+
+def layer_headings() -> dict[str, frozenset[str]]:
+    """Überschriftennummern der Ebene 2–4 je Layer-Datei (D209)."""
+    result: dict[str, frozenset[str]] = {}
+    for prefix, name in LAYER_FILES.items():
+        text = read(ROOT / name)
+        if text is None:
+            result[prefix] = frozenset()
+            continue
+        result[prefix] = frozenset(HEADING_NUM.findall(text))
+    return result
+
+
+def heading_covers(wanted: str, headings: frozenset[str]) -> bool:
+    """Getroffen bei genauer Nummer oder bei Nummer plus Punkt (D209)."""
+    if wanted in headings:
+        return True
+    prefix = wanted + "."
+    return any(heading.startswith(prefix) for heading in headings)
+
+
+def check_section_refs(
+    text: str, headings: dict[str, frozenset[str]]
+) -> list[str]:
+    """Verweise ``NN §X.Y`` mit Ziffernpräfix 00–08 gegen die Layer-Datei (D209)."""
+    counts: dict[str, int] = {}
+    for prefix, section in SECTION_REF.findall(text):
+        ref = f"{prefix} §{section}"
+        counts[ref] = counts.get(ref, 0) + 1
+    problems: list[str] = []
+    for ref in sorted(counts):
+        prefix, section = ref.split(" §", 1)
+        if not heading_covers(section, headings[prefix]):
+            problems.append(
+                f"verweist auf unbekannten Abschnitt: {ref} ({counts[ref]}x)"
+            )
+    return problems
+
+
 def main() -> int:
     register = ROOT / "07-decisions.md"
     known: set[int] = set()
@@ -130,6 +186,7 @@ def main() -> int:
         if text:
             known = set(decision_numbers(text))
 
+    headings = layer_headings()
     failures = 0
     for name in SPECS:
         path = ROOT / name
@@ -149,6 +206,9 @@ def main() -> int:
             problems += check_decisions(text)
         if known:
             problems += check_references(text, known)
+        excepted = name == "07-decisions.md" or name.startswith("sitzungsstart-")
+        if not excepted:
+            problems += check_section_refs(text, headings)
 
         if problems:
             print(f"FEHLER {name}")

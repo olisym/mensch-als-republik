@@ -40,7 +40,7 @@ Die Lage `"vergangen"` zieht danach
 
     t_exp aus [naechstes_t + 1, now - 1]
 
-Ableitung: `01 §6.7` fordert `t < t_exp`, also `t_exp >= t + 1`, mit `t = naechstes_t`.
+Ableitung: `01 §6` fordert `t < t_exp`, also `t_exp >= t + 1`, mit `t = naechstes_t`.
 
 Keine feste Untergrenze wie `min_value=100` — sie hielte nur, solange keine Welt mehr als hundert
 Claims je Identität baut, und diese Schranke stünde nirgends. Kein `assume`. Wird der Bereich

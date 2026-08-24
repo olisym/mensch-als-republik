@@ -21,9 +21,9 @@ Ein Abfragewerkzeug, keine generierte Datei. Nimmt einen Abschnittsnamen als Arg
 Registereinträge aus, die ihn nennen.
 
     python3 tools/register_index.py "04 §4.1"
-    04 §4.1   D106 D107 D174 D193 D194 D201
+    04 §4.1   D106 D107 D174 D193 D194 D201 D207 D209
 
-Gemessen an `65ab37d` ist genau diese Zeile das Ergebnis für `04 §4.1`; für `03 §2.4` sind es
+Gemessen am Prompt-Commit ist genau diese Zeile das Ergebnis für `04 §4.1`; für `03 §2.4` sind es
 `D67 D78 D114`. Beide Mengen sind aus dem Register abzuleiten, nicht als Testkonstante zu tippen.
 
 - Zerlegt `07-decisions.md` an Zeilen der Form `### D<zahl>` und sammelt je Eintrag die Verweise
@@ -48,13 +48,14 @@ Eine neue Prüfung neben den bestehenden, mit den Einschränkungen aus D209:
   gesuchten plus einem Punkt beginnt — `02 §3` ist auch dann getroffen, wenn es nur `3.1` gibt.
 - Befunde werden wie die übrigen gemeldet: Datei, Verweis, Anzahl. Rückgabewert 1.
 
-Gemessen an `65ab37d`: über alle Dateien liegen **672** solche Verweise; nach der Ausnahme für
-Register und Sitzungsstart bleibt genau **ein** Befund, der in Teil C behoben wird. Die Zahlen
-sind im Lauf nachzumessen und bei Abweichung zu melden.
+Gemessen am Prompt-Commit liegen über alle Dateien **704** solche Verweise; nach der Ausnahme
+für Register und Sitzungsstart bleiben **238**, und darin genau **ein** Befund, der in Teil C
+behoben wird. Die Zahlen sind im Lauf nachzumessen und bei Abweichung zu melden.
 
 ### Teil C — Berichtigung in `welten-prompt.md`
 
-Die Datei verweist auf `01 §6.7`. `01-claim-atom.md §6` ist nicht untergliedert; gemeint ist
+Die Datei verweist auf einen Unterabschnitt 6.7 von `01 §6`. Der Abschnitt ist nicht
+untergliedert; gemeint ist
 Listenpunkt 7 darin, „falls `t` und `t_exp` vorhanden: `t < t_exp`". Der Verweis wird zu `01 §6`,
 der Satz bleibt sonst unverändert und behält seine Aussage.
 
@@ -66,8 +67,8 @@ der Satz bleibt sonst unverändert und behält seine Aussage.
 - **Keine generierte Indexdatei im Baum.** D209 hat das mit Grund verworfen.
 - **Keine Zeilenlängenprüfung.** Die 100-Zeichen-Konvention bleibt ungeprüft; das ist ein eigener
   Fork und nicht Teil dieses Laufs.
-- **Kein Nachziehen der zwei Registerverweise** `03 §5.1` und `03 §11`. Sie sind von der Prüfung
-  ausgenommen und bleiben, wie sie stehen.
+- **Kein Nachziehen der zwei Registerverweise** auf die Abschnitte 5.1 und 11 in `03`. Sie sind
+  von der Prüfung ausgenommen und bleiben, wie sie stehen.
 - Kein Anfassen der bestehenden Prüfungen in `check_specs.py`, kein Umbau ihrer Ausgabe.
 - Keine weiteren Funde beheben, auch wenn die neue Prüfung welche zeigt. Melden.
 
@@ -79,16 +80,17 @@ der Satz bleibt sonst unverändert und behält seine Aussage.
 - `ruff check` ohne Fund, auch in `tools/`.
 - `git diff --numstat` zeigt `tools/register_index.py` (neu), `tools/check_specs.py` und
   `welten-prompt.md`. Neue Datei vor `make check` mit explizitem Pfad adden, nie `-A`.
-- `python3 tools/register_index.py "04 §4.1"` gibt die sechs oben genannten D-Nummern aus.
+- `python3 tools/register_index.py "04 §4.1"` gibt die acht oben genannten D-Nummern aus.
 
 ## 6. Zwei Rücknahmeproben
 
-**Probe A.** Die Berichtigung aus Teil C zurücknehmen, also `01 §6` wieder auf `01 §6.7` setzen.
+**Probe A.** Die Berichtigung aus Teil C zurücknehmen, also den Unterabschnitt 6.7 wieder
+einsetzen.
 Erwartet: `make check` **rot** mit genau einem Verweisbefund in `welten-prompt.md`. Bleibt es grün,
 greift die Prüfung nicht und das ist ein Befund.
 
-**Probe B.** In einer beliebigen Layer-Datei einen erfundenen Verweis der Form `02 §99` in einer
-Prompt-Datei einfügen — nicht im Register, sonst greift die Ausnahme. Erwartet: `make check` rot
+**Probe B.** In einer Prompt-Datei einen erfundenen Verweis auf den Abschnitt 99 in `02`
+einfügen — nicht im Register, sonst greift die Ausnahme. Erwartet: `make check` rot
 mit diesem Befund. Danach zurücknehmen.
 
 Zwei Änderungen, zwei Proben. Probe A prüft, dass die Prüfung den echten Fund sieht; Probe B, dass
