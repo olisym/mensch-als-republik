@@ -7414,3 +7414,68 @@ Zitierweise beabsichtigt gewesen wäre.
 **Ausdrücklich nicht entschieden.** Kein Übersichtsdokument über die Schichten, kein gemaltes
 Abhängigkeitsdiagramm, keine Aufteilung des Registers auf mehrere Dateien. Das Erste driftet, das
 Zweite ist aus dem Code in Sekunden zu rechnen, das Dritte zerbricht 345 bestehende Verweise.
+
+### D210 — Die Verweisprüfung unterscheidet Erwähnung nicht von Verwendung
+
+**Der Befund kam aus dem Lauf `00r` und betraf den Prompt, nicht den Lauf.** Die neue Prüfung aus
+D209 meldete vier Verweise in `00r-registerindex-prompt.md` selbst — die Beispielzeilen, mit denen
+der Prompt beschreibt, welche kaputten Verweise zu finden sind. D209 nimmt `07-decisions.md` und
+`sitzungsstart-*.md` aus; für einen Prompt, der über Verweise spricht, war nichts vorgesehen. Das
+Werkzeug hat den Widerspruch gemeldet statt ihn aufzulösen, und das war richtig.
+
+**Entschieden: die Beispiele werden umgeschrieben, keine Ausnahme gebaut.** Wer über einen nicht
+existierenden Abschnitt schreiben muss, nennt seine Nummer ohne das Paragraphenzeichen — „der
+Unterabschnitt 6.7 von `01 §6`" statt der Zitierform. Die Prüfung sieht dann nur den gültigen
+Verweis.
+
+**Benannt und verworfen: eine Abschaltmarke.** Der Stand der Technik in Lintern ist die lokale
+Unterdrückung, `noqa` und seinesgleichen. Sie schaltet hier die ganze Datei ab, auch für echte
+Funde, und sie bleibt liegen, wenn ihr Grund verschwunden ist. Der Preis der gewählten Fassung
+setzt sich dagegen selbst durch: wer die Konvention vergisst, sieht es beim ersten `make check`.
+
+**Ebenfalls verworfen: Prompt-Dateien aus der Prüfmenge nehmen.** Der einzige echte Fund der
+gesamten Messung lag in `welten-prompt.md`. Eine Prüfung, die Prompt-Dateien auslässt, hätte ihn
+nicht gefunden.
+
+**Drei Zahlen aus D209 werden berichtigt.** Der Supervisor hat 672 geprüfte Verweise und sechs
+Registereinträge zu `04 §4.1` an `65ab37d` gemeldet und beides an einer älteren Arbeitskopie
+gemessen, der D207 bis D209 fehlten. Richtig sind **704** Verweise, davon **238** nach der
+Ausnahme, und **acht** Einträge zu `04 §4.1` — D207 und D209 nennen den Abschnitt selbst. Ein
+Commit-Name an einer Messung, die nicht an ihm entstand, ist genau der Fall aus Prüfregel 19.
+
+**Der Lauf `00r` bleibt gültig.** Die drei Teile sind gebaut und ungebrochen. Die Berichtigung
+des Prompts geht in den Lauf-Commit selbst, weil er ohne sie nicht grün werden kann; damit bleibt
+`main` bis zum Merge stehen und das Fast-Forward erhalten (Prüfregel 37). Dieser Eintrag folgt nach
+dem Merge. Die `numstat`-Menge des Laufs wächst dadurch um `00r-registerindex-prompt.md`.
+
+### D211 — Abnahme `00r`; der Lauf landete auf `main`, weil eine Ausgabe für eine Bedingung galt
+
+**Der Lauf.** `7e93a6a`, vier Dateien, `145 +` und `13 -`. `tools/register_index.py` ist neu,
+`tools/check_specs.py` bekommt die Verweisprüfung, `welten-prompt.md` eine berichtigte Zeile, der
+Prompt seine umgeschriebenen Beispiele. Beide Werkzeuge setzen D209 um: explizite Präfixtabelle
+statt Glob, Ausnahme für Register und Sitzungsstart, „Nummer plus Punkt" in `heading_covers`, und
+eine leere Trefferzeile mit Rückgabewert 0 für einen Abschnitt ohne Eintrag. **Kein Defekt im
+Werkzeugcode.**
+
+**Der Lauf hat keinen Branch bekommen.** Der Block des Supervisors begann mit
+`git branch --show-current` und behandelte dessen Ausgabe als Prüfung. Der Befehl gibt den Namen
+aus und liefert Status 0, gleich welcher Branch anliegt; die Kette lief auf `main` weiter und der
+Commit landete dort direkt. Inhaltlich ist er byte-gleich mit dem, was ein Fast-Forward gebracht
+hätte, deshalb wird die Historie nicht umgeschrieben. **Daraus Prüfregel 39.**
+
+**Die Proben des Werkzeugs galten für einen anderen Stand.** Sie liefen vor der Berichtigung des
+Prompts und meldeten damals zusätzlich `00r-registerindex-prompt.md`; der committete Stand war
+ungeprobt. Beide wurden nachgefahren: Probe A meldet genau einen Befund in `welten-prompt.md`,
+Probe B genau einen in `00o-arg-prompt.md`, der Schlusslauf null. Nicht das Werkzeug hat hier
+geschludert — der Supervisor hat die Berichtigung nach den Proben eingeschoben und sie nicht neu
+verlangt.
+
+**Ein Zug, der im Prompt nicht stand.** `REF` in `register_index.py` erlaubt neben dem
+Ziffernpräfix auch `VISION`. Das Register nennt `VISION §…` dreimal; ohne die Alternative verlöre
+der Index diese Verweise. Die Anpassung ist damit richtig, aber sie stand in keinem Auftrag und
+kam in keinem Bericht vor. Sie bleibt stehen, weil ihr Entfernen einen Lauf kostet und nichts
+verbessert; benannt wird sie hier.
+
+**Die Verweisprüfung greift.** Über alle Wurzeldateien werden 704 Verweise gelesen, 238 davon
+geprüft. Der eine echte Fund der Messung ist behoben, und zwei Proben zeigen, dass die Prüfung
+nicht nur ihn kennt.

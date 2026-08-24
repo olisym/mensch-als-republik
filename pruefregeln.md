@@ -262,6 +262,12 @@ geschieht davor. Wer eine Lage für ungeklärt hält, schlägt zuerst nach, wer 
 `tools/register_index.py` nennt die Einträge zu einem Abschnitt. In der Sitzung zu D207 wurden drei
 von vier Positionen zurückgenommen, jede davon gegen eine Entscheidung, die es bereits gab (D209).
 
+**39. Eine Ausgabe ist keine Bedingung.**
+In einer `and`-Kette entscheidet der Rückgabewert, nicht der gedruckte Text. `git branch
+--show-current`, `git log` und `grep -c` liefern Status 0, auch wenn sie das Falsche zeigen; wer
+einen Zustand sichern will, braucht `test`, `--is-ancestor`, `--quiet` oder `-c` mit Vergleich. In
+`00r` galt eine Branchausgabe als Prüfung, und der Lauf-Commit landete auf `main` (D211).
+
 ---
 
 ## Herkunft der Nummern
@@ -271,7 +277,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
-37 aus D208, 38 aus D209.
+37 aus D208, 38 aus D209, 39 aus D211.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
