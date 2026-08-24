@@ -7372,3 +7372,45 @@ Subjekt im `else`-Zweig von `verdict_status` durfte auf Nullbytes wechseln, beid
 Jetzt sieht die Reihe beides. Damit ist der Teil von D173 erledigt, der Abdeckung war; der Teil,
 der Subjektspalten je Layer verlangt, bleibt offen und beginnt bei `02`, wo die Layer-Datei
 überhaupt keine Aussage über Subjekttypen führt.
+
+### D209 — Zwei Werkzeuge gegen das Wiederfinden, nicht gegen die Komplexität
+
+**Die Diagnose ist gemessen und lautet anders als vermutet.** Der Verdacht war, die Schichten seien
+zu stark verzahnt. Gemessen am Importgraphen laufen 74 Kanten von `trust`, `profiles` und
+`governance` nach unten in den Kern und 6 zurück, fünf davon aus der Fassade `resolve.py`. Die
+Schichten stapeln, sie verflechten nicht. Von 672 Abschnittsverweisen auf Layer-Dateien zeigen
+drei ins Leere. Was wächst, ist das Register: 7375 Zeilen, 208 Einträge, 29 Prozent des Projekts.
+
+**Die Fehlerquelle sitzt vor dem Prompt, nicht im Prompt.** In der Sitzung zu D207 wurden vier
+Positionen bezogen und drei zurückgenommen; jede Rücknahme hatte dieselbe Ursache, nämlich eine
+Entscheidung, die es schon gab — die Sammelform in `04 §4.1`, die Zusammenfassung in `03 §2.4.4`,
+die Zurückstellung in `04a §6`. Prüfregel 27 und 33 greifen, wenn ein Prompt entsteht. Zwischen
+Positionsbildung und Prompt liegt aber die eigentliche Arbeit, und dort greift keine Regel.
+
+**Daraus Prüfregel 38** und zwei Werkzeuge, die sie ausführbar machen statt sie zu mahnen.
+
+**`tools/register_index.py`.** Nimmt einen Abschnittsnamen und gibt die Registereinträge aus, die
+ihn nennen. Gemessen an `04 §4.1` liefert er `D106 D107 D174 D193 D194 D201`; D106 ist genau der
+Eintrag, der die Sammelform entschied. Der Index wird **gerechnet, nicht gepflegt** — eine
+generierte Datei im Baum wäre eine dritte Wahrheitsquelle neben Code und Spec und würde driften.
+Benannte Grenze: 40 Prozent der Einträge nennen keinen Abschnitt und tauchen im Index nicht auf.
+
+**`check_specs.py` prüft Abschnittsverweise.** Ein Verweis der Form `NN §X.Y` auf eine Layer-Datei
+muss dort eine Überschrift treffen. Zwei Einschränkungen, beide mit Grund:
+
+- **Nur Ziffernpräfixe.** Die Zitierkonvention ist nicht injektiv: `03` und `04` bezeichnen je vier
+  Dateien, `01a` zwei. Ein Verweis `01a §3.3` ist ohne festgelegte Tabelle nicht auflösbar. Solange
+  es die nicht gibt, prüft das Werkzeug nur `00` bis `08`.
+- **Nicht in `07-decisions.md` und `sitzungsstart-*.md`.** Beide beschreiben vergangene Stände. Ein
+  Registereintrag, der einen inzwischen umgebauten Abschnitt nennt, ist richtig und wird nicht
+  nachgezogen; zwei der drei gefundenen Verweise sind genau das.
+
+Nach diesen Einschränkungen bleibt ein einziger Fund: `welten-prompt.md` verweist auf `01 §6.7`.
+Der Abschnitt `01 §6` ist nicht untergliedert; gemeint ist Listenpunkt 7 darin (`t < t_exp`). Der
+Verweis wird auf `01 §6` berichtigt. **Benannte Grenze der Prüfung:** sie kann einen Listenpunkt
+nicht von einem Unterabschnitt unterscheiden und hätte `§6.7` auch dann gemeldet, wenn die
+Zitierweise beabsichtigt gewesen wäre.
+
+**Ausdrücklich nicht entschieden.** Kein Übersichtsdokument über die Schichten, kein gemaltes
+Abhängigkeitsdiagramm, keine Aufteilung des Registers auf mehrere Dateien. Das Erste driftet, das
+Zweite ist aus dem Code in Sekunden zu rechnen, das Dritte zerbricht 345 bestehende Verweise.
