@@ -7798,3 +7798,51 @@ dass die Kanäle nur über Commits reden. Genau diese Regel macht den Loop über
 **Verworfen: die Werkzeugketten für spec-driven development** (Spec Kit, Kiro und Verwandte). Sie
 erzeugen, was `07-decisions.md` bereits führt, und mit schwächerer Begründungspflicht. Wer sie
 wieder aufmacht, braucht eine Aussage, die das Register nicht tragen kann.
+
+### D219 — Die Buchstabenpräfixe der Zitierkonvention werden gebunden (D209, Teil A)
+
+**Anlass.** D209 hat die Zitierkonvention als nicht injektiv benannt und die Position von der
+Messung getrennt. Teil A ist gemessen, auf `ef807e2`: einunddreissig Verweise der Form `NNx §Y`
+in `.md` und `.py` zusammen, verteilt auf fünfzehn Dateien, mit vier benutzten Namen.
+
+**Die Messung schliesst den Fork, statt ihn zu eröffnen.** Die drei Abnahme-Dateien führen keine
+einzige nummerierte Überschrift; sie gliedern nach `## Teil A` und `### D41`. Damit kann keine
+von ihnen unter der geltenden Konvention Zitierziel sein, und die vermutete Zweideutigkeit ist
+keine.
+
+| Name | Verweise | zitierte Abschnitte | Zitierziel | ohne Nummern |
+|---|---|---|---|---|
+| `02a` | 24 | 2.1, 2.3, 2.4, 2.6, 2.7, 2.10, 3, 4, 5 | `02a-maxflow-prompt.md` | `02a-abnahme.md` |
+| `01a` | 3 | 3.3, 4 | `01a-policy-prompt.md` | `01a-nachtrag-prompt.md` |
+| `02b` | 2 | 2 | `02b-golden-anchors.md` | `02b-abnahme.md` |
+| `04a` | 2 | 6 | `04a-korrektur-prompt.md` | — |
+
+Die Zitierziele führen 19, 16, 12 und 8 nummerierte Überschriften; die drei Dateien rechts
+führen null.
+
+**Entscheidung, drei Teile.** Erstens erhält `LAYER_FILES` in `tools/check_specs.py` die vier
+Einträge oben. Zweitens erlaubt `SECTION_REF` einen optionalen Kleinbuchstaben hinter dem
+Ziffernpaar. Drittens ist ein Buchstabenname ohne Tabelleneintrag ein **Befund**, keine
+Auslassung — das ist die Injektivität, die D209 will: ein Zitiername ohne gebundene Datei ist
+der Defekt selbst. Der Preis ist benannt und erwünscht: wer eine Prompt-Datei mit
+Buchstabennamen anlegt und daraus zitiert, wird rot, bis er die Tabelle ergänzt.
+
+**Zahlen.** In Python stehen 260 Paragraphenverweise. Vor der Änderung prüft `check_specs.py` 60
+davon, danach 75; 185 bleiben präfixlos und ungeprüft. Der Sitzungsstart nennt für die
+präfixlosen 201 — das war eine Handzählung, die gemessene Zahl ist 185. Die Erweiterung läuft
+grün: kein einziger der einunddreissig Verweise zeigt ins Leere.
+
+**Verworfen: eine der Dateien umbenennen.** Es gibt nichts umzubenennen, was die Prüfung
+brauchte. Ein Dateiname, der einen vergangenen Lauf beschreibt, wird nicht umgeschrieben, damit
+eine Tabelle ihn nicht führen muss.
+
+**Verworfen: die Regex aus den Tabellenschlüsseln bauen.** Das ist der kürzere Weg und der
+schlechtere: ein Name ohne Eintrag trifft die Regex dann nicht mehr und verschwindet still.
+Genau die stille Klasse ist der Gegenstand.
+
+**Verworfen: Teil B mitziehen.** Die 185 präfixlosen Verweise brauchen eine eigene Position; eine
+Zuordnung Verzeichnis auf Schicht trägt nicht, weil `mensch_als_republik/policy.py` `00 §3` und
+die Prompt-Datei der Schicht 04 nebeneinander nennt. Teil B bleibt offen und ist kein Anhängsel.
+
+**Probe.** Für `tools/check_specs.py` gibt es keinen Test; die Rücknahmeprobe ist der Lauf selbst.
+Wird ein Tabelleneintrag entfernt, muss `make check-specs` rot werden.
