@@ -78,7 +78,7 @@ def _measure(
 
 
 def _n_auf_der_schwelle(derivation: Derivation, p: Identity) -> int:
-    """Kleinste n mit cap(p → h) ≥ 1, also (n · C(p)) // D ≥ 1 (02 §2.7 / K8)."""
+    """Kleinste n mit cap(p → h) ≥ 1, also (n · C(p)) // D ≥ 1 (02 §3 / K8)."""
     C_p = capacity(PARAMS, derivation.bfs.distance[p.pub])
     return (PARAMS.D + C_p - 1) // C_p
 

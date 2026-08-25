@@ -178,6 +178,33 @@ def check_section_refs(
     return problems
 
 
+def python_sources() -> list[Path]:
+    """``.py`` unter der Wurzel, ohne ``.venv``, stabil sortiert (D215)."""
+    return sorted(p for p in ROOT.rglob("*.py") if ".venv" not in p.parts)
+
+
+def check_python_section_refs(
+    headings: dict[str, frozenset[str]],
+) -> tuple[int, int, list[tuple[str, list[str]]]]:
+    """``check_section_refs`` über alle Python-Dateien (D215).
+
+    Rückgabe: Dateizahl, Verweiszahl, Befunde je Relativpfad.
+    """
+    files = python_sources()
+    n_refs = 0
+    findings: list[tuple[str, list[str]]] = []
+    for path in files:
+        text = read(path)
+        if text is None:
+            findings.append((str(path.relative_to(ROOT)), ["UTF-8 defekt"]))
+            continue
+        n_refs += len(SECTION_REF.findall(text))
+        problems = check_section_refs(text, headings)
+        if problems:
+            findings.append((str(path.relative_to(ROOT)), problems))
+    return len(files), n_refs, findings
+
+
 def main() -> int:
     register = ROOT / "07-decisions.md"
     known: set[int] = set()
@@ -218,6 +245,16 @@ def main() -> int:
         else:
             lines = text.count("\n") + 1
             print(f"  ok  {name:36} {lines:>5} Zeilen")
+
+    n_py, n_py_refs, py_findings = check_python_section_refs(headings)
+    if py_findings:
+        for rel, problems in py_findings:
+            print(f"FEHLER {rel}")
+            for problem in problems:
+                print(f"  {problem}")
+            failures += 1
+    else:
+        print(f"  ok  {'Python-Dateien':36} {n_py:>5} Dateien, {n_py_refs} Verweise")
 
     if failures:
         print(f"\n{failures} Datei(en) mit Befund.")

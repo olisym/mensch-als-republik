@@ -106,15 +106,6 @@ def is_core_predicate(claim: Claim) -> bool:
         return False
 
 
-def is_nuc_predicate(claim: Claim) -> bool:
-    """True gdw. p ein gültiges nuc:-Prädikat ist."""
-    try:
-        parsed = parse_predicate(claim.p)
-        return parsed.namespace == "nuc"
-    except VerifierError:
-        return False
-
-
 def is_nuc_name(claim: Claim, name: str) -> bool:
     """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (§2.2, Anhang A, D181, D213)."""
     try:
