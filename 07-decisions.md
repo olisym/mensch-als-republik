@@ -7692,3 +7692,38 @@ nichts Normatives zurück. Wache und verengte Fangbreite aus D213 bleiben unber�
 das ist der Grund für die Löschung und zugleich der Grund, warum sie sich nicht durch einen Test
 belegen lässt. Der Beleg ist der Grep über den Baum. Wer die Funktion wieder einführt, braucht
 einen Produktiv-Aufrufer, den dieser Eintrag nicht gemessen hat.
+
+### D217 — Abnahme `00t`, kein Defekt; die Vorabvariante war an einer Stelle schlechter
+
+**Der Lauf.** `91410c2`, fünf Dateien, `50 +` und `33 -`. Alle vier Eingriffe stehen so, wie
+D215 und D216 sie entschieden haben. Die Nicht-Ziele halten: `governance/findings.py`,
+`policy.py`, `tests/governance/test_anchors.py`, `verifier.py` und `index.py` sind unberührt.
+597 Tests, `ruff` sauber, `check_specs.py` meldet 120 Dateien und 60 Verweise.
+
+**Die Abweichung von vier Zeilen ist begründet, und die Begründung dreht die Richtung um.**
+`tools/check_specs.py` wuchs um 37 statt der vorab gemessenen 33 Zeilen. Zwei der vier
+bezahlen eine Gruppierung der Befunde je Datei — und damit eine Zählung, die die Vorabvariante
+des Supervisors **falsch** hatte: dort erhöhte ein einziges `failures += 1` den Zähler für alle
+Python-Befunde zusammen, sodass zwei defekte Dateien als eine gemeldet worden wären. Der Prompt
+verlangte, Befunde würden gezählt wie die übrigen; das Werkzeug hat den Prompt befolgt und nicht
+die Variante. Daraus **Prüfregel 41**.
+
+Die beiden übrigen Zeilen sind der Docstring der neuen Prüffunktion und der Zweig für
+`read() is None`. Letzterer führt nebenbei eine UTF-8-Prüfung für Python ein, die der Prompt
+nicht verlangt hat. Sie ist gemeldet und nicht still gebaut, inhaltlich richtig — Python-Quelltext
+ohne Deklaration ist UTF-8 — und ohne sie stünde an der Stelle ein `TypeError`. Kein Befund.
+
+**Die Proben haben getan, was sie sollten.** Probe A ergab Rückgabewert 1 mit genau einer
+Meldung und nach dem Zurücksetzen wieder 0. Probe B ergab 25 statt 23 Prüffälle; die zwei
+zusätzlichen belegen, dass beide `parametrize` an derselben Liste hängen.
+
+**Was D212 übersehen hat, war eine Zählung.** Der Eintrag benannte zwei Zeiger und reparierte
+damit zwei von drei. Der dritte stand zwischen ihnen und zeigte für die halbe Aussage richtig —
+`00 §5.4` trägt das Subjekt aus D163, nicht das aus D164. Wer eine Defektklasse repariert,
+zählt zuerst ihre Vorkommen; wer die gefundenen repariert, repariert die gefundenen.
+
+**Neue Messung für den D209-Fork.** In den Python-Dateien stehen **260** Paragraphenverweise,
+davon **201 ohne Ziffernpräfix**, verteilt über siebzig Dateien. Die neue Prüfung erfasst 59
+von 260, knapp ein Viertel. Eine Zuordnung Verzeichnis auf Schicht wäre der billige Weg, ist
+aber nicht sauber: `mensch_als_republik/policy.py` nennt `00 §3` und daneben die Prompt-Datei
+der Schicht 04. Der Fork bleibt offen und ist grösser, als der Sitzungsstart nahelegte.

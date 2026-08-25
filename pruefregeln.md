@@ -278,6 +278,14 @@ Operator zahlt einen Zug für einen Fehler, der keiner war. Liegt kein gemessene
 die **Beziehung** geprüft: `git rev-parse main` gegen `impl/00x^`, `--is-ancestor`, oder
 `origin/main` statt `main`. In `00s` zweimal gerissen (D214).
 
+**41. Die Vorabvariante ist Erwartungsquelle, nicht Vorbild.**
+Eine vollständig gebaute Variante liefert die Zahlen, gegen die abgenommen wird — sie bindet das
+Werkzeug nicht. Weicht der Lauf ab, wird die Abweichung zuerst gegen den **Prompt** geprüft und
+erst danach gegen die Variante; deckt der Prompt das ab, was das Werkzeug gebaut hat, ist die
+Variante der Fehler und nicht der Lauf. In `00t` zählte die Variante alle Python-Befunde als
+einen, der Prompt verlangte die Zählung je Datei, und die vier Zeilen Abweichung waren die
+Reparatur (D217).
+
 ---
 
 ## Herkunft der Nummern
@@ -287,7 +295,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
-37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214.
+37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
