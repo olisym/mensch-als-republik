@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from mensch_als_republik.atom import Claim
 from mensch_als_republik.errors import (
     BadScopeBinding,
+    MalformedCbor,
     ReservedCorePredicate,
     UnknownNamespace,
     VerifierError,
@@ -36,8 +37,11 @@ def parse_predicate(p: str) -> ParsedPredicate:
     """
     Grammatik aus Anhang A parsen.
 
+    Prüft als erstes, ob p ein str ist, und wirft sonst MalformedCbor (D213).
     Raises VerifierError-Subklassen bei ungültiger Form.
     """
+    if not isinstance(p, str):
+        raise MalformedCbor()
     if p.startswith("core/"):
         if not _CORE_PREDICATE.match(p):
             raise ReservedCorePredicate()
@@ -112,10 +116,10 @@ def is_nuc_predicate(claim: Claim) -> bool:
 
 
 def is_nuc_name(claim: Claim, name: str) -> bool:
-    """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (§2.2, Anhang A, D181)."""
+    """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (§2.2, Anhang A, D181, D213)."""
     try:
         parsed = parse_predicate(claim.p)
-    except Exception:
+    except VerifierError:
         return False
     return (
         parsed.namespace == "nuc"

@@ -7,10 +7,17 @@ import pytest
 from mensch_als_republik.atom import Claim
 from mensch_als_republik.errors import (
     BadScopeBinding,
+    MalformedCbor,
     ReservedCorePredicate,
     UnknownNamespace,
 )
-from mensch_als_republik.predicates import is_nuc_name, parse_predicate, resolve_scope
+from mensch_als_republik.predicates import (
+    is_core_predicate,
+    is_nuc_name,
+    is_nuc_predicate,
+    parse_predicate,
+    resolve_scope,
+)
 
 N = bytes.fromhex("65309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d2f5557")
 ALICE = bytes.fromhex("8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c")
@@ -115,4 +122,34 @@ def test_nuc_name_malformed() -> None:
 
 def test_nuc_name_bytes_p_returns_false() -> None:
     claim = replace(_claim(f"nuc:{N.hex()}/vouch@1"), p=b"nuc:x/vouch@1")
+    assert is_nuc_name(claim, "vouch") is False
+
+
+@pytest.mark.parametrize(
+    "p",
+    [
+        b"nuc:x/vouch@1",
+        None,
+        7,
+        ["nuc:x/vouch@1"],
+    ],
+)
+def test_parse_predicate_non_str_raises_malformed_cbor(p: object) -> None:
+    with pytest.raises(MalformedCbor):
+        parse_predicate(p)
+
+
+@pytest.mark.parametrize(
+    "p",
+    [
+        b"nuc:x/vouch@1",
+        None,
+        7,
+        ["nuc:x/vouch@1"],
+    ],
+)
+def test_praedikatpruefer_non_str_p_returns_false(p: object) -> None:
+    claim = replace(_claim(f"nuc:{N.hex()}/vouch@1"), p=p)
+    assert is_core_predicate(claim) is False
+    assert is_nuc_predicate(claim) is False
     assert is_nuc_name(claim, "vouch") is False
