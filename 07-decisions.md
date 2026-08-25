@@ -7518,3 +7518,54 @@ steht. Ein Ort für beide Arten ist die billigere Antwort auf dieselbe Frage.
 `mensch_als_republik/findings.py` nennt `00 §5.4`, `dedupe_sort` dort nennt `04-prompt.md §2`
 schichtübergreifend. Beides ist Produktivcode und gehört in den nächsten Lauf, der die Datei
 ohnehin anfasst. Damit ist D173 in der Spec erledigt; im Code bleiben zwei Docstring-Zeilen.
+
+### D213 — Die Fangbreite wird an der Wurzel geschlossen, nicht an den drei Fängern
+
+**Der Befund, gemessen.** `is_core_predicate` und `is_nuc_predicate` fangen `VerifierError`,
+`is_nuc_name` fängt `Exception` (offen seit D181). Der enge Fänger fängt nichts von dem, was
+tatsächlich austritt:
+
+| `claim.p` | `is_core_predicate` | `is_nuc_predicate` | `is_nuc_name` |
+|---|---|---|---|
+| `bytes` | `TypeError` | `TypeError` | `False` |
+| `None`, `int`, `list` | `AttributeError` | `AttributeError` | `False` |
+
+`parse_predicate` kommt für ein nicht-`str` `p` gar nicht bis zu einem `raise`; es stolpert an
+`p.startswith` beziehungsweise an `re.match`. Ein `VerifierError` entsteht nie.
+
+**Aus dem Verifier heraus ist die Lage unerreichbar.** `_validate_field_types` verlangt
+`isinstance(m.get(3), str)` und wirft sonst `MalformedCbor`; der Aufruf steht in
+`structural_check` **vor** `claim_from_map`. Jeder Claim aus `read_claim` trägt `p: str`.
+Erreichbar ist die Lage nur über `claim_from_map` oder `claim_from_bytes` direkt — genau der Weg,
+den D181 benannt hat, als es die breite Fangweite bewusst stehen liess.
+
+**Beschluss.** `parse_predicate` prüft `isinstance(p, str)` und wirft sonst `MalformedCbor`.
+Danach tritt aus keinem der drei Prüfer etwas anderes als ein `VerifierError` aus, und
+`is_nuc_name` kann auf `VerifierError` verengt werden, ohne dass sich an einer Aufrufstelle etwas
+ändert. Die Divergenz löst sich auf, statt zugedeckt zu werden.
+
+**Warum `MALFORMED_CBOR` und kein neuer Code.** `01` Anhang B zählt „falscher Feldtyp" bereits
+unter `MALFORMED_CBOR`; der Verifier fällt für dasselbe `p` schon heute genau dieses Urteil. Die
+Wache spricht es an der zweiten Tür noch einmal aus, statt eine zweite Antwort auf dieselbe Frage
+zu erfinden. Die elf Reject-Codes bleiben elf.
+
+**Verworfen: `is_nuc_name` auf `VerifierError` verengen und sonst nichts.** Das kippt
+`test_nuc_name_bytes_p_returns_false`, den D181 mit Begründung gesetzt hat, und trägt die
+Ausnahme wieder in den Aufrufer.
+
+**Verworfen: alle drei auf `Exception` verbreitern.** Das ist keine Angleichung, sondern die
+Übernahme des schlechteren Zustands in zwei weitere Funktionen: eine Fangweite, die
+`AttributeError` schluckt, macht jeden künftigen Programmierfehler in `parse_predicate` still zu
+`False`.
+
+**Die Proben sind ungleich, und das ist die Aussage.** Die Wache ist einzeln prüfbar: ohne sie
+wird der neue Prüffall rot — und mit ihr **auch** `test_nuc_name_bytes_p_returns_false`, weil die
+verengte Fangweite dann ihr Netz verliert. Genau diese Kopplung ist der Beleg. Die Verengung
+dagegen ist bei stehender Wache **nicht** einzeln prüfbar: ihre Rücknahme lässt die Reihe
+vollständig grün. Das ist kein wertloser Probelauf, sondern die Behauptung des Beschlusses —
+wäre sie rot, änderte die Verengung Verhalten, und der Beschluss wäre falsch.
+
+**Nebenbefund: `is_nuc_predicate` hat null Aufrufstellen** — nicht im Paket, nicht in `tools/`,
+nicht in den Tests, in keiner Spec-Datei. Die Löschung ist vorgeschlagen und **nicht**
+entschieden; sie bleibt offen. Solange die Funktion steht, wird sie mitgeprüft, sonst entstünde
+dieselbe Asymmetrie neu, die dieser Eintrag schliesst.
