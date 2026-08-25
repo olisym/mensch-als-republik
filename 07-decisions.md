@@ -7727,3 +7727,74 @@ davon **201 ohne Ziffernpräfix**, verteilt über siebzig Dateien. Die neue Prü
 von 260, knapp ein Viertel. Eine Zuordnung Verzeichnis auf Schicht wäre der billige Weg, ist
 aber nicht sauber: `mensch_als_republik/policy.py` nennt `00 §3` und daneben die Prompt-Datei
 der Schicht 04. Der Fork bleibt offen und ist grösser, als der Sitzungsstart nahelegte.
+
+### D218 — Was die Literatur zum Entwicklungsloop hergibt; drei Forks, zwei Verwerfungen
+
+**Anlass.** Prüfregel 15 verlangt, dass nachgesehen wird, was ausserhalb von MaR zu einer Gabelung
+gefunden wurde, bevor sie geschlossen wird. Die Gabelung war hier der eigene Loop: Oli als
+Operator, Claude als Supervisor, ein Werkzeug als Werkstatt. Vier Befunde tragen, der Rest ist
+Wiederholung davon.
+
+**Der Verifikationsaufwand ist der unsichtbare Posten.** METRs randomisierter Versuch (Becker,
+Rush, Barnes, Rein, 2025): sechzehn erfahrene Entwickler, 246 echte Aufgaben in Repositories, die
+sie selbst pflegen. Mit AI-Werkzeugen 19 Prozent langsamer, geschätzt 20 Prozent schneller. Die
+Nachfolgeuntersuchung 2026 hielt bei etwa achtzehn Prozent Verlangsamung. Die Bedingungen sind
+unsere: erfahrene Beitragende, reife Codebasis, hohe Qualitätsansprüche. Der genannte Mechanismus
+ist, dass der schnelle erste Schritt erinnert wird und der langsame Verifikationsschritt nicht.
+
+**Qualitätssicherung muss mit der Geschwindigkeit mitwachsen.** He, Miller, Agarwal, Kästner,
+Vasilescu (MSR 2026), Difference-in-Differences über 806 Repositories: rund 29 Prozent mehr
+hinzugefügte Zeilen, 30 Prozent mehr Static-Analysis-Warnungen, 42 Prozent mehr Komplexität. Der
+Geschwindigkeitsgewinn war vorübergehend, die Qualitätsverschlechterung blieb. Der Kausalpfad
+läuft über Tempo auf Codemenge auf technische Schuld — die Werkzeuge verstärken bestehende
+Dynamiken, statt eigene Fehlerarten einzuführen.
+
+**Einfache Pipelines schlagen autonome Agenten.** Xia, Deng, Dunn, Zhang (FSE 2025, Agentless):
+Lokalisierung, Reparatur, Validierung, ohne dass das Modell über den nächsten Schritt entscheidet
+— bei besserer Lösungsrate und rund einem Fünftel der Kosten agentischer Aufbauten. Die
+Begründung ist die für uns wichtige: ein falscher Schritt wird verstärkt und verdirbt alle
+folgenden Entscheidungen.
+
+**Kontexte kollabieren, wenn man sie neu schreibt statt sie zu ergänzen.** Zhang et al. (ICLR
+2026, ACE) benennen zwei Fehlerarten: brevity bias, bei dem Fachwissen zugunsten knapper
+Zusammenfassungen wegfällt, und context collapse, bei dem wiederholtes Umschreiben Details
+erodiert. Die Antwort sind inkrementelle Aktualisierungen statt monolithischer Neufassung.
+
+**Einordnung.** Galster et al. (AIware 2026) haben 2853 Repositories vermessen: Kontextdateien
+dominieren und sind oft der einzige Mechanismus; über 85 Prozent der Skills tragen keine
+ausführbaren Ressourcen, und kein einziges Repository nutzt das persistente Subagent-Gedächtnis.
+Register, Prüfregeln und `tools/` liegen deutlich darüber. Der Kern des Loops ist damit gedeckt
+und wird nicht angefasst.
+
+**Drei Forks werden eröffnet, keiner entschieden.**
+
+1. **Die Sitzungsstart-Datei ist ein monolithisches Rewrite.** Gemessen über zwölf Dateien wächst
+   die offene Liste von 22 auf 31 Punkte — in der Summe **kein** Kollaps, und damit ein
+   Gegenbefund zur These. Von sieben Punkten, die zwischen `00r` und `00u` verschwanden, waren
+   sechs erledigt; einer nicht: der Vermerk aus D211, dass `register_index.py` `VISION` erkennt,
+   obwohl das in keinem Auftrag stand. Ein belegter Scope-Zuwachs ist beim Umschreiben aus der
+   Historie gefallen. Vorgeschlagen ist, die offene Liste in eine nur per Splice editierte Datei
+   herauszulösen, sodass eine Streichung eine Änderung ist und kein Weglassen. Kosten: ein Lauf.
+   Dagegen spricht eine zwölfte Datei im Wurzelverzeichnis und dass der Sitzungsstart aufhört,
+   allein als Einstieg zu genügen.
+
+2. **Es gibt keine Kontextdatei für das Werkzeug.** Der Tokengewinn wäre klein: die Prompts
+   messen 81 bis 191 Zeilen, davon drei bis acht stehende. Der Gewinn liegt woanders — in `00t`
+   musste der Satz, dass D205 keine Zeilenlängenregel für Python setzt, von Hand in die
+   Nicht-Ziele. Solche Sätze gehören einmal ins Repository. Dagegen spricht, und es wiegt: eine
+   ständig gelesene Datei ist der Kanal, über den stiller Scope-Zuwachs entsteht.
+
+3. **Die Projektkopie des Supervisors hat kein Nachziehverfahren.** Sie stand während dieser
+   Sitzung vier Commits hinter `main` und kannte D215 bis D217 nicht. Der billige Schritt ist ein
+   repomix-Lauf nach dem letzten Push, dessen Kopfzeile Commit, Testzahl, Registerstand und
+   Prüfregelzahl trägt — dann ist die Kaltmessung ein Hash-Abgleich statt einer
+   Anforderungsrunde. Das Verfahren steht in `sitzungsstart-00u.md`; ein Beschluss ist es nicht,
+   solange nichts es erzwingt.
+
+**Verworfen: Subagenten und Multi-Agent-Orchestrierung.** Die gemessene Verbreitung ist niedrig,
+der Nutzen gegenüber Kontextdateien unbelegt, und ein zweiter autonomer Kanal bricht die Regel,
+dass die Kanäle nur über Commits reden. Genau diese Regel macht den Loop überhaupt prüfbar.
+
+**Verworfen: die Werkzeugketten für spec-driven development** (Spec Kit, Kiro und Verwandte). Sie
+erzeugen, was `07-decisions.md` bereits führt, und mit schwächerer Begründungspflicht. Wer sie
+wieder aufmacht, braucht eine Aussage, die das Register nicht tragen kann.

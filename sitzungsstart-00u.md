@@ -71,6 +71,11 @@ Was in dieser Sitzung am meisten getragen hat:
 - **Der eigene Baum ist die stärkste Messung** — aber nur, wenn er auf dem Commit steht, über den
   geredet wird. Wächst `main` während der Sitzung, wächst die Kopie nicht mit. Die Kopie nach
   jedem Merge nachziehen, auch bei Code, den das Werkzeug geschrieben hat.
+- **Die Kopie wird am Sitzungsende erzeugt, nicht am Anfang.** Nach dem letzten Push ein
+  repomix-Lauf mit `--header-text`, der Commit, Testzahl, Registerstand und Prüfregelzahl trägt.
+  Der Lauf gehört hinter einen Abgleich von `HEAD` gegen `origin/main` — eine Kopie von einem
+  ungepushten Stand kann niemand nachprüfen. Die erzeugte Datei bleibt aus dem Repository: eine
+  committete Ableitung ist der nächste stille Drift-Kandidat (D218).
 - **Prüfregel 27** vor jedem Verweis, **33** für den Satz daneben, **38** vor der Position,
   **40** vor jeder Erwartung an einen Kopfstand, **41** vor jeder Bewertung einer Abweichung.
 - **Prüfregel 28**: die Welt im Prompt ist Feld für Feld die gemessene Welt.
@@ -181,6 +186,11 @@ A zuerst. B bleibt offen und ist ausdrücklich kein Anhängsel von A.
 
 ## Offen
 
+- **Die Sitzungsstart-Datei ist ein monolithisches Rewrite** (D218). Vorgeschlagen ist eine
+  eigene, nur per Splice editierte Datei für die offene Liste. Nicht entschieden.
+- **Es gibt keine Kontextdatei für das Werkzeug** (D218). Fork mit benanntem Gegenargument.
+- **Die Projektkopie hat kein erzwungenes Nachziehverfahren** (D218). Das Verfahren steht oben
+  unter „Messen"; nichts prüft, ob es eingehalten wurde.
 - **Die Zitierkonvention ist nicht injektiv** (D209). Teil A ist der nächste Schritt, Teil B
   offen. Zahlen oben.
 - **201 von 260 Paragraphenverweisen in Python sind ungeprüft** (D217).
