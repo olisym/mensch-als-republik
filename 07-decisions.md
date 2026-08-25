@@ -7605,3 +7605,90 @@ Erwartung nicht. Beide Male stammte die Zahl aus dem zuletzt **gesehenen** Zusta
 den der vorige Block hinterlassen hat. Daraus **Prüfregel 40**.
 
 **Offen bleibt** die Löschung von `is_nuc_predicate` — vorgeschlagen, nicht entschieden (D213).
+
+### D215 — Die Zeiger im Code werden geprüft, nicht nur berichtigt
+
+**Der Befund: es sind drei Zeiger, nicht zwei.** D212 hat die Zeile dazwischen übersehen.
+`mensch_als_republik/findings.py` führt:
+
+| Zeile | steht | Aussage der Zeile | Anker |
+|---|---|---|---|
+| 1 | `00 §5.4` | eigener Enum, kein Claim-Reject | `00 §10`, wörtlich |
+| 16 | `00 §5.4` | Vermerk mit Subjekt, `constitution_hash` | `00 §10` |
+| 23 | `04-prompt.md §2` | sortiert und dedupliziert | `00 §10`, wörtlich |
+
+Zeile 16 nennt D164 und zeigt auf einen Abschnitt, der nach D212s eigenem Satz nur das Subjekt
+von `MALFORMED_NUCLEUS_KEY` trägt. Derselbe Defekt wie in Zeile 1, nur an einer dritten Stelle,
+und deshalb hat ihn dieselbe Durchsicht nicht gesehen: gesucht wurde nach einer falschen
+Aussage, gefunden wurde eine Adresse, die für die halbe Aussage stimmt.
+
+**Der Zwilling bleibt stehen.** `mensch_als_republik/governance/findings.py` trägt denselben
+`dedupe_sort`-Docstring mit `04-prompt.md §2`. Dort ist er richtig: Governance ist Schicht 04,
+der Verweis bleibt in der eigenen Schicht. Schichtübergreifend war nur die Kopie im Nukleus.
+`04-prompt.md` bleibt normativer Text — `policy.py` und `tests/governance/test_anchors.py`
+zeigen weiter darauf.
+
+**Beschluss.** Alle drei Zeilen nennen `00 §10`. **Verworfen: `00 §5.4` in Zeile 16 neben
+`00 §10` stehen lassen.** Der Abschnitt trägt dann die schwächere Hälfte einer Aussage, deren
+starke Hälfte daneben steht; die Spur zur Herkunft führen die D-Nummern, nicht ein zweiter
+Abschnittsverweis.
+
+**Die Prüfung dahinter.** `tools/check_specs.py` prüfte `ROOT.glob("*.md")`. Docstrings waren
+ungeprüft, und genau deshalb hat der falsche Zeiger überlebt. `check_section_refs` läuft
+zusätzlich über alle `.py` unter der Wurzel: 120 Dateien, 60 Verweise der Form `NN §X.Y`.
+Ein Befund vor der Berichtigung — `tests/trust/test_distanzkauf.py` nannte `02 §2.7`, und
+`02` hat unter `§2` überhaupt keine Unterabschnitte. Die Aussage der Zeile, `⌊n·C(I)/D⌋` und
+`E⁺ = {cap ≥ 1}`, steht in `02 §3`.
+
+**Verworfen: `check_escapes` und `check_control_chars` mitlaufen lassen.** Python führt legitime
+Backslashes — Regex-Klassen, Byte-Literale. Die beiden Prüfungen fangen Editor-Schaden in Markdown
+und meldeten hier nur Rauschen.
+
+**Die Reichweite, ausdrücklich.** Geprüft wird, ob die Adresse existiert, nicht ob sie die
+Aussage trägt. Den Defekt aus D212 hätte diese Prüfung **nicht** gefangen, weil `00 §5.4`
+existiert. Sie fängt jeden Zeiger, der auf einen gelöschten oder umnummerierten Abschnitt zeigt
+— die kleinere Klasse, aber die einzige, die maschinell entscheidbar ist.
+
+**Die doppelte Formenliste**, Befund aus D214, wird zur Modulkonstante `NICHT_STR_FORMEN`. Die
+Probe ist eine Differenz, keine Rücknahme: eine fünfte Form ergänzt ergibt in der neuen Fassung
+zwei zusätzliche Prüffälle (23 auf 25), in der alten an nur einer der beiden Literal-Listen
+ergänzt einen (23 auf 24). **Verworfen: den zweiten `parametrize`-Block streichen und die drei
+Prüfer in den ersten Test ziehen.** Das mischt zwei Aussagen in einen Prüffall — dass
+`parse_predicate` wirft, und dass die Prüfer nicht werfen. Fällt eine, sagt die Fehlermeldung
+nicht welche.
+
+**Was ohne Probe bleibt.** Die drei Zeiger in `findings.py` bekommen keine rote Probe; ihre
+Rücknahme lässt auch die neue Prüfung grün. Die Abnahme ist dort der Diff.
+
+### D216 — `is_nuc_predicate` wird gelöscht
+
+**Korrektur an D213.** Der Nebenbefund dort — null Aufrufstellen, „nicht in den Tests" — ist seit
+`00s` veraltet: `tests/test_predicates.py` ruft die Funktion in
+`test_praedikatpruefer_non_str_p_returns_false` auf. Die Aufrufstelle ist von dem Lauf angelegt
+worden, der die Funktion mitgeprüft hat.
+
+**Die Substanz hält.** Null Produktiv-Aufrufstellen, im Paket wie in `tools/`, in keiner
+Spec-Datei. Die einzige Aufrufstelle prüft die Funktion auf eine Eigenschaft ihrer selbst. Eine
+Funktion, deren ganze Rechtfertigung ist, dass sie geprüft wird, rechtfertigt sich zirkulär.
+
+**Beschluss: löschen**, neun Zeilen, dazu der Import und eine von drei Zusicherungen im
+Prüffall. `_NUC_PREDICATE` verwaist dabei nicht — die Regex wird von `parse_predicate` selbst
+benutzt, nicht vom Wrapper.
+
+**Verworfen: behalten wegen der Fangbreite aus D213.** Die Gleichheit der Fangbreite ist eine
+Eigenschaft der Wache in `parse_predicate`, nicht der Zahl der Wrapper. Sie bleibt für die
+verbleibenden zwei wahr. D213s Satz, die Funktion werde mitgeprüft solange sie steht, ist eine
+Regel für das Behalten und kein Grund dafür.
+
+**Verworfen: behalten wegen der Symmetrie zu `is_core_predicate`.** Die Symmetrie ist keine:
+`is_core_predicate` trägt acht Produktiv-Aufrufstellen in `verifier.py` und `index.py`. Zwei
+Funktionen sehen gleich aus und stehen ungleich im Baum; die Bauform nachzubilden ist kein
+Zweck.
+
+**Verworfen: den Lauf nicht anfassen, weil `00s` eine Runde alt ist.** Die Löschung wickelt
+nichts Normatives zurück. Wache und verengte Fangbreite aus D213 bleiben unberührt.
+
+**Ohne rote Probe, und das ist die Aussage.** Es gibt keinen Aufrufer, der rot werden könnte —
+das ist der Grund für die Löschung und zugleich der Grund, warum sie sich nicht durch einen Test
+belegen lässt. Der Beleg ist der Grep über den Baum. Wer die Funktion wieder einführt, braucht
+einen Produktiv-Aufrufer, den dieser Eintrag nicht gemessen hat.
