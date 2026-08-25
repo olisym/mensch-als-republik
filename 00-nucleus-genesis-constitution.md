@@ -551,3 +551,27 @@ radiale Prinzip bleibt intakt.
   opak. Das ist ein *bewusster, begrenzter* Bruch der „Verfassung = reiner opaker Hash"-Linie — der
   minimal nötige, um P-1/E-1 maschinenlesbar zu schließen, ohne die Interpretationsschicht ins
   Protokoll zu ziehen.
+
+---
+
+## 10. Vermerke und ihre Subjekte
+
+Die Auflösung der Schlüssel-Autorität wirft für schadhafte Eingaben keine Ausnahmen; sie legt
+Vermerke ab und rechnet weiter. `NucleusFinding` ist ein eigener Enum und kein Reject-Code des
+Atoms — diese Schicht weist keinen Claim zurück, sie sagt nur, unter welchem Vorbehalt ihre
+Antwort steht. `findings` ist sortiert und dedupliziert.
+
+| Vermerk | Subjekt |
+|---|---|
+| `CONSTITUTION_UNAVAILABLE` | der übergebene `constitution_hash` (D164) |
+| `MALFORMED_NUCLEUS_KEY` | der übergebene `constitution_hash` (D163) |
+
+Beide Subjekte sind derselbe Wert, und das ist kein Versehen: das zurückgewiesene Objekt ist in
+beiden Lagen die Verfassung. Einmal, weil sie lokal nicht vorliegt (§6.4, Schritt 1 c); einmal,
+weil ein Eintrag ihres Feldes `nucleus_keys` formwidrig ist (§5.4). Ein formwidriger Eintrag hat
+keine eigene Adresse, benannt wird deshalb gröber die Verfassung, die ihn führt — dieselbe Regel
+wie in `04 §3.5`. Daraus folgt die Zusammenziehung aus D163: mehrere formwidrige Einträge ergeben
+**einen** Vermerk, und die Anzahl ist keine Aussage dieser Schicht.
+
+Das Subjekt ist nie ein Leerwert. Weder der berechnete Hash eines Objekts, das gar nicht
+vorliegt, noch `b""` steht je darin.

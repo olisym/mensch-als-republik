@@ -707,12 +707,12 @@ seinem Autor gefragt, nie nach seinem Zustand.
 
 `Finding` trägt `kind` und `subject` — ein nackter Code ohne Subjekt sagt dem Betreiber, dass
 *etwas* nicht stimmte, nicht *was*. `subject` ist in der Regel eine `claim_id`; wo kein Claim
-betroffen ist, ist es das Objekt, um das es geht: bei `CONSTITUTION_UNAVAILABLE` und
-`CONSTITUTION_UNAVAILABLE` der **übergebene** `constitution_hash` — nicht der berechnete Hash
-eines Objekts, das gar nicht vorliegt, und nie `b""`. `findings` ist sortiert und dedupliziert.
-`ProfileFinding`
-ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben Defekt bezeichnet wie in einer
-anderen Schicht, trägt er **denselben String** (`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
+betroffen ist, ist es das Objekt, um das es geht: bei `CONSTITUTION_UNAVAILABLE` der
+**übergebene** `constitution_hash` — nicht der berechnete Hash eines Objekts, das gar nicht
+vorliegt, und nie `b""`. Die vollständige Zuordnung steht in §6.1. `findings` ist sortiert und
+dedupliziert. `ProfileFinding` ist ein eigener Enum, kein Claim-Reject; wo ein Vermerk denselben
+Defekt bezeichnet wie in einer anderen Schicht, trägt er **denselben String**
+(`NON_CANONICAL_V`), aber nicht dasselbe Symbol.
 
 **Benennen ist keine Entscheidung.** `subject` und die `*_claim_id`-Felder eines Ergebnisses
 benennen einen Claim, sie wählen keinen aus: erfüllen mehrere dieselbe Regel, gilt die kleinste
@@ -747,3 +747,44 @@ nachträglich strenger, sie sagt nur, was sie sieht.
 Konstruktor von `NucleusPolicy` und lebt als `PolicyNote` in `policy.warnings` (§1.2). Ihn hier
 zu spiegeln hieße, dieselbe Diagnose zweimal zu erzeugen — mit verschiedenen Subjekten und
 absehbarem Auseinanderlaufen.
+
+**Vermerke und ihre Subjekte.** Ein Vermerk benennt in seinem `subject` das zurückgewiesene
+Objekt — notfalls gröber, wenn das Objekt ein Feld ist und keine eigene Adresse hat (D198,
+`04 §3.5`).
+
+| Vermerk | Subjekt |
+|---|---|
+| `NON_CANONICAL_V` | `claim_id` des Claims, dessen `v` gelesen wurde |
+| `UNPARSABLE_V` | `claim_id` des Claims, dessen `v` gelesen wurde |
+| `INVALID_V_TYPE` | `claim_id` des Claims, dessen `v` gelesen wurde |
+| `SCOPE_MISMATCH` | `claim_id` des Claims mit abweichendem `N` |
+| `CONSTITUTION_UNAVAILABLE` | der übergebene `constitution_hash` |
+| `EXPIRING_OBLIGATION` | `claim_id` der Obligation |
+| `OBLIGATION_PENDING` | `claim_id` der Obligation |
+| `OBLIGATION_AUTHOR_FLAGGED` | `claim_id` der Obligation |
+| `PARTIAL_RECEIPT_UNSUPPORTED` | `claim_id` der Quittung |
+| `CONSTITUTION_VERSION_MISMATCH` | `claim_id` des `accept-rules` |
+| `UNAUTHORIZED_GRANT_AUTHOR` | `claim_id` des `grant-membership` |
+| `UNKNOWN_ACCUSATION` | `claim_id` des Verdikts oder die bezeichnete Anklage |
+| `UNRESOLVED_ACCUSED` | der bestrittene Claim oder `claim_id` der Anklage |
+| `INACTIVE_VERDICT` | `claim_id` des Verdikts |
+
+Die drei `v`-Vermerke entstehen in `read_v` ohne Subjekt; gesetzt wird es vom Aufrufer, und der
+kennt nur einen Claim — die Obligation oder die Quittung, deren `v` er gerade liest (§1.3).
+
+**`CONSTITUTION_UNAVAILABLE` ist die einzige Art, deren Subjekt keine `claim_id` ist.** Sie
+entsteht in `resolve_policy`, wo kein Claim beteiligt ist. Das zurückgewiesene Objekt ist das
+Verfassungsobjekt, und dessen einzige Adresse ist der übergebene Hash (§1.2, D164). Wer `subject`
+pauschal als `claim_id` liest, greift genau hier daneben — dieselbe Lage wie
+`OVERCOMMITTED_AUTHOR` in `02 §10`, dort mit einem öffentlichen Schlüssel.
+
+**Zwei Arten tragen je nach Lage verschiedene Subjekte**, und beide Male trennt dieselbe Frage:
+hat das zurückgewiesene Objekt eine eigene Adresse? `UNKNOWN_ACCUSATION` benennt die bezeichnete
+Anklage, wenn `verdict.J` auf einen Claim zeigt, dieser aber lokal unbekannt ist — der Zeiger ist
+die Adresse. Zeigt `J` auf keinen Claim, ist das zurückgewiesene Objekt das Feld `J` selbst, und
+benannt wird gröber das Verdikt. `UNRESOLVED_ACCUSED` steht ebenso: benannt wird der bestrittene
+Claim, solange die Anklage auf ihn zeigt, sonst die Anklage (§2.4.4).
+
+**Ein Subjekt sagt nicht, dass der Claim vorliegt.** `UNKNOWN_ACCUSATION` und
+`UNRESOLVED_ACCUSED` benennen im Regelfall gerade den Claim, den der Store nicht führt. Das ist
+die Aussage des Vermerks und kein Defekt der Benennung.

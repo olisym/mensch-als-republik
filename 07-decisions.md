@@ -7479,3 +7479,42 @@ verbessert; benannt wird sie hier.
 **Die Verweisprüfung greift.** Über alle Wurzeldateien werden 704 Verweise gelesen, 238 davon
 geprüft. Der eine echte Fund der Messung ist behoben, und zwei Proben zeigen, dass die Prüfung
 nicht nur ihn kennt.
+
+### D212 — Die Vermerkssubjekte von `03` und `00`; der Doppeleintrag war ein Streichungsrest
+
+**Der Befund.** `03 §6` nannte in derselben Aufzählung zweimal `CONSTITUTION_UNAVAILABLE`. Die
+zweite Nennung war nicht der falsche Name einer anderen Art, sondern der Rest einer Streichung:
+`03-prompt.md` Zeile 82 führt den Satz im Original mit `CONSTITUTION_UNAVAILABLE` **und**
+`CONSTITUTION_HASH_MISMATCH`, und D167 lässt die zweite Art ersatzlos entfallen. Beim Nachzug
+wurde das Subjekt richtig auf „der übergebene" korrigiert und der leergewordene Name mit dem
+ersten aufgefüllt. Die Reparatur ist Streichung, nicht Ersetzung.
+
+**Die Messung.** Vierzehn Arten in `ProfileFinding`, keine Erzeugungsstelle ausserhalb von
+`profiles/`. Dreizehn tragen eine `claim_id`; `CONSTITUTION_UNAVAILABLE` trägt den übergebenen
+`constitution_hash` (`policy.py`). `CONSTITUTION_VERSION_MISMATCH` — der einzige Kandidat, den
+der Name nahelegt — trägt die `claim_id` des `accept-rules` und kommt als zweite Nennung nicht in
+Frage. Zwei Arten tragen je nach Lage zwei verschiedene Subjekte, und beide Male ist es die Regel
+aus D198: hat das zurückgewiesene Objekt eine eigene Adresse, wird sie benannt, sonst gröber der
+Claim, der das Feld führt.
+
+**Beschluss für `03`.** Eine zweite Tabelle in `03 §6.1`, Bauform wie `02 §10`, dazu die Prosa
+für die drei Sonderlagen. **Verworfen: eine dritte Spalte in der bestehenden Tabelle.** Die
+längste Zeile dort misst heute 92 Zeichen; jede Subjektangabe sprengt die hundert. Wer die
+Tabelle dafür kürzte, tauschte die Auslöserbeschreibung gegen die Subjektangabe — beide werden
+gebraucht.
+
+**Beschluss für `00`.** Ein neuer `00 §10` derselben Bauform. `00` hielt die Form seiner Vermerke
+nirgends fest; das steht seit D173 offen. `00 §5.4` trägt nur das Subjekt von
+`MALFORMED_NUCLEUS_KEY`, obwohl D164 das Subjekt von `CONSTITUTION_UNAVAILABLE` ausdrücklich
+entschieden hat — die Entscheidung war getroffen und nie aufgeschrieben.
+
+**Verworfen: ein Halbsatz in `00 §6.4` Schritt 1 c.** Dort entsteht der Vermerk, und der Satz
+stünde richtig. Aber die Formaussage — eigener Enum, kein Reject, sortiert und dedupliziert —
+bliebe heimatlos, die beiden Arten stünden in zwei Abschnitten, und der Docstring von
+`mensch_als_republik/findings.py` zeigte weiter auf `00 §5.4` für eine Aussage, die dort nicht
+steht. Ein Ort für beide Arten ist die billigere Antwort auf dieselbe Frage.
+
+**Was offen bleibt.** Die Zeiger im Code sind nicht nachgezogen: der Modul-Docstring von
+`mensch_als_republik/findings.py` nennt `00 §5.4`, `dedupe_sort` dort nennt `04-prompt.md §2`
+schichtübergreifend. Beides ist Produktivcode und gehört in den nächsten Lauf, der die Datei
+ohnehin anfasst. Damit ist D173 in der Spec erledigt; im Code bleiben zwei Docstring-Zeilen.
