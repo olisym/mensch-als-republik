@@ -268,6 +268,16 @@ In einer `and`-Kette entscheidet der Rückgabewert, nicht der gedruckte Text. `g
 einen Zustand sichern will, braucht `test`, `--is-ancestor`, `--quiet` oder `-c` mit Vergleich. In
 `00r` galt eine Branchausgabe als Prüfung, und der Lauf-Commit landete auf `main` (D211).
 
+**40. Der erwartete Kopf des nächsten Blocks wird abgeleitet, nicht erinnert.**
+Was ein Block hinterlässt, steht im Block, nicht im zuletzt gesehenen Hash. Ein Block, der
+committet und nicht pusht, lässt `main` und `origin/main` auseinanderlaufen; ein Block, der einen
+Branch anlegt, lässt `main` stehen; ein Übergabe-Commit hebt den Kopf über den Stand, auf dem die
+eigene Kopie steht. Wer im nächsten Zug `test (git rev-parse HEAD ...) = <hash>` schreibt, ohne
+diesen Zustand gemessen zu haben, hält die Kette auf einer Zahl an, die nie galt — und der
+Operator zahlt einen Zug für einen Fehler, der keiner war. Liegt kein gemessener Hash vor, wird
+die **Beziehung** geprüft: `git rev-parse main` gegen `impl/00x^`, `--is-ancestor`, oder
+`origin/main` statt `main`. In `00s` zweimal gerissen (D214).
+
 ---
 
 ## Herkunft der Nummern
@@ -277,7 +287,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
-37 aus D208, 38 aus D209, 39 aus D211.
+37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

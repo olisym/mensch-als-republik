@@ -7569,3 +7569,39 @@ wäre sie rot, änderte die Verengung Verhalten, und der Beschluss wäre falsch.
 nicht in den Tests, in keiner Spec-Datei. Die Löschung ist vorgeschlagen und **nicht**
 entschieden; sie bleibt offen. Solange die Funktion steht, wird sie mitgeprüft, sonst entstünde
 dieselbe Asymmetrie neu, die dieser Eintrag schliesst.
+
+### D214 — Abnahme `00s`, kein Defekt im Lauf; der Defekt lag zweimal in der Erwartung
+
+**Der Lauf.** `4aefa5d`, zwei Dateien, `44 +` und `3 -`. `predicates.py` bekommt die Wache und
+die verengte Fangweite, `test_predicates.py` acht Prüfpunkte. Beide Eingriffe stehen so, wie D213
+sie entschieden hat; `is_nuc_predicate` bleibt, `verifier.py` ist unangetastet, kein Scope-Zuwachs.
+
+**Die Mengen weichen um zwei Zeilen von der Vorabmessung ab**, `6 -2` statt `5 -1` in
+`predicates.py`. Die Differenz sind vollständig die zwei Docstring-Zeilen, die der Prompt verlangt
+hat. Die geänderte Zeile in `is_nuc_name` misst 103 Zeichen; nach D205 ist das für Python
+zulässig, kein Befund.
+
+**Die Proben haben getan, was sie sollten.** Probe A — Wache entfernt, Verengung stehen gelassen —
+ergab **9 rot, 588 grün**, und die neunte Zeile war `test_nuc_name_bytes_p_returns_false`. Damit
+ist die Kopplung belegt: die verengte Fangweite hängt an der Wache und an nichts sonst. Probe B —
+Verengung zurück, Wache stehen gelassen — blieb **597 grün** und belegt die Behauptung von D213,
+dass die Verengung kein Verhalten ändert. Eine Probe, die grün bleiben **muss**, ist hier keine
+leere Übung, sondern die Aussage selbst.
+
+**Was der Lauf sonst belegt.** Vor `00s` liess sich die Wache nicht einmal vermissen: die Variante
+ohne sie lief mit 589 grün durch. Erst die acht Prüfpunkte machen die Divergenz sichtbar, die seit
+D181 auf der offenen Liste stand.
+
+**Befund, nicht blockierend: die vier Formen stehen zweimal als Literal-Liste**, einmal je
+`parametrize`. Wer eine fünfte ergänzt, ergänzt sie an einer Stelle, und die andere deckt sie
+still nicht mehr ab — dieselbe Driftform wie bei den sechs Kopien von `_is_nuc_name` (D181), nur
+klein und im Testcode. Eine Modulkonstante behebt es. Nicht jetzt: die Behebung kostet einen
+eigenen Lauf und reist beim nächsten mit, der `test_predicates.py` ohnehin anfasst.
+
+**Der Fehler dieser Runde lag beim Supervisor, zweimal.** Erst wurde `d9db6fc` als Kopfstand
+behauptet, obwohl der Übergabe-Commit darüber lag; dann `52b464c` als `main`, obwohl der
+D213-Commit dazwischen lag und nur nicht gepusht war. Beide Male stimmte der Baum und die
+Erwartung nicht. Beide Male stammte die Zahl aus dem zuletzt **gesehenen** Zustand statt aus dem,
+den der vorige Block hinterlassen hat. Daraus **Prüfregel 40**.
+
+**Offen bleibt** die Löschung von `is_nuc_predicate` — vorgeschlagen, nicht entschieden (D213).
