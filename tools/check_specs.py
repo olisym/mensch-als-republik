@@ -123,7 +123,9 @@ def check_references(text: str, known: set[int]) -> list[str]:
 
 
 # Zuordnung Präfix → Layer-Datei. Explizite Tabelle, kein Glob: 03 und 04
-# bezeichnen je vier Dateien (D209).
+# bezeichnen je vier Dateien (D209). Die gleichnamigen Abnahme-Dateien sind
+# nicht die Ziele, weil sie keine nummerierten Überschriften führen und damit
+# unter der geltenden Konvention kein Zitierziel sein können (D219).
 LAYER_FILES = {
     "00": "00-nucleus-genesis-constitution.md",
     "01": "01-claim-atom.md",
@@ -134,10 +136,14 @@ LAYER_FILES = {
     "06": "06-services.md",
     "07": "07-decisions.md",
     "08": "08-scope.md",
+    "01a": "01a-policy-prompt.md",
+    "02a": "02a-maxflow-prompt.md",
+    "02b": "02b-golden-anchors.md",
+    "04a": "04a-korrektur-prompt.md",
 }
 
 HEADING_NUM = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)", re.M)
-SECTION_REF = re.compile(r"(?<![A-Za-z0-9])(0[0-8]) §(\d+(?:\.\d+)*)")
+SECTION_REF = re.compile(r"(?<![A-Za-z0-9])(0[0-8][a-z]?) §(\d+(?:\.\d+)*)")
 
 
 def layer_headings() -> dict[str, frozenset[str]]:
@@ -163,12 +169,24 @@ def heading_covers(wanted: str, headings: frozenset[str]) -> bool:
 def check_section_refs(
     text: str, headings: dict[str, frozenset[str]]
 ) -> list[str]:
-    """Verweise ``NN §X.Y`` mit Ziffernpräfix 00–08 gegen die Layer-Datei (D209)."""
+    """Verweise ``NN §X.Y`` und ``NNx §X.Y`` gegen die Layer-Datei (D209, D219).
+
+    Ein Präfix ohne Tabelleneintrag ist ein eigener Befund, kein stilles
+    Überspringen und kein ``KeyError`` (D219).
+    """
+    unknown_names: dict[str, int] = {}
     counts: dict[str, int] = {}
     for prefix, section in SECTION_REF.findall(text):
+        if prefix not in headings:
+            unknown_names[prefix] = unknown_names.get(prefix, 0) + 1
+            continue
         ref = f"{prefix} §{section}"
         counts[ref] = counts.get(ref, 0) + 1
     problems: list[str] = []
+    for name in sorted(unknown_names):
+        problems.append(
+            f"unbekannter Zitiername: {name} ({unknown_names[name]}x)"
+        )
     for ref in sorted(counts):
         prefix, section = ref.split(" §", 1)
         if not heading_covers(section, headings[prefix]):
