@@ -8470,3 +8470,73 @@ beiden Proben formt Produktivcode.
 
 **Die Grenze aus D229 bleibt unberührt.** Geprüft wird, dass das Ziel existiert, nicht dass es
 stimmt. Mit dieser Entscheidung ist die Zitiergrammatik in allen vier Teilen geschlossen.
+
+---
+
+### D231 — Die Backtick-Form wird toleriert, und eine Berichtigung zu D230 (D221, D227, D230)
+
+**Berichtigung zuerst.** D230 nennt als Ertrag der Anhangserweiterung einen einzigen neu
+geprüften Verweis: den aus `02b-golden-anchors.md` auf den Abschnitt C.1 von `02b-abnahme.md`.
+Der Verweis existiert, aber er ist nicht qualifiziert. Der schließende Backtick steht zwischen
+dem Dateinamen und dem Paragraphenzeichen, und `SECTION_REF` verlangt an dieser Stelle ein
+Namenszeichen. Der Ertrag der Erweiterung allein ist **null**. Der Fehler liegt beim Supervisor,
+und es ist dieselbe Klasse wie in D221: eine Form wurde gelesen, ohne sie gegen die Regex zu
+halten.
+
+**Die vierte Oberflächenform, gemessen auf `2919e76`.** Elf Verweise in sieben Dateien schreiben
+den Namen in Backticks und lassen das Paragraphenzeichen draußen. In `.py` gibt es null Fälle.
+
+| Datei | Fälle |
+|---|---|
+| `00b-prompt.md` | 3 |
+| `03b-prompt.md` | 3 |
+| `02b-golden-anchors.md` | 1 |
+| `03-prompt.md` | 1 |
+| `einlesen-a-prompt.md` | 1 |
+| `einlesen-a-nachlauf-prompt.md` | 1 |
+| `07-decisions.md` (von der Verweisprüfung ausgenommen) | 1 |
+
+**Alle elf lösen gegen ihr Ziel grün auf.** Kein Defekt darunter, und das ist der Grund, warum die
+Form so lange getragen hat: sie ist für einen Leser vollständig qualifiziert und für den Prüfer
+vollständig unsichtbar. Genau diese Kombination hat D227 für `.py` als schlechter beurteilt als
+einen sichtbar ungeprüften Verweis.
+
+**Warum die beiden Fragen zusammenhängen.** `02b-abnahme.md` führt keine einzige
+Ziffernüberschrift; seine zehn Überschriften der Ebene 3 tragen Buchstabennummern. Würde die
+Backtick-Form aufgelöst, ohne dass D230 die Buchstabenform trägt, ginge dieser eine Verweis rot.
+Umgekehrt hat die Erweiterung aus D230 ohne diese Entscheidung keine einzige Anwendung. Die
+beiden gehören in einen Lauf.
+
+**Entscheidung.** `SECTION_REF` toleriert einen optionalen schließenden Backtick zwischen dem
+Namen und dem Paragraphenzeichen. Der Name bleibt derselbe, die Injektivität bleibt unberührt —
+dieselbe Begründung, mit der D228 zwei Strichformen für den Bereich zugelassen hat. Zehn Verweise
+werden damit geprüft, der elfte steht im ausgenommenen Register.
+
+**Verworfen: die elf Stellen umschreiben.** Elf Textänderungen in sieben Dateien gegen ein
+Zeichen in der Regex. Vier der Dateien beschreiben vergangene Läufe, und D219 hat für diesen Fall
+schon einmal entschieden, dass nichts umgeschrieben wird, damit eine Prüfung es führen kann.
+
+**Verworfen: einen Befund für die Form erheben.** Das machte zehn sachlich richtige Verweise rot,
+um eine Schreibweise durchzusetzen, die keinen Leser irreführt. Der Gegenstand ist die
+Prüfbarkeit, nicht die Typografie.
+
+**Verworfen: nichts tun.** Elf Verweise, die qualifiziert aussehen und keiner sind, sind kein
+Randfall mehr, sondern eine Klasse. Sie wächst, weil die Form sich gut liest.
+
+**Erwartung an den Lauf.** `make check-specs` bleibt grün. Die Python-Zeile bleibt bei 121
+Dateien und 260 Verweisen: kein `.py` trägt eine der beiden Formen, und gemessen trifft die
+erweiterte Regex über alle Wurzel-`.md` und alle `.py` keinen Verweis neu, den die alte nicht
+schon traf. Die Zahl der in `.md` aufgelösten Verweise wird nicht ausgegeben; die Abnahme ist
+darum der Diff und sind die beiden Proben, nicht die grüne Zeile.
+
+**Zwei Rücknahmeproben, je eine pro Änderung.** Erstens das Großbuchstaben-Präfix aus D230 in
+`HEADING_NUM` zurücknehmen: der Verweis aus `02b-golden-anchors.md` muss als unbekannter
+Abschnitt fallen, und nur dieser eine. Zweitens bei beiden Änderungen in Kraft einen
+backtick-getrennten Verweis auf eine nicht vorhandene Nummer setzen: dieselbe Befundklasse muss
+feuern, was zeigt, dass die Toleranz die Form überhaupt liest. Keine der beiden Proben formt
+Produktivcode.
+
+**Was damit geschlossen ist.** Die Zitiergrammatik kennt zwei Namensformen (D221), eine
+Bereichsform (D228), die Anhangsnummer (D230) und zwei Schreibweisen des Namens (hier). Bare
+Verweise sind in `.py` ein Befund (D227) und in `.md` weiterhin zulässig, weil dort der
+Selbstverweis der Normalfall ist. Eine fünfte Klasse ist nicht gemessen worden.
