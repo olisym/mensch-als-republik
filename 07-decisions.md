@@ -7898,3 +7898,69 @@ die stille Normativität, gegen die das Register steht.
 
 **Nicht entschieden und ausdrücklich offen:** ob die 185 qualifiziert werden, ob ein
 Verzeichnis-Mapping kommt, ob bare Verweise verboten werden.
+
+### D221 — Die Zitiergrammatik hat zwei Namensformen (D209 Frage 1, berichtigt D220)
+
+**Berichtigung zuerst.** D220 hat 185 präfixlose Verweise in Python gezählt und sie gegen die
+Layer-Dateien gehalten: 146 mehrdeutig, 30 eindeutig, 9 nirgends. Die Messung war falsch. Sie hat
+nur `NN`- und `NNx`-qualifizierte Verweise abgezogen, nicht die dateinamensqualifizierten. Von
+den 185 tragen **112 sehr wohl einen Namen** — den Dateinamen. Wirklich bar sind **73**, davon
+62 mehrdeutig, 5 eindeutig, 6 nirgends. Die Aussage von D220 hält damit unverändert und anteilig
+schärfer, aber die Zahlen dort sind zu ersetzen. Der Fehler liegt beim Supervisor, nicht am
+Werkzeug: dieselbe Lücke ist in derselben Sitzung zweimal aufgetreten, weil eine Regex das Wort
+vor dem Paragraphenzeichen nicht als Namen gelesen hat.
+
+**Die Dateinamensform ist die grösste ungeprüfte Klasse.** Gemessen auf `d39daec`, über `.md` und
+`.py`:
+
+| Form | Verweise | geprüft |
+|---|---|---|
+| `NN` (Kurzform Layer) | 860 | ja, seit D209 |
+| Dateiname, `.md` optional | 321 | nein |
+| bar | 73 in `.py` | nein |
+| `NNx` (Kurzform Anhang und Prompt) | 31 | ja, seit D219 |
+
+**Entscheidung: zwei Namensformen, mehr nicht.**
+
+1. **Der Dateiname**, mit oder ohne `.md`. Diese Form ist injektiv von selbst — der Name **ist**
+   die Datei, sie braucht keinen Tabelleneintrag und trägt jede künftige Datei ohne Pflege. Sie
+   trägt heute schon 321 Verweise.
+2. **Die Kurzform `NN` und `NNx`** als Abkürzung, gebunden durch `LAYER_FILES`. Die Tabelle ist
+   damit ein **geschlossener** Satz von dreizehn Einträgen. Sie wächst nicht mehr, weil Form 1
+   jede neue Datei trägt.
+
+Alles andere ist ein Befund. Keiner der 1212 bestehenden qualifizierten Verweise muss angefasst
+werden; die Entscheidung kostet keine Migration.
+
+**Ein fehlender Dateistamm ist kein Befund.** Gemessen: dreizehn Verweise zeigen auf
+`fuzz-prompt.md` und `sim-prompt.md`, die `ab73450` gelöscht hat. Kein einziger ist ein Defekt —
+neun stehen in der Umzugstabelle in `welten-prompt.md`, die den Umzug angeordnet hat, vier im
+Register. Beide Fundorte **erwähnen** den toten Namen als linke Spalte, sie **benutzen** ihn
+nicht, und syntaktisch sind die Fälle nicht zu trennen. Wer hier einen Befund erhebt, braucht eine
+Ausnahmeliste, und die verrottet. Der Preis wird benannt: ein vertippter Dateiname fällt durch.
+
+**Verworfen: die Anhangs-Zielform mitbauen.** Verweise wie `§B.2` gibt es, und `01-claim-atom.md`
+führt fünfzehn Anhangsüberschriften. Aber gemessen ist jeder solche Verweis heute **bar** — ohne
+Dateinamen davor. Eine Erweiterung von `HEADING_NUM` hätte null Wirkung und wäre Umfang ohne
+Messung. Die Anhangs-Zielform gehört zu Frage 2 und wird dort entschieden.
+
+**Drei tote Zeiger, mit ihren Zielen.** Die Erweiterung macht sie sichtbar; sie werden im selben
+Lauf berichtigt, sonst landet die Prüfung rot:
+
+1. `distanzkauf-prompt.md` nennt `02-trust-flow.md §2.7` für den BFS-Kapazitätsfilter und Anker
+   K8. Die Nummer stimmt, die Datei nicht: der Abschnitt steht in `02a-maxflow-prompt.md`.
+2. `02b-abnahme.md` nennt `02b-golden-anchors.md §10.1`. Die Datei hat kein `§10.1`; gemeint ist
+   Punkt 1 der Liste in `§10`. Der Verweis geht auf `§10`. Dass die Prüfung Listenpunkte nicht
+   von Unterabschnitten trennt, ist der offene Punkt aus D209 und bleibt offen.
+3. `welten-prompt.md` nennt `01-claim-atom.md §6.7` für `INCOHERENT_EXPIRY`. Die Aussage steht in
+   Anhang B.2. Da die Zielgrammatik Anhänge nicht trägt, wird der Verweis in Prosaform gesetzt,
+   ohne Paragraphenzeichen.
+
+**Dazu ein toter Zeiger in der Spec selbst.** Die Tabelle in `01-claim-atom.md` Anhang B.2 führt
+hinter der Definition von `INCOHERENT_EXPIRY` den baren Verweis auf einen Abschnitt 6.7, den es
+nicht gibt. Die Zelle definiert die Bedingung vollständig; der Zeiger trägt nichts, was sie nicht
+schon sagt. Er wird gestrichen statt umgehängt.
+
+**Erwartung an den Lauf.** Die Python-Zeile geht von 75 auf **187** Verweise, insgesamt werden
+**545** geprüft. Vor den vier Korrekturen meldet die Prüfung **genau drei** Befunde, danach
+keinen. Übrig bleiben **73** bare Verweise in `.py`; das ist Frage 2 und nicht Gegenstand.
