@@ -148,8 +148,8 @@ def check_references(text: str, known: set[int]) -> list[str]:
 
 # Zuordnung Präfix → Layer-Datei. Explizite Tabelle, kein Glob: 03 und 04
 # bezeichnen je vier Dateien (D209). Die gleichnamigen Abnahme-Dateien sind
-# nicht die Ziele, weil sie keine nummerierten Überschriften führen und damit
-# unter der geltenden Konvention kein Zitierziel sein können (D219).
+# nicht die Ziele der Kurzform; die Tabelle bindet die Kurzform, und der
+# Dateiname bindet sich selbst (D219, D230).
 LAYER_FILES = {
     "00": "00-nucleus-genesis-constitution.md",
     "01": "01-claim-atom.md",
@@ -166,10 +166,10 @@ LAYER_FILES = {
     "04a": "04a-korrektur-prompt.md",
 }
 
-HEADING_NUM = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)", re.M)
+HEADING_NUM = re.compile(r"^#{2,4} ((?:[A-Z]\.)?\d+(?:\.\d+)*)", re.M)
 SECTION_REF = re.compile(
-    r"(?<![A-Za-z0-9.-])([A-Za-z0-9-]+(?:\.md)?) §(\d+(?:\.\d+)*)"
-    r"(?:[–-]§(\d+(?:\.\d+)*))?"
+    r"(?<![A-Za-z0-9.-])([A-Za-z0-9-]+(?:\.md)?)`? §((?:[A-Z]\.)?\d+(?:\.\d+)*)"
+    r"(?:[–-]§((?:[A-Z]\.)?\d+(?:\.\d+)*))?"
 )
 SHORT_NAME = re.compile(r"0[0-8][a-z]?$")
 

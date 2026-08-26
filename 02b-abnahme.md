@@ -26,7 +26,7 @@ davon, dass die Golden Numbers diesmal exakt und ohne Rundung waren — es gab n
 verrechnen.
 
 Zwei Verbesserungen gegenüber dem Prompt werden hier normativ nachgezogen: die
-Schnittstellenform von `derive()` (§A.1) und die Identitätsprüfung in PR-INV-4 (§C.3).
+Schnittstellenform von `derive()` (§B.4) und die Identitätsprüfung in PR-INV-4 (§C.3).
 
 ---
 
