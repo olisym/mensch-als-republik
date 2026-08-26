@@ -83,13 +83,19 @@ Was in dieser Sitzung am meisten getragen hat:
 
 ### Splices
 
-Splices als Skript mit `assert`, dass der Anker genau einmal vorkommt, vorher trocken gegen eine
-Kopie gelaufen. Diese Sitzung hat zwei Splice-Läufe gefahren, beide sauber.
+Ein Splice ist ein Skript mit `assert`, dass der Anker genau einmal vorkommt. Gefahren wird er mit
+`python3 tools/splice_run.py /tmp/splice-dNNN.py` (D225). Der Harness verlangt einen sauberen
+Baum, erzwingt das Scheitern des zweiten Laufs, prüft die Zeilenlänge am Ergebnis und setzt bei
+jedem Fehlschlag zurück. Das Temp-Verzeichnis und der Trockenlauf gegen eine Kopie sind damit
+entfallen — Git ist der Rollback.
 
-- **Jeder Splice läuft trocken gegen den Stand nach dem vorigen**, nicht gegen die Projektkopie.
-- **Ein zweiter Lauf desselben Skripts muss scheitern.** Beide Male gehalten.
-- **Nur die neuen Zeilen auf Länge prüfen, nicht die ganze Datei.** Der Altbestand führt Zeilen
-  über 100 Zeichen. **Tabellenzeilen nicht ausnehmen.**
+- **Ein zweiter Lauf desselben Skripts muss scheitern.** Der Harness prüft es. Ohne wirksamen
+  Anker gibt es keinen Splice.
+- **Der Assert prüft das Ergebnis, nicht den eingesetzten Text** (Prüfregel 42).
+- **Tabellenzeilen sind von der 100-Zeichen-Grenze ausgenommen** (D222). Die frühere Anweisung,
+  sie nicht auszunehmen, hat in D219 eine Tabellenspalte gekostet.
+- **Was der Harness nicht fängt** (D226): einen Splice, der eine zu lange Zeile entfernt und eine
+  andere einsetzt, und eine unversionierte Datei, die ein gescheiterter Splice angelegt hat.
 - **Blöcke werden ersetzt, nicht Teilstrings geflickt.** Wer in eine Datei mit Abschnittsstruktur
   einfügt, ersetzt den Ankerblock samt Überschrift — ein Split am Anker und Neuzusammenbau
   zerlegt den Abschnitt darüber. In dieser Sitzung einmal beim ersten Anlauf passiert.

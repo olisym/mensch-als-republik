@@ -8148,3 +8148,30 @@ Einträge sind Prosa mit benannter Begründung; ein Formular erzeugt Formulare.
 **Verworfen: die Kopie verkleinern** — durch `--compress`, Auslassen der Tests oder Auslassen des
 Registers. D224 hat die ersten beiden schon verworfen; das dritte nähme dem Supervisor die
 oberste Instanz.
+
+### D226 — Abnahme `00x`, kein Defekt; zwei benannte Grenzen des Harness
+
+**Abnahme.** `tools/splice_run.py` steht, 129 Zeilen, keine bestehende Datei geändert.
+`check_line_length` war importierbar; eine zweite Fassung der Klassifikation ist nicht entstanden.
+597 Tests, `ruff` grün. Alle drei Proben sind eingetreten: P1 hat den durchlaufenden zweiten Lauf
+gefangen und den doppelten Anhang zurückgenommen, P2 die zu lange Prosazeile mit Nummer und Länge
+gemeldet und zurückgesetzt, P3 **vor** dem ersten Lauf abgebrochen und die vorhandene Änderung
+unangetastet gelassen.
+
+**Grenze 1: der Längenvergleich zählt, er identifiziert nicht.** Der Harness vergleicht die
+**Anzahl** zu langer Prosazeilen im Arbeitsstand mit der im Basisstand. Ein Splice, der eine zu
+lange Zeile entfernt und eine andere einsetzt, läuft deshalb durch. Aus demselben Grund kann der
+Bericht bei einem Abbruch alte Zeilen als neu ausweisen, wenn oberhalb eingefügt wurde: die
+Befundstrings tragen Zeilennummern, und jede Einfügung verschiebt alles darunter. Das ist keine
+Nachlässigkeit, sondern die Folge der Befundform, und eine Identifikation über den Zeileninhalt
+statt über die Nummer wäre ein eigener Fork.
+
+**Grenze 2: ein gescheiterter Splice kann eine unversionierte Datei hinterlassen.** Zurückgesetzt
+wird über `git diff --name-only`, und das kennt nur versionierte Pfade. Das ist gewollt: die
+Alternative wäre `git checkout .` oder `git reset --hard`, und beide räumen fremde Arbeit weg —
+genau das, was P3 verhindert. Nach einem Fehlschlag ist der Baum also **nicht zwingend** sauber.
+
+**Entscheidung 1 aus D225 hat sofort gewirkt.** `00x` war der erste Lauf, bei dem Abnahme und
+Merge in derselben Runde lagen, weil der Prompt den vollständigen Diff verlangt hat.
+
+**Dieser Eintrag ist der erste, den der Harness selbst anwendet.**
