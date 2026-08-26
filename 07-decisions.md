@@ -8026,3 +8026,34 @@ gesetzt statt gemessen, und der Bestand führt 22 Zeilen über 200.
 werden im selben Lauf umbrochen, sonst landet die Prüfung rot. Danach ist der offene Punkt
 geschlossen und die Splices müssen die Grenze nicht mehr einzeln assertieren — sie dürfen es
 weiter tun, ein zweiter Wächter schadet nicht.
+
+### D223 — Abnahme `00w`, kein Defekt; die Stummelzeilen sind der Preis und bleiben
+
+**Abnahme.** `00w` hat die Prosagrenze aus D222 prüfbar gemacht und die einundzwanzig Zeilen
+umbrochen. `make check-specs` grün, 597 Tests, `ruff` grün. Beide Proben sind rot geworden: P1 mit
+21 Befunden in 11 Dateien in genau der Verteilung aus dem Prompt, darunter einer in
+`07-decisions.md` — der belegt, dass die Ausnahme für Register und Sitzungsstart auf die
+Zeilenlänge nicht angewandt wird. P2 hat drei Klassen zugleich geprüft und genau einen Befund
+gemeldet: die Prosazeile, nicht die gleich lange Tabellenzeile und nicht die Zeile im Codeblock.
+
+**Damit ist der offene Punkt geschlossen.** Die 100-Zeichen-Regel war seit ihrer Einführung
+ungeprüft und hielt nur, weil jeder Splice sie selbst assertete. Sie hält jetzt, weil `make
+check-specs` sie hält.
+
+**Die Nebenwirkung, benannt statt repariert.** Der Prompt verlangte einen Umbruch je Zeile und
+keine Neuumbrechung des Absatzes, gebunden durch ein Abnahmekriterium, das die Löschungen je
+Datei auf die Befundzahl festnagelte. Das erzeugt Stummelzeilen: von 46 neuen Zeilen sind 17
+kürzer als 40 Zeichen, darunter `Befund,` und `Lauf,` als eigene Zeile. Das ist hässlich und
+bleibt so. Ein Reflow der elf Absätze hätte einen Diff erzeugt, den niemand Wort für Wort
+nachprüfen kann, und Abnahmekriterium 4 — kein Wort verändert — wäre nicht mehr belegbar gewesen.
+Wer die Absätze später glättet, tut es als eigenen Lauf mit eigener Begründung, nicht nebenbei.
+
+**Zwei Handzählungen dieser Sitzung waren falsch**, beide vom Supervisor: die erwartete
+`numstat`-Zeile für D221 (72 statt gemessener 66) und die Dateizahl in D222 (13 statt gemessener
+11). Beide standen in einem Satz, der mit einer Messung hätte belegt werden können und es nicht
+war. Die zweite stand bereits committet auf `main` und ist mit dem Prompt-Commit zu `00w`
+berichtigt worden.
+
+**Daraus Prüfregel 42.** Der erste Anlauf der Berichtigung an D222 ersetzte einen Teilstring und
+prüfte die Zeilenlänge am **eingesetzten Text**. Der war unter 100 Zeichen; die Zeile, die im
+Ergebnis daraus entstand, hatte 149. Ein Assert über den Einsatz sagt nichts über die Datei.

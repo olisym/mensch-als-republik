@@ -158,24 +158,24 @@ benannt worden, mit Begründung — sonst hätte das Werkzeug eine erfunden.
 
 ## Der nächste Schritt
 
-**Die Zitiergrammatik schliessen** (D209 Teil B, vermessen in D220). Teil A ist mit D219
-erledigt: `LAYER_FILES` bindet `01a`, `02a`, `02b` und `04a`, und ein Buchstabenname ohne
-Tabelleneintrag ist ein Befund statt eines Absturzes. Die Prüfung erfasst 75 von 260
-Paragraphenverweisen in Python.
+**Frage 2 der Zitiergrammatik** (D220, D221). Frage 1 ist entschieden und gebaut: zwei
+Namensformen, der Dateiname bindet sich selbst, `LAYER_FILES` ist bei dreizehn Einträgen
+geschlossen. Die Prüfung erfasst 187 von 260 Paragraphenverweisen in Python.
 
-Was bleibt, ist **nicht** die Zuordnung der 185 präfixlosen Verweise. Davor liegt die Frage,
-welche Namensformen es überhaupt gibt. D220 zählt fünf: `NN`, `NNx`, `NN-golden-anchors.md`,
-`NN-prompt.md` und den baren Verweis, der ein zuvor genanntes Präfix fortsetzt. Nur die ersten
-beiden sind gebunden.
+Offen ist, was ein **barer** Verweis bedeutet. 73 stehen noch in `.py`, davon treffen 62
+Überschriften in mehr als einer Layer-Datei — eine Heuristik über die Nummer gibt es nicht. Drei
+Lesarten stehen zur Wahl, und keine ist bezogen:
 
-Die Reihenfolge steht in D220 und ist die eigentliche Aussage der Messung:
+1. **Fortsetzung im Modulkontext** — der Verweis erbt das zuletzt im selben Modul genannte
+   Präfix. Deckt die sechs, die heute in keiner Layer-Datei treffen; die zeigen alle auf
+   `02a-maxflow-prompt.md`.
+2. **Die eigene Schicht** — abgeleitet aus dem Paketverzeichnis. Gemessen in D220 und schwach:
+   98 gedeckt, 18 widerlegt, 69 in Dateien ohne Schichtverzeichnis.
+3. **Unzulässig** — jeder Verweis wird qualifiziert. 73 Stellen, und die Grammatik ist geschlossen.
 
-1. Welche Namensformen sind zulässig, und woran wird jede gebunden?
-2. Was bedeutet ein barer Verweis — Fortsetzung im Modulkontext, eigene Schicht, oder unzulässig?
-3. Erst danach die 185.
-
-Wer bei 3 anfängt, entscheidet 1 und 2 nebenbei. 146 der 185 Verweise treffen Überschriften in
-mehr als einer Layer-Datei; eine Heuristik über die Nummer gibt es nicht.
+Dazu gehört die **Anhangs-Zielform**: `01-claim-atom.md` führt fünfzehn Anhangsüberschriften, und
+Verweise wie `§B.2` gibt es. Sie sind heute alle bar, weshalb D221 die Zielform vertagt hat. Wer
+Frage 2 entscheidet, entscheidet sie mit.
 
 ## Offen
 
@@ -184,14 +184,14 @@ mehr als einer Layer-Datei; eine Heuristik über die Nummer gibt es nicht.
 - **Es gibt keine Kontextdatei für das Werkzeug** (D218). Fork mit benanntem Gegenargument.
 - **Die Projektkopie hat kein erzwungenes Nachziehverfahren** (D218). Das Verfahren steht oben
   unter „Messen"; nichts prüft, ob es eingehalten wurde.
-- **Die Zitiergrammatik ist nicht geschlossen** (D209, D220). Teil A ist mit D219 erledigt,
-  Teil B vermessen und ohne Position. Zahlen oben.
-- **185 von 260 Paragraphenverweisen in Python sind ungeprüft** (D220). Geprüft werden 75.
+- **Frage 2 der Zitiergrammatik ist offen** (D220, D221). Frage 1 ist mit D221 entschieden
+  und mit `00v` gebaut. Zahlen oben.
+- **73 von 260 Paragraphenverweisen in Python sind ungeprüft** (D221). Geprüft werden 187.
 - **Die Verweisprüfung kann Listenpunkte nicht von Unterabschnitten unterscheiden** (D209).
 - **Zwei Registerverweise zeigen ins Leere**, `03 §5.1` und `03 §11`. Bewusst nicht nachgezogen:
   das Register beschreibt vergangene Stände.
-- **Die 100-Zeichen-Regel ist ungeprüft.** Sie hält nur, weil jeder Splice sie selbst assertet.
-  Eine Prüfung dafür ist ein eigener Fork und nicht aufgemacht.
+- **Elf Absätze führen Stummelzeilen** (D223). Nebenwirkung von `00w`, benannt und nicht
+  repariert. Glätten ist ein eigener Lauf.
 - **`SUBGRANULAR_VOUCH.subject` ist ungeprüft** (D173).
 - **Die Sondierwelt in `test_benennung.py` erzeugt keine Vermerke** (D173).
 - **Wie weit die Regierbarkeitsprüfung reicht** (D200). Zurückgestellt, bis ein Fall sie erzwingt
