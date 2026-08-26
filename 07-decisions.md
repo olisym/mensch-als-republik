@@ -8175,3 +8175,98 @@ genau das, was P3 verhindert. Nach einem Fehlschlag ist der Baum also **nicht zw
 Merge in derselben Runde lagen, weil der Prompt den vollständigen Diff verlangt hat.
 
 **Dieser Eintrag ist der erste, den der Harness selbst anwendet.**
+
+### D227 — Bare Paragraphenverweise in Python sind unzulässig (D220, D221 Frage 2)
+
+**Anlass.** D221 hat Frage 1 der Zitiergrammatik entschieden und Frage 2 ausdrücklich offen
+gelassen: was ein **barer** Verweis bedeutet. Drei Lesarten standen zur Wahl — Fortsetzung im
+Modulkontext, Verweis auf die eigene Schicht, oder unzulässig. Der Sitzungsstart `00y` hat
+verlangt, dass zuerst gemessen wird, wie viele der 73 jede Lesart trägt. Diese Messung liegt vor.
+
+**Grundzählung, gemessen auf `b49358e`.** In `.py` stehen 266 Paragraphenzeichen. 187 tragen
+einen auflösbaren Namen und werden seit D221 geprüft. 73 sind bar. Die übrigen 6 sind
+Regex-Literale in `tools/check_specs.py` und `tools/register_index.py`; auf das Zeichen folgt
+dort `(`, `{` oder ein Leerzeichen, sie fallen unter keine Verweisform und brauchen später keine
+Ausnahme.
+
+**Die Definition, die dabei scharf geworden ist.** Bar ist ein Verweis, dessen unmittelbar
+vorangehendes Token **kein auflösbarer Zitiername** ist. `SECTION_REF` liest jedes ASCII-Wort vor
+dem Paragraphenzeichen als möglichen Namen und verwirft es erst im Nachtest gegen `SPECS` und
+`LAYER_FILES`. Sechzehn der 73 haben deshalb ein Wort davor — `aus §2.7`, `Kein §3.1`, und bei
+`Gültigkeit §4.1` bricht der Regex am Umlaut und liest `ltigkeit`. Sie sind nicht qualifiziert,
+sondern bar mit Vorlauf. Wer 187 von 260 abzieht, bekommt dieselbe 73 auf zwei verschiedenen
+Wegen; nur der zweite Weg sagt, was die Zahl bedeutet.
+
+**Lesart 1 — Fortsetzung im Modulkontext — trägt 41 von 73.** Gemessen: 47 der baren Verweise
+haben überhaupt ein zuvor im selben Modul genanntes auflösbares Präfix, 26 haben keins. Von den
+47 trägt das Vorgängerpräfix den Abschnitt in 41 Fällen, in 6 nicht.
+
+**Die sechs Widerlegungen sind kein Rand, sondern ein Muster.** Zuletzt genannt wird oft eine
+Anker- oder Prompt-Datei, gemeint ist die Layer-Datei:
+
+| Fundstelle | Verweis | zuletzt genanntes Präfix |
+|---|---|---|
+| `mensch_als_republik/trust/graph.py:111` | `§2.7` | `02b` — hat kein `§2.7`, `02a` hat es |
+| `mensch_als_republik/trust/params.py:14` | `§2.2` | `02` |
+| `tests/helpers.py:55` | `§2.3` | `03-golden-anchors.md` |
+
+`mensch_als_republik/trust/derive.py` zeigt es in Reinform. Der Docstring der ersten Zeile lautet
+sinngemäß: geteilte Ableitungsstufe zwischen `§4` (trust) und `§5` (rank), Klammerzusatz
+`02b §2`. Das einzige qualifizierte Präfix im ganzen Modul ist `02b`; gemeint sind beide Male
+Abschnitte von `02-trust-flow.md`. Lesart 1 bindet hier nicht bloß nichts — sie bindet falsch.
+
+**Lesart 2 — die eigene Schicht aus dem Paketverzeichnis — trägt 33 von 73.** Gemessen: 33
+gedeckt, 9 widerlegt, 31 unanwendbar, weil die Datei in keinem Schichtverzeichnis liegt. Die 31
+sind fast durchweg `mensch_als_republik/*.py` in der Paketwurzel — `atom.py`, `cbor_canon.py`,
+`domains.py`, `predicates.py`, `policy.py`, `verifier.py`. Ihre Verweise zeigen im Kontext
+gelesen ausnahmslos auf `01-claim-atom.md`: `§2` für die Felder, `§3` für CBOR, `§4` für Domänen
+und Signatur, `§5.3` und `§5.4` für die Policy, `§6` für den Verifier. Die tragende Regularität
+ist dort das **Modulthema**, nicht das Verzeichnis. Lesart 2 greift nach dem richtigen Gedanken
+mit dem falschen Signal.
+
+**Mehrdeutigkeit, und eine Berichtigung der Grundmenge.** D221 nannte 62 mehrdeutig, 5 eindeutig,
+6 nirgends. Diese Zahlen sind reproduziert und richtig — sie gelten gegen die **acht**
+Layer-Dateien. Gegen die dreizehn Einträge von `LAYER_FILES`, also gegen alle heute zulässigen
+Zitierziele, sind es 63 mehrdeutig, 10 eindeutig, **0 nirgends**. Die zweite Messung ist die
+normativ maßgebliche, und sie sagt zweierlei: kein barer Verweis zeigt ins Leere, und bei 63 von
+73 identifiziert die Nummer die Datei nicht. 39 davon treffen in zwölf der dreizehn Dateien.
+
+**Entscheidung: Lesart 3. Bare Paragraphenverweise in `.py` sind unzulässig.** Jeder Verweis
+trägt einen der beiden Namen aus D221.
+
+**Die Begründung ist nicht Ästhetik, sondern die Fehlerrichtung.** Keine der beiden Alternativen
+erreicht zwei Drittel, und beide lösen an gemessenen Stellen **falsch** auf: Lesart 1 an 6, Lesart
+2 an 9. Heute ist ein barer Verweis erkennbar ungeprüft — er fällt aus der Prüfung heraus und
+niemand hält ihn für bestätigt. Unter Lesart 1 oder 2 wäre derselbe Verweis scheinbar geprüft und
+in acht beziehungsweise zwölf Prozent der Fälle still an die falsche Datei gebunden. Eine Regel,
+die Vertrauen erzeugt, wo sie rät, ist schlechter als keine Regel. Das ist genau die Drift, gegen
+die das Register steht.
+
+**Benannt und verworfen: ein Mapping von Modulthema auf Schicht.** Es ist die einzige Regularität,
+die alle 73 erklären würde — die Paketwurzel ist Layer 01, `trust/` ist 02, und so fort. Verworfen,
+weil es eine zweite Tabelle neben `LAYER_FILES` wäre, die gepflegt werden muss und still veraltet,
+sobald ein Modul umzieht oder zwei Schichten berührt. `derive.py` berührt heute schon zwei.
+
+**Benannt: der Preis.** Der Docstring `Feldtypen aus §2 prüfen.` liest sich besser als
+`Feldtypen aus 01 §2 prüfen.`, und in `atom.py` ist `01` für jeden redundant, der die Datei
+kennt. Der Einwand ist echt. Er setzt aber genau den Leser voraus, gegen den gehärtet wird — den
+Autor in drei Jahren, der nicht mehr weiß, welche Datei `atom.py` bedient.
+
+**Berichtigung zu D221: die Anhangs-Zielform gehört nicht zu Frage 2.** D221 hat sie mit der
+Begründung vertagt, jeder `§B`-Verweis sei heute bar und werde in Frage 2 mitentschieden.
+Gemessen auf `b49358e`: in `.py` gibt es **null** bare Anhangsverweise. Die 19 Vorkommen stehen
+sämtlich in `.md` — sieben in `02b-abnahme.md`, fünf im Register, drei in `00`, je eines in
+`00v-grammatik-prompt.md`, `02b-golden-anchors.md` und zwei Sitzungsstart-Dateien. Diese
+Entscheidung berührt sie nicht. Die Anhangsform bleibt offen und braucht eine eigene Runde.
+
+**Reihenfolge für die Umsetzung, damit sie nicht nebenbei entschieden wird.** Die 73 werden in
+Tranchen nach Verzeichnis qualifiziert; die Auflösung ist nicht mechanisch abzuleiten, weil 63
+mehrdeutig sind, sondern je Stelle aus dem Modulzweck zu lesen und im Diff zu prüfen. Der Befund
+für bare Verweise in `check_specs.py` entsteht **im letzten Lauf**, zusammen mit der letzten
+Tranche. Erst dann ist die Rücknahmeprobe scharf: eine einzelne Qualifizierung zurücknehmen und
+bestätigen, dass die Prüfung genau diese eine Stelle meldet. Käme die Prüfung zuerst, stünde der
+Baum über mehrere Läufe rot und die Probe liefe gegen 73 gleichzeitige Befunde.
+
+**Erwartung nach Abschluss aller Tranchen.** In `.py` sind 260 Paragraphenverweise geprüft, bare
+gibt es keine mehr, und die Grammatik ist geschlossen: zwei Namensformen, beide gebunden, keine
+dritte Klasse, die durch die Prüfung fällt.
