@@ -211,7 +211,7 @@ def check_section_refs(
     for match in SECTION_REF.finditer(text):
         name = match.group(1)
         sections = [match.group(2)]
-        if len(match.groups()) >= 3 and match.group(3) is not None:
+        if match.group(3) is not None:
             sections.append(match.group(3))
         if SHORT_NAME.fullmatch(name):
             if name not in headings:
