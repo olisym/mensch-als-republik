@@ -158,31 +158,24 @@ benannt worden, mit Begründung — sonst hätte das Werkzeug eine erfunden.
 
 ## Der nächste Schritt
 
-**Die Zitierkonvention injektiv machen** (D209). Gemessen auf `43b984c`, und die Messung teilt
-den Fork in zwei sehr ungleiche Hälften:
+**Die Zitiergrammatik schliessen** (D209 Teil B, vermessen in D220). Teil A ist mit D219
+erledigt: `LAYER_FILES` bindet `01a`, `02a`, `02b` und `04a`, und ein Buchstabenname ohne
+Tabelleneintrag ist ein Befund statt eines Absturzes. Die Prüfung erfasst 75 von 260
+Paragraphenverweisen in Python.
 
-**A — die Buchstabenpräfixe. Klein und abschliessbar.** 31 Verweise der Form `NNx §Y` in
-`.md` und `.py` zusammen, verteilt auf fünfzehn Dateien, mit genau vier benutzten Namen:
+Was bleibt, ist **nicht** die Zuordnung der 185 präfixlosen Verweise. Davor liegt die Frage,
+welche Namensformen es überhaupt gibt. D220 zählt fünf: `NN`, `NNx`, `NN-golden-anchors.md`,
+`NN-prompt.md` und den baren Verweis, der ein zuvor genanntes Präfix fortsetzt. Nur die ersten
+beiden sind gebunden.
 
-| Name | Verweise | beanspruchende Dateien |
-|---|---|---|
-| `02a` | 24 | `02a-abnahme.md`, `02a-maxflow-prompt.md` |
-| `01a` | 3 | `01a-nachtrag-prompt.md`, `01a-policy-prompt.md` |
-| `04a` | 2 | `04a-korrektur-prompt.md` — **eindeutig** |
-| `02b` | 2 | `02b-abnahme.md`, `02b-golden-anchors.md` |
+Die Reihenfolge steht in D220 und ist die eigentliche Aussage der Messung:
 
-Drei zweideutige Namen, sechs Dateien. `04a` ist bereits injektiv. Der erste Griff ist die
-Frage, welche der beiden `02a`-Dateien die vierundzwanzig Verweise meinen — eine Messung, keine
-Position. Danach zwei Wege: eine Datei umbenennen, oder eine Zuordnungstabelle wie `LAYER_FILES`,
-die den Zitiernamen an genau eine Datei bindet und die Prüfung darauf ausweitet. Erst messen.
+1. Welche Namensformen sind zulässig, und woran wird jede gebunden?
+2. Was bedeutet ein barer Verweis — Fortsetzung im Modulkontext, eigene Schicht, oder unzulässig?
+3. Erst danach die 185.
 
-**B — die präfixlosen Verweise in Python. Gross und nicht nebenbei zu lösen.** 260
-Paragraphenverweise in `.py`, davon **201 ohne Ziffernpräfix**, über siebzig Dateien. Die neue
-Prüfung erfasst 59 von 260. Eine Zuordnung Verzeichnis auf Schicht wäre der billige Weg und
-trägt nicht: `mensch_als_republik/policy.py` nennt `00 §3` und daneben die Prompt-Datei der
-Schicht 04. B braucht eine eigene Position, bevor irgendwer anfängt, und ist kein Nachmittag.
-
-A zuerst. B bleibt offen und ist ausdrücklich kein Anhängsel von A.
+Wer bei 3 anfängt, entscheidet 1 und 2 nebenbei. 146 der 185 Verweise treffen Überschriften in
+mehr als einer Layer-Datei; eine Heuristik über die Nummer gibt es nicht.
 
 ## Offen
 
@@ -191,9 +184,9 @@ A zuerst. B bleibt offen und ist ausdrücklich kein Anhängsel von A.
 - **Es gibt keine Kontextdatei für das Werkzeug** (D218). Fork mit benanntem Gegenargument.
 - **Die Projektkopie hat kein erzwungenes Nachziehverfahren** (D218). Das Verfahren steht oben
   unter „Messen"; nichts prüft, ob es eingehalten wurde.
-- **Die Zitierkonvention ist nicht injektiv** (D209). Teil A ist der nächste Schritt, Teil B
-  offen. Zahlen oben.
-- **201 von 260 Paragraphenverweisen in Python sind ungeprüft** (D217).
+- **Die Zitiergrammatik ist nicht geschlossen** (D209, D220). Teil A ist mit D219 erledigt,
+  Teil B vermessen und ohne Position. Zahlen oben.
+- **185 von 260 Paragraphenverweisen in Python sind ungeprüft** (D220). Geprüft werden 75.
 - **Die Verweisprüfung kann Listenpunkte nicht von Unterabschnitten unterscheiden** (D209).
 - **Zwei Registerverweise zeigen ins Leere**, `03 §5.1` und `03 §11`. Bewusst nicht nachgezogen:
   das Register beschreibt vergangene Stände.

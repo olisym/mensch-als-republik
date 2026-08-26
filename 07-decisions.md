@@ -7846,3 +7846,55 @@ die Prompt-Datei der Schicht 04 nebeneinander nennt. Teil B bleibt offen und ist
 
 **Probe.** Für `tools/check_specs.py` gibt es keinen Test; die Rücknahmeprobe ist der Lauf selbst.
 Wird ein Tabelleneintrag entfernt, muss `make check-specs` rot werden.
+
+### D220 — Teil B der Zitierkonvention ist vermessen, nicht entschieden (D209)
+
+**Anlass.** D219 hat Teil A geschlossen. D209 hat Teil B — die präfixlosen Paragraphenverweise in
+Python — ausdrücklich als eigene Position offengelassen. Diese Messung ist die Vorarbeit dazu und
+enthält **keine Entscheidung**. Sie steht im Register, weil die Zahlen sonst wieder aus der
+Historie fallen: der Sitzungsstart führte 201 präfixlose Verweise, gemessen sind 185.
+
+**Zahlen, gemessen auf `253d649`.** In `.py` stehen 260 Paragraphenverweise. 75 tragen ein
+Präfix und werden seit D219 geprüft. Die übrigen 185 sind präfixlos. Gegen die acht Layer-Dateien
+gehalten:
+
+| Befund | Zahl |
+|---|---|
+| trifft Überschriften in **mehr als einer** Layer-Datei | 146 |
+| trifft genau eine Layer-Datei | 30 |
+| trifft keine Layer-Datei | 9 |
+
+**Damit ist jede Heuristik über die Abschnittsnummer erledigt.** Bei 146 von 185 identifiziert die
+Nummer die Schicht nicht. Ein Verfahren, das aus `§2.2` die Datei ableitet, rät in vier von fünf
+Fällen.
+
+**Die neun ohne Treffer sind keine Defekte.** Sie zeigen aus dem Zuständigkeitsbereich der
+Layer-Dateien heraus. `mensch_als_republik/policy.py` nennt Abschnitt 0.2 der Datei
+`04-prompt.md`, `tests/trust/test_coupling.py` zweimal Abschnitt 0 von `03-prompt.md`; beide
+Abschnitte gibt es. Der Rest sind Fortsetzungen: `mensch_als_republik/trust/graph.py` nennt in
+Zeile 1 die Abschnitte 2.7 und 2.8 der Datei `02a-maxflow-prompt.md` und schreibt in späteren
+Docstrings desselben Moduls nur noch die Nummer.
+
+**Verzeichnis auf Schicht trägt nicht.** Gegen die Annahme, das Paketverzeichnis nenne die
+Schicht: 98 Verweise gedeckt, 18 widerlegt, 69 in Dateien ohne Schichtverzeichnis. Die 98 sind
+schwaches Material, weil dieselben Verweise zu grossen Teilen ohnehin mehrdeutig sind. Von den 18
+zeigen mehrere auf die Anchor-Dateien statt auf die Layer-Datei — `tests/profiles/test_credit.py`
+auf Abschnitt 8, `tests/trust/test_pagerank_invariants.py` auf Abschnitt 11.
+
+**Fünf Namensformen sind im Umlauf.** Das ist der eigentliche Befund. D209 hat die Injektivität
+für die ersten beiden Formen gefragt; die anderen drei standen nirgends.
+
+1. `NN` — die Layer-Datei. Geprüft seit D209.
+2. `NNx` — Prompt- und Anchor-Dateien mit Buchstabennamen. Gebunden seit D219.
+3. `NN-golden-anchors.md` — vier Dateien, ungebunden.
+4. `NN-prompt.md` — ungebunden, teils ohne Endung zitiert (`03-prompt`).
+5. Der bare Verweis, der ein zuvor im selben Modul genanntes Präfix fortsetzt.
+
+**Keine Entscheidung, aber eine festgehaltene Reihenfolge.** Zuerst ist zu entscheiden, welche
+Namensformen zulässig sind und woran jede gebunden wird. Danach, was ein barer Verweis bedeutet:
+Fortsetzung im Modulkontext, Verweis auf die eigene Schicht, oder unzulässig. Erst danach die 185.
+Wer mit den 185 anfängt, entscheidet die beiden Fragen davor nebenbei und ohne Begründung — genau
+die stille Normativität, gegen die das Register steht.
+
+**Nicht entschieden und ausdrücklich offen:** ob die 185 qualifiziert werden, ob ein
+Verzeichnis-Mapping kommt, ob bare Verweise verboten werden.
