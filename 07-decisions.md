@@ -8374,3 +8374,99 @@ daneben. Deshalb ist bei Qualifizierungsläufen der Diff die Abnahme und nicht d
 Frage 2 geschoben, D227 hat das berichtigt: in `.py` gibt es keinen einzigen Fall, die 19
 Vorkommen stehen sämtlich in Wurzel-`.md`. Sie braucht eine eigene Runde und wird von dieser
 Entscheidung nicht berührt.
+
+---
+
+### D230 — Die Anhangsform wird auf `§X.n` beschränkt und geprüft (D221, D227, D229)
+
+**Anlass.** Die Anhangsform ist dreimal verschoben worden: D221 hat sie zu Frage 2 geschoben,
+D227 hat berichtigt, dass sie dort nicht hingehört, D229 hat sie als einzigen offenen Teil der
+Grammatik benannt. Gemessen auf `b0ff1e8`.
+
+**Grundzählung.** Das Muster Paragraphenzeichen plus Großbuchstabe steht **29-mal in zehn
+Dateien**. Davon sind 17 Zitate der Grammatik selbst — Prompt-Dateien, Register,
+Sitzungsstart-Dateien und der Docstring von `tools/check_specs.py`. Echte Verweise sind
+**zwölf**. Die Übergabedatei nannte 19 auf `b49358e` und behauptete, keines stehe in `.py`.
+Beides ist überholt: seit D228 trägt der Docstring von `check_specs.py` die Bereichs-Metasyntax.
+
+**Die zwölf sind nicht eine Form, sondern drei Referenten.**
+
+| Referent | Fälle | Ziel |
+|---|---|---|
+| Anhangsabschnitt | 7 | reguläre Überschriften der Ebene 3, `### B.1` bis `### C.8` |
+| Anhang als Ganzes | 1 | `## Anhang C — Test-Vektoren` in `01-claim-atom.md`, Wortform ohne Nummer |
+| Axiom aus einer Liste | 3 | `01-claim-atom.md` Zeile 23, kein Abschnitt |
+| toter Zeiger | 1 | `02b-abnahme.md` nennt A.1; gemeint ist B.4 |
+
+**Der Fund ist A3.** `A3` ist kein Anhang, sondern das dritte Axiom im Abschnitt 1 von
+`01-claim-atom.md` — Erkennen statt verhindern. Dieselbe Datei zitiert es an Zeile 264 selbst
+richtig, in Prosaform mit der Abschnittsnummer davor. Die beiden Stellen in
+`00-nucleus-genesis-constitution.md` schreiben stattdessen Paragraphenzeichen plus A3 hinter dem
+Namen Atom-Spec und behaupten damit einen Abschnitt, den es nicht gibt, unter einem Namen, den
+die Grammatik nicht kennt. Dasselbe Zeichen trägt zwei Bedeutungen — genau die Überladung, gegen
+die D209, D219 und D227 stehen.
+
+**Drei von zwölf zeigen ins Leere, und keiner der zwölf ist heute geprüft.** `SECTION_REF` und
+`check_bare_refs` verlangen beide eine Ziffer hinter dem Paragraphenzeichen. Die Form ist der
+Prüfung vollständig unsichtbar; die Fehlerquote von drei aus zwölf liegt über allem, was D227
+gemessen hat.
+
+**Zwei Angaben der Übergabe sind zu berichtigen.** Erstens führen die Anhänge sehr wohl
+nummerierte Überschriften der Ebene 3 — fünfzehn in `01-claim-atom.md`, zehn in
+`02b-abnahme.md`. Eine zweite Überschriftenquelle ist nicht nötig; nur das Alphabet der Nummer
+ist ein anderes. Zweitens werden die Test-Vektoren nicht mit dieser Form zitiert: die sieben
+Vorkommen in `02b-abnahme.md` sind Selbstverweise auf eigene Berichtsabschnitte.
+
+**Entscheidung: geprüft wird genau die Form Großbuchstabe, Punkt, Zahl.** `HEADING_NUM` erhält
+ein optionales Großbuchstaben-Punkt-Präfix, `SECTION_REF` ebenso. `check_bare_refs` bleibt
+unverändert.
+
+**Die Selbst-Rot-Falle feuert nicht, und das ist gemessen.** Die Bereichs-Metasyntax mit den
+bloßen Buchstaben A und B trägt keine Ziffer und trifft die erweiterte Regex nicht. Das Literal
+in `00v-grammatik-prompt.md` trifft sie, steht aber ohne Namen davor — und `.md` hat keinen
+Bare-Check. Register und Sitzungsstart-Dateien sind ohnehin ausgenommen.
+
+**Ertrag heute: ein einziger neu geprüfter Verweis** — `02b-golden-anchors.md` auf den Abschnitt
+C.1 von `02b-abnahme.md`, und der ist korrekt. Das ist der ehrliche Wert am Bestand. Der Ertrag
+liegt in der Zukunft: eine Regel, die erst bei der ersten Anwendung entsteht, kommt zu spät, und
+die Erweiterung kostet zwei Regexzeilen.
+
+**Vier Textkorrekturen im selben Lauf**, alle in Prosaform nach dem Vorbild aus D221:
+
+1. `00-nucleus-genesis-constitution.md` Zeile 76 nennt Anhang C von `01-claim-atom.md` mit
+   Paragraphenzeichen vor dem Wort. Die Wortform bekommt keine Regex und wird Prosa.
+2. und 3. Dieselbe Datei, Zeilen 371 und 418: Atom-Spec plus A3 wird zum qualifizierten Verweis
+   auf Abschnitt 1 von `01-claim-atom.md`, mit dem Axiom als Prosa dahinter.
+4. `02b-abnahme.md` Zeile 30 nennt A.1 für die Schnittstellenform von `derive()`. Gemeint ist
+   B.4, deren Überschrift die Schnittstelle der geteilten Ableitung nachzieht.
+
+**Verworfen: die Form in `.md` verbieten, analog D227.** Das bräuchte eine Ausnahmeliste für die
+Prompt-Dateien, die die Grammatik als Literal zitieren — und Ausnahmelisten verrotten, was D221
+in eigener Sache schon einmal ausgeschlossen hat. Dazu kommt die Unstimmigkeit: in `.md` ist der
+bare Selbstverweis mit Ziffern zulässig und überall. Ihn mit Buchstaben zu verbieten,
+unterschiede zwei Fälle allein danach, welches Alphabet die Zielüberschrift trägt.
+
+**Verworfen: gar nicht prüfen und nur die Grenze benennen.** Das war die Position des Supervisors
+vor der Messung der drei Referenten und ist mit ihr gefallen. Sie lässt drei falsche Zeiger ohne
+Wächter zurück und macht die Korrektur zu einer, die in einem Jahr wieder aufgeht.
+
+**Verworfen: die Wortform mittragen.** Eine zweite Überschriftenquelle für die Ebene-2-Formen mit
+Wort statt Nummer, für genau ein Vorkommen. Prosa ist billiger und hat mit D221 ein Vorbild.
+
+**Verworfen: `check_bare_refs` auf Buchstaben erweitern.** In `.py` gibt es null Fälle, und der
+erste Effekt wäre, dass `check_specs.py` seinen eigenen Docstring meldet. Eine Regel ohne
+Anwendung, die als erstes den Prüfer rot macht.
+
+**Erwartung an den Lauf.** `make check-specs` bleibt grün. Die Python-Zeile bleibt bei 121
+Dateien und 260 Verweisen; kein `.py` trägt die Form. Vor den vier Korrekturen meldet die Prüfung
+**keinen** Befund, weil keiner der vier falschen Verweise einen auflösbaren Namen vor sich hat —
+die Korrekturen sind darum vom Diff abzunehmen, nicht von der grünen Zeile.
+
+**Zwei Rücknahmeproben, je eine pro Änderung.** Erstens das Großbuchstaben-Präfix in
+`HEADING_NUM` zurücknehmen: der Verweis aus `02b-golden-anchors.md` muss als unbekannter
+Abschnitt fallen. Zweitens denselben Verweis auf eine nicht vorhandene Nummer setzen: dieselbe
+Befundklasse muss feuern, was zeigt, dass `SECTION_REF` die Form überhaupt liest. Keine der
+beiden Proben formt Produktivcode.
+
+**Die Grenze aus D229 bleibt unberührt.** Geprüft wird, dass das Ziel existiert, nicht dass es
+stimmt. Mit dieser Entscheidung ist die Zitiergrammatik in allen vier Teilen geschlossen.
