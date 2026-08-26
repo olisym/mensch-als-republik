@@ -8329,3 +8329,48 @@ letzten Lauf, wie D227 festlegt.
 **Erwartung.** Die Erweiterung löst alle acht Bereiche in `.py` sofort beidseitig auf, auch die
 sechs in `tests/`, ohne dass eine Testdatei angefasst wird. Die Zahl der ungeprüften Stellen in
 `tests/` sinkt dadurch von 24 auf 18, bevor Tranche D überhaupt beginnt.
+
+### D229 — Die Zitiergrammatik ist geschlossen (D219, D221, D227, D228)
+
+**Was erreicht ist.** In `.py` steht kein barer Paragraphenverweis mehr. Gemessen auf `f9c0fab`:
+121 Dateien, 260 geprüfte Verweise, null Befunde. Zu Sitzungsbeginn waren es 187 geprüfte und 73
+bare. Die Differenz ist vollständig aufgelöst, nicht weggelassen.
+
+**Vier Läufe, jeder mit Rücknahmeprobe.**
+
+| Lauf | Commit | Umfang | Verweise danach |
+|---|---|---|---:|
+| A | `d853b1b` | 26 Stellen in der Paketwurzel | 213 |
+| B | `b84d0eb` | 17 Stellen im Trust-Paket | 230 |
+| C | `b51b56c` | 4 Stellen plus Bereichsform in `check_specs.py` | 242 |
+| D | `f9c0fab` | 18 Stellen in `tests/` plus Befund für bare Verweise | 260 |
+
+**Was die Grammatik jetzt ist.** Zwei Namensformen (D221): Kurzform über `LAYER_FILES` oder
+Stamm einer Wurzel-`.md`. Eine Bereichsform (D228), die beide Nummern an denselben Namen bindet.
+Alles andere ist ein Befund (D227). Es gibt keine dritte Klasse mehr, die durch die Prüfung
+fällt — das war der Zustand, den D220 als Grammatikproblem benannt hatte.
+
+**Entscheidung: kein eigener Test für `tools/`.** Für die Werkzeuge gibt es heute keine Tests;
+sie werden durch `make check` an den echten Spec-Dateien ausgeführt, und die Spec-Dateien sind
+ihre Testdaten. Die Bereichsauflösung aus D228 bekommt deshalb **keinen** Regressionstest. Sie
+ist trotzdem abgesichert, weil der Befund für bare Verweise sie mit abdeckt: bricht die optionale
+Gruppe in `SECTION_REF`, werden die acht zweiten Bereichsnummern bar, und der Befund feuert.
+Probe 3 des Laufs D hat das gezeigt — acht bare Verweise über sieben Dateien, nach Rücknahme
+wieder grün.
+
+**Benannt und verworfen: eine erste Testdatei für `tools/`.** Sie wäre nicht bloß eine Datei,
+sondern eine neue Kategorie, und sie prüfte etwas, das `make check` schon prüft. Wer das später
+anders sieht, hat mit der Kopplung an den baren Befund ein Argument gegen sich, das erst
+verschwindet, wenn dieser Befund verschwindet.
+
+**Die Grenze, die bleibt und nicht zu schließen ist.** Die Prüfung sichert, dass das Ziel
+**existiert**, nicht dass es **stimmt**. Ein Verweis auf einen vorhandenen, aber sachlich
+falschen Abschnitt bleibt grün. Ein gemessener Fall aus dieser Sitzung: `example-nucleus.md`
+zitiert für die Kapazitätsformel den Abschnitt 2 von `02-trust-flow.md`, wo das Graphmodell
+steht; die Formel steht in Abschnitt 3 derselben Datei und in `02a`. Formal gültig, inhaltlich
+daneben. Deshalb ist bei Qualifizierungsläufen der Diff die Abnahme und nicht die grüne Zeile.
+
+**Was offen bleibt.** Die Anhangsform mit Buchstaben ist nicht entschieden. D221 hatte sie zu
+Frage 2 geschoben, D227 hat das berichtigt: in `.py` gibt es keinen einzigen Fall, die 19
+Vorkommen stehen sämtlich in Wurzel-`.md`. Sie braucht eine eigene Runde und wird von dieser
+Entscheidung nicht berührt.

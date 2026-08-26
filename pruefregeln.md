@@ -299,6 +299,20 @@ einen Baum, den es so nicht gibt. Von Hand nachgepatchte Kopien sind der schlech
 sehen aktuell aus. In `00u` lief `tools/check_specs.py` vier Merges lang in der Rekonstruktion
 des Supervisors statt in der Fassung des Werkzeugs.
 
+**44. Abgeleitete Zahlen werden gerechnet, nicht aus der eigenen Tabelle nachgezählt.**
+Ein Abnahmekriterium, das eine Anzahl nennt, leitet sie aus der Messung ab, die dem Prompt
+zugrunde liegt. In `00y` nannte Prompt D sieben betroffene Testdateien, während die eigene
+Tabelle darüber neun listete, und eine Probe fünf statt sechs. Die Messung lag vor; gezählt wurde
+im Kopf. Das Werkzeug hat beide Abweichungen gemeldet und die Tabelle umgesetzt — richtig, aber
+ein Kriterium, das der Auftrag verletzt, ist kein Kriterium.
+
+**45. Eine Probe darf den Produktivcode nicht formen.**
+Entsteht Code, den nur die Rücknahmeprobe braucht, ist die Probe falsch konstruiert und nicht der
+Code unvollständig. In `00y` kam eine Abfrage auf die Zahl der Regex-Gruppen in `check_specs.py`
+hinzu, weil die Probe eine Gruppe entfernte; im Produktivpfad war die Abfrage konstant wahr. Die
+Probe ließ sich stattdessen bauen, indem das Trennzeichen der Gruppe durch ein nie vorkommendes
+ersetzt wurde — Gruppe bleibt, matcht nie, Befund feuert.
+
 ---
 
 ## Herkunft der Nummern
@@ -308,7 +322,8 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 `sitzungsstart-kollision.md`, 20 aus `sitzungsstart-decke.md`, 21 aus D142, 22 aus D146, 23 aus
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
-37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224.
+37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
+44 und 45 aus D229.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
