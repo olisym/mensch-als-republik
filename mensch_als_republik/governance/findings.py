@@ -1,4 +1,4 @@
-"""Governance-Findings: eigener Enum, kein Claim-Reject (04-governance.md §3.5, §4.1)."""
+"""Governance-Findings: eigener Enum, kein Claim-Reject (04 §3.5, 04 §4.1)."""
 
 from __future__ import annotations
 

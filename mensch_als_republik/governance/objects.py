@@ -1,4 +1,4 @@
-"""Epochen- und Vorschlagsidentität (04-governance.md §1.1, §2.4)."""
+"""Epochen- und Vorschlagsidentität (04 §1.1, 04 §2.4)."""
 
 from __future__ import annotations
 

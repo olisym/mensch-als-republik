@@ -35,7 +35,7 @@ def _is_valid_uint(value: object) -> bool:
 
 
 def _obligation_v_findings(obligation: Claim) -> list[Finding]:
-    """Typprüfung und EXPIRING_OBLIGATION (03-profiles.md §1.3, §3.3.1; B2)."""
+    """Typprüfung und EXPIRING_OBLIGATION (03 §1.3, 03 §3.3.1; B2)."""
     cid = claim_id(obligation)
     findings: list[Finding] = []
     if obligation.t_exp is not None:

@@ -169,6 +169,7 @@ LAYER_FILES = {
 HEADING_NUM = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)", re.M)
 SECTION_REF = re.compile(
     r"(?<![A-Za-z0-9.-])([A-Za-z0-9-]+(?:\.md)?) §(\d+(?:\.\d+)*)"
+    r"(?:[–-]§(\d+(?:\.\d+)*))?"
 )
 SHORT_NAME = re.compile(r"0[0-8][a-z]?$")
 
@@ -196,29 +197,35 @@ def heading_covers(wanted: str, headings: frozenset[str]) -> bool:
 def check_section_refs(
     text: str, headings: dict[str, frozenset[str]]
 ) -> tuple[int, list[str]]:
-    """Verweise mit Kurzform oder Dateiname gegen die Zieldatei (D209, D219, D221).
+    """Verweise mit Kurzform oder Dateiname gegen die Zieldatei (D209, D219, D221, D228).
 
     Drei Klassen (D221): Kurzform über ``LAYER_FILES``, Dateiname über den
     Stamm einer Wurzel-``.md``-Datei, sonst übergangen. Ein Kurzform-Name
     ohne Tabelleneintrag ist ein Befund (D219). Ein fehlender Dateistamm
-    ist keiner. Rückgabe: Zahl der aufgelösten Verweise, Befunde.
+    ist keiner. Ein Bereich ``NAME §A–§B`` bindet beide Nummern an denselben
+    Namen (D228). Rückgabe: Zahl der aufgelösten Verweise, Befunde.
     """
     unknown_names: dict[str, int] = {}
     counts: dict[str, int] = {}
     n_resolved = 0
-    for name, section in SECTION_REF.findall(text):
+    for match in SECTION_REF.finditer(text):
+        name = match.group(1)
+        sections = [match.group(2)]
+        if match.group(3) is not None:
+            sections.append(match.group(3))
         if SHORT_NAME.fullmatch(name):
             if name not in headings:
-                unknown_names[name] = unknown_names.get(name, 0) + 1
-                n_resolved += 1
+                unknown_names[name] = unknown_names.get(name, 0) + len(sections)
+                n_resolved += len(sections)
                 continue
         else:
             stem = name.removesuffix(".md")
             if f"{stem}.md" not in SPECS:
                 continue
-        n_resolved += 1
-        ref = f"{name} §{section}"
-        counts[ref] = counts.get(ref, 0) + 1
+        for section in sections:
+            n_resolved += 1
+            ref = f"{name} §{section}"
+            counts[ref] = counts.get(ref, 0) + 1
     problems: list[str] = []
     for name in sorted(unknown_names):
         problems.append(

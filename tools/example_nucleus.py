@@ -691,7 +691,7 @@ def check_membership_epoch2(ex: ExampleNucleus) -> None:
 
 
 def check_trust_flow(ex: ExampleNucleus) -> None:
-    """Reichweitentabelle und C(CHRIS)=50 bei n=50 (example-nucleus.md §4.3, §7)."""
+    """Reichweitentabelle und C(CHRIS)=50 bei n=50 (example-nucleus.md §4.3, example-nucleus.md §7)."""
     table = [capacity(ex.params, d) for d in range(8)]
     expected = [100, 50, 25, 12, 6, 3, 1, 0]
     if table != expected:
