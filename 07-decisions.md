@@ -8270,3 +8270,62 @@ Baum über mehrere Läufe rot und die Probe liefe gegen 73 gleichzeitige Befunde
 **Erwartung nach Abschluss aller Tranchen.** In `.py` sind 260 Paragraphenverweise geprüft, bare
 gibt es keine mehr, und die Grammatik ist geschlossen: zwei Namensformen, beide gebunden, keine
 dritte Klasse, die durch die Prüfung fällt.
+
+### D228 — Bereichsverweise binden beide Nummern an denselben Namen (D227)
+
+**Anlass.** D227 verbietet bare Paragraphenverweise in `.py`, sagt aber nicht, wie ein
+**Bereich** qualifiziert wird. Beim Vorbereiten der dritten Tranche fiel die Form auf:
+`example-nucleus.md §2–§5` trägt den Namen vor der ersten Nummer, die zweite steht bar. Sie
+fällt unter D227 und wäre beim Formulieren des Prompts nebenbei entschieden worden. Das ist
+genau der Fehler, vor dem D220 warnt.
+
+**Messung auf `b84d0eb`.** In `.py` stehen 8 Bereichsverweise, in den Wurzel-`.md` 6. Alle
+tragen bereits einen auflösbaren Namen vor der ersten Nummer, und alle sind **beidseitig
+gedeckt** — auch die zweite Nummer trifft eine Überschrift der genannten Datei. Der Trennstrich
+ist uneinheitlich: sechsmal Halbgeviertstrich, zweimal Bindestrich, letzteres in
+`tests/trust/pr02.py` und `tests/trust/tp02.py`.
+
+| Fundstelle | Form |
+|---|---|
+| `tools/example_nucleus.py` (2x) | `example-nucleus.md §2–§5` |
+| `tests/governance/fixtures.py` | `04-golden-anchors.md §2–§3` |
+| `tests/governance/test_tally_math.py` | `04-golden-anchors.md §4–§5` |
+| `tests/profiles/fixtures.py` | `03-golden-anchors.md §2–§3` |
+| `tests/profiles/test_payload.py` | `03-golden-anchors.md §5–§6` |
+| `tests/trust/pr02.py` | `02-golden-anchors.md §1-§2` |
+| `tests/trust/tp02.py` | `02-golden-anchors.md §1-§2` |
+
+**Entscheidung.** Die Form `NAME §A–§B` ist zulässig und bindet **beide** Nummern an denselben
+Namen. `tools/check_specs.py` löst beide auf und prüft beide gegen die Zieldatei. Als Trennstrich
+sind Halbgeviertstrich und Bindestrich zulässig.
+
+**Das ist keine dritte Namensform.** Die Grammatik bleibt bei den zwei Namen aus D221
+geschlossen. Der Bereich ist eine Kurzschreibung für zwei Verweise auf dieselbe Datei, nicht ein
+neuer Weg, eine Datei zu benennen. Wer die Zahl der zulässigen Namensformen zählt, zählt
+weiterhin zwei.
+
+**Benannt und verworfen: den Namen wiederholen.** `example-nucleus.md §2–example-nucleus.md §5`
+braucht keine Änderung an der Prüfung und wäre der billigste Weg. Verworfen, weil er an acht
+Stellen Text erzeugt, den niemand freiwillig schreibt — und Text, den niemand freiwillig
+schreibt, wird beim nächsten Mal nicht geschrieben. Die Form käme als bare Fortsetzung zurück,
+und dann steht dieselbe Frage noch einmal. Bei der Kurzform wäre die Wiederholung erträglich, bei
+der Dateinamensform nicht; eine Regel, die nur für eine der beiden Namensformen trägt, ist keine.
+
+**Benannt und verworfen: Bereiche verbieten.** Jede Nummer als eigener Verweis verliert die
+Aussage, dass ein zusammenhängender Bereich gemeint ist. `example-nucleus.md §2, §3, §4, §5`
+sagt weniger als der Bereich und ist länger.
+
+**Benannt und verworfen: den Trennstrich vereinheitlichen.** Zwei Schreibweisen für dasselbe
+Zeichen sind sonst genau die Drift, gegen die dieses Register steht. Hier trägt der Strich aber
+keine Bedeutung, die Regex trägt beide Varianten kostenlos, und eine Vereinheitlichung wäre eine
+zweite Änderung im selben Lauf mit eigener Rücknahmeprobe. Der Aufwand steht in keinem Verhältnis
+zum Gewinn. Wer das später anders sieht, ändert acht Stellen und diesen Absatz.
+
+**Reihenfolge.** Die Regex-Erweiterung entsteht in Tranche C, nicht im letzten Lauf — dort werden
+die ersten beiden Bereichsstellen qualifiziert, und ohne die Erweiterung bliebe ihre zweite
+Nummer ungeprüft. Der Befund für bare Verweise bleibt davon unberührt und kommt weiterhin im
+letzten Lauf, wie D227 festlegt.
+
+**Erwartung.** Die Erweiterung löst alle acht Bereiche in `.py` sofort beidseitig auf, auch die
+sechs in `tests/`, ohne dass eine Testdatei angefasst wird. Die Zahl der ungeprüften Stellen in
+`tests/` sinkt dadurch von 24 auf 18, bevor Tranche D überhaupt beginnt.
