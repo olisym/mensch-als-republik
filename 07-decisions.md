@@ -8105,3 +8105,46 @@ Eintrag. Kein Handlungsbedarf heute; ein offener Punkt ab heute. Wer ihn aufmach
 ob eine Teilung nach Ären den Index aus `tools/register_index.py` trägt oder bricht.
 
 **Daraus Prüfregel 43.**
+
+### D225 — Zwei Änderungen am Takt, und eine zurückgenommene Sorge
+
+**Zurückgenommen: das Register mache den Nachzug teuer.** D224 hat notiert, das Register sei
+22,2 Prozent der Projektkopie und wachse. Der Anteil stimmt, die Folgerung nicht. Projektwissen
+erlaubt unbegrenzt viele Dateien mit 30 MB je Datei; die Kopie misst 2,15 MB. Das Register mit
+rund 500 KB ist ein Fünftel von etwas, das reichlich Platz hat. Es gibt heute keinen Engpass, und
+eine Teilung nach Ären wäre Aufwand ohne gemessenen Anlass. Der offene Punkt bleibt als
+Beobachtung stehen, nicht als Dringlichkeit. Wer eine Zahl als Anteil nennt, nennt den Nenner
+dazu — sonst klingt Knappheit, wo keine ist.
+
+**Was wirklich kostet, sind Runden.** Ein Werkzeuglauf braucht heute vier: Prompt hinaus, Bericht
+zurück, Diff anfordern, Merge. Sechs Splices dieser Sitzung trugen je neun Zeilen reine
+Zeremonie im Befehlsblock — Temp-Verzeichnis wegräumen, anlegen, Zieldateien kopieren,
+hinwechseln, trocken laufen, zweiten Lauf prüfen, zurückwechseln, live laufen. 54 Zeilen, die der
+Operator kopiert, und ebenso viele Stellen für einen falschen Pfad.
+
+**Entscheidung 1: der Prompt verlangt den vollständigen Diff.** Im Abschluss steht künftig
+`git diff` gegen den Branchpunkt, nicht nur `git diff --numstat`. Damit liegt der Diff in
+derselben Runde vor wie der Bericht, und Abnahme und Merge fallen zusammen. Der Preis sind
+Diff-Zeilen im Chat, die eine Runde später ohnehin gelesen worden wären. Unberührt bleibt, dass
+**der Bericht nie die Abnahme ist**: geprüft wird weiterhin der Diff, nur früher.
+
+**Entscheidung 2: ein Harness für Splices**, `tools/splice_run.py`. Ein Aufruf statt neun Zeilen.
+Er lässt den Splice im Arbeitsverzeichnis laufen — **nicht** gegen eine Kopie —, erzwingt danach
+das Scheitern des zweiten Laufs, prüft am Ergebnis die Zeilenlänge nach D222 und setzt bei jedem
+Fehlschlag mit `git checkout --` zurück.
+
+**Verworfen: das Temp-Verzeichnis beibehalten.** Der Trockenlauf gegen eine Kopie schützt die
+Dateien vor einem fehlerhaften Splice. Genau das tut Git schon; die dauerhafte Anweisung führt
+Schreiben im Arbeitsverzeichnis als Tier 2 mit Git als Rollback. Zwei Rollback-Mechanismen
+nebeneinander sind einer zu viel, und der schwächere ist der handgeschriebene.
+
+**Verworfen: den Baum vorher auf Sauberkeit zu prüfen und sonst nichts.** Der Harness prüft es,
+aber die Prüfung allein genügt nicht — sie muss mit einem Rücksetzpfad verbunden sein, sonst
+bleibt ein halb angewandter Splice liegen.
+
+**Verworfen: ein eigenes Werkzeug für Registereinträge**, das aus Feldern einen Eintrag baut. Die
+Einträge sind Prosa mit benannter Begründung; ein Formular erzeugt Formulare.
+
+**Verworfen: die Kopie verkleinern** — durch `--compress`, Auslassen der Tests oder Auslassen des
+Registers. D224 hat die ersten beiden schon verworfen; das dritte nähme dem Supervisor die
+oberste Instanz.
