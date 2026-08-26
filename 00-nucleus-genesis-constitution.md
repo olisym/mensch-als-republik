@@ -367,7 +367,7 @@ ist das keine Equivocation (§6.3 verlangt dieselbe `h_prev`), und beide sind g�
 die frühere in `K_{n-1}`s eigener Kette. Daraus folgt ausdrücklich: **trifft deren Gegenzeichnung
 erst später ein, springt der aufgelöste Kopf zurück**, und Akte des zwischenzeitlichen Kopfes
 verlieren rückwirkend ihre Autorisierung. Das ist dieselbe Klasse wie nachträglich entdeckte
-Equivocation — mehr Wissen revidiert einen Zustand (Detect-not-Prevent, 01 §1 Axiom A3). Die
+Equivocation — mehr Wissen revidiert einen Zustand (Detect-not-Prevent, `01 §1` Axiom A3). Die
 Alternative, nach Empfangsreihenfolge zu ordnen, wäre schlechter: zwei Leser mit demselben
 Claim-Bestand kämen zu verschiedenen Ergebnissen.
 
@@ -414,7 +414,7 @@ ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
 3.  Hat k irgendeinen Claim im Zustand EQUIVOCATION_FLAGGED — an beliebiger Stelle
     seiner Autorenkette, nicht nur an einer Rotation (D162) —, liefert k keinen Kopf;
     Nukleus-Akte beider konkurrierender Schlüssel gelten als nicht autorisiert
-    (Detect-not-Prevent, 01 §1 Axiom A3). Dasselbe gilt für jeden Schlüssel, den
+    (Detect-not-Prevent, `01 §1` Axiom A3). Dasselbe gilt für jeden Schlüssel, den
     Schritt 2 auf der Kette erreicht, nicht nur für k selbst (D165). Eine Änderung
     von nucleus_keys löst den Fall nicht auf, indem sie denselben Schlüssel erneut
     nennt, sondern einen anderen.
