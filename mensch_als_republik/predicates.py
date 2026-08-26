@@ -1,4 +1,4 @@
-"""Prädikat-Grammatik (Anhang A), Scope-Auflösung und Bindungsregel (§2.2)."""
+"""Prädikat-Grammatik (Anhang A), Scope-Auflösung und Bindungsregel (01 §2.2)."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ def parse_predicate(p: str) -> ParsedPredicate:
 
 def resolve_scope(claim: Claim) -> bytes:
     """
-    Aufgelösten Scope aus Claim bestimmen (§2.2).
+    Aufgelösten Scope aus Claim bestimmen (01 §2.2).
 
     Raises BadScopeBinding wenn Bindungsregel verletzt.
     """
@@ -107,7 +107,7 @@ def is_core_predicate(claim: Claim) -> bool:
 
 
 def is_nuc_name(claim: Claim, name: str) -> bool:
-    """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (§2.2, Anhang A, D181, D213)."""
+    """True gdw. p ein nuc:-Prädikat mit diesem Namen in Version 1 ist (01 §2.2, Anhang A, D181, D213)."""
     try:
         parsed = parse_predicate(claim.p)
     except VerifierError:
@@ -120,7 +120,7 @@ def is_nuc_name(claim: Claim, name: str) -> bool:
 
 
 def check_scope_binding(claim: Claim) -> None:
-    """Bindungsregel §2.2 Regel 3 prüfen; wirft bei Verletzung."""
+    """Bindungsregel 01 §2.2 Regel 3 prüfen; wirft bei Verletzung."""
     parsed = parse_predicate(claim.p)
     if parsed.namespace == "nuc":
         resolve_scope(claim)

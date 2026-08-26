@@ -1,4 +1,4 @@
-"""Nukleus-Policy: Override der Widerrufbarkeit für Nukleus-Prädikate (§5.4, 00 §5.2)."""
+"""Nukleus-Policy: Override der Widerrufbarkeit für Nukleus-Prädikate (01 §5.4, 00 §5.2)."""
 
 from __future__ import annotations
 
@@ -106,7 +106,7 @@ class NucleusPolicy:
 
 def is_irrevocable(predicate: str, policy: NucleusPolicy | None) -> bool:
     """Wahr gdw. predicate ein nuc:-Prädikat ist und dessen Profilname
-    (Teil nach dem letzten "/") in der wirksamen Menge liegt (§5.4.2).
+    (Teil nach dem letzten "/") in der wirksamen Menge liegt (01 §5.4.2).
 
     Die wirksame Menge ist ``policy.irrevocable``, falls ``policy`` gesetzt ist,
     sonst ``PROTOCOL_IRREVOCABLE`` (00 §5.2, D156, D159).

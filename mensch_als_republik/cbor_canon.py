@@ -1,4 +1,4 @@
-"""Kanonische CBOR-Enkodierung und Re-Serialisierungs-Check (§3)."""
+"""Kanonische CBOR-Enkodierung und Re-Serialisierungs-Check (01 §3)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Claim-Verifizierer: strukturelle Prüfung und Zustandsmaschine (§6, Anhang B)."""
+"""Claim-Verifizierer: strukturelle Prüfung und Zustandsmaschine (01 §6, Anhang B)."""
 
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ class InMemoryStore:
 
 
 def _validate_field_types(m: dict) -> None:
-    """Feldtypen aus §2 prüfen."""
+    """Feldtypen aus 01 §2 prüfen."""
     if not isinstance(m.get(0), int):
         raise MalformedCbor()
     if not isinstance(m.get(1), bytes) or len(m[1]) != 32:
@@ -136,7 +136,7 @@ def _check_foreign_lifecycle(claim: Claim, store: ClaimStore | None) -> None:
 
 def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
     """
-    Strukturelle Gültigkeit §6 Punkte 1–7 in normativer Reihenfolge.
+    Strukturelle Gültigkeit 01 §6 Punkte 1–7 in normativer Reihenfolge.
 
     Raises VerifierError-Subklassen bei Reject.
     """
@@ -154,7 +154,7 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
         if not isinstance(k, int):
             raise MalformedCbor()
 
-    # 2c: kanonische Kodierung (§3, D130)
+    # 2c: kanonische Kodierung (01 §3, D130)
     try:
         canonical = cbor_canon.is_canonical(data)
     except Exception as exc:
@@ -220,7 +220,7 @@ def _is_temporally_valid(claim: Claim, now: int | None) -> bool | None:
     Zeitliche Gültigkeit gegen t_exp.
 
     Returns True/False wenn entscheidbar, None wenn now fehlt und t_exp gesetzt.
-    core/* ignoriert t_exp (§5.3).
+    core/* ignoriert t_exp (01 §5.3).
     """
     if is_core_predicate(claim):
         return True
@@ -305,11 +305,11 @@ def classify(
     policy: NucleusPolicy | None = None,
 ) -> Classification:
     """
-    Zustandsmaschine aus Anhang B, optional mit Nukleus-Policy-Override (§5.4).
+    Zustandsmaschine aus Anhang B, optional mit Nukleus-Policy-Override (01 §5.4).
 
     Voraussetzung: claim ist strukturell gültig (structural_check bestanden).
     """
-    # Scope-Prüfung (§5.4): eine Policy fremden Scopes wird nie still ignoriert.
+    # Scope-Prüfung (01 §5.4): eine Policy fremden Scopes wird nie still ignoriert.
     if policy is not None and claim.p.startswith("nuc:") and claim.N != policy.scope:
         raise ValueError("policy scope does not match claim scope")
 

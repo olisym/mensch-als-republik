@@ -1,4 +1,4 @@
-"""Claim-Atom: Datenstruktur, Core, Signatur, Claim-ID (§2, §4)."""
+"""Claim-Atom: Datenstruktur, Core, Signatur, Claim-ID (01 §2, 01 §4)."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ _NULL_HPREV = bytes(32)
 
 @dataclass(frozen=True, slots=True)
 class Claim:
-    """Claim-Atom mit Feldern aus §2 (CBOR-Keys 0–9)."""
+    """Claim-Atom mit Feldern aus 01 §2 (CBOR-Keys 0–9)."""
 
     version: int
     I: bytes
@@ -46,7 +46,7 @@ class Claim:
 
 
 def core_map(claim: Claim) -> dict[int, Any]:
-    """Keys 0–8 ohne σ; abwesende optionale Felder lassen ihren Key weg (§3 Regel 5)."""
+    """Keys 0–8 ohne σ; abwesende optionale Felder lassen ihren Key weg (01 §3 Regel 5)."""
     m: dict[int, Any] = {
         0: claim.version,
         1: claim.I,
@@ -83,7 +83,7 @@ def signed_bytes(claim: Claim) -> bytes:
 
 
 def claim_id(claim: Claim) -> bytes:
-    """SHA-256(DOM_CID ‖ core_bytes); signatur-unabhängig (§4)."""
+    """SHA-256(DOM_CID ‖ core_bytes); signatur-unabhängig (01 §4)."""
     return hashlib.sha256(DOM_CID + core_bytes(claim)).digest()
 
 
@@ -93,7 +93,7 @@ def sign_preimage(claim: Claim) -> bytes:
 
 
 def sign(sk: Ed25519PrivateKey, claim: Claim) -> bytes:
-    """Ed25519-Sign(sk, DOM_SIG ‖ core_bytes) (§4)."""
+    """Ed25519-Sign(sk, DOM_SIG ‖ core_bytes) (01 §4)."""
     return sk.sign(sign_preimage(claim))
 
 
@@ -108,7 +108,7 @@ def build_signed(
     N: bytes | None = None,
     t_exp: int | None = None,
 ) -> Claim:
-    """Signierten Claim bauen: I aus sk, version 1, sigma via replace (D122, 01 §2/§4)."""
+    """Signierten Claim bauen: I aus sk, version 1, sigma via replace (D122, 01 §2/01 §4)."""
     unsigned = Claim(
         version=1,
         I=sk.public_key().public_bytes_raw(),
@@ -137,14 +137,14 @@ def verify_sig(claim: Claim) -> bool:
 
 
 def id_genesis_anchor(I: bytes) -> bytes:
-    """SHA-256(DOM_ID_GEN ‖ I) (§4)."""
+    """SHA-256(DOM_ID_GEN ‖ I) (01 §4)."""
     if len(I) != 32:
         raise ValueError("I must be 32 bytes")
     return hashlib.sha256(DOM_ID_GEN + I).digest()
 
 
 def is_equivocation_pair(c1: Claim, c2: Claim) -> bool:
-    """Verschiedene claim_id, gleiches (I, h_prev) (§4)."""
+    """Verschiedene claim_id, gleiches (I, h_prev) (01 §4)."""
     return (
         claim_id(c1) != claim_id(c2)
         and c1.I == c2.I
@@ -158,7 +158,7 @@ def is_genesis(claim: Claim) -> bool:
 
 
 def has_null_hprev(claim: Claim) -> bool:
-    """True gdw. h_prev == 32×0x00 (verboten, §4)."""
+    """True gdw. h_prev == 32×0x00 (verboten, 01 §4)."""
     return claim.h_prev == _NULL_HPREV
 
 
