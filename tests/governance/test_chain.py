@@ -124,7 +124,7 @@ def test_chain_without_ratification_stays_at_epoch_1() -> None:
 
 
 def test_chain_missing_c3_stops_at_epoch_2() -> None:
-    """Das Verfassungsobjekt von i+1 ist das Zielobjekt des Übergangs (04 §3.5, §4.1)."""
+    """Das Verfassungsobjekt von i+1 ist das Zielobjekt des Übergangs (04 §3.5, 04 §4.1)."""
     world = _two_transitions()
     result = _resolve(
         world.store,

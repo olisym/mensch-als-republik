@@ -112,7 +112,7 @@ def test_INV1_differs_for_A_prime_simultaneous() -> None:
 
 
 def test_INV2_sybil_count_independence() -> None:
-    """|S|-Unabhaengigkeit ist eine Schranke, keine Gleichheit (§4).
+    """|S|-Unabhaengigkeit ist eine Schranke, keine Gleichheit (02 §4).
 
     Sybils haengen hinter CAROL (dem ehrlichen Grenzknoten) und sind selbst Ziele --
     sonst prueft der Test nichts: stromabwaerts vom Ziel kann nichts wirken.

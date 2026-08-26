@@ -18,7 +18,7 @@ def test_PR_INV1_monotonicity_exhaustive_over_variant_B() -> None:
     """Entfernen einer beliebigen Kante senkt jeden u-Wert oder laesst ihn gleich, nie
     Anstieg. Fehlende Knoten zaehlen als 0 (Neuling ≈ 0, PR-INV-7).
 
-    Alle fuenf Kanten von Variante B variieren (2^5 = 32 Teilgraphen, §9), nicht nur die
+    Alle fuenf Kanten von Variante B variieren (2^5 = 32 Teilgraphen, 02b §9), nicht nur die
     drei Sybil-Kanten -- sonst blieben der Rumpf ALICE->BOB->CAROL fest und der Fall, in dem
     eine ganze Kette wegfaellt, waere ungeprueft.
     """
@@ -111,7 +111,7 @@ def test_PR_INV3_overcommit_indicator_is_one_sided() -> None:
 def test_PR_INV4_edge_set_is_shared_with_paragraph_4(
     variant: str, include_flagged: bool
 ) -> None:
-    """Der Kantensatz, ueber den §5 rechnet, ist byte-gleich mit dem von §4 (D49): beide
+    """Der Kantensatz, ueber den 02 §5 rechnet, ist byte-gleich mit dem von 02 §4 (D49): beide
     rufen dieselbe derive()-Funktion auf."""
     from mensch_als_republik.trust.flow import derive as derive_in_flow
     from mensch_als_republik.trust.relax import derive as derive_in_relax
@@ -207,7 +207,7 @@ def test_PR_INV8_monotonicity_in_K(variant: str) -> None:
 
 def test_PR_INV9_anchor_asymmetry_halves_every_value() -> None:
     """Ein zweiter, isolierter Anker senkt jeden t-Wert (halbiert ihn hier) -- anders als
-    in §4, wo zusaetzliche Anker nie senken (D51). Kein §7-Bruch: §7 handelt von Kanten."""
+    in 02 §4, wo zusaetzliche Anker nie senken (D51). Kein 02 §7-Bruch: 02 §7 handelt von Kanten."""
     g = build("B")
     store = g.store()
     alice2 = Identity("prinv9-alice2-isolated")
@@ -229,7 +229,7 @@ def test_PR_INV9_anchor_asymmetry_halves_every_value() -> None:
     # System bringt. NICHT weil die Rekursion unabhaengig von |A| waere -- der Restart-Term
     # wird je Anker addiert. Was sich herauskuerzt, ist |A| aus dem Restart-Term selbst
     # (Delta * e_J = (bD)^k), nicht die Zahl der Anker aus der Rekursion. Mit einem
-    # verbundenen zweiten Anker steigen fremde u-Werte (offener Vektor, Anchors §11).
+    # verbundenen zweiten Anker steigen fremde u-Werte (offener Vektor, Anchors 02b §11).
     for identity, value in scores_one.items():
         assert scores_two[identity] == value
 

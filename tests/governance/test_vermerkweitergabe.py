@@ -1,4 +1,4 @@
-"""Weitergabe der Auszählungsvermerke ohne Folgeepoche (04-governance.md §4.1, §4.5, D203)."""
+"""Weitergabe der Auszählungsvermerke ohne Folgeepoche (04 §4.1, 04 §4.5, D203)."""
 
 from __future__ import annotations
 
@@ -108,7 +108,7 @@ def test_governability_block_carries_tally_findings() -> None:
 
 
 def test_carried_ratification_drops_tally_findings() -> None:
-    """Eine tragende Ratifizierung gibt die Auszählungsvermerke nicht weiter (§4.1, D203)."""
+    """Eine tragende Ratifizierung gibt die Auszählungsvermerke nicht weiter (04 §4.1, D203)."""
     alice, bob, carol, dave = fresh_p1()
     fremd = _fremd()
     yes = [
@@ -141,7 +141,7 @@ def test_carried_ratification_drops_tally_findings() -> None:
 
 
 def test_carried_transition_drops_tally_findings() -> None:
-    """Ein tragender Übergang gibt die Auszählungsvermerke nicht weiter (§4.5, D203)."""
+    """Ein tragender Übergang gibt die Auszählungsvermerke nicht weiter (04 §4.5, D203)."""
     welt, _a, _b, _c = _welt()
     fremd = _fremd()
     welt.store.add(

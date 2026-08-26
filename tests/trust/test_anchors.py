@@ -213,7 +213,7 @@ def test_A_prime_individual_is_16() -> None:
 
 
 def test_A_prime_simultaneous_is_16_not_48() -> None:
-    """K4 auf a_in: der Satz aus §4 haelt mit Gleichheit; a_out-Fehler liefert 48."""
+    """K4 auf a_in: der Satz aus 02 §4 haelt mit Gleichheit; a_out-Fehler liefert 48."""
     g = build_A_prime()
     r = trust(
         g.store(),

@@ -1,4 +1,4 @@
-"""resolve_authorized_keys — Lagen aus 00 §5.4, §6.4 und D150, D161, D163, D164."""
+"""resolve_authorized_keys — Lagen aus 00 §5.4, 00 §6.4 und D150, D161, D163, D164."""
 
 from __future__ import annotations
 

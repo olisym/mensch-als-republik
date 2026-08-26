@@ -233,7 +233,7 @@ def test_expired_when_now_past_t_exp():
 
 
 def test_core_revoke_ignores_t_exp():
-    """core/* ignoriert t_exp auch wenn gesetzt (§5.3)."""
+    """core/* ignoriert t_exp auch wenn gesetzt (01 §5.3)."""
     store = InMemoryStore()
     _add_chain(store, "TV1", "TV2")
     tv3 = _claim("TV3")

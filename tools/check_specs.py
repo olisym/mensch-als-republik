@@ -211,7 +211,7 @@ def check_section_refs(
     for match in SECTION_REF.finditer(text):
         name = match.group(1)
         sections = [match.group(2)]
-        if match.group(3) is not None:
+        if len(match.groups()) >= 3 and match.group(3) is not None:
             sections.append(match.group(3))
         if SHORT_NAME.fullmatch(name):
             if name not in headings:
@@ -241,6 +241,37 @@ def check_section_refs(
     return n_resolved, problems
 
 
+def check_bare_refs(
+    text: str, headings: dict[str, frozenset[str]]
+) -> list[str]:
+    """Bare Paragraphenverweise: § plus Ziffer, kein auflösbarer Name davor (D227).
+
+    Auflösbar wie in ``check_section_refs``: Kurzform über ``LAYER_FILES`` oder
+    Stamm einer Wurzel-``.md``. Von ``SECTION_REF`` gebundene Bereiche decken
+    beide Nummern (D228). Rückgabe: Befunde, leer wenn keiner.
+    """
+    covered: list[tuple[int, int]] = []
+    for match in SECTION_REF.finditer(text):
+        name = match.group(1)
+        if SHORT_NAME.fullmatch(name):
+            if name not in headings:
+                continue
+        else:
+            stem = name.removesuffix(".md")
+            if f"{stem}.md" not in SPECS:
+                continue
+        covered.append((match.start(), match.end()))
+    n_bare = 0
+    for match in re.finditer(r"§\d", text):
+        pos = match.start()
+        if any(start <= pos < end for start, end in covered):
+            continue
+        n_bare += 1
+    if n_bare:
+        return [f"barer Paragraphenverweis ({n_bare}x)"]
+    return []
+
+
 def python_sources() -> list[Path]:
     """``.py`` unter der Wurzel, ohne ``.venv``, stabil sortiert (D215)."""
     return sorted(p for p in ROOT.rglob("*.py") if ".venv" not in p.parts)
@@ -249,7 +280,8 @@ def python_sources() -> list[Path]:
 def check_python_section_refs(
     headings: dict[str, frozenset[str]],
 ) -> tuple[int, int, list[tuple[str, list[str]]]]:
-    """``check_section_refs`` über alle Python-Dateien (D215, D221).
+    """``check_section_refs`` und ``check_bare_refs`` über alle Python-Dateien
+    (D215, D221, D227).
 
     Rückgabe: Dateizahl, Zahl der aufgelösten Verweise, Befunde je Relativpfad.
     """
@@ -262,6 +294,7 @@ def check_python_section_refs(
             findings.append((str(path.relative_to(ROOT)), ["UTF-8 defekt"]))
             continue
         n_resolved, problems = check_section_refs(text, headings)
+        problems += check_bare_refs(text, headings)
         n_refs += n_resolved
         if problems:
             findings.append((str(path.relative_to(ROOT)), problems))
