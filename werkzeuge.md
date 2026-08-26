@@ -322,13 +322,15 @@ oder eine Iteration an der Einfügereihenfolge, ist das Ergebnis reihenfolgeabh�
 (`02 §7`). Beide Vorbehalte sind zwingend: `erlaube_ueberzeichnung = False`, weil die Budgetprüfung
 `Σ n ≤ D` nicht monoton ist (D118, kleinstes Gegenbeispiel zwei Vouches mit `n = 51` bei `D = 100`),
 und `erlaube_equivocation = False`, weil ein eintreffender Zwilling einem zählenden Claim die
-Wirkung entzieht (D117). Ohne sie ist die Eigenschaft **falsch**, und ein roter Lauf wäre kein Befund,
+Wirkung entzieht (D117). Ohne sie ist die Eigenschaft **falsch**, und ein roter Lauf wäre kein
+Befund,
 sondern eine falsch aufgeschriebene Zusage.
 
 **P-3 — Die Vorbehalte positiv.** Was P-2 ausschließt, wird eigens geprüft, sonst prüft P-2 nur den
 bequemen Bereich. P-3a: mit Überzeichnung existieren Welten, in denen eine Teilmenge **höheres**
 Vertrauen liefert. P-3b: mit Equivocation entfernt ein zusätzlicher Claim eine zählende Stimme und
-ein erreichtes `PASSED` fällt auf `PENDING` zurück. Beides sind **erwartete** Verletzungen; ein Lauf,
+ein erreichtes `PASSED` fällt auf `PENDING` zurück. Beides sind **erwartete** Verletzungen; ein
+Lauf,
 der keine findet, ist der Befund.
 
 **P-4 — Konvergenz.** Haben am Ende alle Beobachter denselben Bestand und dieselbe Uhr, rechnen sie

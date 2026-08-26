@@ -1,6 +1,7 @@
 # Golden Anchors — Layer 02 (Trust Flow)
 
-Revision 3 · Status: gerechnet, gegengerechnet und gegen die Implementierung geprüft · gilt gegen `02-trust-flow.md` nach Anwendung
+Revision 3 · Status: gerechnet, gegengerechnet und gegen die Implementierung geprüft · gilt gegen
+`02-trust-flow.md` nach Anwendung
 von `02-spec-nachzug.md` Rev 2
 Zweck: normative Testvektoren für `02a-maxflow`. Alle Werte exakt, ganzzahlig, von Hand geprüft.
 
@@ -133,7 +134,8 @@ schneidet; `3 × 4 = 12 > 4`. Δ = 8.
 **B.** Einzeln: `min(4, 1) = 1`. Simultan: `1+1+1 = 3 ≤ Rumpf 4`. **Δ = 0** — bei isolierten
 Blättern klafft nichts.
 
-**C.** Einzeln nach `g₁_in`: direkt `1` + über `g₂` (`CAROL_out→g₂_in 1 → g₂ intern 2 → g₂_out→g₁_in 1`) `1`
+**C.** Einzeln nach `g₁_in`: direkt `1` + über `g₂`
+(`CAROL_out→g₂_in 1 → g₂ intern 2 → g₂_out→g₁_in 1`) `1`
 + über `g₃` `1` = **3**. Begrenzt durch die Emission aus `CAROL_out` (3 Kanten à 1). Simultan:
 Fluss verlässt `gᵢ_in` sofort nach `T*`, die `S`-internen Kanten tragen **nichts** → 3. Δ = 6.
 

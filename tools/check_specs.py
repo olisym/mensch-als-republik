@@ -60,6 +60,30 @@ def check_escapes(text: str) -> list[str]:
     return problems
 
 
+def check_line_length(text: str) -> list[str]:
+    """Prosa höchstens 100 Zeichen; Tabellenzeilen und Codeblöcke ausgenommen (D222).
+
+    Gezählt wird mit ``len()`` über den dekodierten Text, nicht in Bytes.
+    Führende Leerzeichen und Blockzitat-Zeichen samt folgenden Leerzeichen
+    werden nur für die Klassifikation abgezogen.
+    """
+    problems: list[str] = []
+    in_code = False
+    for line_no, line in enumerate(text.splitlines(), 1):
+        body = line.lstrip(" \t")
+        while body.startswith(">"):
+            body = body[1:].lstrip(" \t")
+        if body.startswith("```"):
+            in_code = not in_code
+            continue
+        if in_code or body.startswith("|"):
+            continue
+        n = len(line)
+        if n > 100:
+            problems.append(f"Zeile {line_no} zu lang: {n} Zeichen")
+    return problems
+
+
 def check_control_chars(text: str) -> list[str]:
     """Ersetzungszeichen und unsichtbare Steuerzeichen aus fehlgeschlagenen Kopien."""
     problems = []
@@ -261,6 +285,7 @@ def main() -> int:
 
         problems += check_escapes(text)
         problems += check_control_chars(text)
+        problems += check_line_length(text)
         if name == "07-decisions.md":
             problems += check_decisions(text)
         if known:

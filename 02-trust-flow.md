@@ -554,7 +554,8 @@ Der *Mechanismus* ist festgelegt; die *Werte* sind Interpretation (A2):
   Vouch-Kanten** — also **knoten**-disjunkt, nicht kantendisjunkt. Zwei Pfade durch denselben
   Bürgen sind ein Bürge. Die Vouch-Kanten tragen `1` und nicht ∞: zwei knotendisjunkte Pfade
   teilen nie eine Kante, die Kappung ist daher verlustfrei — und ohne sie liefert der Solver bei
-  einer direkten Anker→Ziel-Kante keinen Pfadwert, sondern den ∞-Sentinel (D42). **Endpunkte werden nicht gespalten:** die internen Kanten der Anker
+  einer direkten Anker→Ziel-Kante keinen Pfadwert, sondern den ∞-Sentinel (D42).
+  **Endpunkte werden nicht gespalten:** die internen Kanten der Anker
   tragen ∞, die des Ziels liegt ohnehin nicht auf dem Pfad (§4). Sonst wäre die Zahl von
   einem einzelnen Anker aus trivial 1. Wirkung: eine Koalition, die über *einen*
   Bürgen eingesickert ist, hat Min-Cut 1 — egal wie viele Mitglieder sie hat. Das ist die

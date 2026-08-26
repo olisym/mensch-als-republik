@@ -391,7 +391,8 @@ ergibt sich, weil eine Verfassungsänderung sie ohnehin trägt (D150).
   `I == K_{n-1}` und dieselbe `h_prev` in `K_{n-1}`s eigener Kette ⇒ **Equivocation-Beweis nach
   Atom-Spec §4**, ohne neue Mechanik. Der Verifizierer sieht eine *umstrittene* Autorität und
   behandelt Nukleus-Akte beider konkurrierender Schlüssel als **unaufgelöst**, bis die
-  Governance-Rotation (§6.2) entscheidet **oder** das Mitglied per Exit/Fork ausweicht (Gov-Spec §6).
+  Governance-Rotation (§6.2) entscheidet **oder** das Mitglied per Exit/Fork ausweicht
+  (Gov-Spec §6).
 - Das ist genau der Grund für „Beides": ein **gestohlener** Schlüssel produziert einen zweiten
   Nachfolger → Equivocation → die Entscheidung fällt zwangsläufig an die Mitglieder, nicht an den
   Dieb.
@@ -531,7 +532,8 @@ radiale Prinzip bleibt intakt.
   intern erkennen. Bewusst akzeptiert; eine Multi-Party-Seed-Zeremonie ist Policy, kein v1-Core.
 - **`amendment_rule` in v1 unveränderlich** (Gov-Spec §5): Wer die Meta-Regel ändern will, **forkt**
   einen neuen Nukleus (neues `N`) und nimmt Mitglieder per Re-Akzeptanz mit. Verhindert
-  Governance-Capture der Änderungsregel selbst. Trade-off: weniger Flexibilität, keine Capture-Fläche.
+  Governance-Capture der Änderungsregel selbst. Trade-off: weniger Flexibilität, keine
+  Capture-Fläche.
 - **Governance-Rotation als Capture-Vektor.** Der Notfallpfad §6.2 könnte theoretisch von einer
   Mehrheit missbraucht werden, um einen legitimen Schlüsselhalter zu enteignen. Mitigation: hohe
   (`amendment`-)Schwelle + der Halter kann per Exit/Fork ausweichen (er behält seine *eigene*

@@ -45,7 +45,8 @@ byte-identisch bleibt. Ein Nukleus ohne deklariertes `participants` ist nicht au
 Teilwissen unter-bekannt; ein zu kleiner Nenner macht jede Schwelle leichter erreichbar, und das
 ist die Über-Ratifizierungsrichtung (D96).
 
-**`irrevocable_predicates` MUSS `vote@1` und `ratify@1` enthalten.** Ohne den ersten greifen Widerruf und
+**`irrevocable_predicates` MUSS `vote@1` und `ratify@1` enthalten.** Ohne den ersten greifen
+Widerruf und
 Supersede nach `01 §5.4` auch auf Stimmen, die Stimmenmenge schrumpft, und die Auszählung ist
 nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ohne den zweiten kann eine bereits
 etablierte Epoche wieder verschwinden, weil ihr einziger Beleg widerrufbar bleibt (D107). Ein
@@ -577,7 +578,8 @@ Auszählungen nach `§3` holt sie sich nicht selbst; sie erreichen den Aufrufer 
 sie an ein Ergebnis **ohne** Folgeepoche angehängt hat (D194, D203). Was in einer Auszählung
 vermerkt wurde, deren Übergang getragen hat, fällt damit weg — es beantwortet nicht, warum die
 Kette dort endet, wo sie endet. Diese Verwerfung leistet der Neuaufbau der Liste in jedem
-Schleifenschritt; sie ist keine Zeile, die man streichen könnte. Ist die Verfassung der erreichten Epoche unbekannt, bleibt
+Schleifenschritt; sie ist keine Zeile, die man streichen könnte. Ist die Verfassung der erreichten
+Epoche unbekannt, bleibt
 das Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
 
 **Das leere Feld ist nur an Epoche 1 erreichbar.** Die Verfassung von `i+1` ist zugleich das

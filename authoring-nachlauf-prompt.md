@@ -11,7 +11,8 @@ die Lücke, die dabei sichtbar wurde. Es ist derselbe Gegenstand.
 ## 2. Befund A — der Feldtest ist zirkulär
 
 `tests/test_atom.py` prüft heute `set(Claim.__dataclass_fields__)` gegen die im Test
-aufgeschriebene Menge `CLAIM_FIELDS`, und `test_build_signed_sets_every_field_when_all_optionals_given`
+aufgeschriebene Menge `CLAIM_FIELDS`, und
+`test_build_signed_sets_every_field_when_all_optionals_given`
 vergleicht gegen ein handaufgezähltes `expected`.
 
 Beide melden, dass `Claim` sich geändert hat. Keiner stellt sicher, dass `build_signed` ein

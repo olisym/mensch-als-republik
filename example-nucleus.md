@@ -236,7 +236,8 @@ Materialisiert wird sie durch ein `ratify@1` eines Mitglieds mit der Zeugenmenge
 Ja-Stimmen. Danach beginnt Epoche 2 mit `constitution_hash_2` und vier Mitgliedern. **DORA ist
 damit noch nicht Mitglied** — sie steht in `participants`, aber ohne ihre eigene `accept-rules` auf
 `6cbcd33f…` ist ihr Zustand `GRANT_ONLY` (D60). Eine Mehrheit kann niemandem eine Mitgliedschaft
-samt Pflichten zuschreiben, die er nicht eingegangen ist. Zwei Mitglieder dürfen unabhängig materialisieren; sie erzeugen denselben `epoch_id`,
+samt Pflichten zuschreiben, die er nicht eingegangen ist. Zwei Mitglieder dürfen unabhängig
+materialisieren; sie erzeugen denselben `epoch_id`,
 weil dessen Identität das Ergebnis hasht und nicht den Beleg (D99).
 
 ### 5.1 Der aufgelöste Zustand
@@ -325,7 +326,8 @@ prüft sie gegen die Objekt-Hashes oben — damit belegt derselbe Lauf, dass Dok
 Nach 1–3 sind alle drei `MEMBER`: in `participants` **und** mit aktiver `accept-rules` auf genau
 diesen Hash (D60, `04 §6.1`). Nach 8 ist DORA `GRANT_ONLY`, nach 9 `MEMBER` — aber gegen
 `constitution_hash_2`, nicht gegen den ersten. Die drei Gründer sind in Epoche 2 ihrerseits
-`GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand `GRANT_ONLY` oder
+`GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand
+`GRANT_ONLY` oder
 `APPLICANT` — nie `MEMBER`.
 
 **Die autorisierten Schlüssel sind BRUNO und ANNA.** Keine Verfassung dieses Nukleus nennt ein

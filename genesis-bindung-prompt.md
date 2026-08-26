@@ -20,7 +20,8 @@ unmittelbar nach `proposal.scope != epoch.scope`, dass
 `SHA-256(DOM_NUC_GEN ‖ cbor_canon.encode(genesis_obj)) == epoch.scope`. Bei Abweichung
 `ValueError`. Kein Vermerk, kein neuer `GovernanceFinding`, kein Eintrag in einer Befundtabelle.
 
-Die Prüfung steht **vor** jedem Zugriff auf ein Feld des Genesis. Heute sind das `genesis_obj.get(6)`,
+Die Prüfung steht **vor** jedem Zugriff auf ein Feld des Genesis. Heute sind das
+`genesis_obj.get(6)`,
 `genesis_obj.get(5)` und der Aufruf von `threshold_class`; die Reihenfolge dieser drei
 untereinander bleibt unverändert (D112).
 
