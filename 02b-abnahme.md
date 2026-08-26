@@ -112,7 +112,7 @@ Begründung immun (§C.1). Der offene Punkt wird dadurch dringlicher und bekommt
 
 ### B.4 §2 — Schnittstelle der geteilten Ableitung nachziehen
 
-`02b-golden-anchors.md §10.1` und der Prompt beschreiben die geteilte Funktion als
+`02b-golden-anchors.md §10` und der Prompt beschreiben die geteilte Funktion als
 `-> (d, edges, findings)`. Die Implementierung liefert `Derivation(bfs, findings)` und ist damit
 **besser**: `build_flow_graph()` und `infinity()` konsumieren bereits eine `BfsResult`, und
 `test_invariants.py` ruft `bfs_capacities()`/`infinity()` direkt damit auf. Die Tupelform hätte

@@ -10,7 +10,7 @@
 - `07-decisions.md`, **D141** — der Distanzkauf entfernt eine Decke, er trägt keinen Fluss.
 - `07-decisions.md`, **D139** — der Befund selbst, in den Zahlen durch D141 ersetzt.
 - `02-trust-flow.md §4`, Warnblock „Distanz ist kaufbar".
-- `02-trust-flow.md §2.7` / Anker K8 — `E⁺` ist die Menge der Kanten mit `cap ≥ 1`.
+- `02a-maxflow-prompt.md §2.7` / Anker K8 — `E⁺` ist die Menge der Kanten mit `cap ≥ 1`.
 
 ## Auftrag
 

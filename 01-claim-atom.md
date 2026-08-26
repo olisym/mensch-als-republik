@@ -646,7 +646,7 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 | `FOREIGN_LIFECYCLE` | `core/revoke`/`supersede` mit `ziel.I ≠ C.I` (§5.1) |
 | `BAD_SIGNATURE` | Ed25519-Verifikation schlägt fehl |
 | `INVALID_GENESIS_ANCHOR` | `h_prev == 32×0x00` (§4) |
-| `INCOHERENT_EXPIRY` | `t` und `t_exp` vorhanden und `t ≥ t_exp` (§6.7) |
+| `INCOHERENT_EXPIRY` | `t` und `t_exp` vorhanden und `t ≥ t_exp` |
 
 ### B.3 Nicht-Fehler (bewusst kein Reject)
 

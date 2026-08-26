@@ -143,18 +143,21 @@ LAYER_FILES = {
 }
 
 HEADING_NUM = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)", re.M)
-SECTION_REF = re.compile(r"(?<![A-Za-z0-9])(0[0-8][a-z]?) §(\d+(?:\.\d+)*)")
+SECTION_REF = re.compile(
+    r"(?<![A-Za-z0-9.-])([A-Za-z0-9-]+(?:\.md)?) §(\d+(?:\.\d+)*)"
+)
+SHORT_NAME = re.compile(r"0[0-8][a-z]?$")
 
 
 def layer_headings() -> dict[str, frozenset[str]]:
-    """Überschriftennummern der Ebene 2–4 je Layer-Datei (D209)."""
+    """Überschriftennummern der Ebene 2–4 je Layer-Datei und je Wurzel-Stamm (D209, D221)."""
     result: dict[str, frozenset[str]] = {}
-    for prefix, name in LAYER_FILES.items():
+    for name in SPECS:
         text = read(ROOT / name)
-        if text is None:
-            result[prefix] = frozenset()
-            continue
-        result[prefix] = frozenset(HEADING_NUM.findall(text))
+        nums = frozenset() if text is None else frozenset(HEADING_NUM.findall(text))
+        result[name.removesuffix(".md")] = nums
+    for prefix, name in LAYER_FILES.items():
+        result[prefix] = result[name.removesuffix(".md")]
     return result
 
 
@@ -168,19 +171,29 @@ def heading_covers(wanted: str, headings: frozenset[str]) -> bool:
 
 def check_section_refs(
     text: str, headings: dict[str, frozenset[str]]
-) -> list[str]:
-    """Verweise ``NN §X.Y`` und ``NNx §X.Y`` gegen die Layer-Datei (D209, D219).
+) -> tuple[int, list[str]]:
+    """Verweise mit Kurzform oder Dateiname gegen die Zieldatei (D209, D219, D221).
 
-    Ein Präfix ohne Tabelleneintrag ist ein eigener Befund, kein stilles
-    Überspringen und kein ``KeyError`` (D219).
+    Drei Klassen (D221): Kurzform über ``LAYER_FILES``, Dateiname über den
+    Stamm einer Wurzel-``.md``-Datei, sonst übergangen. Ein Kurzform-Name
+    ohne Tabelleneintrag ist ein Befund (D219). Ein fehlender Dateistamm
+    ist keiner. Rückgabe: Zahl der aufgelösten Verweise, Befunde.
     """
     unknown_names: dict[str, int] = {}
     counts: dict[str, int] = {}
-    for prefix, section in SECTION_REF.findall(text):
-        if prefix not in headings:
-            unknown_names[prefix] = unknown_names.get(prefix, 0) + 1
-            continue
-        ref = f"{prefix} §{section}"
+    n_resolved = 0
+    for name, section in SECTION_REF.findall(text):
+        if SHORT_NAME.fullmatch(name):
+            if name not in headings:
+                unknown_names[name] = unknown_names.get(name, 0) + 1
+                n_resolved += 1
+                continue
+        else:
+            stem = name.removesuffix(".md")
+            if f"{stem}.md" not in SPECS:
+                continue
+        n_resolved += 1
+        ref = f"{name} §{section}"
         counts[ref] = counts.get(ref, 0) + 1
     problems: list[str] = []
     for name in sorted(unknown_names):
@@ -189,11 +202,12 @@ def check_section_refs(
         )
     for ref in sorted(counts):
         prefix, section = ref.split(" §", 1)
-        if not heading_covers(section, headings[prefix]):
+        key = prefix.removesuffix(".md")
+        if not heading_covers(section, headings[key]):
             problems.append(
                 f"verweist auf unbekannten Abschnitt: {ref} ({counts[ref]}x)"
             )
-    return problems
+    return n_resolved, problems
 
 
 def python_sources() -> list[Path]:
@@ -204,9 +218,9 @@ def python_sources() -> list[Path]:
 def check_python_section_refs(
     headings: dict[str, frozenset[str]],
 ) -> tuple[int, int, list[tuple[str, list[str]]]]:
-    """``check_section_refs`` über alle Python-Dateien (D215).
+    """``check_section_refs`` über alle Python-Dateien (D215, D221).
 
-    Rückgabe: Dateizahl, Verweiszahl, Befunde je Relativpfad.
+    Rückgabe: Dateizahl, Zahl der aufgelösten Verweise, Befunde je Relativpfad.
     """
     files = python_sources()
     n_refs = 0
@@ -216,8 +230,8 @@ def check_python_section_refs(
         if text is None:
             findings.append((str(path.relative_to(ROOT)), ["UTF-8 defekt"]))
             continue
-        n_refs += len(SECTION_REF.findall(text))
-        problems = check_section_refs(text, headings)
+        n_resolved, problems = check_section_refs(text, headings)
+        n_refs += n_resolved
         if problems:
             findings.append((str(path.relative_to(ROOT)), problems))
     return len(files), n_refs, findings
@@ -253,7 +267,8 @@ def main() -> int:
             problems += check_references(text, known)
         excepted = name == "07-decisions.md" or name.startswith("sitzungsstart-")
         if not excepted:
-            problems += check_section_refs(text, headings)
+            _, section_problems = check_section_refs(text, headings)
+            problems += section_problems
 
         if problems:
             print(f"FEHLER {name}")

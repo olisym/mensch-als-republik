@@ -19,7 +19,7 @@ Der Vergleichspunkt der Abnahme ist dieser Commit, nicht der Branchpunkt der Spe
   **lebende Mitglieder** formuliert, nicht über den ersten Claim einer Gruppe.
 - `07-decisions.md` D135 — `EQUIVOCATION_FLAGGED` gehört ins Budget-Set.
 - `07-decisions.md` D136 — Umlenkungstabelle für Verweise auf gelöschte Prompt-Dateien.
-- `01-claim-atom.md §6.7` — `INCOHERENT_EXPIRY` gdw. `t` und `t_exp` vorhanden und `t >= t_exp`.
+- `01-claim-atom.md` Anhang B.2 — `INCOHERENT_EXPIRY` gdw. `t` und `t_exp` vorhanden und `t >= t_exp`.
 - `01-claim-atom.md §6` — zeitlich gültig gdw. `now <= t_exp`.
 - `02 §3.1` — `n_budget = max n` über die Mitglieder einer Gruppe, `Σ_J n_budget <= D` über die
   Gruppen. Maximum innerhalb, Summe darüber.
