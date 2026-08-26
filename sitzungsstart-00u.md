@@ -71,8 +71,9 @@ Was in dieser Sitzung am meisten getragen hat:
 - **Der eigene Baum ist die stärkste Messung** — aber nur, wenn er auf dem Commit steht, über den
   geredet wird. Wächst `main` während der Sitzung, wächst die Kopie nicht mit. Die Kopie nach
   jedem Merge nachziehen, auch bei Code, den das Werkzeug geschrieben hat.
-- **Die Kopie wird am Sitzungsende erzeugt, nicht am Anfang.** Nach dem letzten Push ein
-  repomix-Lauf mit `--header-text`, der Commit, Testzahl, Registerstand und Prüfregelzahl trägt.
+- **Die Kopie wird nach jedem Push nachgezogen** (D224, Prüfregel 43). Ziel ist `/tmp`, der
+  `--header-text` trägt Commit, Testzahl, Registerstand, Prüfregelzahl und Branchzahl, und eine
+  Zeile zählt gepackte gegen versionierte Dateien. Der Baustein hängt hinter jedem `git push`.
   Der Lauf gehört hinter einen Abgleich von `HEAD` gegen `origin/main` — eine Kopie von einem
   ungepushten Stand kann niemand nachprüfen. Die erzeugte Datei bleibt aus dem Repository: eine
   committete Ableitung ist der nächste stille Drift-Kandidat (D218).
@@ -182,8 +183,9 @@ Frage 2 entscheidet, entscheidet sie mit.
 - **Die Sitzungsstart-Datei ist ein monolithisches Rewrite** (D218). Vorgeschlagen ist eine
   eigene, nur per Splice editierte Datei für die offene Liste. Nicht entschieden.
 - **Es gibt keine Kontextdatei für das Werkzeug** (D218). Fork mit benanntem Gegenargument.
-- **Die Projektkopie hat kein erzwungenes Nachziehverfahren** (D218). Das Verfahren steht oben
-  unter „Messen"; nichts prüft, ob es eingehalten wurde.
+- **Das Register ist 22,2 Prozent der Projektkopie** (D224). 140336 von 631113 Tokens, wachsend.
+  Eine Teilung nach Ären ist nicht aufgemacht; sie müsste zuerst gegen
+  `tools/register_index.py` gemessen werden.
 - **Frage 2 der Zitiergrammatik ist offen** (D220, D221). Frage 1 ist mit D221 entschieden
   und mit `00v` gebaut. Zahlen oben.
 - **73 von 260 Paragraphenverweisen in Python sind ungeprüft** (D221). Geprüft werden 187.

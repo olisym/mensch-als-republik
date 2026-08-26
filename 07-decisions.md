@@ -8057,3 +8057,51 @@ berichtigt worden.
 **Daraus Prüfregel 42.** Der erste Anlauf der Berichtigung an D222 ersetzte einen Teilstring und
 prüfte die Zeilenlänge am **eingesetzten Text**. Der war unter 100 Zeichen; die Zeile, die im
 Ergebnis daraus entstand, hatte 149. Ein Assert über den Einsatz sagt nichts über die Datei.
+
+### D224 — Die Projektkopie wird nach jedem Push nachgezogen (D218, Fork 3)
+
+**Anlass.** D218 hat als dritten Fork benannt, dass es für die Projektkopie kein erzwungenes
+Nachziehverfahren gibt. Diese Sitzung hat den Preis vorgeführt: über vier Merges hinweg hat der
+Supervisor auf einer Kopie gerechnet, in der `tools/check_specs.py` nicht die Fassung des
+Werkzeugs trug, sondern seine eigene Rekonstruktion des gemeldeten Diffs. Die Zahlen stimmten
+trotzdem — das war kein Beleg, sondern Glück.
+
+**Entscheidung.** Nach **jedem** Push, nicht nach jeder Sitzung, läuft repomix. Drei Teile:
+
+1. **Ziel `/tmp`**, nicht das Arbeitsverzeichnis. Die alte Ablage in der Wurzel hat in dieser
+   Sitzung eine unversionierte Datei im Baum hinterlassen, die in der Kaltmessung als offener
+   Posten auftauchte und erst nachträglich erklärt werden konnte.
+2. **Der Kopf trägt fünf Kaltzahlen** — Commit, Testzahl, Registerstand, Prüfregelzahl,
+   Branchzahl. Damit kann die nächste Sitzung ihren ersten Griff gegen den Kopf machen statt
+   gegen eine Erinnerung.
+3. **Ein Wächter zählt gegen.** Gepackte Dateien gegen versionierte. Der Security-Check von
+   repomix kann Dateien stillschweigend auslassen, und dieses Repo führt Hex-Vektoren und
+   Byte-Testfälle. Im ersten Lauf: 219 gepackt, 218 versioniert — ein Überschuss durch eine
+   unversionierte lokale Datei, also die harmlose Richtung.
+
+**Verworfen: Lesezugriff des Supervisors auf das Repository**, etwa über einen GitHub-Spiegel.
+Er bräuchte ein Credential, das zwischen Sitzungen nicht gehalten werden kann und sonst je
+Sitzung in den Chat getippt würde. Er schüfe eine zweite Wahrheitsquelle neben Gitea, während die
+dauerhafte Anweisung genau eine kennt. Und das Repository verliesse das LAN. Der Gewinn gegenüber
+dem Nachziehen je Push ist ein gesparter Handgriff des Operators.
+
+**Verworfen: `--compress`.** Streicht Funktionsrümpfe und lässt Signaturen stehen. Das ist genau
+der Modulcode, der vor jedem Prompt gelesen wird.
+
+**Verworfen: `--remove-comments`.** In diesem Repo tragen die Docstrings die
+Paragraphenverweise. Die Option löschte den Gegenstand von D215, D219 und D221.
+
+**Verworfen: `--remove-empty-lines` und `--output-show-line-numbers`.** Die erste verschiebt jede
+Zeilennummer; `00v` und `00w` haben Zeilennummern in den Prompt geschrieben. Die zweite stellt
+jeder Zeile eine Nummer voran und zerstört damit die Extraktion aus der Kopie.
+
+**Verworfen: `--no-file-summary`.** Der `--header-text` wird nach der Doku innerhalb dieses
+Abschnitts gerendert; ohne ihn fiele der Hash weg, der den Zweck trägt. Die Annahme ist beim
+ersten Lauf nicht widerlegt worden.
+
+**Gemessen und benannt: das Register wird gross.** Die Kopie umfasst 219 Dateien und 631113
+Tokens. `07-decisions.md` allein trägt davon 140336, also 22,2 Prozent, und wächst mit jedem
+Eintrag. Kein Handlungsbedarf heute; ein offener Punkt ab heute. Wer ihn aufmacht, misst zuerst,
+ob eine Teilung nach Ären den Index aus `tools/register_index.py` trägt oder bricht.
+
+**Daraus Prüfregel 43.**
