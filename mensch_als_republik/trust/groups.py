@@ -86,7 +86,7 @@ def build_groups(
     D: int,
     now: int,
 ) -> tuple[dict[tuple[bytes, bytes], Group], tuple[Finding, ...]]:
-    """Vouch-Claims des Scopes sammeln, v dekodieren, zu Gruppen aggregieren (§2.10 Schritte 2-3)."""
+    """Vouch-Claims des Scopes sammeln, v dekodieren, zu Gruppen aggregieren (02a §2.10 Schritte 2-3)."""
     findings: list[Finding] = []
     members: dict[tuple[bytes, bytes], list[tuple[bytes, int, State]]] = {}
 

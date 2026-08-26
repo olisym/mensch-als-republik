@@ -1,7 +1,7 @@
 """PageRank-Relaxation — die schnelle Sicht von Schicht 02 (02 §5, D45-D53).
 
 Kapazitaetsvergessende Relaxation, **keine** Schranke. Fuer harte Gate-Entscheidungen
-verboten (§9). Eigene Oberflaeche (D52): eigenes Modul, eigener Rueckgabetyp -- nicht
+verboten (02 §9). Eigene Oberflaeche (D52): eigenes Modul, eigener Rueckgabetyp -- nicht
 `trust`, nicht `TrustResult`, kein zusaetzliches Feld an `TrustResult`. Das ist die einzige
 mechanische Durchsetzung der Trennlinie, die es gibt.
 """
@@ -29,7 +29,7 @@ class RelaxParams:
     Gleichheit.
     """
 
-    base: TrustParams  # C0, gamma_num, gamma_den, D -- geteilt mit §4
+    base: TrustParams  # C0, gamma_num, gamma_den, D -- geteilt mit 02 §4
     alpha_num: int  # a
     alpha_den: int  # b
     rounds: int  # K
@@ -73,7 +73,7 @@ def rank(
         raise ValueError("anchors must not be empty")
 
     # geteilte Ableitung (D49): dieselbe Ableitungsstufe wie trust() (derive.py), aber ohne
-    # Knoten-Split -- §5 hat keine Knotenkapazitaeten (K13). C(x) ist bereits als E+-Filter
+    # Knoten-Split -- 02 §5 hat keine Knotenkapazitaeten (K13). C(x) ist bereits als E+-Filter
     # eingegangen (cap >= 1 in derivation.bfs.edges); n_kante ist das rohe Gruppengewicht,
     # nicht cap -- C(x) geht hier nie als Faktor ein (D49).
     derivation = derive(
@@ -88,7 +88,7 @@ def rank(
     K = params.rounds
     bD = b * D
 
-    # Knotenmenge des Ergebnisses: A vereinigt mit allen Endpunkten von E+ (§3). Wer nicht
+    # Knotenmenge des Ergebnisses: A vereinigt mit allen Endpunkten von E+ (02 §3). Wer nicht
     # darin liegt, erscheint gar nicht -- nicht als 0 (PR-INV-7).
     nodes: set[bytes] = set(anchors)
     incoming: dict[bytes, list[tuple[bytes, int]]] = {}

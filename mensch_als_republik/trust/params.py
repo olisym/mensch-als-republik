@@ -11,7 +11,7 @@ from mensch_als_republik.domains import DOM_NUC_GEN
 
 @dataclass(frozen=True, slots=True)
 class TrustParams:
-    """γ = gamma_num/gamma_den, C(d) = ⌊C0 · γ^d⌋ (einmal am Ende gerundet, §2.2)."""
+    """γ = gamma_num/gamma_den, C(d) = ⌊C0 · γ^d⌋ (einmal am Ende gerundet, 02a §2.2)."""
 
     C0: int
     gamma_num: int
