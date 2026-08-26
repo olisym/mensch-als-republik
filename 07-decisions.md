@@ -8017,6 +8017,7 @@ stärkste vorliegende Argument dafür, dass sie trägt.
 gesetzt statt gemessen, und der Bestand führt 22 Zeilen über 200.
 
 **Erwartung an den Lauf.** Unter dieser Regel meldet eine Prüfung heute **21** Befunde in
-**13** Dateien. Sie werden im selben Lauf umbrochen, sonst landet die Prüfung rot. Danach ist der
-offene Punkt geschlossen und die Splices müssen die Grenze nicht mehr einzeln assertieren — sie
-dürfen es weiter tun, ein zweiter Wächter schadet nicht.
+**11** Dateien; die Zahl 13 im ursprünglichen Eintrag war von Hand gezählt und falsch. Sie
+werden im selben Lauf umbrochen, sonst landet die Prüfung rot. Danach ist der offene Punkt
+geschlossen und die Splices müssen die Grenze nicht mehr einzeln assertieren — sie dürfen es
+weiter tun, ein zweiter Wächter schadet nicht.
