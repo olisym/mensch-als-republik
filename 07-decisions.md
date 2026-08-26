@@ -7964,3 +7964,59 @@ schon sagt. Er wird gestrichen statt umgehängt.
 **Erwartung an den Lauf.** Die Python-Zeile geht von 75 auf **187** Verweise, insgesamt werden
 **545** geprüft. Vor den vier Korrekturen meldet die Prüfung **genau drei** Befunde, danach
 keinen. Übrig bleiben **73** bare Verweise in `.py`; das ist Frage 2 und nicht Gegenstand.
+
+### D222 — Die 100-Zeichen-Grenze gilt für Prosa, nicht für Tabellenzeilen
+
+**Anlass.** Die Grenze stand nie in einer Entscheidung. Sie wurde geübt, und sie hielt nur, weil
+jeder Splice sie selbst assertete. Damit war sie weder prüfbar noch begründet — die schlechteste
+Form von Normativität, und genau die, gegen die dieses Register steht. Für Python ist dieselbe
+Frage mit D205 verneint worden; für Markdown war sie offen.
+
+**Messung auf `0137a86`.** 27194 Zeilen in den `.md`-Dateien des Wurzelverzeichnisses, davon 268
+über 100 Zeichen — 1,0 Prozent. Aufgeschlüsselt nach Art der Zeile:
+
+| Art | über 100 |
+|---|---|
+| Tabellenzeile, auch im Blockzitat | 244 |
+| Prosa | 21 |
+| Zeile im Codeblock | 3 |
+
+**Die Messung teilt die Frage in zwei Antworten.**
+
+Für **Prosa** ist die Grenze keine Setzung, sondern eine Beschreibung. 21 Ausreisser auf 27194
+Zeilen heisst: der Bestand hält sie zu 99,9 Prozent, ohne dass sie je geprüft wurde. Die meisten
+liegen bei 101 bis 108 Zeichen und sind Umbrüche, keine Entscheidungen. Vier sind Altbestand —
+522, 148, 143 und 131 Zeichen, unumbrochene Absätze.
+
+Für **Tabellenzeilen** ist sie unerfüllbar. Eine Markdown-Tabellenzeile lässt sich nicht
+umbrechen; die Grenze ist dort keine Formatierung, sondern eine Obergrenze für Spalteninhalt. 244
+Verletzungen sind kein schlampiger Bestand, sondern das Format. Und sie hat in derselben Sitzung
+Inhalt gekostet: die Tabelle in D219 musste gekürzt werden, eine Spalte ist der Grenze zum Opfer
+gefallen und nicht einer Überlegung.
+
+**Entscheidung.** Für `.md`-Dateien im Wurzelverzeichnis gilt: **Prosa höchstens 100 Zeichen**,
+gezählt als Zeichen und nicht als Bytes. **Ausgenommen sind Tabellenzeilen** — auch die im
+Blockzitat — **und Zeilen innerhalb eines Codeblocks**. Für Python gilt weiterhin keine Grenze
+(D205).
+
+**`07-decisions.md` und `sitzungsstart-*.md` werden mitgeprüft.** Sie sind von der Verweisprüfung
+ausgenommen, weil sie vergangene Stände beschreiben und ein Zeiger dort eine historische Aussage
+ist. Zeilenlänge ist keine Aussage über Inhalt. Der Preis ist eine Zeile im Register mit 522
+Zeichen.
+
+**Verworfen: semantische Umbrüche**, ein Satz je Zeile ohne Grenze. Für Diffs wäre das besser —
+eine geänderte Formulierung bricht dann nicht den halben Absatz um. Der Bestand ist aber auf
+27194 Zeilen hart umbrochen; die Umstellung wäre eine Migration ohne gemessenen Gewinn und machte
+jeden älteren Diff unlesbar. Wer sie wieder aufmacht, braucht eine Messung, die diesen Preis
+schlägt.
+
+**Verworfen: die Grenze streichen.** Dass die Prosa sie ungeprüft zu 99,9 Prozent hält, ist das
+stärkste vorliegende Argument dafür, dass sie trägt.
+
+**Verworfen: Tabellenzeilen mit einer höheren Grenze führen**, etwa 140. Jede Zahl dort wäre
+gesetzt statt gemessen, und der Bestand führt 22 Zeilen über 200.
+
+**Erwartung an den Lauf.** Unter dieser Regel meldet eine Prüfung heute **21** Befunde in
+**13** Dateien. Sie werden im selben Lauf umbrochen, sonst landet die Prüfung rot. Danach ist der
+offene Punkt geschlossen und die Splices müssen die Grenze nicht mehr einzeln assertieren — sie
+dürfen es weiter tun, ein zweiter Wächter schadet nicht.
