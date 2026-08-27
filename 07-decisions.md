@@ -8774,3 +8774,81 @@ Frage nach vorhandenen Bauformen, nicht nach einer Erfindung, und sie bekommt ei
 **Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei. Die Streichung in `04 §7.2`, die Grenze in
 `04 §8` und die Betriebswarnung in `example-nucleus.md §8.1` sind ein eigener, dann gebündelter
 Lauf.
+
+---
+
+### D236 — Kein Ausschlussmechanismus; Exit ist die Antwort (D234, D235)
+
+**Die Frage.** D235 hat festgestellt, dass ein kompromittierter Eintrag in `participants` seine
+eigene Entfernung endgültig blockiert und dass dieser Zustand nicht gewollt, sondern unbemerkt
+war. Offen blieb, was an die Stelle tritt. Recherchiert wurde die Frage: wie entfernen Systeme
+ohne Zentrale, ohne Gericht und ohne Konsens einen feindlichen Träger einer Autoritätsliste, und
+was kostet es.
+
+**Der Stand außerhalb**, nach dem Muster von D124:
+
+| System | Bauform der Entfernung | Preis |
+|---|---|---|
+| BFT-SMaRt | signierter Reconfiguration-Request durch die Totalordnung; der Betroffene stimmt nicht mit | Konsens, Totalordnung, ein Admin-Schlüssel über den Knoten |
+| Kuznetsov/Tonkikh, arXiv 2005.13499 | konsensfreie Reconfiguration über Lattice Agreement | forward-sichere Schlüssel, die vernichtet werden — Zeitbegriff und Monotoniebruch |
+| MLS, RFC 9420 | Remove-Proposal, das ein anderes Mitglied ausführt | wer entfernen darf, ist Anwendungspolicy; das Protokoll regelt es nicht |
+| SPKI/SDSI, RFC 2693 | Threshold-Subject: K von N zeichnen gemeinsam | löst nichts — der Feindliche zeichnet einfach nicht mit |
+| Stellar/SCP | jeder streicht ihn aus seinen eigenen Quorum-Slices | keine kollektive Wirkung, die Entfernung ist rein lokal |
+| Mastodon | einseitiger Instanz-Block durch jeden Betreiber | dasselbe: lokal, kein Beschluss, kein gemeinsamer Zustand |
+| Steem zu Hive, 2020 | die Übrigen gründen neu und lassen ihn zurück | Netzwerkspaltung, Verlust von Kontinuität und Marke |
+| Gesellschaftsrecht, § 47 Abs. 4 GmbHG | Stimmverbot des Betroffenen bei eigener Sache | die Missbrauchskontrolle liegt bei einem Gericht |
+
+**Was davon geprüft ist.** Selbst gelesen wurden RFC 2693, RFC 9420, RFC 9750 sowie die Arbeiten
+arXiv 2005.13499, arXiv 2304.02156 und arXiv 1510.04629. Die übrigen Zeilen stammen aus einem
+Recherchebericht und sind nicht am Primärtext nachgeprüft. Sie stützen die Entscheidung, sie
+tragen sie nicht allein; die tragende Aussage steht in den geprüften Quellen.
+
+**Das negative Ergebnis, und es ist der Kern.** Keine Bauform wahrt zugleich Konsensfreiheit,
+Uhrenlosigkeit, Monotonie und Instanzlosigkeit **und** entfernt einen Eintrag verbindlich gegen
+seinen Willen. Wer verbindlich entfernt, braucht Konsens, eine Frist oder eine Instanz. Wer alle
+vier Bedingungen wahrt, entfernt nur lokal oder gar nicht. Das ist keine Lücke der Recherche,
+sondern folgt aus der Bauform: ein monotoner, uhrenloser Beschluss, dessen Nenner stets `|P|` ist
+und in dem Nichtteilnahme wie Ablehnung wirkt (`04 §3.2`), kann eine Sperrminorität nicht gegen
+ihren Willen auflösen, ohne entweder den Nenner zu verändern oder den Kontext zu verlassen.
+
+**Berichtigung eines vorgeschlagenen Auswegs.** Der Bericht empfahl einen Nachfolge-Mechanismus:
+ein Verfassungsobjekt deklariert einen Nachfolger, der den Feindlichen nicht übernimmt, statt ihn
+zu entfernen. Das umgeht die Blockade **nicht**, solange der Nachfolgebeschluss derselben
+Auszählung unterliegt — der Feindliche stimmt auch dagegen, mit denselben Zahlen. Strukturell
+umgangen wird sie nur, wenn der neue Kontext **ohne jeden Beschluss** entsteht.
+
+**Beschluss.** Es wird kein Ausschlussmechanismus gebaut.
+
+1. **Kein Stimmverbot bei Betroffenheit**, weder generell noch an eine Schlichtung gebunden. Es
+   kippt den Minderheitenschutz genau dort, wo er am nötigsten ist: bei zwölf Mitgliedern und
+   Schwelle 2/3 verlangt ein Ausschluss heute neun Ja-Stimmen, bei Stimmverbot von vier
+   Betroffenen nur noch sechs. Eine knappe Mehrheit könnte sich zur Supermajorität machen, indem
+   sie genug Gegner in einen Vorschlag aufnimmt.
+2. **Keine Schlichtung als „wichtiger Grund".** Der Ausweg ist zirkulär:
+   `arbitration.arbitrators` ist dieselbe Bauform wie `participants` und trägt dasselbe
+   Bearer-Problem. Ein kompromittierter Schiedsrichter ist ebenso wenig zu entfernen. D166
+   verlangt zudem, die Frage für `root_keys`, `nucleus_keys` und `arbitration.arbitrators`
+   zugleich zu beantworten oder gar nicht; ein Sonderweg für eine der drei Listen fällt damit aus.
+3. **Exit ist die Antwort, und sie steht bereits.** Ein Genesis ist von jedem gründbar und
+   braucht niemandes Zustimmung — das ist der einzige Vorgang in MaR, der ohne Auszählung
+   auskommt, und deshalb der einzige, den eine Sperrminorität nicht erreicht. Der Preis ist
+   ebenfalls schon geschrieben: Vertrauen aus einem Scope fließt nicht in einen anderen
+   (`02 §2`), und die neue Lage beginnt bei null (`example-nucleus.md §6`).
+4. **Die Selbstblockade wird als getragene Grenze benannt**, mit den Zahlen aus D235, in `04 §8`.
+   Ein Zustand, den man kennt und ausspricht, ist etwas anderes als einer, den man übersieht.
+
+**Warum das keine Kapitulation ist.** Die Entscheidung ist dieselbe, die `08 §2.2` für das ganze
+Protokoll trifft: Widersprüche werden unbestreitbar, nicht unmöglich. Ein feindlicher Eintrag
+wird nicht ausgeschlossen, sondern sichtbar — und die Übrigen entscheiden selbst, ob sie mit ihm
+weitermachen. Das ist genau die Lage, in der Menschen sich ohnehin befinden, wenn keine Instanz
+über ihnen steht. Eine Protokollmechanik, die etwas anderes verspricht, müsste eine der vier
+Bedingungen aufgeben, und jede dieser Aufgaben ist teurer als die Blockade.
+
+**Verworfen, mit Grund.** Der forward-sichere Weg aus arXiv 2005.13499 wäre der einzige
+konsensfreie Mechanismus mit verbindlicher Wirkung; er scheitert daran, dass die Vernichtung
+alter Schlüssel ein Zeitbegriff ist und ein Claim damit ungültig würde — beides gibt es in MaR
+nicht. Der Weg über eine Instanz mit Vetorecht scheitert an `04 §8`: innerhalb eines Nukleus gibt
+es keine Instanz über den Überstimmten, und das ist eine tragende Entscheidung, keine Lücke.
+
+**Kein Lauf.** Der Spec-Anschluss — Streichung in `04 §7.2`, Grenze in `04 §8`, Betriebswarnung
+in `example-nucleus.md §8.1` — ist ein eigener, gebündelter Lauf.
