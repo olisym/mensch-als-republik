@@ -8676,3 +8676,101 @@ ist die erste Gabel; sie ist nicht gerechnet und darf hier nicht als entschieden
 
 **Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei. Er hält fest, was gemessen ist, damit die
 Entscheidung eine Grundlage hat und nicht wieder bei „nie durchgerechnet" beginnt.
+
+---
+
+### D235 — Die Autoritätsliste ist ein Bearer-Recht: drei Fälle, zwei entschieden (D234)
+
+**Die gemeinsame Ursache.** MaR hat mit `resolve_current_key` eine Indirektion gebaut und benutzt
+sie an genau einer der fünf Stellen, die `00 §7` unter dieselbe Regel stellt (D234). Überall sonst
+bindet Autorität unmittelbar an Schlüsselbytes: `participants`, `arbitration.arbitrators`,
+`nucleus_keys`. Das ist mit D124 und `03 §2.4` konsistent, macht aber jede Autoritätsliste zu
+einem Bearer-Recht — wer die Bytes hält, hat die Befugnis, und entziehen kann sie ihm nur eine
+Auszählung, an der er selbst teilnimmt. Die Föderation ist bloß der Ort, an dem das zuerst weh
+tut, weil dort die Mitglieder selbst rotierende Entitäten sind.
+
+**Der Stand außerhalb.** RFC 2693 (SPKI/SDSI) kennt für ein Subject drei Formen: einen Schlüssel,
+einen Namen mit Auflösung über ein name cert, oder ein Threshold-Subject. `04 §7.2` mischt die
+erste und die zweite in einem Satz. Das SAFE-System (arXiv 1510.04629) nennt die übliche Antwort:
+Prinzipale handeln über Sub-Prinzipale, denen sie eine Delegation ausstellen, damit der
+Hauptschlüssel offline bleiben und rotieren kann, ohne die Delegation zu berühren.
+
+**Fall A entschieden: der Föderationseintrag ist ein eigener Schlüssel.** `participants` einer
+Föderationsverfassung benennt **nicht** den aktuellen Nukleus-Schlüssel des Kindes, sondern den
+Schlüssel, mit dem dieses Kind in dieser Föderation spricht. Er ist von der Rotation im
+Kind-Scope entkoppelt, weil er mit ihr nichts zu tun hat. Damit fällt in `04 §7.2` das Wort
+„aktuellen", und der gerechnete Einfrierfall verschwindet: eine Rotation im Kind-Scope berührt
+die Föderation nicht mehr.
+
+Begründung, in dieser Reihenfolge. Erstens ist es die Form, die schon dasteht — dieselbe wie bei
+`arbitration.arbitrators` nach `03 §2.4`, das ausdrücklich byte-weise vergleicht und keine
+Schlüsselauflösung vornimmt. Zweitens verlangt die Alternative eine Auflösung in der
+Stimmbedingung, und der aufgelöste Kopf kann nach D154 unter Wissenszuwachs zurückspringen; die
+Stimmberechtigung wäre dann nicht mehr monoton, woran D96, D101 und D102 hängen. Drittens sagt
+`00 §7` selbst, dass `akt.N` zum aufgelösten Scope passen muss — für eine Stimme im
+Föderations-Scope ist das `N_fed`, und `resolve_current_key(N_fed)` liefert die Schlüssel der
+Föderation, nicht die des stimmenden Kindes. Der Weg zeigt strukturell auf den falschen Scope.
+
+**Folge für `00 §7`:** die Föderationsstimme gehört nicht in die Aufzählung der Nukleus-Akte. Sie
+ist der einzige dort genannte Akt in einem **fremden** Scope. Die Streichung ist ein eigener Lauf.
+
+**Fall B getragen, nicht behoben: der alte Schlüssel bleibt stimmfähig.** `04 §3.1` prüft an
+`vote.I` die Mengenzugehörigkeit zu `P` und den Claim-Zustand, nichts über die Lebendigkeit des
+Schlüssels; der `rotate-key@1`-Claim des Kindes trägt `N_kind` und ist im Föderations-Scope nach
+`02 §2` unsichtbar. Wer einen abgelösten Eintragsschlüssel behält, stimmt weiter.
+
+Der Fall hat außerhalb einen Namen: „I still work here", beschrieben in der Arbeit zur
+asynchronen Reconfiguration unter byzantinischen Fehlern (arXiv 2005.13499). Die dortige
+Gegenmaßnahme sind forward-sichere Signaturen mit einem Quorum, das seine alten Schlüssel
+vernichtet. Entscheidend ist die Grenze, die dieselbe Arbeit zieht: sicherzustellen, dass **alle**
+veralteten Konfigurationen ihre Schlüssel löschen, verlangt Konsens. MaR ist nach `08 §2.3`
+konsensfrei. B ist damit in diesem Protokoll nicht schließbar — dieselbe Beweisfigur wie in D124,
+wo identitätserhaltende Rotation aus genau diesem Grund verworfen wurde.
+
+**Beschluss zu B:** eine getragene Grenze in `04 §8`, mit dem Unmöglichkeitsgrund. Der praktische
+Satz dazu gehört in `example-nucleus.md §8.1`: ein Eintragsschlüssel ist so lange gültig, wie
+seine Bytes in der Liste stehen, und die einzige Entwertung ist die Änderung der Liste.
+
+**Fall C festgestellt: die Abweichung ist nicht gewollt.** Ein kompromittierter `participants`-
+Eintrag blockiert seine eigene Entfernung. Nach `04 §3.2` ist der Nenner `|P|` einschließlich des
+Betroffenen, Nichtteilnahme wirkt wie Ablehnung, und „gescheitert" ist einmal wahr für immer wahr.
+Gemessen, kleinstes `m`, das die eigene Entfernung endgültig scheitern lässt:
+
+| `n` | 1/2 | 2/3 | 3/4 |
+|---:|---:|---:|---:|
+| 3 | 2 | 1 | 1 |
+| 4 | 2 | 2 | 1 |
+| 7 | 4 | 3 | 2 |
+| 12 | 6 | 4 | 3 |
+
+Je strenger die Schwelle, desto leichter die Blockade. Das ist **kein** Föderationsproblem,
+sondern eine Eigenschaft jeder Auszählung in jedem Nukleus.
+
+Der Stand der Technik trennt an dieser Stelle das Entfernungsrecht vom Stimmrecht. In MLS
+(RFC 9420) ist die Entfernung ein Vorschlag, den ein anderes Mitglied ausführt, und wer entfernen
+darf, ist Policy und keine Abstimmung. MaR geht diesen Weg nicht. **Festgestellt wird: das ist
+nicht gewollt, sondern unbemerkt.** Gewollt hieße in diesem Projekt ein Registereintrag mit
+benannter Begründung; über D1 bis D234 gibt es keinen. `04 §8` führt die verwandte Grenze — eine
+hohe Schwelle bei lauer Beteiligung macht die Verfassung faktisch unveränderlich —, aber nicht die
+aktive Selbstblockade. D116 und `§6.3` entkoppeln die Stimmberechtigung ausdrücklich von der
+Mitgliedschaft und begründen das gegen eine **andere** Blockade; dass damit kein zweiter Hebel
+mehr existiert, einen Eintrag zu entwerten, ist dort nicht gesehen worden.
+
+**Warum C hier nicht entschieden wird.** Der naheliegende Ersatz ist das Stimmverbot bei
+Betroffenheit — wer in `participants_alt` steht und in `participants_neu` fehlt, zählt weder im
+Zähler noch im Nenner. Es wäre billig: `§3.4` leitet die Klasse bereits aus dem Unterschied der
+beiden Verfassungen ab, beide Objekte sind content-adressiert und vollständig bekannt, es entsteht
+kein Teilwissensproblem, und die Monotonie bliebe erhalten. Es hat aber einen Preis in der
+Gegenrichtung: bei `n = 12` und Schwelle 2/3 verlangt ein Ausschluss heute neun Ja-Stimmen, bei
+Stimmverbot von vier Betroffenen nur noch sechs. Die Schutzwirkung einer hohen Schwelle
+verschwindet genau dort, wo sie am dringendsten ist. Das Gesellschaftsrecht federt dieselbe
+Spannung mit dem „wichtigen Grund" ab, den ein Gericht prüft; MaR hat kein Gericht, wohl aber
+Schlichtung nach `03 §2.4`, und ob die diese Rolle tragen kann, ist nie gefragt worden.
+
+**Offen und benannt:** welcher Mechanismus die Ausschlussfähigkeit herstellt, ohne den
+Minderheitenschutz zu opfern, in einem Protokoll ohne Konsens und ohne Instanz. Das ist eine
+Frage nach vorhandenen Bauformen, nicht nach einer Erfindung, und sie bekommt eine eigene Runde.
+
+**Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei. Die Streichung in `04 §7.2`, die Grenze in
+`04 §8` und die Betriebswarnung in `example-nucleus.md §8.1` sind ein eigener, dann gebündelter
+Lauf.
