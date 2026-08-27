@@ -8616,3 +8616,63 @@ Erwartung dahinter. Wer sie erneut aufmachen will, braucht mehr als einen weiter
 braucht eine Probe, deren Blindquote gemessen ist.
 
 **Kein Werkzeuglauf.** Zwei Zeilen, beide längenneutral, als Splice gefahren.
+
+---
+
+### D234 — Die Föderationsstimme trägt keinen Autorisierungsweg (Befund, keine Entscheidung)
+
+**Anlass.** Die offene Liste führte `04 §7.2` als „nie durchgerechnet". Beim Lesen hält das nicht:
+der Abschnitt ist bewusst dünn und delegiert alles Weitere an `08 §3`. Was er dagegen ungeprüft
+behauptet, ist ein Autorisierungsweg, den keine Schicht einlöst. **Kein Registereintrag nennt die
+Föderation** — gemessen über alle Einträge D1 bis D233. Die Frage ist nie gestellt worden.
+
+**Der Widerspruch, drei Stellen.**
+
+1. `00 §7` zählt die Föderationsstimme als Nukleus-Akt auf und autorisiert sie über
+   `akt.I` Element von `resolve_current_key(akt.N)`, wobei `akt.N` zum aufgelösten Scope passen
+   MUSS.
+2. `04 §7.2` sagt, `participants` der Föderationsverfassung enthalte „die aktuellen Schlüssel der
+   konstituierenden Nuklei", und deren Stimme entstehe bei jedem von ihnen über `§5`.
+3. `04 §3.1` Bedingung 3 prüft `vote.I` als Element von `P` byte-fest. Nach `04 §1.1` ist
+   `participants` ein `array of bstr (32 B)`. Es findet keine Auflösung statt.
+
+**Warum kein Pfad trägt.** `04 §5` trennt Epochen- und Schlüsselpfad nach `vote_mode` und erklärt
+diese Zuordnung für normativ. Für die Föderationsstimme scheitern beide, und zwar verschieden. Im
+Epochenpfad bindet `participants` byte-fest: rotiert ein Kind seine `nucleus_keys` — nach D150 für
+den Nukleus identitätserhaltend und jederzeit zulässig —, fällt seine Stimme aus, bis die
+Föderationsverfassung nachgezogen ist. Die ist nur über eine Auszählung änderbar, an der es dann
+nicht mehr teilnimmt. Im Schlüsselpfad ist `akt.N` nach der Bindungsregel (`01 §2.2`) der Scope
+der Stimme, also `N_fed`; `resolve_current_key(N_fed)` liefert die Schlüssel der Föderation, nicht
+die des stimmenden Kindes. Der Weg zeigt auf den falschen Scope.
+
+**Der strukturelle Grund.** Die Föderationsstimme ist der einzige der fünf aufgezählten Akte, der
+in einem **fremden** Scope stattfindet. Bei den übrigen ist `akt.N` der Scope, dessen Autorität
+geprüft wird; hier ist es der Scope, in dem gehandelt wird, und der gehört einem anderen. Deshalb
+ist die Regel aus `00 §7` auf sie nicht anwendbar — nicht, weil sie falsch gerechnet wäre, sondern
+weil ihr Argument etwas anderes bezeichnet, als der Satz meint.
+
+**Die Aufzählung in `00 §7` trägt ihre eigene Regel nur einmal.** Gemessen an den fünf genannten
+Akten:
+
+| Akt | tatsächlich autorisiert in | über `resolve_current_key` |
+|---|---|---|
+| `grant-membership@1` | `00 §7`, umgesetzt in `03 §4` | ja |
+| `verdict@1` eines Panels | `03 §2.4`, byte-weise gegen `arbitration.arbitrators` | nein, ausdrücklich |
+| Föderationsstimme | `04 §3.1` Bedingung 3 | nein |
+| Ratifizierung | `04 §4.1` Bedingung 1 | nein |
+| `rotate-key@1` | `00 §6.4` | ist die Kette, nicht ihr Nutzer |
+
+Das ist die Fehlerform von D145 und D150: der allgemeine Satz stimmt für den Fall, aus dem er
+gewonnen wurde, und die Aufzählung darunter trägt ihn nicht. `04 §5` hat den Teil davon, der die
+Pfade betrifft, bereits berichtigt; `00 §7` ist nie nachgezogen worden.
+
+**Die Gabel, benannt und nicht entschieden.** Entweder bleibt `participants` byte-fest, dann fällt
+in `04 §7.2` das Wort „aktuellen", und die Kosten gehören offen benannt: jede Rotation eines
+Kindes verlangt eine Verfassungsänderung der Föderation, und eine Föderation kann darüber
+einfrieren. Oder die Stimmbedingung bekommt einen Auflösungsschritt. Gegen die zweite steht D154 —
+der Kettenkopf kann unter Wissenszuwachs zurückspringen; eine aufgelöste Stimmberechtigung wäre
+dann nicht monoton, und D96, D101 und D102 hängen an der Monotonie. Die Neigung des Supervisors
+ist die erste Gabel; sie ist nicht gerechnet und darf hier nicht als entschieden gelten.
+
+**Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei. Er hält fest, was gemessen ist, damit die
+Entscheidung eine Grundlage hat und nicht wieder bei „nie durchgerechnet" beginnt.
