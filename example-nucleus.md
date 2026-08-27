@@ -75,7 +75,7 @@ constitution_gov = {
 constitution_hash_gov = f5cddafcaa18068aba72079a7a8c87194a13b0dcd6d5c22bfcacbe2c3991e923
 ```
 
-`vote@1` und `ratify@1` stehen in `irrevocable_predicates`, weil `04 §2.1` es verlangt — ohne
+`vote@1` und `ratify@1` stehen in `irrevocable_predicates`, weil `04 §1.1` es verlangt — ohne
 sie ist der Nukleus nicht auszählbar (`VOTE_REVOCABLE`, `RATIFY_REVOCABLE`).
 
 Alle drei Schwellen stehen auf `1/2`. Nach D108 zulässig, weil `2·1 ≥ 2`; die Grenze ist nicht
@@ -154,7 +154,7 @@ N_res = 4d78bcea4a44af89c0728fbc5f3a0300a853291f744a1657b3ecc2926717f355
 
 ### 4.3 Was diese Zahlen bedeuten
 
-Knotenkapazität `C(x) = ⌊C₀·γ^d⌋`, einmal am Ende gerundet (`02 §2`):
+Knotenkapazität `C(x) = ⌊C₀·γ^d⌋`, einmal am Ende gerundet (`02 §3`):
 
 ```
 d      0    1    2    3    4    5    6    7

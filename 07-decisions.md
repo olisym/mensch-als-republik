@@ -8574,3 +8574,45 @@ die Stellen nach Inhalt getroffen, statt still zu suchen — genau so war es bea
 vergangenen Lauf und ist als dessen Beschreibung richtig; D219 hat für diesen Fall entschieden.
 
 **Daraus Prüfregel 46.**
+
+---
+
+### D233 — Zwei sachlich falsche Verweise in `example-nucleus.md`, keine zweite Prüfklasse (D229)
+
+**Was gemessen wurde.** Auf `3d35972` führt `example-nucleus.md` 25 qualifizierte Layer-Verweise.
+Alle 25 lösen auf einen vorhandenen Abschnitt auf; `check_specs.py` ist an der Datei grün und
+bleibt es nach dieser Berichtigung. Zwei der 25 zeigen auf den falschen Abschnitt.
+
+| Zeile | genannt | richtig | was am Ziel steht |
+|---|---|---|---|
+| 78 | `04 §2.1` | `04 §1.1` | das MUSS über `irrevocable_predicates`; `§2.1` ist `propose@1` |
+| 157 | `02 §2` | `02 §3` | das Knotenbudget mit einmaliger Rundung; `§2` ist das Graphmodell |
+
+**Berichtigung zu D229.** Dort steht „Ein gemessener Fall aus dieser Sitzung". Gemessen war nur
+der erste; die übrigen 24 Verweise waren nicht geprüft, sondern ungeprüft geblieben. Der zweite
+Fall ist erst beim vollständigen Auszählen aufgefallen, und er ist der ältere von beiden.
+
+**Die drei übrigen `02 §2` bleiben stehen.** Sie nennen die Scope-Partition, und die steht in
+`§2`. Eine Ersetzung über die ganze Datei wäre falsch gewesen — der Befund ist zeilengenau, nicht
+namensweit.
+
+**Entscheidung: es kommt keine zweite Prüfklasse.** D229 hatte die Richtigkeit eines Verweises
+dem Leser überlassen. Der zweite Fund war ein benannter Grund, das zu prüfen, weil beide Fälle
+derselben billigen Probe zugänglich gewesen wären: nimmt der Zielabschnitt mindestens einen
+Code-Span aus der Zeile des Verweises auf? Gegen die Datei mit jetzt bekannter Wahrheit gemessen:
+zwei richtige Alarme, zwei falsche, neun still und richtig, kein verpasster Fall — und **zwölf von
+25 Verweisen ohne Code-Span in der Zeile**, für die Probe also unsichtbar. Darunter alle drei
+richtigen `02 §2`.
+
+**Warum die Zahlen die Probe erledigen.** Eine Prüfung, die 48 Prozent ihres Gegenstands nicht
+sieht, meldet Grün für einen Bestand, den sie nicht angesehen hat; das ist schlechter als keine
+Prüfung, weil es sich wie eine anfühlt. Dazu kommt, dass beide Fehlalarme dieselbe Ursache haben
+— `n = 3` und `n = 50` sind Beispielwerte, die im Zielabschnitt naturgemäß nicht stehen. Ein
+Beispielnukleus besteht aus solchen Werten. Die Probe ist gerade dort am blindesten und am
+lautesten, wo sie gebraucht würde.
+
+**Was bleibt.** Die Grenze aus D229 steht unverändert, jetzt mit einer Messung statt einer
+Erwartung dahinter. Wer sie erneut aufmachen will, braucht mehr als einen weiteren Einzelfund: er
+braucht eine Probe, deren Blindquote gemessen ist.
+
+**Kein Werkzeuglauf.** Zwei Zeilen, beide längenneutral, als Splice gefahren.
