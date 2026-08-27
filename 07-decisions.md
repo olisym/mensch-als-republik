@@ -8852,3 +8852,61 @@ es keine Instanz über den Überstimmten, und das ist eine tragende Entscheidung
 
 **Kein Lauf.** Der Spec-Anschluss — Streichung in `04 §7.2`, Grenze in `04 §8`, Betriebswarnung
 in `example-nucleus.md §8.1` — ist ein eigener, gebündelter Lauf.
+
+---
+
+### D237 — Reifegrad und Reihenfolge: die Spec prüft sich nicht selbst
+
+**Anlass.** Nach vier Läufen und einer Recherche in einer Sitzung die Frage, woran als nächstes
+zu arbeiten ist. Der Eintrag hält die Antwort fest, damit die nächste Sitzung nicht wieder bei
+der Frage beginnt.
+
+**Die Spec ist breit reif und in der Tiefe ungeprüft.** Layer 00 bis 04 sind vollständig, 236
+Entscheidungen sind begründet, 46 Prüfregeln kodifiziert. Dagegen steht eine gemessene Zahl: in
+`example-nucleus.md` waren zwei von 25 qualifizierten Verweisen sachlich falsch (D233), und
+`00 §7` hat seit Layer 00 eine Autorisierungsregel verallgemeinert, die nur einer von fünf dort
+aufgezählten Fällen trägt (D234, D235). Beides stand jahrelang grün, weil die Prüfung sichert,
+dass ein Ziel existiert, und nicht, dass es stimmt (D229). Die Spec ist nie systematisch gegen
+sich selbst gelesen worden.
+
+**Die Implementierung erbt die Mehrdeutigkeiten der Spec, statt sie aufzudecken.** 597 Tests und
+14 Eigenschaftstests laufen gegen eine Referenzimplementierung, die aus derselben Spec über
+denselben Kanal abgeleitet wurde. Die Golden Anchors sind Selbstkonsistenzproben, keine
+Interop-Tests. Wo die Spec zweideutig ist, hat der Ableitungsweg eine der Lesarten stillschweigend
+gewählt, und der Test bestätigt genau diese Wahl.
+
+**Beschlossene Reihenfolge.**
+
+1. **Die Stummelzeilen aus `00w` glätten** (D223). Klein, abgeschlossen, räumt einen Punkt der
+   offenen Liste. Die Menge ist nur über den Diff des Umbruch-Commits bestimmbar, nicht über ein
+   Muster: eine Suche nach kurzen Zeilen mitten im Absatz findet über den ganzen Bestand 139
+   Stellen, überwiegend nummerierte Listen und eingerückten Code. Der Splice muss je Absatz
+   belegen, dass die Wortfolge unverändert bleibt — das war der Grund, warum D223 den Reflow
+   abgelehnt hat, und es ist die Bedingung, unter der er jetzt zulässig ist.
+2. **Die MUSS-Aussagen gegen ihre Prüfer messen.** Eine endliche, mechanisch aufzählbare Menge;
+   jede Aussage hat entweder einen Test oder ist ein Befund. Das ist der Spec-Review, der Zahlen
+   liefert statt Eindrücke, und er ist billiger als ein Durchlesen, das Funde in zufälliger
+   Reihenfolge produziert.
+3. **Eine zweite Implementierung von Layer 01 in einer anderen Sprache**, gegen die bestehenden
+   Golden Anchors. Kanonische CBOR-Kodierung, Signaturprüfung, die elf Reject-Codes, die acht
+   Zustände. Jede Stelle, an der die zweite Implementierung abweicht oder eine Rückfrage erzwingt,
+   ist eine Mehrdeutigkeit der Spec, die sich von allein meldet. Das ist ein Review, der sich
+   selbst durchführt, und der Schnitt ist klein genug für einen Lauf: Layer 01 ist die Schicht,
+   auf der alles andere steht.
+
+**Verworfen für jetzt, mit Grund.**
+
+- **Layer 05.** Enforcement ohne beobachtete Verstöße ist Spekulation über Verhalten. Die
+  Beta-Reputation trägt ein ungelöstes Moral-Licensing-Problem, das ohne Daten nicht zu
+  entscheiden ist.
+- **Weitere Arbeit an der Zitiergrammatik.** Mit D232 erschöpft; wer dort weitermacht, braucht
+  einen benannten Grund.
+- **Die Föderation weiter ausbauen.** Mit D235 und D236 entschieden; alles Weitere verlangt
+  Teilnehmer.
+
+**Der Zustand, der dabei nicht unbemerkt bleiben soll.** Der größte Reifegradmangel ist kein
+technischer. `08 §2.2` verlangt Menschen mit einem echten gemeinsamen Anliegen, und es gibt sie
+nicht. Alles hier ist gegen sich selbst geprüft. Eine zweite Implementierung ist der beste
+verfügbare Ersatz für die fehlende Außenprüfung — sie bringt einen zweiten Blick ein, keinen
+zweiten Menschen —, und keine Menge weiterer Spec-Arbeit ersetzt ihn. Warten bleibt ein zulässiger
+Zustand; die letzten Läufe haben allerdings überwiegend das Werkzeug geschärft und nicht das Werk.
