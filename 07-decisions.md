@@ -9019,3 +9019,96 @@ den Quelltext geschrieben, tokengleich und trotzdem falsch.
 Zeilen wird umbrochen und ergibt zwei. Die Datei behält dadurch ihre 503 Zeilen. Das ändert das
 Rendering — aus einem Absatz werden zwei — und ist die einzige Änderung dieses Laufs, die man
 sieht statt sie nur zu lesen.
+
+---
+
+### D242 — Punkt 2 aus D237: vierzehn Pflichten, geprüft mit der Rücknahmeprobe
+
+**Die Menge, gemessen.** Über die acht normativen Layer-Dateien stehen 24 RFC-2119-Marker: 16 MUSS,
+1 MUSS NICHT, 4 SHOULD, 3 MAY. Gezählt werden Vorkommen, nicht Zeilen — die Zählung ist damit
+unabhängig davon, wie der Reflow aus D238 umbrochen hat. Davon abzuziehen sind ein Falsch-Positiv
+und zwei Dubletten: `03 §3.3.3` zitiert eine ausdrücklich **überholte** Formulierung, um zu
+erklären, warum sie überholt ist; VR-02.1 in `02 §4` läuft über zwei Zeilen; und die
+Alias-Invariante steht einmal als Prosa in `01 §2.2` und einmal als Kommentar in der Grammatik in
+Anhang A derselben Datei. Es bleiben vierzehn distinkte Pflichten. Die vier SHOULD und die drei
+MAY sind nicht Teil dieses Laufs: eine Erlaubnis verlangt keinen Prüfer, und die beiden SHOULD
+zu `D >= C₀` in
+`00 §4.0` und `02 §8` stehen seit D147 mit demselben Befund auf der offenen Liste.
+
+| | Pflicht | Ort |
+| --- | --- | --- |
+| N01 | `akt.N` ist gesetzt und passt zum aufgelösten Scope | `00 §7` |
+| N02 | ein Alias trifft das kanonische Muster nicht | `01 §2.2`, Anhang A |
+| N03 | Bindungsregel: `N` ist gesetzt | `01 §2.2` |
+| N04 | `N` entspricht dem aufgelösten Scope | `01 §2.2` |
+| N05 | bei kanonischer Kodierung gilt Byte-Gleichheit | `01 §2.2` |
+| N06 | der Verifizierer serialisiert neu und vergleicht byte-genau | `01 §3` |
+| N07 | der Verifizierer ignoriert `t_exp` auf einem `core/*`-Claim | `01 §5.3` |
+| N08 | VR-02.1: die Aggregation rechnet simultan | `02 §4` |
+| N09 | ein Vouch trägt `t_exp`, wo die Budgetregel gilt | `02 §6.2` |
+| N10 | ein vorhandenes `v` trägt den deklarierten Typ | `03 §1.3` |
+| N11 | dieses `N` ist der ausgewertete Scope | `03 §1.4` |
+| N12 | `irrevocable_predicates` enthält `vote@1` und `ratify@1` | `04 §1.1` |
+| N13 | `decide` rechnet die Genesis-Bindung vor jedem Feldzugriff nach | `04 §3.5` |
+| N14 | es wird geworfen, nicht vermerkt | `04 §4.5` |
+
+Die Ortsangaben sind gemessen, nicht geschlossen. Neun von vierzehn waren beim ersten Ansatz aus
+der Zeilennummer geraten und falsch; erst der Abgleich gegen die Überschriften hat sie berichtigt.
+Prüfregel 27 in der Fassung, die für eigene Zwischenergebnisse gilt.
+
+**Verworfen: die Zuordnung über Stichworte.** Ein erster Anlauf hat je Pflicht Suchbegriffe
+gebildet und ihre Treffer über die 77 Testdateien gezählt. Das Ergebnis misst Vokabular statt
+Prüfung: für N11 meldet `test_rotate_key.py` 133 Treffer, weil das Wort Scope überall vorkommt,
+für N09 meldet `tp02.py` 55 Treffer auf `t_exp`. Eine solche Tabelle sähe aus wie ein Beleg und
+wäre keiner — dieselbe Blindquote, an der D229 und D233 mit Zahlen gescheitert sind, nur in
+anderer Verkleidung.
+
+**Das Verfahren: die Rücknahmeprobe.** Eine Pflicht hat genau dann einen Prüfer, wenn ihre
+Durchsetzung im Produktivcode zurückgenommen werden kann und daraufhin mindestens ein Test rot
+wird. Bleibt der Lauf grün, ist die Pflicht ungeprüft, und das ist der gesuchte Befund. Findet sich
+keine durchsetzende Stelle, ist die Pflicht ohne Träger — ein schwererer Befund derselben Art. Das
+ist kein neues Instrument: dieselbe Probe verlangt die Prompt-Regel für jeden neu entstehenden
+Regressionstest, hier auf bestehenden Code angewandt.
+
+**Ausgelagert.** Vierzehn Neutralisierungen mit je einem Testlauf gehören zum Werkzeug, nicht in
+diesen Kanal; durch ihn müsste sonst der halbe Produktivcode laufen. Zurück kommt je Pflicht die
+durchsetzende Stelle, die rot gewordenen Tests namentlich, oder die Feststellung, dass keiner rot
+wird.
+
+---
+
+### D243 — Die RFC-2119-Marker sind keine Landkarte der Normativität
+
+**Befund.** Die Marker verteilen sich über die Layer so: `00` zwei, `01` zehn, `02` vier, `03`
+drei, `04` drei, `06` zwei, `05` null, `08` null. Layer 02 ist durchweg normativ — die Budgetregel,
+die Kapazitätsformel, die Determinismusforderung an die Aggregation — und trägt vier Marker, von
+denen zwei dieselbe Aussage in zwei Zeilen sind. `06-services.md` trägt zwei, und beide sind MAY.
+Die Marker sind also eine dünn und uneinheitlich gesetzte Teilmenge der Normativität, keine
+Aufzählung von ihr.
+
+**Was daraus nicht folgt.** Kein Auftrag, die Spec mit Markern nachzurüsten. Zu entscheiden,
+welcher Satz einen verdient, ist Ermessensarbeit ohne mechanische Grenze — genau die Klasse, die
+D229 und D233 mit gemessenen Zahlen verworfen haben. Wer sie doch aufmacht, misst vorher die
+Falsch-Positiv-Rate an einer Datei mit bekannter Wahrheit.
+
+**Was folgt.** D237 Punkt 2 leistet weniger, als sein Name verspricht. Das Ergebnis aus D242 sagt
+über die vierzehn markierten Pflichten etwas und über die übrige Normativität nichts. Wer es
+zitiert, zitiert diese Grenze mit.
+
+---
+
+### D244 — Eine abgeleitete `numstat`-Erwartung zieht die randgleichen Zeilen ab
+
+**Anlass.** Für den Lauf zu D238 war die Erwartung mit +179 −82 fixiert und wurde mit +147 −50
+gemessen. Die Abweichung war kein Defekt, sondern ein Fehler in der Ableitung: gerechnet war je
+Block die vollständige Alt-Menge als Löschung und die vollständige Neu-Menge als Einfügung.
+
+**Die Ursache.** Git zieht Zeilen, die am oberen oder unteren Rand eines Blocks unverändert
+bleiben, nicht in den Hunk. Nachgerechnet sind es über die vierzehn Blöcke 32 solcher Zeilen, und
+179 minus 147 wie 82 minus 50 ergeben genau 32; je Datei stimmt es einzeln ebenfalls, mit 9 in
+`werkzeuge.md`, 8 in `06-services.md` und 7 in `01-claim-atom.md`.
+
+**Norm.** Wer eine `numstat`-Erwartung aus einer Blockersetzung ableitet, zieht je Block die am
+Rand gleich gebliebenen Zeilen von beiden Seiten ab. Ohne diesen Abzug ist die Erwartung
+systematisch zu hoch, und eine Abweichung, die nichts bedeutet, sieht aus wie ein Befund. Das
+ergänzt Prüfregel 41 um einen Fall, in dem die Abweichung vor der Bewertung gerechnet werden kann.
