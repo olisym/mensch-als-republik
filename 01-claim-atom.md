@@ -91,9 +91,9 @@ formale Grammatik steht in **Anhang A**; dieser Abschnitt bleibt normativ maßge
    matchen (§2.4, Invariante 3) — sonst wäre die Kodierungs-Erkennung mehrdeutig.
 3. **Bindungsregel:** Für jedes `nuc:…`-Profil **MUSS** `N` gesetzt sein und **MUSS** dem
    aufgelösten Scope entsprechen. Bei kanonischer Kodierung **MUSS**
-   `N == bytes.fromhex(scope_id_hex)`
-   gelten; bei Alias-Kodierung ist `N` die einzige Scope-Quelle. Diese Prüfung ist reine
-   **Byte-Gleichheit** — das Atom bleibt blind für die *Herkunft* von `N` (§2.3).
+   `N == bytes.fromhex(scope_id_hex)` gelten; bei Alias-Kodierung ist `N` die einzige Scope-Quelle.
+   Diese Prüfung ist reine **Byte-Gleichheit** — das Atom bleibt blind für die *Herkunft* von `N`
+   (§2.3).
 4. **Evaluator-Partitionierung:** Trust-Flow, Profile und Governance partitionieren
    Claim-Mengen nach dem **aufgelösten Scope** (`resolve_scope(N)`), nicht nach dem
    rohen `p`-String allein (§2.4, Invariante 2).
@@ -120,10 +120,9 @@ Verifizierer partitioniert die Trust-Flow-Berechnung pro `N` (Vertrauen ist kont
 **Das Atom kennt die *Herleitung* von `N` nicht.** Dass `N` der Hash eines unveränderlichen
 Nukleus-Genesis-Objekts ist — `N = SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj))` —, ist eine
 **Governance-/Fundament-Definition** (siehe `00-nucleus-genesis-constitution.md §3`) und lebt
-bewusst *nicht* hier. Für das
-Atom ist `N` ein opaker 32-Byte-Bezeichner; seine einzige atom-lokale Regel ist die
-Byte-Gleichheit aus §2.2 Regel 3. So bleibt die Scope-ID stabil über FROST-Re-Keying und
-Schlüsselrotation hinweg (der Grund, warum sie ein Objekt-Hash und **kein** Pubkey ist), ohne
+bewusst *nicht* hier. Für das Atom ist `N` ein opaker 32-Byte-Bezeichner; seine einzige atom-lokale
+Regel ist die Byte-Gleichheit aus §2.2 Regel 3. So bleibt die Scope-ID stabil über FROST-Re-Keying
+und Schlüsselrotation hinweg (der Grund, warum sie ein Objekt-Hash und **kein** Pubkey ist), ohne
 dass das bedeutungsblinde Atom davon etwas wissen muss.
 
 ### 2.4 Scope-Sicherheit (normativ — sechs Invarianten)
@@ -188,9 +187,8 @@ DOM_CID    = "claim-atom/v1/cid"
 DOM_ID_GEN = "claim-atom/v1/id-genesis"
 ```
 
-> `DOM_NUC_GEN = "claim-atom/v1/nucleus-genesis"` gehört **nicht** hierher — es ist der
-> Separator für die Nukleus-Scope-ID und lebt in `00-nucleus-genesis-constitution.md §3` (§2.3).
-> Das Atom
+> `DOM_NUC_GEN = "claim-atom/v1/nucleus-genesis"` gehört **nicht** hierher — es ist der Separator
+> für die Nukleus-Scope-ID und lebt in `00-nucleus-genesis-constitution.md §3` (§2.3). Das Atom
 > definiert nur die drei obigen.
 
 **Berechnung:**
@@ -544,13 +542,12 @@ Referenz-Vektoren: **TV2** (Alice, verkettet auf TV1) und **TV4** (Bob, Genesis;
   *eigene* Identity, oder (c) FROST über die Geräte. Reale operative Einschränkung, kein Bug —
   der Preis für triviale Tamper-Evidence ohne Konsens. Sauberer Fix später via Delegation
   (Sub-Keys), bewusst vertagt.
-- **Key-Rotation: nicht im Core, aber ausdrückbar (DF-0).** Der Core kennt keine Rotation.
-  Der **Normalfall** ist ein verkettetes `rotate-key@1`-**Profil** (Interpretationsschicht,
-  **kein** `core`): Der alte Schlüssel signiert als letzten Akt seiner Kette einen Verweis auf
-  den neuen. **Verlust/Diebstahl** löst ein **Governance-Akt** (`00 §6.2`). Ein gestohlener
-  Schlüssel,
-  der zwei Nachfolger signiert, erzeugt automatisch eine **Equivocation** (§4) — die Wahl des
-  gültigen Zweigs fällt damit zwangsläufig an die Mitglieder. Kein neues Atom-Feld nötig.
+- **Key-Rotation: nicht im Core, aber ausdrückbar (DF-0).** Der Core kennt keine Rotation. Der
+  **Normalfall** ist ein verkettetes `rotate-key@1`-**Profil** (Interpretationsschicht, **kein**
+  `core`): Der alte Schlüssel signiert als letzten Akt seiner Kette einen Verweis auf den neuen.
+  **Verlust/Diebstahl** löst ein **Governance-Akt** (`00 §6.2`). Ein gestohlener Schlüssel, der zwei
+  Nachfolger signiert, erzeugt automatisch eine **Equivocation** (§4) — die Wahl des gültigen Zweigs
+  fällt damit zwangsläufig an die Mitglieder. Kein neues Atom-Feld nötig.
 - **Keine Delegation im Core.** „Schlüssel A signiert für Identity B" schmuggelt Scope-Semantik
   ein; bleibt in der Interpretationsschicht, bis sich zeigt, dass Verifikation ohne sie nicht geht.
 - **Oracle-Problem & physische Durchsetzung** liegen außerhalb des Atoms. Das Protokoll

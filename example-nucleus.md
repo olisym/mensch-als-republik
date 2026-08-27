@@ -327,8 +327,7 @@ Nach 1–3 sind alle drei `MEMBER`: in `participants` **und** mit aktiver `accep
 diesen Hash (D60, `04 §6.1`). Nach 8 ist DORA `GRANT_ONLY`, nach 9 `MEMBER` — aber gegen
 `constitution_hash_2`, nicht gegen den ersten. Die drei Gründer sind in Epoche 2 ihrerseits
 `GRANT_ONLY`, bis sie die neue Fassung ihrerseits annehmen. Fehlt eines von beidem, ist der Zustand
-`GRANT_ONLY` oder
-`APPLICANT` — nie `MEMBER`.
+`GRANT_ONLY` oder `APPLICANT` — nie `MEMBER`.
 
 **Die autorisierten Schlüssel sind BRUNO und ANNA.** Keine Verfassung dieses Nukleus nennt ein
 Feld `nucleus_keys`, also ist der Anker `genesis_gov[1]` (`00 §6.4` Schritt 1), und es gibt keine

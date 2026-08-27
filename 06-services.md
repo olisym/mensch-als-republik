@@ -39,8 +39,7 @@ Der Kern-Satz:
   werden sie **referenziert**, nicht ins Atom gezogen (§8): **Roughtime** (witnessed time +
   Inkonsistenz-Meldung) für den Zeitdienst, **NTS** (RFC 8915) für Transport-Auth, die
   **PoR/PoRep/PoSt-Klasse** für den vertagten Storage-Dienst. Das Atom bleibt
-  algorithmus-agnostisch;
-  ein Dienst-Profil *wrappt* einen externen Beweis, es *ersetzt* ihn nicht.
+  algorithmus-agnostisch; ein Dienst-Profil *wrappt* einen externen Beweis, es *ersetzt* ihn nicht.
 
 ---
 
@@ -48,8 +47,7 @@ Der Kern-Satz:
 
 **Ein „Node" ist keine Protokoll-Entität.** Es ist eine Ed25519-Identity (Atom-Spec §1), die einen
 Dienst ankündigt. „Node" ist Betriebs-Vokabular (der Lebensraum, in dem Atome existieren,
-VISION §5),
-nicht Protokoll-Vokabular.
+VISION §5), nicht Protokoll-Vokabular.
 
 ### 2.1 `nuc:<N>/service-announce@1`
 
@@ -261,9 +259,8 @@ Diese Schicht fügt **kein** Atom-Feld hinzu:
 
 - **`service-announce@1`, `timestamp@1`, `validation@1`** sind Profile über bestehenden Feldern
   (`I`, `J ∈ {claim-ref, object-hash}`, `v`, `N`, `t`, `h_prev`). Keiner besteht den
-  `core`-Aufnahme-
-  test (alle machen **soziale** Aussagen mit Wert) — sie bleiben korrekt außerhalb von `core`,
-  konsistent mit der Ablehnung von `vouch`/`verdict`/`membership` (Atom-Spec §5).
+  `core`-Aufnahmetest (alle machen **soziale** Aussagen mit Wert) — sie bleiben korrekt außerhalb
+  von `core`, konsistent mit der Ablehnung von `vouch`/`verdict`/`membership` (Atom-Spec §5).
 - **Namensraum:** alle Dienst-Prädikate leben unter **`nuc:<N>`** — kein neuer Namensraum, **keine
   Grammatik-Änderung** an Atom-Spec Anhang A. Die Scope-Autorität bleibt einzig an `N` (Atom-Spec
   §2.4, Invariante 2). Dienst-„Typ" ist der Prädikatname, nicht ein Namensraum-Präfix.

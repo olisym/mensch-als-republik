@@ -21,9 +21,8 @@ unmittelbar nach `proposal.scope != epoch.scope`, dass
 `ValueError`. Kein Vermerk, kein neuer `GovernanceFinding`, kein Eintrag in einer Befundtabelle.
 
 Die Prüfung steht **vor** jedem Zugriff auf ein Feld des Genesis. Heute sind das
-`genesis_obj.get(6)`,
-`genesis_obj.get(5)` und der Aufruf von `threshold_class`; die Reihenfolge dieser drei
-untereinander bleibt unverändert (D112).
+`genesis_obj.get(6)`, `genesis_obj.get(5)` und der Aufruf von `threshold_class`; die Reihenfolge
+dieser drei untereinander bleibt unverändert (D112).
 
 **2. Die zwei Golden-Anchor-Vektoren.** `tests/governance/test_vectors.py` baut für `GV-24` und
 `GV-29` heute `dict(GENESIS_D)`, mutiert Key 6 bzw. Key 5 und übergibt das Ergebnis an eine

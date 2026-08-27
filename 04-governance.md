@@ -46,11 +46,10 @@ Teilwissen unter-bekannt; ein zu kleiner Nenner macht jede Schwelle leichter err
 ist die Über-Ratifizierungsrichtung (D96).
 
 **`irrevocable_predicates` MUSS `vote@1` und `ratify@1` enthalten.** Ohne den ersten greifen
-Widerruf und
-Supersede nach `01 §5.4` auch auf Stimmen, die Stimmenmenge schrumpft, und die Auszählung ist
-nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ohne den zweiten kann eine bereits
-etablierte Epoche wieder verschwinden, weil ihr einziger Beleg widerrufbar bleibt (D107). Ein
-Nukleus ohne beide Deklarationen ist nicht auszählbar (`§3.5`).
+Widerruf und Supersede nach `01 §5.4` auch auf Stimmen, die Stimmenmenge schrumpft, und die
+Auszählung ist nicht mehr monoton — womit D96, D101 und D102 zugleich fallen. Ohne den zweiten kann
+eine bereits etablierte Epoche wieder verschwinden, weil ihr einziger Beleg widerrufbar bleibt
+(D107). Ein Nukleus ohne beide Deklarationen ist nicht auszählbar (`§3.5`).
 
 **`propose@1` ist ausdrücklich nicht geschützt und wird nicht geprüft.** Eine Stimme zeigt auf den
 `proposal_hash`, nie auf den `propose@1`-Claim; dieser dient allein der Auffindbarkeit. Sein
@@ -571,16 +570,15 @@ Schlüssel hasht, gilt als **unbekannt**. Der Aufrufer kontrolliert den Inhalt f
 nicht; deshalb Vermerk und nicht Ausnahme. Dieselbe Prüfung gilt für `known_proposals` in `§3`
 (D175).
 
-**Vermerke.** Die Kette beantwortet, welche Epoche gilt; ihre Vermerke sagen, warum sie dort
-endet — nicht, was in einer überholten Epoche geschah. Sie gibt daher ausschließlich die Vermerke
-der Prüfungen nach `§4.1` weiter, die auf die **erreichte** Epoche zeigen. Vermerke der
-Auszählungen nach `§3` holt sie sich nicht selbst; sie erreichen den Aufrufer nur, soweit `§4.1`
-sie an ein Ergebnis **ohne** Folgeepoche angehängt hat (D194, D203). Was in einer Auszählung
-vermerkt wurde, deren Übergang getragen hat, fällt damit weg — es beantwortet nicht, warum die
-Kette dort endet, wo sie endet. Diese Verwerfung leistet der Neuaufbau der Liste in jedem
-Schleifenschritt; sie ist keine Zeile, die man streichen könnte. Ist die Verfassung der erreichten
-Epoche unbekannt, bleibt
-das Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
+**Vermerke.** Die Kette beantwortet, welche Epoche gilt; ihre Vermerke sagen, warum sie dort endet —
+nicht, was in einer überholten Epoche geschah. Sie gibt daher ausschließlich die Vermerke der
+Prüfungen nach `§4.1` weiter, die auf die **erreichte** Epoche zeigen. Vermerke der Auszählungen
+nach `§3` holt sie sich nicht selbst; sie erreichen den Aufrufer nur, soweit `§4.1` sie an ein
+Ergebnis **ohne** Folgeepoche angehängt hat (D194, D203). Was in einer Auszählung vermerkt wurde,
+deren Übergang getragen hat, fällt damit weg — es beantwortet nicht, warum die Kette dort endet, wo
+sie endet. Diese Verwerfung leistet der Neuaufbau der Liste in jedem Schleifenschritt; sie ist keine
+Zeile, die man streichen könnte. Ist die Verfassung der erreichten Epoche unbekannt, bleibt das
+Ergebnisfeld leer; ein eigener Vermerk wäre dieselbe Auskunft ein zweites Mal.
 
 **Das leere Feld ist nur an Epoche 1 erreichbar.** Die Verfassung von `i+1` ist zugleich das
 Zielobjekt des Übergangs von `i` nach `i+1`; fehlt sie, ist die Auszählung nach `§3.5` nicht

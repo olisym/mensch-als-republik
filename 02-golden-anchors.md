@@ -1,8 +1,8 @@
 # Golden Anchors — Layer 02 (Trust Flow)
 
 Revision 3 · Status: gerechnet, gegengerechnet und gegen die Implementierung geprüft · gilt gegen
-`02-trust-flow.md` nach Anwendung
-von `02-spec-nachzug.md` Rev 2
+`02-trust-flow.md` nach Anwendung von `02-spec-nachzug.md` Rev 2
+
 Zweck: normative Testvektoren für `02a-maxflow`. Alle Werte exakt, ganzzahlig, von Hand geprüft.
 
 ## Änderungen gegenüber Revision 1

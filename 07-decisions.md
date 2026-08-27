@@ -8910,3 +8910,112 @@ nicht. Alles hier ist gegen sich selbst geprüft. Eine zweite Implementierung is
 verfügbare Ersatz für die fehlende Außenprüfung — sie bringt einen zweiten Blick ein, keinen
 zweiten Menschen —, und keine Menge weiterer Spec-Arbeit ersetzt ihn. Warten bleibt ein zulässiger
 Zustand; die letzten Läufe haben allerdings überwiegend das Werkzeug geschärft und nicht das Werk.
+
+---
+
+### D238 — Die Stummelzeilen aus `00w`: vierzehn sind zu glätten, drei nicht
+
+**Anlass.** D223 hat den Reflow abgelehnt und die Nebenwirkung mit einer Zahl benannt: von 46
+eingefügten Zeilen sind 17 kürzer als 40 Zeichen. D237 hat ihn als ersten Schritt wieder
+zugelassen, unter der Bedingung aus D223, dass je Absatz die unveränderte Wortfolge belegt wird.
+Beim Nachrechnen fällt die Menge auseinander.
+
+**Die siebzehn sind einzeln lokalisiert.** Aus `git show e98b7f2` wurden die eingefügten Zeilen
+unter 40 Zeichen genommen und im Arbeitsstand gesucht; jede kommt genau einmal vor. Ein Muster
+ersetzt das nicht: die Suche nach kurzen Zeilen mitten im Absatz liefert über die neun betroffenen
+Dateien 54 Treffer und trifft in sieben von neun Dateien die falsche Zahl. Das bestätigt D237 an
+einem kleineren Ausschnitt.
+
+**Drei Blöcke sind nicht zu glätten**, jeder aus eigenem Grund. Zeilennummern im Stand vor dem
+Lauf:
+
+| Ort | Block | Grund |
+| --- | --- | --- |
+| `00 §9` | 537-540 | die kurze Zeile ist der Absatzschluss; ein Greedy-Umbruch ergibt den Ist-Zustand |
+| `07-decisions.md`, D137 | 4448-4453 | dieselbe Lage |
+| `00 §6.3` | 390-395 | Greedy verkürzt sie von 16 auf 6 Zeichen und zerreißt dabei einen Verweis; mit D239 ist der Ist-Zustand bereits das Ergebnis |
+
+**Damit ist die 17 kein Maß.** Eine eingefügte Zeile unter 40 Zeichen ist nicht dasselbe wie eine
+Stummelzeile: jeder umbrochene Absatz endet mit einer Restzeile, und die darf kurz sein. Der
+prüfbare Begriff ist die kurze Zeile, der im selben Absatz noch eine folgt. Nach ihm sind es
+vierzehn.
+
+**Beschluss.** Die vierzehn Blöcke werden neu umbrochen, greedy auf 100 Zeichen, unter der Regel
+aus D239. Die drei übrigen bleiben unverändert; sie sind kein Befund und gehören nicht auf die
+offene Liste.
+
+**Gemessen vor der Auslieferung.** Sieben Dateien, vierzehn Blöcke, jeder Anker genau einmal im
+Bestand. Wortfolge je Block nach Normalisierung des Umbruchs gleich, ausgenommen die zwei
+ausdrücklich beschlossenen Änderungen aus D240 und D241. Keine neu erzeugte Zeile über 100
+Zeichen, keine Restzeile unter 40 Zeichen mit Nachfolger im selben Absatz.
+
+| Datei | Blöcke | Zeilen |
+| --- | --- | --- |
+| `01-claim-atom.md` | 4 | 925 auf 922 |
+| `02-golden-anchors.md` | 1 | 503 auf 503 |
+| `04-governance.md` | 2 | 799 auf 797 |
+| `06-services.md` | 3 | 409 auf 406 |
+| `example-nucleus.md` | 1 | 417 auf 416 |
+| `genesis-bindung-prompt.md` | 1 | 101 auf 100 |
+| `werkzeuge.md` | 2 | 385 auf 383 |
+
+Summe 3539 auf 3527, gezählt wie `wc -l`. `tools/check_specs.py` meldet je Datei eine Zeile mehr,
+weil es `text.count` über die Umbrüche plus eins rechnet; das ist kein Widerspruch.
+`00-nucleus-genesis-constitution.md` und `07-decisions.md` bleiben vom Reflow unberührt.
+
+---
+
+### D239 — Ein Verweis und ein Code-Span werden nicht über die Zeilengrenze getrennt
+
+**Anlass.** Der erste gerechnete Reflow zu D238 hat zwei qualifizierte Verweise auf zwei Zeilen
+verteilt, den auf die Gov-Spec in `00 §6.3` und den auf die Vision in `06 §2`, und einen
+Inline-Code-Span in `01 §2.2` gespalten.
+
+**Die Wirkung ist nicht kosmetisch.** `SECTION_REF` in `tools/check_specs.py` verlangt den Namen
+unmittelbar vor dem Paragraphenzeichen, getrennt durch genau ein Leerzeichen. Ein Zeilenumbruch an
+dieser Stelle macht den Verweis für die Prüfung unsichtbar. Er wird nicht falsch, er wird nicht
+mehr geprüft, und `make check-specs` bleibt grün. Gemessen: ohne die Regel fallen die gefundenen
+Verweise in `00-nucleus-genesis-constitution.md` von 67 auf 66 und in `06-services.md` von 44 auf
+43; mit der Regel bleiben beide Zahlen stehen. Für Code-Spans dieselbe Lage in schwächerer Form:
+die Zahl der Zeilen mit ungerader Backtick-Zahl steigt in `01-claim-atom.md` von 38 auf 40 und
+fällt mit der Regel auf 38 zurück.
+
+**Norm.** Wer Prosa umbricht, trennt einen qualifizierten Verweis der Form Name-Paragraph-Ziffer
+und einen Inline-Code-Span nicht über die Zeilengrenze. Beide gelten beim Umbrechen als ein Wort.
+
+**Offen, nicht beschlossen.** Diese Klasse ist die erste im Umfeld der Zitiergrammatik, die
+mechanisch entscheidbar ist: eine Zeile endet auf einen über `LAYER_FILES` oder einen Dateistamm
+auflösbaren Namen, die folgende beginnt mit dem Paragraphenzeichen. Sie hat das Blindquotenproblem
+nicht, an dem D229 und D233 gescheitert sind, weil sie keine Sachaussage prüft, sondern eine Form.
+D237 verlangt für weitere Arbeit an der Zitiergrammatik einen benannten Grund; er liegt hier vor,
+ohne dass er heute eingelöst werden muss.
+
+---
+
+### D240 — Der Aufnahmetest in `06 §10` war über den Zeilenumbruch getrennt
+
+**Befund.** In `06-services.md` steht seit Layer 06 eine mit Bindestrich abgebrochene Wortfolge am
+Zeilenende und ihre Fortsetzung am Anfang der Folgezeile. Markdown macht aus einem weichen Umbruch
+ein Leerzeichen; im gerenderten Text steht dort also ein Leerzeichen mitten im Wort. Der Umbruch
+aus `00w` hat die Stelle nicht verursacht, er hat sie nur an eine Stummelzeile geheftet. Es ist die
+einzige Stelle dieser Art im Bestand: die Suche nach einem Bindestrich am Zeilenende über alle
+`.md` findet genau eine.
+
+**Beschluss.** Die Trennung wird geschlossen, das Wort in einem Stück geschrieben. Das ist eine
+Änderung der Wortfolge und damit ausdrücklich nicht von der Bedingung aus D223 gedeckt; sie steht
+deshalb hier und nicht in D238. Der Reflow ist der Anlass, nicht der Grund — ohne ihn bliebe die
+Stelle im Quelltext unauffällig und im Rendering falsch.
+
+---
+
+### D241 — Der Kopfblock von `02-golden-anchors.md` trennte zwei Angaben ohne Leerzeile
+
+**Befund.** Die Zeilen 3 bis 6 tragen zwei Kopfangaben, die Revision samt Geltungsbereich und den
+Zweck der Datei. Zwischen ihnen steht keine Leerzeile, also sind sie ein einziger Absatz. Gerendert
+laufen sie schon heute in eine Zeile zusammen. Ein Reflow ohne Reparatur hätte diesen Zustand in
+den Quelltext geschrieben, tokengleich und trotzdem falsch.
+
+**Beschluss.** Vor die Zweckangabe wird eine Leerzeile gesetzt; der verbleibende Block aus drei
+Zeilen wird umbrochen und ergibt zwei. Die Datei behält dadurch ihre 503 Zeilen. Das ändert das
+Rendering — aus einem Absatz werden zwei — und ist die einzige Änderung dieses Laufs, die man
+sieht statt sie nur zu lesen.
