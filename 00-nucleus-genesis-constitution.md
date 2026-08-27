@@ -478,7 +478,7 @@ Rotation wäre in den zwei Modi verschieden.
 ## 7. Auswirkung auf `grant-membership` & Nukleus-Akte
 
 **Geänderte Autorisierungsregel** (ersetzt „`I == N`"): Ein Nukleus-Akt (`grant-membership@1`,
-`verdict@1` eines Panels, Föderationsstimme, Ratifizierung, `rotate-key@1`) ist autorisiert gdw.:
+`verdict@1` eines Panels, Ratifizierung, `rotate-key@1`) ist autorisiert gdw.:
 
 ```
 akt.I ∈ resolve_current_key(akt.N)
@@ -497,6 +497,10 @@ akt.I ∈ resolve_current_key(akt.N)
   Verfassungsknopf nach §5 und kein Protokolldefault — und er wäre für alle drei Listen zugleich
   zu entscheiden, nicht für eine.
 - `akt.N` MUSS gesetzt sein und zum aufgelösten Scope passen (Atom-Spec §2.2, Bindungsregel).
+- **Die Föderationsstimme gehört nicht dazu (D235).** Sie ist der einzige Akt in einem fremden
+  Scope: `akt.N` wäre nach der Bindungsregel `N_fed`, und `resolve_current_key(N_fed)` nennt die
+  Schlüssel der Föderation, nicht die des stimmenden Kindes. Ihre Autorisierung läuft über
+  `participants` der Föderationsverfassung (Gov-Spec §3.1), byte-weise und ohne Auflösung.
 
 Das ist die konkrete Code-Konsequenz von DF-0: die heutige Prüfung `atom.I == scope` in
 `parse_grant_membership` wird zu `atom.I ∈ resolve_current_key(scope)`.

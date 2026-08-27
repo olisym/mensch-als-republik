@@ -395,6 +395,13 @@ eine Bürgschaft hinzufügt, muss vorher die bestehenden verkleinern. Diese Reih
 häufigste Betriebsfalle des Trust-Flow, und die erste Fassung dieses Dokuments ist selbst
 hineingelaufen.
 
+**Ein Schlüssel in einer Autoritätsliste ist ein Bearer-Recht.** `participants`, `root_keys` und
+`arbitration.arbitrators` werden byte-weise verglichen; keine der drei wird aufgelöst. Wer die
+Bytes hält, hat die Befugnis, bis die Liste geändert ist — und wer in der Liste steht, stimmt über
+seine eigene Streichung mit. Bei den drei Gründern und Schwelle `1/2` müssen dafür zwei
+zusammenwirken. Wer sich so nicht mehr einigt, gründet einen neuen Nukleus; `§6` rechnet vor, was
+das kostet (D236).
+
 ### 8.2 Was nicht gewählt wurde
 
 Weil Layer 05 es noch nicht trägt: `k_slash`, die Cure-Kurve,

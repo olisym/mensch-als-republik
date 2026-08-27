@@ -720,8 +720,16 @@ kleinere Verfassung, derselbe Loop.
 
 Ein Nukleus ist allerdings **kein Graphknoten** — Knoten sind Ed25519-Schlüssel (`02 §2`), ein
 Nukleus ist ein Genesis-Hash. Für eine Kopfzahl-Auszählung ist das gleichgültig: `participants`
-einer Föderationsverfassung enthält die aktuellen Schlüssel der konstituierenden Nuklei, und deren
-Stimme entsteht bei jedem von ihnen über `§5`.
+einer Föderationsverfassung führt je Kind **einen benannten Schlüssel**, mit dem dieses Kind in
+dieser Föderation spricht. Er ist von den `nucleus_keys` des Kindes und deren Rotation entkoppelt;
+die Föderation löst nichts auf, sondern vergleicht byte-weise wie jede Stimmbedingung (`§3.1`).
+Die Föderationsstimme ist deshalb **kein Nukleus-Akt** (D235): sie fällt im fremden Scope `N_fed`,
+und `resolve_current_key(N_fed)` nennt die Schlüssel der Föderation, nicht die des Kindes.
+
+**Der Preis steht offen.** Verliert ein Kind diesen Schlüssel, verliert es seine Stimme, bis
+`participants` geändert ist; wer ihn behält, obwohl er im Kind-Scope längst abgelöst wurde, stimmt
+weiter. Beides folgt aus derselben Bauform wie `arbitration.arbitrators` in `03 §2.4` und ist mit
+D235 getragen, nicht übersehen.
 
 **Der Appeal-Pfad ist Opt-in, nicht eingebaut.** Ein Verdikt aus dem Föderations-Scope ist im
 Kind-Scope scope-fremd und bindet dort nicht (D81, D92). Es bindet genau dann, wenn die Verfassung
@@ -749,6 +757,14 @@ Alles Weitere zur Föderation — Losverfahren für Versammlungen, Repräsentati
 - **Eine hohe Schwelle bei lauer Beteiligung macht die Verfassung faktisch unveränderlich.** Der
   Nenner ist `|P|`, nicht die Zahl der Abstimmenden. Die Schwelle ist gegen realistische
   Beteiligung zu wählen; das gehört in `example-nucleus.md`, nicht ins Protokoll.
+
+- **Ein feindlicher Eintrag blockiert seine eigene Entfernung.** Wer in `participants` steht,
+  stimmt über jede Änderung mit, die ihn herausnähme; der Nenner bleibt `|P|`, und gescheitert ist
+  einmal wahr für immer wahr (`§3.2`). Bei Schwelle `1/2` sind dafür `n/2` solcher Einträge nötig,
+  bei `2/3` nur `n/3`, bei `3/4` ein Viertel — je strenger die Schwelle, desto leichter die
+  Blockade. Ein Stimmverbot des Betroffenen wäre der bekannte Ausweg; er ist mit D236 verworfen,
+  weil er den Minderheitenschutz genau dort aufhebt, wo er gebraucht wird. Der Weg bleibt der neue
+  Kontext: ein Genesis braucht niemandes Zustimmung.
 
 - **Eine Stimme lässt sich nicht zurücknehmen.** Ohne Frist gibt es kein Fenster, nach dem es
   gleichgültig wäre; ohne Unwiderruflichkeit gibt es keine Monotonie (D97). Wer seine Meinung
