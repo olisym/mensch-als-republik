@@ -313,6 +313,14 @@ hinzu, weil die Probe eine Gruppe entfernte; im Produktivpfad war die Abfrage ko
 Probe ließ sich stattdessen bauen, indem das Trennzeichen der Gruppe durch ein nie vorkommendes
 ersetzt wurde — Gruppe bleibt, matcht nie, Befund feuert.
 
+**46. Zeilennummern und Zeilenzahlen aus der Projektkopie sind um eins zu hoch.**
+Jeder Dateikörper im repomix-Archiv beginnt mit einem Zeilenumbruch hinter dem Dateitag; wer ihn
+aufteilt, zählt eine Leerzeile mit. In `00z` trugen fünf Zeilenangaben eines Prompts und beide
+Splice-Trockenläufe denselben Versatz. Er fällt in jeder Differenz heraus — der Zuwachs stimmt,
+die Stelle nicht — und bleibt darum lange unentdeckt. Vor jeder absoluten Zeilenangabe die
+führende Leerzeile abziehen. Im Prompt bleibt der Ankertext maßgeblich; die Nummer ist ein
+Hinweis, keine Adresse.
+
 ---
 
 ## Herkunft der Nummern
@@ -323,7 +331,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
-44 und 45 aus D229.
+44 und 45 aus D229, 46 aus D232.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

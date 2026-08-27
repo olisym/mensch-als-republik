@@ -8540,3 +8540,37 @@ Produktivcode.
 Bereichsform (D228), die Anhangsnummer (D230) und zwei Schreibweisen des Namens (hier). Bare
 Verweise sind in `.py` ein Befund (D227) und in `.md` weiterhin zulässig, weil dort der
 Selbstverweis der Normalfall ist. Eine fünfte Klasse ist nicht gemessen worden.
+
+---
+
+### D232 — Abnahme `00z`; ein Defekt aus dem Prompt und ein Versatz in der Messgrundlage
+
+**Der Lauf.** Zwei Commits auf `impl/00z`, drei Dateien. `tools/check_specs.py` trägt die
+Anhangsnummer in `HEADING_NUM` und in beiden Nummerngruppen von `SECTION_REF`, dazu den
+tolerierten Backtick aus D231 und den berichtigten Kommentar über `LAYER_FILES`. Vier Textstellen
+sind korrigiert. Die abgeleiteten Zahlen halten: 43 zusätzliche Überschriften über vier Dateien,
+die Python-Zeile unverändert bei 121 Dateien und 260 Verweisen, 597 Tests. Beide Rücknahmeproben
+melden genau einen Befund mit der erwarteten Nummer und werden nach dem Zurücksetzen wieder grün.
+
+**Ein Defekt, und er stammt aus dem Prompt.** Die beiden neuen Verweise standen im ersten Commit
+ohne Backticks. `00-nucleus-genesis-constitution.md` führt elf qualifizierte Verweise, elf davon
+in Backticks und keinen ohne; die neue Form war im Bestand einmalig. Der Prompt hatte das Ziel in
+einem Code-Span genannt, und das Werkzeug hat die Backticks folgerichtig als Auszeichnung des
+Prompts gelesen statt als Teil des einzusetzenden Textes. Behoben im zweiten Commit, zwei Zeilen.
+Der Verweis war schon vorher grün — die Prüfung sah die Form nicht, der Bestand schon.
+
+**Der Versatz in der Messgrundlage.** Jeder der 227 Dateikörper im repomix-Archiv beginnt mit
+einem Zeilenumbruch hinter dem Dateitag. Wer den Körper aufteilt, zählt eine Leerzeile mit:
+**jede Zeilennummer und jede Zeilenzahl aus der Kopie ist um genau eins zu hoch.** Betroffen
+waren fünf Zeilenangaben im Prompt und beide Splice-Trockenläufe dieser Sitzung, die 8377 und
+8473 meldeten, wo der Baum 8376 und 8472 hatte.
+
+**Warum er drei Runden gehalten hat.** Der Versatz fällt in jeder Differenz heraus. Der Zuwachs
+von 96 und 70 Zeilen stimmte beide Male, und die Zeilenzahl selbst war nie ein Abnahmekriterium.
+Erst eine absolute Angabe im Prompt hat ihn sichtbar gemacht. Das Werkzeug hat ihn gemeldet und
+die Stellen nach Inhalt getroffen, statt still zu suchen — genau so war es beauftragt.
+
+**Nicht berichtigt: die fünf Zeilenangaben im committeten Prompt.** Er beschreibt einen
+vergangenen Lauf und ist als dessen Beschreibung richtig; D219 hat für diesen Fall entschieden.
+
+**Daraus Prüfregel 46.**
