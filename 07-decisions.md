@@ -9449,3 +9449,53 @@ Prüfregel 49 ist nicht konstruierbar. Der Wert der Zeile liegt vollständig in 
 **Was nicht folgt.** N02 bleibt geprüft (D253, D254). Der Lookahead in `_ALIAS_SCOPE` bleibt
 unverändert: dort ist der Anker richtig, und er ist Teil des gemeinsamen Trägers. D252 ist
 geschlossen — sein Befund bleibt gültig, sein Beschlussteil war keiner.
+
+---
+
+### D256 — Vorentscheidung zur Zweitimplementierung von Layer 01
+
+**Gemessen an Anhang C.** Layer 01 ist das einzige Layer ohne eigene Datei mit Golden Anchors;
+Anhang C ist die gesamte Messfläche. Drei der elf Reject-Codes tragen dort einen Vektor mit
+erwartetem Ausgang: der Genesis-Anker, die nicht-kanonische Kodierung und das unlesbare CBOR. Acht
+tragen keinen, darunter die Signaturprüfung selbst. Von den acht Zuständen sind vier über Vektoren
+belegt.
+
+**Was daraus folgt.** D237 hält fest, jede Abweichung einer fremden Implementierung sei eine
+Mehrdeutigkeit der Spec, die sich von allein melde. Das gilt für die **Rückfrage beim Lesen**. Für
+die **Abweichung beim Laufen** gilt es nur dort, wo ein Vektor hinsieht. Wo keiner ist, läuft die
+fremde Implementierung grün durch, und wir erfahren nichts — die teuerste Art, nichts zu lernen.
+
+**Beschluss 1: die Messfläche zuerst.** Anhang C wird um die fehlenden Fehlerklassen erweitert,
+bevor die Zweitimplementierung beauftragt wird. Das ist ein Lauf gegen die vorhandene Referenz mit
+aus Anhang B abgeleiteten Erwartungen und kostet nichts von dem, was für die Zweitsprache
+bereitliegt.
+
+**Der Einwand und warum er nicht trägt.** Die Vektoren stammen vom selben Autor wie die Referenz
+und können denselben blinden Fleck tragen. Das ist richtig und entscheidet nicht: ein **falscher**
+Vektor wird von der Zweitimplementierung als Abweichung gemeldet und ist damit Ertrag; ein
+**fehlender** Vektor erzeugt Schweigen. Ein falscher Vektor ist besser als keiner.
+
+**Beschluss 2: der Umfang ist die zustandslose Stufe.** Gebaut wird die Prüfung von Bytes zu
+Ausgang — kanonische Serialisierung nach `01 §3`, Berechnung der Claim-Kennung, Signaturprüfung,
+Prädikat-Grammatik nach Anhang A, Bindungsregel nach `01 §2.2`. Nicht gebaut werden Store,
+Vorgängerauflösung und Zustandsmaschine. Begründung: das ist genau die Hälfte, die Anhang C
+byteweise messen kann, und die Mehrdeutigkeiten sitzen dort am dichtesten.
+
+**Die Grenze dieser Stufe, benannt.** Ein Reject-Code ist so nicht messbar: sein aktiver Träger
+sitzt nach D138 in der Zustandsprüfung und verlangt ein bekanntes Ziel. Er bleibt der
+Zustandsstufe vorbehalten und wird nicht behelfsweise in einen zustandslosen Vektor gezwungen.
+
+**Beschluss 3: gemessen wird gegen die Vektoren, nicht gegen die Referenzausgabe.** Ein Abgleich
+der fremden Implementierung gegen die Ausgabe der Python-Referenz prüft die Referenz und nicht die
+Spec; das ist dieselbe Zirkularität, die D196 für die Sortierung festgehalten hat. Die Erwartung
+kommt aus Anhang B und aus dem gedruckten Vektor, nie aus einem Lauf der Referenz.
+
+**Offen: die Sprache.** Sie wird nach einem Literaturcheck entschieden (Prüfregel 15) und nicht
+vorab geraten. Zwei Kriterien stehen schon fest. Erstens wird die deterministische Kodierung aus
+`01 §3` von Hand geschrieben und nicht aus einer Bibliothek genommen, weil sonst die Bibliothek
+eines Dritten geprüft wird und nicht die Spec. Zweitens wird die Signaturprüfung ausdrücklich
+**nicht** selbst gebaut: sie ist RFC 8032 und nicht MaR-normativ, eine Eigenimplementierung misst
+nichts und schafft Risiko.
+
+**Was nicht folgt.** D237 bleibt unberührt: die Zweitimplementierung ist der beste verfügbare
+Ersatz für die fehlende Außenprüfung und ersetzt sie nicht.
