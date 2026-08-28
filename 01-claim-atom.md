@@ -917,6 +917,181 @@ claim_id = 8b19196274b2a8ac08e9a34337de5f445e6efd19fb75155eb187b069f5fd8022
 Wirkung: keine. TV1 ist durch TV3 bereits widerrufen; TV5 wiederholt den Widerruf und ist
 selbst bei einem `now` jenseits seines `t_exp` weiterhin `active` (§5.3, Anhang B.3).
 
+### C.10 NV4–NV11 — negative Vektoren für den Fehlerkanal
+
+Acht Claims, jeder mit genau einem Mangel. Alle übrigen Felder sind die Grundwerte von TV1
+ohne `t_exp`, korrekt signiert. Sie prüfen denselben Fehlerkanal wie C.8: welchen Code eine
+Implementierung liefern muss, unabhängig davon, an welcher Stelle ihrer Prüfreihenfolge sie
+ihn findet.
+
+#### NV4 — `version` 2 → `UNSUPPORTED_VERSION`
+
+Verletzt Punkt 1 von §6: `version` wird nicht unterstützt.
+
+```
+core = { 0:2, 1:ALICE, 2:[1, BOB], 3:"nuc:6530…5557/vouch@1",
+         4:h'a1001864', 5:N, 6:1700000401, 8:h_prev_genesis(ALICE) }
+
+bytes    = a800020158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f766f75636840310444a1001864
+           05582065309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d
+           2f5557061a6553f29108582062db0b05f44c17e2dfe7f371d631845fdd5858dd
+           94c37d327a28f73b25625430
+claim_id = 382810f6d71a1767c96e678a05519da48713a556f0277f8a97732b9d9714bf09
+σ        = b73db1e3037bb602e2eb7c79c268f552dc5d51132f88fdd4bf9c3df509e6aacf
+           b969429bd48ee179c7057dbd6192c58dd65407d876d238136271c60f920e3f0c
+erwartet = Reject: UNSUPPORTED_VERSION
+```
+
+#### NV5 — `J.tag` 4 → `UNKNOWN_J_TAG`
+
+Verletzt Punkt 3 von §6: `J.tag` liegt nicht im geschlossenen Enum `{1,2,3}`.
+
+```
+core = { 0:1, 1:ALICE, 2:[4, BOB], 3:"nuc:6530…5557/vouch@1",
+         4:h'a1001864', 5:N, 6:1700000402, 8:h_prev_genesis(ALICE) }
+
+bytes    = a800010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820458208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f766f75636840310444a1001864
+           05582065309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d
+           2f5557061a6553f29208582062db0b05f44c17e2dfe7f371d631845fdd5858dd
+           94c37d327a28f73b25625430
+claim_id = 341cd38cebb06e8b9b2b33c10def16530df4576862c5dc92d98dc9fecadd8a7d
+σ        = 53bbc9430388716ab18063f91200025cd79319ae553782eace0f3022a393c15c
+           e4677816d4899f606c988c7940add80ddc15ce9e6e582fe19da20aa1044a270f
+erwartet = Reject: UNKNOWN_J_TAG
+```
+
+#### NV6 — Namensraum `foo` → `UNKNOWN_NAMESPACE`
+
+Verletzt Punkt 4 von §6: der Namensraum von `p` ist weder `core` noch `nuc:`.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"foo/vouch@1",
+         4:h'a1001864', 6:1700000403, 8:h_prev_genesis(ALICE) }
+
+bytes    = a700010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b394036b666f6f2f766f75636840310444a1001864061a
+           6553f29308582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a
+           28f73b25625430
+claim_id = e9a3dbb5903dba124c2c746e4a8a2180454fba7527ac406e57af40bfd8c9824a
+σ        = 0576a0be4bcbb1fc32912b1a9e62e4b1b90e633f0345e33d3ae5fa16f00dc514
+           74ff68a38bcce79acf899fd08db629d8fe75ef7d81b76d7e2bf14ae4f87e420e
+erwartet = Reject: UNKNOWN_NAMESPACE
+```
+
+#### NV7 — `N` entspricht dem kanonischen Scope nicht → `BAD_SCOPE_BINDING`
+
+Verletzt Punkt 4 von §6, Bindungsregel §2.2 Regel 3: `N` ist gesetzt und ungleich
+`bytes.fromhex(scope)`.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"nuc:6530…5557/vouch@1",
+         4:h'a1001864', 5:32×0x11, 6:1700000404, 8:h_prev_genesis(ALICE) }
+
+bytes    = a800010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f766f75636840310444a1001864
+           0558201111111111111111111111111111111111111111111111111111111111
+           111111061a6553f29408582062db0b05f44c17e2dfe7f371d631845fdd5858dd
+           94c37d327a28f73b25625430
+claim_id = 0c9b903b704dd4f996522cef13f96bfa2fb9f553196579981ba58d39801c3099
+σ        = 9275a4193d9bec8f9cfe9aab8929a54f7c6cbc77678e7a51fa1dfa9637f4ab2d
+           902fe71388c9646a84c74e2e380c5ca54c2e21d765767505c91ae16416a15e04
+erwartet = Reject: BAD_SCOPE_BINDING
+```
+
+#### NV8 — Alias-Kodierung ohne `N` → `BAD_SCOPE_BINDING`
+
+Verletzt Punkt 4 von §6, Bindungsregel §2.2 Regel 3: bei Alias-Kodierung fehlt `N`.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"nuc:beispiel-alias/vouch@1",
+         4:h'a1001864', 6:1700000405, 8:h_prev_genesis(ALICE) }
+
+bytes    = a700010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403781a6e75633a626569737069656c2d616c696173
+           2f766f75636840310444a1001864061a6553f29508582062db0b05f44c17e2df
+           e7f371d631845fdd5858dd94c37d327a28f73b25625430
+claim_id = 52c26cea614c8460f859a6e0756eb8cbb6e3cf7b8409547f3f41e5d727af60b5
+σ        = 17f1a3ded18d913034e6e607b9a93e0d297729f5faaf901556f77bb5ed69b52a
+           cbb1d3a827839cb63e58abda199248b29f06f1008189c4a25d5d17881ba95b04
+erwartet = Reject: BAD_SCOPE_BINDING
+```
+
+#### NV9 — `core/rotate@1` → `RESERVED_CORE_PREDICATE`
+
+Verletzt Punkt 4 von §6: `core/*` liegt nicht in `{revoke@1, supersede@1}`.
+
+```
+core = { 0:1, 1:ALICE, 2:[2, TV1.claim_id], 3:"core/rotate@1",
+         6:1700000406, 8:h_prev_genesis(ALICE) }
+
+bytes    = a600010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c0282025820f95d430e40df736cbdffd7bf82af4f77e0c7af8692
+           565f3b2a151c2c1ae8660c036d636f72652f726f746174654031061a6553f296
+           08582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a28f73b25
+           625430
+claim_id = 614aab79e4bea65dd486b46f95a4d1f50ad03205f92aac14e454b4446fd71969
+σ        = f899d194336b2456e11cbe7ad7012cbe7a4d9cef68b604ea93701f194d6a6f35
+           13330a1a402a93f256680cccb92749db8c786ff2c64daeed9d371857ab7aab0e
+erwartet = Reject: RESERVED_CORE_PREDICATE
+```
+
+#### NV10 — Signatur von BOB, `I` bleibt ALICE → `BAD_SIGNATURE`
+
+Verletzt Punkt 5 von §6: `Ed25519-Verify` gegen `C.I` schlägt fehl.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"nuc:6530…5557/vouch@1",
+         4:h'a1001864', 5:N, 6:1700000407, 8:h_prev_genesis(ALICE) }
+
+bytes    = a800010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f766f75636840310444a1001864
+           05582065309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d
+           2f5557061a6553f29708582062db0b05f44c17e2dfe7f371d631845fdd5858dd
+           94c37d327a28f73b25625430
+claim_id = f4541adfc37c1d42b880cee040c1018772f47020736bc02ed3d4b21fed7b611b
+σ        = b5147f2d004b03e9c46d33db57bfe3e37af585b875357fac2f3b8bd2f2433a05
+           ad88ffe76ca55ed747feba8ead186de324baf7b3b1bafda67bf8a41c6a494106
+erwartet = Reject: BAD_SIGNATURE
+```
+
+#### NV11 — `t_exp` gleich `t` → `INCOHERENT_EXPIRY`
+
+Verletzt Punkt 7 von §6: `t < t_exp` gilt nicht, die Gleichheit liegt auf der Grenze.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"nuc:6530…5557/vouch@1",
+         4:h'a1001864', 5:N, 6:1700000408, 7:1700000408, 8:h_prev_genesis(ALICE) }
+
+bytes    = a900010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f766f75636840310444a1001864
+           05582065309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d
+           2f5557061a6553f298071a6553f29808582062db0b05f44c17e2dfe7f371d631
+           845fdd5858dd94c37d327a28f73b25625430
+claim_id = 32dd820ac291f75319369563f9eb10fe30de77607cb24cbb5a6778798a57ff3c
+σ        = 5ee6ea5ec53776d0e804b2b7640cd87dbb84b22486b3f3510b85f3d6dc9f381a
+           e6d313a10ce6f9af4d6f650458477110ccc7ca36c68dc087aeed26dc00e14308
+erwartet = Reject: INCOHERENT_EXPIRY
+```
+
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 
 - **Genesis-`h_prev` vereinheitlicht** auf `SHA-256(DOM_ID_GEN ‖ I)` (Feldtabelle, §4, §6);

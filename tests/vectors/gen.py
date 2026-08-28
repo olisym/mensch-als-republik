@@ -207,6 +207,107 @@ def build_vectors() -> dict:
     )
     nv3 = _finalize(nv3_unsigned, alice_sk)
 
+    # NV4 — version 2
+    nv4_unsigned = Claim(
+        version=2,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p=P_VOUCH,
+        v=V_VOUCH,
+        N=N,
+        t=1_700_000_401,
+        h_prev=h_gen_alice,
+    )
+    nv4 = _finalize(nv4_unsigned, alice_sk)
+
+    # NV5 — J.tag 4
+    nv5_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(4, BOB_PUB),
+        p=P_VOUCH,
+        v=V_VOUCH,
+        N=N,
+        t=1_700_000_402,
+        h_prev=h_gen_alice,
+    )
+    nv5 = _finalize(nv5_unsigned, alice_sk)
+
+    # NV6 — Namensraum foo, N abwesend
+    nv6_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p="foo/vouch@1",
+        v=V_VOUCH,
+        t=1_700_000_403,
+        h_prev=h_gen_alice,
+    )
+    nv6 = _finalize(nv6_unsigned, alice_sk)
+
+    # NV7 — N ist 32×0x11, p bleibt kanonisch auf N
+    nv7_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p=P_VOUCH,
+        v=V_VOUCH,
+        N=b"\x11" * 32,
+        t=1_700_000_404,
+        h_prev=h_gen_alice,
+    )
+    nv7 = _finalize(nv7_unsigned, alice_sk)
+
+    # NV8 — Alias-Kodierung, N abwesend
+    nv8_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p="nuc:beispiel-alias/vouch@1",
+        v=V_VOUCH,
+        t=1_700_000_405,
+        h_prev=h_gen_alice,
+    )
+    nv8 = _finalize(nv8_unsigned, alice_sk)
+
+    # NV9 — core/rotate@1, J wie TV3, kein v, kein N
+    nv9_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(2, tv1_cid),
+        p="core/rotate@1",
+        t=1_700_000_406,
+        h_prev=h_gen_alice,
+    )
+    nv9 = _finalize(nv9_unsigned, alice_sk)
+
+    # NV10 — mit BOB signiert, I bleibt ALICE
+    nv10_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p=P_VOUCH,
+        v=V_VOUCH,
+        N=N,
+        t=1_700_000_407,
+        h_prev=h_gen_alice,
+    )
+    nv10 = _finalize(nv10_unsigned, bob_sk)
+
+    # NV11 — t_exp gleich t
+    nv11_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p=P_VOUCH,
+        v=V_VOUCH,
+        N=N,
+        t=1_700_000_408,
+        t_exp=1_700_000_408,
+        h_prev=h_gen_alice,
+    )
+    nv11 = _finalize(nv11_unsigned, alice_sk)
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -247,6 +348,14 @@ def build_vectors() -> dict:
                 "expect_reject": "NON_CANONICAL_ENCODING",
             },
             _vec("TV5", tv5),
+            _vec("NV4", nv4, expect_reject="UNSUPPORTED_VERSION"),
+            _vec("NV5", nv5, expect_reject="UNKNOWN_J_TAG"),
+            _vec("NV6", nv6, expect_reject="UNKNOWN_NAMESPACE"),
+            _vec("NV7", nv7, expect_reject="BAD_SCOPE_BINDING"),
+            _vec("NV8", nv8, expect_reject="BAD_SCOPE_BINDING"),
+            _vec("NV9", nv9, expect_reject="RESERVED_CORE_PREDICATE"),
+            _vec("NV10", nv10, expect_reject="BAD_SIGNATURE"),
+            _vec("NV11", nv11, expect_reject="INCOHERENT_EXPIRY"),
         ],
     }
 
