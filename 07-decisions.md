@@ -9234,3 +9234,38 @@ selbst an dieser Stelle nicht angewandt worden.
 Werkzeugrunde. Der Punkt geht offen und ausdrücklich als ungemessen auf die Liste. Die Reparatur —
 toten Lookahead und redundante Bedingung löschen — ist eine Codelöschung und gehört zusammen mit
 der Probe in einen Lauf.
+
+---
+
+### D249 — Die drei Normen aus `00ab` erhalten die Nummern 47 bis 49
+
+**Anlass.** D239, D244 und D245 sind als Norm formuliert worden, ohne eine Prüfregelnummer zu
+bekommen; `pruefregeln.md` blieb bei 46. Das ist derselbe Zustand, den D144 für die Parallelen-
+und die Begründungspruefung beschrieben hat: ohne Nummer ist eine Regel in einem Prompt nicht
+zitierbar, und was nicht zitierbar ist, wirkt nicht. Der Verlust wäre still gewesen — die
+Registereinträge bleiben ja stehen und lesen sich richtig.
+
+**Beschluss.** 47 aus D239, 48 aus D244, 49 aus D245. Der Volltext steht in `pruefregeln.md`, wie
+D144 es für alle Regeln festgelegt hat; die Registereinträge behalten Anlass, Messung und
+Begründung. Die Herkunftsliste am Dateiende wird mitgezogen.
+
+**Was der Volltext gegenüber dem Registereintrag verliert.** Regel 49 nennt vier Module für die
+Genesis-Bindung und drei für die Policy-Bindung, nicht die Modulnamen; die stehen in D245. Die
+vier parallelen Träger zu N11 sind im Regeltext weggelassen, weil sie den Fall nicht schärfen.
+Eine Regel ist ein Merksatz mit Beleg, kein Ersatz für den Eintrag.
+
+**Einordnung.** Angehängt an den letzten Abschnitt, wie 37 bis 46 vor ihnen. Die angekündigte
+Ordnung nach dem Zeitpunkt, an dem eine Regel greift, ist für die Nummern ab 37 faktisch die
+Ordnung ihrer Entstehung: 38, 39, 40, 43 und 46 stehen unter einer Überschrift über Tests und
+handeln nicht von Tests. Das ist ein Befund an der Gliederung, keine Änderung an ihr; er geht auf
+die offene Liste.
+
+**Nicht beschlossen.** Der Kandidat aus `00ab` — eine neu formulierte Norm wird vor dem Commit
+gegen die offenen Befunde derselben Sitzung gehalten — bekommt hier keine Nummer. Sein einziger
+Anlass ist D248, wo D245 im selben Eintrag nicht angewandt wurde. Er wird formuliert, wenn der
+Nachlauf zu D248 gemessen hat, ob die Anwendung der Norm den Befund verändert hätte; vorher ist
+offen, ob die Regel den Fehler gefangen oder nur benannt hätte.
+
+**Was nicht dazugehört.** Kein Test und kein Werkzeug liest die Zahl der Prüfregeln.
+`tools/register_index.py` und `tools/splice_run.py` nennen Regelnummern nur im Docstring. Der
+Splice berührt zwei Markdown-Dateien und keine Zusicherung.

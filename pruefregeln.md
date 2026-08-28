@@ -321,6 +321,36 @@ die Stelle nicht — und bleibt darum lange unentdeckt. Vor jeder absoluten Zeil
 führende Leerzeile abziehen. Im Prompt bleibt der Ankertext maßgeblich; die Nummer ist ein
 Hinweis, keine Adresse.
 
+**47. Ein Verweis und ein Code-Span werden beim Umbrechen wie ein Wort behandelt.**
+`SECTION_REF` in `tools/check_specs.py` verlangt den Namen unmittelbar vor dem Paragraphenzeichen,
+getrennt durch genau ein Leerzeichen. Ein Zeilenumbruch an dieser Stelle macht den Verweis nicht
+falsch, sondern unsichtbar: er wird nicht mehr geprüft, und die Prüfung bleibt grün. Gemessen in
+`00ab` an einem ungeglätteten Reflow: die gefundenen Verweise fallen in
+`00-nucleus-genesis-constitution.md` von 67 auf 66 und in `06-services.md` von 44 auf 43. Fuer
+Inline-Code-Spans dieselbe Lage in schwächerer Form: die Zeilen mit ungerader Backtick-Zahl in
+`01-claim-atom.md` steigen von 38 auf 40. Wer Prosa umbricht, hält Name-Paragraph-Ziffer und jeden
+Code-Span in einer Zeile (D239).
+
+**48. Eine abgeleitete `numstat`-Erwartung zieht die randgleichen Zeilen ab.**
+Git zieht Zeilen, die am oberen oder unteren Rand eines Blocks unverändert bleiben, nicht in den
+Hunk. Wer je Block die vollständige Alt-Menge als Löschung und die vollständige Neu-Menge als
+Einfügung rechnet, erwartet systematisch zu viel: für den Lauf zu D238 stand +179 -82 gegen
+gemessene +147 -50, und die Differenz von 32 auf beiden Seiten war genau die Zahl der randgleichen
+Zeilen. Ohne den Abzug sieht eine Abweichung, die nichts bedeutet, aus wie ein Befund. Das ergänzt
+Prüfregel 41 um einen Fall, in dem die Abweichung vor der Bewertung gerechnet werden kann (D244).
+
+**49. Eine Rücknahmeprobe neutralisiert die Träger einer Pflicht geschlossen.**
+Wer eine Pflicht mit der Rücknahmeprobe misst, bestimmt zuerst die vollständige Menge ihrer
+Träger und neutralisiert sie zusammen. Bleibt eine von mehreren gleichwertigen Stellen stehen,
+zeigt ein grüner Lauf nur, dass die neutralisierte Stelle für die bestehenden Tests unsichtbar
+ist — nicht, dass die Pflicht ungeprüft ist; ein Test über einen anderen Einstiegspunkt bekommt
+dieselbe Ausnahme von einer der übrigen. Vier Module rechnen die Genesis-Bindung byte-gleich
+nach, drei weitere werfen wortgleich zur Policy-Bindung; nach einer Einzelprobe heißt eine Pflicht
+darum unbestimmt und nicht ungeprüft. Bleibt bei geschlossener Neutralisierung ein Test rot, ist
+sie geprüft, auch wenn keine Einzelstelle für sich rot zu faerben war. Umgekehrt zu Prüfregel
+41: eine ausbleibende Abweichung ist erst dann ein Befund, wenn ein paralleler Träger
+ausgeschlossen ist (D245).
+
 ---
 
 ## Herkunft der Nummern
@@ -331,7 +361,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
-44 und 45 aus D229, 46 aus D232.
+44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
