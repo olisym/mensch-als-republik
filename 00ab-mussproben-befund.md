@@ -251,3 +251,85 @@ nicht allein rot färben.
 
 Elf geprüft, drei ungeprüft, keiner ohne Träger. N01 hat keinen akt-spezifischen
 Träger, aber einen allgemeinen. Deshalb nicht ohne Träger.
+
+## Nachlauf: N11 und N14 mit geschlossener Trägermenge
+
+Nach D245. Zwei Proben, je alle Träger zugleich. Dazwischen `git diff --quiet`.
+Grundlinie 597 Tests. Kein Produktivcode bleibt geändert.
+
+### N14 — es wird geworfen, nicht vermerkt
+
+Träger, die den Genesis-Hash gegen `scope` vergleichen und bei Abweichung
+werfen. Die Meldung ist überall `genesis_obj does not match scope`:
+
+1. `mensch_als_republik/governance/chain.py`, `resolve_epoch`
+2. `mensch_als_republik/profiles/policy.py`, `resolve_policy`
+3. `mensch_als_republik/keys.py`, `resolve_authorized_keys`
+4. `mensch_als_republik/trust/params.py`, `resolve_trust_params`
+
+rot: 6
+
+```
+tests/governance/test_chain.py::test_chain_wrong_scope_raises
+tests/nucleus/test_anchor.py::test_j_scope_mismatch_raises
+tests/profiles/test_invariants.py::test_PR_INV_4
+```
+
+Die übrigen drei sind `test_P_F`,
+`test_resolve_state_wrong_scope_raises_like_resolve_epoch` und
+`test_genesis_does_not_match_scope`.
+
+Klasse: **geprüft**
+
+Abweichung vom bisherigen Befund: dort nur `resolve_epoch`, mit
+`resolve_policy` als unsichtbarem Schatten. Die geschlossene Menge hat vier
+Träger. D245 nannte dieselben vier; das ist bestätigt, nicht übernommen.
+
+`decide` in `tally.py` wirft gegen `epoch.scope` mit der anderen Meldung
+`genesis_obj does not match epoch scope`. Das ist N13, nicht N14.
+
+### N11 — dieses `N` ist der ausgewertete Scope
+
+Träger, die ein `N` gegen den ausgewerteten Scope prüfen:
+
+1. `mensch_als_republik/profiles/credit.py`, `settlement`: `obligation.N`,
+   ValueError
+2. `mensch_als_republik/profiles/credit.py`, `settlement`: Quittung `c.N`,
+   Vermerk `SCOPE_MISMATCH`
+3. `mensch_als_republik/profiles/verdict.py`, `verdict_status`: `verdict.N`,
+   ValueError
+4. `mensch_als_republik/profiles/verdict.py`, `_active_submission`: `c.N`,
+   Vermerk `SCOPE_MISMATCH`
+5. `mensch_als_republik/profiles/verdict.py`, `verdict_status`: `accusation.N`,
+   Vermerk `SCOPE_MISMATCH`
+6. `mensch_als_republik/profiles/membership.py`, `membership`: `accept-rules`,
+   `c.N`
+7. `mensch_als_republik/profiles/membership.py`, `membership`:
+   `grant-membership`, `c.N`
+8. `mensch_als_republik/governance/tally.py`, `decide`: `vote.N` gegen
+   `epoch.scope`
+
+rot: 8
+
+```
+tests/governance/test_vectors.py::test_GV_20
+tests/profiles/test_credit.py::test_SE_5
+tests/profiles/test_invariants.py::test_PR_INV_9
+```
+
+Die übrigen fünf sind `test_PR_INV_13`, `test_MB_9`, `test_VS_7`, `test_VS_12`
+und `test_VS_13`.
+
+Klasse: **geprüft**
+
+Abweichung: der bisherige Befund nannte vier Module und eine Argumentprüfung
+in `settlement`. Die geschlossene Menge hat acht Stellen in denselben vier
+Modulen. Die Argumentprüfung in `verdict_status` war ungenannt.
+
+Die Argumentprüfung `obligation.N` in `settlement` ist Träger. Der einzige
+Test, der sie trifft, wirft danach noch über `policy.scope`. Unter
+geschlossener Neutralisierung der N-Stellen blieb dieser eine Aufruf grün.
+Die Klasse hängt nicht an ihm.
+
+`test_PR_INV_9` wurde rot, weil die Vermerke `SCOPE_MISMATCH` fehlten, nicht
+weil eine andere Pflicht brach.
