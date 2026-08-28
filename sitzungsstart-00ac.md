@@ -48,9 +48,21 @@ Was in `00ab` am meisten getragen hat:
   Kein `float`, kein `fractions` im Produktivcode. `now` ist immer Parameter.
 - Shell-Befehle als **ein** Copy-Block, fish. Ein Job pro Zeile, `and` am Zeilenanfang, nie `;`.
   Glob-Argumente **quoten** — ein leerer Glob bricht die Zeile ab, `find -name` ist der sichere
-  Ersatz. **Nie `and` innerhalb einer Pipe**; `sha256sum -c` am Pipe-Ende und eine Pipe auf `tail`,
-  `awk` oder `string trim` sind die nützlichen Ausnahmen. Nach Regel 39 sichert eine Zeile, die nur
-  ausgibt, nichts: `test (git branch --show-current) = main` statt der Ausgabe.
+  Ersatz. **Nie `and` innerhalb einer Pipe**; `sha256sum -c` am Pipe-Ende und eine Pipe auf `tail`
+  oder `awk` sind die nützlichen Ausnahmen. Nach Regel 39 sichert eine Zeile, die nur ausgibt,
+  nichts: `test (git branch --show-current) = main` statt der Ausgabe.
+- **Jeder Block trägt Marken.** Vor jedem Abschnitt ein `echo "== NAME =="`, am Ende ein
+  `echo "== FERTIG =="`. Fehlt die Schlussmarke in der zurückkopierten Ausgabe, ist die Kette
+  abgebrochen — unabhängig davon, ob die letzte sichtbare Zeile erfolgreich aussieht. Ohne Marken
+  ist ein stiller Abbruch nicht von einem vollständigen Lauf zu unterscheiden, und beide Male, wo
+  das in `00ab` passiert ist, war die letzte sichtbare Zeile ein Erfolg. Die Marken stehen mit
+  `and` in der Kette, damit sie mit ihr abbrechen.
+- **`string`-Kommandos in einer `and`-Kette sind eine Falle.** `string trim`, `string match` und
+  `string replace` geben Exit-Status 1 zurück, wenn sie nichts zu tun hatten — kein Fehler, nur
+  keine Änderung. In einer Kette bricht das alles Folgende ab. Genau daran ist der Nachzug der
+  Projektkopie in `00ab` zweimal gescheitert: `wc -l` liefert unter Linux keine führenden
+  Leerzeichen, `string trim` hatte nichts zu tun und meldete 1. Meist braucht man es nicht —
+  Kommandosubstitution entfernt Whitespace bereits selbst.
 - **Ein Wächter, der nur prüft, sagt nicht, was zu tun ist.** In den Merge-Block gehört
   `git checkout main` **vor** den Wächter, nicht statt seiner. `git branch -d` statt `-D`, damit
   die Löschung scheitert, wenn doch etwas ungemergt ist.
@@ -107,9 +119,13 @@ Paragraphenzeichen eine Ziffernfolge stehen muss. Anhänge werden im Klartext ge
   `grep -n '^## ' <datei>`.
 - **Die Projektkopie wird nach jedem Push nachgezogen** (D224, Prüfregel 43), mit fünf Kaltzahlen
   im `--header-text`, Aufruf über
-  `npx --yes repomix --header-text "$stand" -o /tmp/mar-context.xml`. **Das `-o` gehört dazu**:
+  `npx --yes repomix --header-text "..." -o /tmp/mar-context.xml`. **Das `-o` gehört dazu**:
   ohne es schreibt repomix `repomix-output.xml` in den Arbeitsbaum, und `check_tree.py` meldet
   sie. `.gitignore` nimmt sie bewusst **nicht** auf, damit der Wächter anschlägt.
+- **Die fünf Kaltzahlen werden ausgelesen, nicht abgetippt.** Ein Header, der die Zahlen falsch
+  trägt, ist schlimmer als keiner. Der Nachzug steht am Kettenende und ist deshalb der erste
+  Verlierer jedes stillen Abbruchs; ein `echo` des Headers **vor** dem Aufruf zeigt, ob die Kette
+  so weit gekommen ist.
 - **Verworfen für die Kopie:** `--compress`, `--remove-comments`, `--remove-empty-lines`,
   `--output-show-line-numbers`, `--no-file-summary`. Begründungen in D224; nicht wieder aufmachen.
 - **Prüfregel 27** vor jedem Verweis, **33** für den Satz daneben, **38** vor der Position,
