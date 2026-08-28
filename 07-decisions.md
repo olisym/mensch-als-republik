@@ -9605,3 +9605,41 @@ ist noch nicht entschieden.
 **Was nicht folgt.** D237 bleibt: die Zweitimplementierung ist der beste verfügbare Ersatz für die
 fehlende Außenprüfung und ersetzt sie nicht. Der Befund von 1986 und der von 2026 machen sie nicht
 wertlos, sondern verschieben, wonach in ihrem Ergebnis zu suchen ist.
+
+---
+
+### D259 — Was die Zweitimplementierung sehen darf
+
+**Die Quelle ist eine einzige Datei.** Gemessen an `01-claim-atom.md`: die drei
+Domänen-Separatoren sind dort definiert, und alle zwölf Verweise auf
+`00-nucleus-genesis-constitution.md` betreffen Verfassung, Governance oder die Policy-Sicht, also
+die Zustandsstufe. Der Separator der Nukleus-Scope-ID wird in C.0 im Klartext genannt. Für die
+zustandslose Stufe nach D256 ist die Datei selbsttragend, und es geht nichts weiter mit.
+
+**Anhang C wird bei C.1 abgeschnitten.** Mitgegeben wird der Text bis einschließlich des ersten
+positiven Vektors; C.2 bis C.10 werden zurückgehalten. Begründung: Anhang C ist bis zum Bau der
+Kampagne der einzige Messpunkt, und ein Messpunkt, gegen den entwickelt wurde, misst die
+Entwicklung und nicht die Spec. Wer dem Agenten die negativen Vektoren gibt, bekommt eine Fassung,
+die sie besteht, und erfährt nichts darüber, ob der Text sie trägt.
+
+**Warum der Schnitt nicht vor C.0 liegt.** Ohne einen vollständig gerechneten positiven Vektor
+kann eine falsche Kodierung die gesamte Fassung zu Rauschen machen: alles wird abgelehnt, und
+keine einzige Fehlerklasse wird sichtbar. Der erste Vektor fixiert die Kodierung, die
+Claim-Kennung und die Signatur und kostet dafür genau einen von elf Messpunkten. Das ist der
+billigste verfügbare Schutz gegen einen Totalausfall der Messung.
+
+**Die Arbeit findet außerhalb des Arbeitsverzeichnisses statt.** Die Zweitimplementierung
+entsteht in einem eigenen Verzeichnis ohne Sicht auf die Python-Fassung, die Tests, die
+Vektordatei und das Register. Sonst ist die Trennung eine Bitte und keine Eigenschaft. Die
+beschnittene Spec-Datei wird durch ein Skript aus dem committeten Stand erzeugt, mit Quell- und
+Zielhash, damit nachweisbar bleibt, welcher Text vorlag.
+
+**Die Schnittstelle wird vorgegeben, die Semantik nicht.** Ein- und Ausgabeformat müssen
+festliegen, sonst ist nichts vergleichbar; das ist keine Präzisierung der Spec im Sinne von D258
+Beschluss 2, sondern die Bedingung dafür, überhaupt zu messen. Die Namen der Fehlerklassen kommen
+aus Anhang B und werden im Prompt nicht aufgezählt.
+
+**Was das kostet, benannt.** Nach dem Lauf ist der Messpunkt verbraucht: eine zweite Fassung
+gegen dieselben zurückgehaltenen Vektoren ist noch möglich, eine Nachbesserung derselben Fassung
+gegen sie nicht. Wird die Fassung nach der Messung repariert, ist sie danach kein Messpunkt mehr,
+sondern Code wie jeder andere.
