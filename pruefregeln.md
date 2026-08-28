@@ -361,6 +361,15 @@ Kriterium aus einem Modell wird als untere Schranke formuliert — dieser Test w
 vollständige Menge. Ergänzt Prüfregel 28: die Weltlage vor dem Kriterium umfasst auch die Tests,
 die das Modell nicht kennt.
 
+**51. Ein Prüfer, der eine Menge misst, wird zuerst an einem vorhandenen Element geeicht.**
+Wer ein Skript baut, das erwartete Werte im Text sucht, prüft es zunächst gegen ein Element, das
+im Bestand schon steht. Die Rücknahmeprobe reicht dafür nicht: sie zeigt, dass der Prüfer
+reagiert, nicht dass er das Richtige misst. Gemessen in `00ad`: ein Diagnoseskript für Anhang C
+meldete gegen den Vorzustand pflichtgemäß null Treffer und gegen den Zielzustand ebenfalls null
+für die Bytes — weil es die signierten Bytes suchte, der Anhang aber nach dem Muster von C.1 den
+Core und die Signatur getrennt führt. Ein Probelauf gegen TV1 hätte das im ersten Zug gezeigt und
+einen Umlauf gespart. Ergänzt Prüfregel 49: eine Probe sichert die Richtung, nicht den Maßstab.
+
 ---
 
 ## Herkunft der Nummern
@@ -371,7 +380,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
-44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254.
+44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

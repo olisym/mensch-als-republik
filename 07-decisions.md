@@ -9499,3 +9499,45 @@ nichts und schafft Risiko.
 
 **Was nicht folgt.** D237 bleibt unberührt: die Zweitimplementierung ist der beste verfügbare
 Ersatz für die fehlende Außenprüfung und ersetzt sie nicht.
+
+---
+
+### D257 — Anhang C deckt zehn der elf Reject-Codes; Prüfregel 51
+
+**Was gebaut wurde.** Acht negative Vektoren NV4 bis NV11 in `01 §C.10`, angehängt und nicht
+eingeschoben. Sie decken sieben Fehlerklassen: nicht unterstützte Version, unbekanntes J-Tag,
+unbekannter Namensraum, verletzte Scope-Bindung in beiden Zweigen der Regel, reserviertes
+core-Prädikat, falsche Signatur, inkohärente Ablaufzeit. Zusammen mit den drei vorhandenen trägt
+Anhang C damit zehn der elf Reject-Codes. 617 Tests.
+
+**Das Konstruktionsprinzip.** Jeder Vektor trägt genau einen Mangel und ist im Übrigen gültig und
+korrekt signiert. Nur so ist der erwartete Code eindeutig, unabhängig davon, an welcher Stelle
+ihrer Prüfreihenfolge eine fremde Implementierung ihn findet. Ein Vektor mit zwei Mängeln
+behauptet ungewollt über die Reihenfolge.
+
+**Die verbleibende Lücke, benannt.** Für den elften Code gibt es keinen Vektor: sein aktiver
+Träger sitzt nach D138 in der Zustandsprüfung und verlangt ein bekanntes Ziel. Er gehört in die
+Zustandsstufe der Zweitimplementierung und wurde nicht behelfsweise in einen zustandslosen Vektor
+gezwungen.
+
+**Die Abnahme lief ohne gelesenen Diff.** Die acht Claim-Kennungen, Signaturen und Core-Bytes
+wurden aus der Feldspezifikation des Prompts unabhängig nachgerechnet und gegen drei Artefakte
+gehalten: die Golden-Liste, die Vektordatei und den Anhang. Achtmal deckungsgleich in jeder
+Spalte, achtmal der beauftragte Code. Von den 175 Zeilen des Anhangs wurde keine gelesen; geprüft
+wurde, dass sie die gerechneten Werte enthalten.
+
+**Die Proben.** Acht Vektoren, acht Neutralisierungen, kein Vektor ohne roten Test. Die Meldung
+des Werkzeugs korrigiert eine Erwartung des Prompts: NV7 und NV8 treffen zwei verschiedene
+Bedingungen in `resolve_scope` und nicht dieselbe Prüfstelle. Das war der Grund, beide Vektoren zu
+bauen, und die Probe hat ihn bestätigt.
+
+**Prüfregel 51, aus einem eigenen Fehler.** Das erste Diagnoseskript suchte die signierten Bytes
+im Anhang und fand sie achtmal nicht, obwohl der Anhang fehlerfrei war: er führt nach dem Muster
+von C.1 den Core und die Signatur getrennt. Die Rücknahmeprobe des Skripts hatte das nicht
+gefangen, weil sie gegen den Vorzustand aus dem richtigen Grund rot war und gegen den Zielzustand
+aus dem falschen. Daraus die Regel: ein Prüfer, der eine Menge misst, wird zuerst an einem
+Element geeicht, das im Bestand schon steht. Ein Probelauf gegen TV1 hätte den Umlauf gespart.
+
+**Was offen bleibt.** Die Sprache der Zweitimplementierung, nach D256 mit Literaturcheck. Die
+Zustandsstufe mit dem elften Code. Die Gliederung von `pruefregeln.md`, durch Regel 51 nicht
+schlechter und nicht besser geworden.
