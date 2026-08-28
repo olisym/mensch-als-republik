@@ -9643,3 +9643,68 @@ aus Anhang B und werden im Prompt nicht aufgezählt.
 gegen dieselben zurückgehaltenen Vektoren ist noch möglich, eine Nachbesserung derselben Fassung
 gegen sie nicht. Wird die Fassung nach der Messung repariert, ist sie danach kein Messpunkt mehr,
 sondern Code wie jeder andere.
+
+---
+
+### D260 — Die Zweitimplementierung ist gelaufen: 18 von 19, siebzehn Fragen
+
+**Der Lauf.** Go 1.27, Commit `365df9b` in einem eigenen Verzeichnis, 2039 Zeilen in acht Dateien,
+eigenes deterministisches CBOR ohne Bibliothek, Signatur aus der Standardbibliothek. Vorgelegen
+hat allein die bei C.1 beschnittene Spec, deren Hash lautet:
+
+```
+b16251fc02d07c8761a0583fe77ddadd6a6f59e6b7167d889231733170cc051a
+```
+
+Der Prompt nannte keinen Abschnitt, keine Fehlerklasse und keine Prüfreihenfolge.
+
+**Die Messung.** Neunzehn Vektoren aus Anhang C, achtzehn davon der fremden Fassung unbekannt.
+Achtzehn deckungsgleich, eine Abweichung. Alle acht Fehlerklassen aus `01 §C.10` trafen beim
+ersten Durchlauf zu, ebenso die drei älteren negativen Vektoren und alle fünf positiven samt
+Claim-Kennung.
+
+**Das ist ein Ergebnis über die Spec, nicht über Go.** Eine fremde Implementierung, die nichts als
+den Text und einen einzigen Vektor gesehen hat, trifft achtzehn von neunzehn Ausgängen byte- und
+codegleich. Für die Kodierung, die Kennungsberechnung, die Signaturprüfung, die
+Prädikat-Grammatik und die Bindungsregel trägt der Text.
+
+**Die Abweichung sitzt am einzigen Vektor mit zwei Mängeln.** BV2 ist indefinite-length **und**
+trägt einen Text-Schlüssel. Die Referenz meldet die Schlüsselklasse, die fremde Fassung die
+Kodierungsklasse. Beide Lesarten sind mit dem Hauptteil vereinbar; die Reihenfolge entscheidet,
+und der Hauptteil legt sie nicht fest. Das bestätigt D257 von der anderen Seite: ein Vektor mit
+zwei Mängeln behauptet über die Reihenfolge, und ein Vektorsatz mit genau einem Mangel je Stück
+ist gegen Reihenfolgefragen blind.
+
+**Befund an BV2, gemessen.** Der Vektor begründet sich mit einer Prüfreihenfolge aus `01 §6`, die
+er als 2b vor 2c benennt. Diese Nummerierung kommt in der ganzen Datei genau einmal vor, nämlich
+in dieser Begründung; sie stammt aus den Kommentaren von `verifier.py`. Der Hauptteil
+`01 §6` Punkt 2 zählt die vier Bedingungen in einem Satz auf und nennt die kanonische Kodierung
+dabei zuerst. Zweiter Befund: die Einleitung desselben Abschnitts sagt, der Code müsse derselbe
+sein, unabhängig davon, an welchem Schritt der Prüfreihenfolge eine Implementierung ihn findet.
+BV2 widerspricht ihr.
+
+**Die Sache ist entschieden, die Begründung nicht.** Inhaltlich trägt BV2: eine Kodierungsklasse
+behauptet, es gebe eine gültige kanonische Fassung desselben Inhalts, und bei einem
+Text-Schlüssel gibt es die in keiner Kodierung. Der Ausgang bleibt also, wie er ist. Zu
+reparieren ist der Text: entweder normiert der Hauptteil die Reihenfolge, oder BV2 verliert seine
+Berufung auf eine Nummerierung, die nur im Modul existiert. Das ist ein eigener Beschluss.
+
+**Der schwerste Befund steht nicht in der Messung.** Eintrag 1 der Fragenliste: `01 §3` verlangt,
+den dekodierten **Core** neu zu serialisieren und mit den **empfangenen Bytes** byte-genau zu
+vergleichen. Der Core ist die Map ohne die Signatur, die empfangenen Bytes enthalten sie. Wörtlich
+befolgt lehnt diese Regel jeden signierten Claim ab. Beide Implementierungen haben unabhängig
+voneinander dieselbe vernünftige Lesart gewählt und sind darum deckungsgleich; kein Vektor kann
+das sehen. Genau das ist die Klasse von Defekt, für die D237 die Zweitimplementierung wollte.
+
+**Siebzehn Einträge, dreizehn offen.** Die Fragenliste nennt siebzehn Stellen, an denen der Text
+eine Entscheidung erzwang. Zwei sind oben behandelt, zwei weitere sind messbare Abweichungen ohne
+Vektor: die Auslösebedingung der Lifecycle-Fremdheit ohne Store, und die Frage, ob die
+Feldkonsistenz von `t` und `t_exp` auf `core/*` mitentfällt, wenn die Ablaufzeit dort ignoriert
+wird. Die übrigen dreizehn werden einzeln geprüft und einzeln entschieden; keiner wird als
+erledigt geführt, bevor er einen eigenen Eintrag hat.
+
+**Was der Lauf über das Verfahren sagt.** Der Ertrag liegt in der Fragenliste, nicht in der
+Abweichungszahl. Achtzehn Treffer haben null Befunde erzeugt, ein Treffer daneben einen, und die
+Liste siebzehn. Wer eine Zweitimplementierung nur gegen Vektoren misst, wirft den Hauptteil des
+Ertrags weg. Das ändert die Erwartung an eine mögliche dritte Fassung: verlangt wird die Liste,
+gemessen wird die Häufung der Fragen, nicht die der Abweichungen.
