@@ -9541,3 +9541,67 @@ Element geeicht, das im Bestand schon steht. Ein Probelauf gegen TV1 hätte den 
 **Was offen bleibt.** Die Sprache der Zweitimplementierung, nach D256 mit Literaturcheck. Die
 Zustandsstufe mit dem elften Code. Die Gliederung von `pruefregeln.md`, durch Regel 51 nicht
 schlechter und nicht besser geworden.
+
+---
+
+### D258 — Sprache, Prompt-Form und Anker der Zweitimplementierung
+
+**Der Literaturbefund, gegen den entschieden wird.** Knight und Leveson haben 1986 an
+siebenundzwanzig unabhängig gebauten Fassungen gemessen, dass unabhängige Entwicklung keine
+unabhängigen Ausfälle erzeugt. Eine Wiederholung vom Juni 2026 misst denselben Aufbau mit
+Coding-Agents über die drei Achsen Werkzeug, Modell und Zielsprache: achtundvierzig zugelassene
+Fassungen, eine Million Eingaben, 429 gleichzeitige Ausfälle gegen 115,36 erwartete. Für die
+Sprachfrage ist eine andere Zahl entscheidend: von 146 sprachübergreifenden Paaren mit definierter
+Korrelation liegen 81 bei genau eins — sie versagen auf denselben Eingaben. Ein Sprachwechsel
+entkoppelt die Fehler also nicht.
+
+**Beschluss 1: die Sprache ist Go, und die Wahl ist keine methodische.** Ed25519 liegt in der
+Standardbibliothek, die Bauzeiten sind kurz, und explizite Fehlerrückgaben statt Ausnahmen zwingen
+dazu, jeden Reject-Code zu benennen. Das sind Bequemlichkeitsgründe, und sie dürfen entscheiden,
+weil die Sprache nach dem Befund oben der schwächste der drei Hebel ist. Die kanonische Kodierung
+nach `01 §3` wird von Hand geschrieben und nicht aus einer Bibliothek genommen, weil sonst die
+Bibliothek eines Dritten geprüft wird und nicht die Spec. Die Signaturprüfung wird ausdrücklich
+nicht selbst gebaut.
+
+**Beschluss 2: der Prompt ist minimal, und das kehrt die sonst geltenden Prompt-Regeln um.** Der
+Auftrag nennt die Spec-Datei, das Ein- und Ausgabeformat und das erwartete Artefakt. Er nennt
+keine Prüfreihenfolge, keine Liste der Fehlerklassen, kein Gerüst und keine Auflösung einer
+Mehrdeutigkeit. Begründung: jede Präzisierung im Prompt repariert die Spec außerhalb der Spec und
+vernichtet genau den Befund, den der Lauf erzeugen soll. Wer in den Prompt schreibt, was der Text
+offenlässt, misst danach seinen eigenen Prompt. Die übrigen Prompt-Regeln — Basis-Commit,
+Abschluss, ein Commit — gelten weiter; nur die Enge fällt.
+
+**Beschluss 3: alle Fassungen lesen denselben Spec-Stand.** Der Anker ist der Commit, auf dem
+Anhang C zehn der elf Reject-Codes trägt. Fassungen dürfen zeitlich weit auseinanderliegen, aber
+eine Fassung, die eine wegen ihrer Vorgängerin reparierte Spec liest, sagt nichts mehr über die
+Vorgängerin. Ohne gemeinsamen Anker gibt es keine Häufung, und die Häufung ist das Instrument.
+
+**Warum die Häufung und nicht die Unabhängigkeit.** Die Wiederholung von 2026 findet die Fehler
+nicht verstreut, sondern auf wenigen schwierigen oder mehrdeutigen Stellen der Spezifikation
+gebündelt; an zwei Bedingungen ließ sich die gemeinsame Fehllesart direkt auf eine Unklarheit im
+Text zurückführen. MaR sucht keine Fehlertoleranz durch Mehrheitsvotum, sondern die Stellen, an
+denen `01-claim-atom.md` mehrdeutig ist. Für diesen Zweck ist die Korrelation, die das Verfahren
+als Fehlertoleranz beschädigt, das Messinstrument. Daraus folgt, dass mehrere Fassungen mehr wert
+sind als die richtige Sprache, und dass verschiedene Modelle mehr bringen als verschiedene
+Sprachen.
+
+**Beschluss 4: eine durchgefallene Fassung wird ausgewertet, nicht ausgeschlossen.** Die
+Wiederholung von 2026 siebt Fassungen aus, die den Aufnahmetest nicht bestehen, weil ihr Ziel
+Zuverlässigkeit ist. Unser Ziel ist das Gegenteil: eine Fassung, die an einem Vektor aus Anhang C
+scheitert, ist der wertvollste Fall, den der Lauf erzeugen kann. Anhang C ist hier Messpunkt und
+nicht Aufnahmesieb.
+
+**Verfeinerung von D256 Beschluss 3.** Dort steht, die Erwartung komme nie aus einem Lauf der
+Referenz. Für die Vektoren bleibt das gültig; dort gibt es eine gedruckte Erwartung. Für eine
+randomisierte Kampagne gibt es keine, und der Abgleich gegen die Referenz ist der einzig mögliche.
+Er ist zulässig unter einer Bedingung: eine Abweichung ist eine Frage an die Spec und kein Urteil
+gegen die Zweitimplementierung. Bei jeder Abweichung entscheidet `01-claim-atom.md`, nicht die
+Python-Fassung.
+
+**Offen, für den Kampagnenlauf.** Zufällige Bytes liefern fast durchweg dieselbe Fehlerklasse; eine
+Kampagne braucht strukturierte Eingaben, also mutierte gültige Claims. Die Bauform dieser Mutation
+ist noch nicht entschieden.
+
+**Was nicht folgt.** D237 bleibt: die Zweitimplementierung ist der beste verfügbare Ersatz für die
+fehlende Außenprüfung und ersetzt sie nicht. Der Befund von 1986 und der von 2026 machen sie nicht
+wertlos, sondern verschieben, wonach in ihrem Ergebnis zu suchen ist.
