@@ -9373,3 +9373,30 @@ unbestimmt nach geprüft, sobald der Lauf die vierte Zelle im Repo bestätigt.
 **Der Vorbehalt.** Gerechnet ist ein Modell, das die Logik von `parse_predicate` und
 `resolve_scope` nachbildet, nicht der Code selbst. Die Bestätigung ist Aufgabe des Laufs; bleibt
 die vierte Zelle grün, ist der Eintrag falsch und wird zurückgenommen, nicht angepasst.
+
+---
+
+### D254 — Korrektur zu D253: vier rote Tests, nicht einer
+
+**Gemessen.** Probe B3 färbt vier Tests in `tests/test_predicates.py` rot:
+`test_parse_canonical_nuc`, `test_bad_scope_binding_wrong_n`, `test_alias_matching_64_hex_rejected`
+und `test_alias_that_looks_like_hex_but_wrong_n`. B1 und B2 färben keinen. Die Aussage von D253
+steht damit: die geschlossene Neutralisierung sieht die Pflicht, jede Einzelneutralisierung sieht
+sie nicht. N02 ist geprüft.
+
+**Falsch war die Zahl.** Das Modell in D253 hat drei Fälle gerechnet und dabei `resolve_scope`
+nachgebildet. Drei der vier roten Tests behaupten aber über `parse_predicate`: sie prüfen die
+Klassifikation eines Scopes als kanonisch oder Alias, nicht das Ergebnis der Auflösung. Der vierte
+verlangt einen Fehler bei kanonischem Scope mit falschem `N`; wird derselbe String als Alias
+gelesen, ist `N` die einzige Scope-Quelle, der Vergleich entfällt und der Fehler bleibt aus. Keinen
+dieser drei konnte das Modell sehen, weil es sie nicht enthielt.
+
+**Die Fehlklasse.** Nicht das Modell war falsch, sondern die Reichweite der daraus abgeleiteten
+Aussage. Aus einem Modell, das drei von achtzehn Tests einer Datei nachbildet, ist eine Aussage
+über die Zahl der roten Tests geworden. Das Abnahmekriterium hätte den Aliastest als mindestens
+rot verlangen müssen, nicht als einzigen roten Test.
+
+**Was das Werkzeug richtig gemacht hat.** Gemeldet und nicht angepasst — die Meldung stand vor dem
+Diff und war der Grund, den Punkt überhaupt nachzurechnen.
+
+**Folge.** Prüfregel 50.

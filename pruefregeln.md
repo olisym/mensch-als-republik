@@ -351,6 +351,16 @@ sie geprüft, auch wenn keine Einzelstelle für sich rot zu faerben war. Umgekeh
 41: eine ausbleibende Abweichung ist erst dann ein Befund, wenn ein paralleler Träger
 ausgeschlossen ist (D245).
 
+**50. Ein Modell des Codes trägt nur die Zusicherungen, die es nachbildet.**
+Wer eine Erwartung an einem nachgebauten Modell rechnet statt am Code, darf daraus keine Aussage
+über Mengen ableiten, die das Modell nicht kennt. Gemessen in `00ac`: ein Modell von
+`resolve_scope` mit drei Fällen sagte einen roten Test voraus; der Lauf färbte vier, weil drei der
+achtzehn Tests in `tests/test_predicates.py` über die Klassifikation in `parse_predicate`
+behaupten und nicht über die Auflösung. Die Richtung der Aussage war richtig, ihre Zahl nicht. Ein
+Kriterium aus einem Modell wird als untere Schranke formuliert — dieser Test wird rot —, nie als
+vollständige Menge. Ergänzt Prüfregel 28: die Weltlage vor dem Kriterium umfasst auch die Tests,
+die das Modell nicht kennt.
+
 ---
 
 ## Herkunft der Nummern
@@ -361,7 +371,7 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
-44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245.
+44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
