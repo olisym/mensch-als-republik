@@ -315,7 +315,8 @@ Autorenkette (`h_prev`), nie aus Wall-Clock `t`** — über eine partitionierbar
 > einem `core/*`-Claim **ignorieren**. Grund: Ein ablaufender Widerruf würde in einer Partition
 > das widerrufene Vertrauen *wiederbeleben* → **Über-Vertrauen**, exakt die eine gefährliche
 > Richtung (Trust-Flow §7). Lifecycle ist **monoton**: einmal wirksam gesehen, permanent
-> wirksam.
+> wirksam. Positiver Vektor: **TV5** (Anhang C) — ein `core/revoke@1` mit gesetztem `t_exp`,
+> der jenseits von `t_exp` weiter `active` ist.
 
 ### 5.4 Default-Sicht & Policy-Override
 
@@ -895,6 +896,26 @@ BV3 trennt, was `Anhang B.2` vor D130 zusammenwarf. Eine dekodierbare indefinite
 ist der Musterfall von `NON_CANONICAL_ENCODING`: es gibt eine kanonische Kodierung desselben
 Inhalts, und sie ist eine andere. Unter `MALFORMED_CBOR` fällt die Längenform nur, wenn sie
 **unabgeschlossen** ist — und das deckt „nicht dekodierbar" bereits ab.
+
+### C.9 TV5 — `core/revoke@1` mit gesetztem `t_exp` (Wiederholung auf TV1, verkettet auf TV3)
+
+```
+core = { 0:1, 1:ALICE, 2:[2, TV1.claim_id], 3:"core/revoke@1",
+         6:1700000300, 7:1700000400, 8:TV3.claim_id }
+
+bytes    = a700010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3
+           748801b40f6f5c0282025820f95d430e40df736cbdffd7bf82af4f77e0c7af
+           8692565f3b2a151c2c1ae8660c036d636f72652f7265766f6b654031061a65
+           53f22c071a6553f2900858208e76a2a9ee6677e6959bf9868dc6d162e5ff7e
+           464a6bb4c6b839f89713e54629
+claim_id = 8b19196274b2a8ac08e9a34337de5f445e6efd19fb75155eb187b069f5fd8022
+σ        = 61522c987609f25a18292abb53df78a5a7ee5027d3ad09b28e6d7adfbb06cd68
+           e1c586fbebbc91f27c87ca513ddb4fa833ead9f979e229d7730c7132ab083d0d
+```
+
+
+Wirkung: keine. TV1 ist durch TV3 bereits widerrufen; TV5 wiederholt den Widerruf und ist
+selbst bei einem `now` jenseits seines `t_exp` weiterhin `active` (§5.3, Anhang B.3).
 
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 

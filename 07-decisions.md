@@ -9269,3 +9269,107 @@ offen, ob die Regel den Fehler gefangen oder nur benannt hätte.
 **Was nicht dazugehört.** Kein Test und kein Werkzeug liest die Zahl der Prüfregeln.
 `tools/register_index.py` und `tools/splice_run.py` nennen Regelnummern nur im Docstring. Der
 Splice berührt zwei Markdown-Dateien und keine Zusicherung.
+
+---
+
+### D250 — TV5: der Vektor für `t_exp` auf `core/*` wird als C.9 angehängt
+
+**Anlass.** D247 hat den Befund festgehalten: `test_core_revoke_ignores_t_exp` klassifiziert TV3,
+und TV3 trägt kein `t_exp`. Der Test kann nicht sehen, was sein Name behauptet. Nachgelesen ist
+die Lage genau so — der Core von TV3 trägt die Keys 0, 1, 2, 3, 6 und 8; Key 7 fehlt, und die
+Überschrift von C.3 sagt es ausdrücklich.
+
+**Vektor statt Sondierwelt.** D247 hatte beides offengelassen. Anhang C ist das einzige Artefakt,
+das die Zweitimplementierung aus D237 sehen wird; eine Reparatur, die nur in einer Python-Welt
+lebt, prüft die Verifizierer-Pflicht aus `01 §5.3` nur in Python. Die Pflicht ist aber genau von
+der Art, die eine fremde Implementierung falsch machen wird, wenn niemand sie ihr vorlegt.
+
+**Angehängt, nicht eingeschoben.** Ein TV5 zwischen C.4 und C.5 würde C.5 bis C.8 verschieben. Auf
+`§C.8` zeigen sechs Stellen in fünf Dateien. Eine Umnummerierung ist der Fehlertyp, den die
+Verweisprüfung nach D229 nicht sehen kann: das Ziel existiert weiter, es bedeutet nur etwas
+anderes. Der Preis ist die gebrochene Gruppierung — C.1 bis C.4 positiv, C.5 bis C.7 negativ, C.8
+Bytes, C.9 wieder positiv. Das ist billiger als sechs stille Fehlverweise.
+
+**Ziel ist TV1, nicht TV2.** TV5 widerruft einen Claim, den TV3 bereits widerrufen hat. Die
+Wiederholung ist Absicht: in jedem Store, der TV3 enthält, ändert TV5 keinen Zustand.
+`tests/trust/test_coupling.py` lädt alle Vektoren mit `signed_bytes` in einen Store; dort wird nur
+die Kopplung geprüft, aber ein Vektor, der beim Hinzufügen fremde Zustände kippt, macht künftige
+Erwartungen von seiner Anwesenheit abhängig. Der Vektor trägt eine Eigenschaft, keine Wirkung.
+
+**Wohlgeformtheit.** `t` ist 1700000300, `t_exp` ist 1700000400. `INCOHERENT_EXPIRY` verlangt
+`t < t_exp`; die Bedingung ist erfüllt, der Claim ist strukturell gültig. Nach `01 §B.3` ist
+`t_exp` auf `core/*` ausdrücklich kein Reject-Grund.
+
+**Gerechnet, nicht getippt.** Dieselbe Kette reproduziert TV1 und TV3 byteweise gegen die
+committeten Werte; erst danach ist TV5 gerechnet worden. `claim_id` ist
+`8b19196274b2a8ac08e9a34337de5f445e6efd19fb75155eb187b069f5fd8022`. Der Lauf erzeugt den Vektor
+unabhängig neu; trifft er den Wert nicht, ist das ein Befund und keine Nachziehung.
+
+---
+
+### D251 — Die in D248 beschlossene Löschung wird zurückgenommen
+
+**Was D248 beschlossen hat.** Den toten Lookahead in `_ALIAS_SCOPE` und die redundante Bedingung
+in `resolve_scope` zu löschen. Der Beschluss stand, bevor gemessen war, was die Lookaheads sind.
+
+**Sie sind normativer Text.** Anhang A von `01-claim-atom.md` druckt die äquivalenten Regexe zur
+ABNF, und dort steht der negative Lookahead wörtlich in beiden Formen — in der Alias-Regex und in
+der zusammengesetzten nuc-Regex. Die ABNF-Zeile für `alias-scope` trägt die Ausschlussregel als
+Begleitnorm, und `01 §2.2` Regel 2 macht sie zur MUSS-NICHT-Aussage. Was `predicates.py` trägt,
+ist die Spiegelung einer gedruckten Norm, nicht eine Bequemlichkeit des Autors.
+
+**Zwei Messungen.** Über 200000 erzeugte Kandidaten unterscheidet sich die Alias-Regex ohne
+Lookahead in drei Fällen von der mit; sie ist also nicht sprachlich tot, sondern nur tot relativ
+zur Zweigreihenfolge in `parse_predicate`. Die zusammengesetzte nuc-Regex unterscheidet sich in
+null Fällen — dieser Lookahead ist unbedingt wirkungslos, und zwar in der gedruckten Fassung
+ebenso wie in der implementierten. Das gehört an Anhang A und nicht an das Modul; siehe D252.
+
+**Dieselbe Begründung trägt die redundante Bedingung.** `claim.N is None or claim.N != expected`
+spiegelt die zwei MUSS aus `01 §2.2` Regel 3: `N` muss gesetzt sein, und `N` muss entsprechen. Wer
+den linken Zweig streicht, behält das Verhalten und verliert die Entsprechung zum normativen Satz.
+Prüfregel 8 legt beide nebeneinander; der Gewinn wäre eine Zeile, der Verlust die Lesbarkeit der
+Spiegelung.
+
+**Was folgt.** Keine Löschung in `predicates.py`. Der Befund aus D248 bleibt gültig als
+Beschreibung — beide Stellen können in der heutigen Anordnung nichts ausschließen —, aber die
+Folge ist nicht die Streichung. D248 ist damit in seinem Beschlussteil überholt und in seinem
+Befundteil bestätigt.
+
+---
+
+### D252 — Der Lookahead in der gedruckten nuc-Regex kann nichts ausschließen
+
+**Befund.** Anhang A von `01-claim-atom.md` druckt für das nuc-Prädikat eine Regex, deren
+Alias-Alternative den negativen Lookahead auf 64 Hexziffern mit Zeilenende-Anker trägt. An dieser
+Stelle folgt aber zwingend ein Schrägstrich mit Name und Version, das Zeilenende ist dort nie
+erreichbar, und die Alternative davor fängt 64-Hex ohnehin zuerst. Gemessen: null Unterschiede
+zwischen der gedruckten Regex und derselben ohne diesen Lookahead über 200000 Kandidaten.
+
+**Warum das nicht sofort repariert wird.** Der Lookahead spiegelt die Alias-Regex zwei Zeilen
+darüber, wo er wirkt. Ob die Spiegelung mehr wert ist als die Genauigkeit, ist eine Frage an den
+Text und nicht an den Code; sie wird nicht nebenbei in einem Lauf entschieden, der Vektoren baut.
+Der Punkt geht offen auf die Liste.
+
+**Was ausdrücklich nicht folgt.** Die Grammatik ist nicht falsch. Eine Regex, die eine Bedingung
+zweimal ausdrückt, akzeptiert dieselbe Sprache; der Mangel ist Lesbarkeit, nicht Semantik.
+
+---
+
+### D253 — N02 ist geprüft, sobald geschlossen neutralisiert wird
+
+**Die Lage.** D248 hat N02 als unbestimmt eingetragen: die Probe hatte die Lookaheads
+neutralisiert und die Zweigreihenfolge stehen lassen. Nach D245 ist das die Einzelprobe an einem
+von zwei Trägern.
+
+**Vier Zellen, an einem Modell der beiden Funktionen gerechnet.** Lookahead vorhanden und
+kanonisch zuerst: kein Test rot. Lookahead vorhanden, Alias zuerst: kein Test rot. Lookahead
+entfernt, kanonisch zuerst: kein Test rot. Lookahead entfernt **und** Alias zuerst: ein
+64-Hex-Scope wird als Alias klassifiziert, und `test_alias_matching_64_hex_rejected` wird rot.
+
+**Folge.** Die Pflicht aus `01 §2.2` Regel 2 ist getragen, nicht ungeprüft. Keine Einzelstelle ist
+für sich rot zu färben, und genau diesen Fall nennt Prüfregel 49 als geprüft. N02 wandert von
+unbestimmt nach geprüft, sobald der Lauf die vierte Zelle im Repo bestätigt.
+
+**Der Vorbehalt.** Gerechnet ist ein Modell, das die Logik von `parse_predicate` und
+`resolve_scope` nachbildet, nicht der Code selbst. Die Bestätigung ist Aufgabe des Laufs; bleibt
+die vierte Zelle grün, ist der Eintrag falsch und wird zurückgenommen, nicht angepasst.
