@@ -9400,3 +9400,52 @@ rot verlangen müssen, nicht als einzigen roten Test.
 Diff und war der Grund, den Punkt überhaupt nachzurechnen.
 
 **Folge.** Prüfregel 50.
+
+---
+
+### D255 — Der Anker im Lookahead der nuc-Regex wird angepasst, nicht gestrichen
+
+**Die Frage aus D252.** Anhang A von `01-claim-atom.md` druckt in der zusammengesetzten nuc-Regex
+einen negativen Lookahead, der an seiner Stelle nichts ausschließen kann. D252 hat daraus eine
+Textfrage gemacht: Spiegelung der Zeile darüber oder Genauigkeit. Beides war zu wenig gemessen.
+
+**Der Mechanismus ist ein nicht mitgeführter Anker.** Die Alias-Regel ist verankert; ihre beiden
+Anker begrenzen den Scope-String. Beim Einsetzen in die zusammengesetzte Regex wurden die äußeren
+Anker angepasst — der Zeilenanfang wurde zum Präfix mit dem Namensraum, das Zeilenende wanderte
+hinter die Version. Das Zeilenende-Zeichen **innerhalb** des Lookaheads wurde nicht mitgeführt und
+bezeichnet seither das Ende des ganzen Prädikats, das hinter dem Scope nie erreichbar ist. Die
+Fehlklasse heißt nicht "überflüssiger Lookahead", sondern "verankerte Teilregex eingesetzt,
+innerer Anker nicht angepasst".
+
+**Die Messung.** Drei Fassungen der Alias-Alternative — Bestand, ohne Lookahead, mit auf den
+Schrägstrich angepasstem Anker — mal zwei Reihenfolgen der Alternativen, über 200000 Kandidaten.
+Die Sprache unterscheidet sich in allen sechs Fällen in null Kandidaten; das bestätigt D252. Die
+**Klassifikation** unterscheidet sich bei getauschter Reihenfolge: Bestand 25502, ohne Lookahead
+25502, mit angepasstem Anker null. Der gedruckte Lookahead trägt gegen den Fall, für den er
+dasteht, exakt so viel wie kein Lookahead.
+
+**Warum Behalten die schlechteste Option ist.** D251 hat ihn als Spiegelung einer Norm behalten.
+Die Spiegelung ist eine des Wortlauts, nicht der Wirkung: was der Lookahead zu sichern scheint,
+sichert allein die Reihenfolge der beiden Alternativen. Behalten kostet jeden Leser die Analyse aus
+D252 und liefert keine Robustheit.
+
+**Warum Anpassen vor Streichen.** Gleiche Sprache, gleiche Länge, aber unabhängig von der
+Reihenfolge der Alternativen. D254 hat gemessen, dass Reihenfolgeabhängigkeit ein Träger ist, den
+keine Einzelprobe sieht. Anhang A ist das Artefakt, das eine Zweitimplementierung liest (D237); eine
+Grammatik, deren Klassifikation an der Reihenfolge zweier Alternativen hängt, ist die schlechtere
+Vorlage. Streichen würde diese Abhängigkeit festschreiben, statt sie aufzulösen.
+
+**Beschluss.** In der nuc-Zeile von Anhang A wird im negativen Lookahead das Zeilenende-Zeichen
+durch den Schrägstrich ersetzt. Die Alias-Zeile darüber bleibt unberührt; dort ist der Anker
+richtig. `_NUC_PREDICATE` in `predicates.py` folgt im selben Commit: nach D251 ist die Zeile
+Spiegelung der gedruckten Norm, und eine Spiegelung, die eine Fassung hinterherhinkt, ist die Drift,
+gegen die das Register steht.
+
+**Die Grenze.** Im Modul ist die Änderung nicht testbar. `parse_predicate` klassifiziert nicht
+über die Alternation, sondern prüft die kanonische und danach die Alias-Regel einzeln;
+`_NUC_PREDICATE` ist reine Formprüfung. Kein Test kann rot werden, eine Rücknahmeprobe nach
+Prüfregel 49 ist nicht konstruierbar. Der Wert der Zeile liegt vollständig in der Spiegelung.
+
+**Was nicht folgt.** N02 bleibt geprüft (D253, D254). Der Lookahead in `_ALIAS_SCOPE` bleibt
+unverändert: dort ist der Anker richtig, und er ist Teil des gemeinsamen Trägers. D252 ist
+geschlossen — sein Befund bleibt gültig, sein Beschlussteil war keiner.

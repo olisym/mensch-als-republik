@@ -20,7 +20,7 @@ _NAME = re.compile(r"^[a-z0-9_-]+$")
 _VERSION = re.compile(r"^[1-9][0-9]*$")
 _CORE_PREDICATE = re.compile(r"^core/(revoke|supersede)@[1-9][0-9]*$")
 _NUC_PREDICATE = re.compile(
-    r"^nuc:(?:[0-9a-f]{64}|(?![0-9a-f]{64}$)[a-z0-9_-]+)/[a-z0-9_-]+@[1-9][0-9]*$"
+    r"^nuc:(?:[0-9a-f]{64}|(?![0-9a-f]{64}/)[a-z0-9_-]+)/[a-z0-9_-]+@[1-9][0-9]*$"
 )
 
 

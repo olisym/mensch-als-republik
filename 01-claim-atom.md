@@ -601,7 +601,7 @@ alias scope     : ^(?![0-9a-f]{64}$)[a-z0-9_-]+$      ; negativer Lookahead sper
 name            : ^[a-z0-9_-]+$
 version         : ^[1-9][0-9]*$
 core predicate  : ^core/(revoke|supersede)@[1-9][0-9]*$   ; v1: nur @1 aktiv (§2.2)
-nuc predicate   : ^nuc:(?:[0-9a-f]{64}|(?![0-9a-f]{64}$)[a-z0-9_-]+)/[a-z0-9_-]+@[1-9][0-9]*$
+nuc predicate   : ^nuc:(?:[0-9a-f]{64}|(?![0-9a-f]{64}/)[a-z0-9_-]+)/[a-z0-9_-]+@[1-9][0-9]*$
 ```
 
 Bindung an `N`: siehe §2.2 Regel 3 und §2.4 Invarianten 2–3. Die Grammatik prüft **Form**;
