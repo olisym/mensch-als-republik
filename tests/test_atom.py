@@ -31,6 +31,7 @@ GOLDEN_CLAIM_IDS = {
     "TV4": "0bd77591da5e480a8c9a573382d14407a1770e0a7f6d2d09776b630fbd7ca01c",
     "NV1": "9b25020fee7da6832416f8bcb61e4a05329776d051a4da282db7e973eb96c453",
     "NV3": "e14ebd82eb172672a4a3ccbc330fef64fecd86e4664f72eab538855c9cef5c8b",
+    "TV5": "8b19196274b2a8ac08e9a34337de5f445e6efd19fb75155eb187b069f5fd8022",
 }
 
 
@@ -53,7 +54,7 @@ def test_gen_reproduces_golden_claim_ids():
         assert vec["claim_id"] == expected
 
 
-@pytest.mark.parametrize("name", ["TV1", "TV2", "TV3", "TV4", "NV1", "NV3"])
+@pytest.mark.parametrize("name", ["TV1", "TV2", "TV3", "TV4", "NV1", "NV3", "TV5"])
 def test_claim_id_from_vectors(name: str):
     assert _vec(name)["claim_id"] == GOLDEN_CLAIM_IDS[name]
 

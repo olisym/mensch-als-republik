@@ -54,7 +54,7 @@ def _add_chain(store: InMemoryStore, *names: str) -> None:
 # --- Positive structural checks ---
 
 
-@pytest.mark.parametrize("name", ["TV1", "TV2", "TV3", "TV4"])
+@pytest.mark.parametrize("name", ["TV1", "TV2", "TV3", "TV4", "TV5"])
 def test_structural_check_valid_vectors(name: str):
     structural_check(bytes.fromhex(_vec(name)["signed_bytes"]))
 
@@ -232,13 +232,23 @@ def test_expired_when_now_past_t_exp():
     assert result.trust_usable is False
 
 
-def test_core_revoke_ignores_t_exp():
-    """core/* ignoriert t_exp auch wenn gesetzt (01 §5.3)."""
+def test_core_revoke_without_t_exp_stays_active():
+    """core/*-Claim ohne t_exp bleibt jenseits jedes now aktiv."""
     store = InMemoryStore()
     _add_chain(store, "TV1", "TV2")
     tv3 = _claim("TV3")
     store.add(tv3)
     result = classify(tv3, store, now=9_999_999_999)
+    assert result.state == State.ACTIVE
+
+
+def test_core_revoke_with_expired_t_exp_stays_active():
+    """core/*-Claim mit gesetztem t_exp bleibt jenseits von t_exp active (01 §5.3, TV5)."""
+    store = InMemoryStore()
+    _add_chain(store, "TV1", "TV2", "TV3")
+    tv5 = _claim("TV5")
+    store.add(tv5)
+    result = classify(tv5, store, now=1_800_000_000)
     assert result.state == State.ACTIVE
 
 

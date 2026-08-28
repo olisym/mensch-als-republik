@@ -157,6 +157,19 @@ def build_vectors() -> dict:
         h_prev=tv2_cid,
     )
     tv3 = _finalize(tv3_unsigned, alice_sk)
+    tv3_cid = claim_id(tv3)
+
+    # TV5 — core/revoke@1 wiederholt TV1, verkettet auf TV3, mit t_exp (01 §C.9)
+    tv5_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(2, tv1_cid),
+        p=P_REVOKE,
+        t=1_700_000_300,
+        t_exp=1_700_000_400,
+        h_prev=tv3_cid,
+    )
+    tv5 = _finalize(tv5_unsigned, alice_sk)
 
     # TV4 — accept-rules Bob, Genesis
     tv4_unsigned = Claim(
@@ -233,6 +246,7 @@ def build_vectors() -> dict:
                 "wire_bytes": bv3_wire.hex(),
                 "expect_reject": "NON_CANONICAL_ENCODING",
             },
+            _vec("TV5", tv5),
         ],
     }
 
