@@ -9112,3 +9112,40 @@ bleiben, nicht in den Hunk. Nachgerechnet sind es über die vierzehn Blöcke 32 
 Rand gleich gebliebenen Zeilen von beiden Seiten ab. Ohne diesen Abzug ist die Erwartung
 systematisch zu hoch, und eine Abweichung, die nichts bedeutet, sieht aus wie ein Befund. Das
 ergänzt Prüfregel 41 um einen Fall, in dem die Abweichung vor der Bewertung gerechnet werden kann.
+
+---
+
+### D245 — Die Rücknahmeprobe misst die Stelle, nicht die Pflicht, solange Träger redundant sind
+
+**Anlass.** Der Lauf zu D242 hat vierzehn Pflichten geprobt und elf als geprüft, drei als
+ungeprüft klassifiziert. Bei zweien beantwortet die Messung eine andere Frage als die gestellte.
+
+**Der Befund im Code.** Vier Module berechnen unabhängig voneinander
+`SHA-256(DOM_NUC_GEN ‖ cbor(genesis_obj))` und vergleichen das Ergebnis mit `scope`:
+`governance/chain.py`, `profiles/policy.py`, `keys.py` und `trust/params.py`. Die Bedingung ist
+byte-gleich, die geworfene Meldung wortgleich. Drei weitere Stellen werfen wortgleich zur
+Policy-Bindung: `profiles/membership.py`, `profiles/verdict.py`, `profiles/credit.py`. Für N11
+nennt der Befund vier parallele Träger in `credit.py`, `verdict.py`, `membership.py` und
+`tally.py`, von denen einer geprobt wurde.
+
+**Warum das die Aussage bricht.** Wird eine von vier gleichwertigen Stellen neutralisiert und der
+Lauf bleibt grün, ist damit gezeigt, dass *diese Stelle* für die bestehenden Tests unsichtbar ist —
+nicht, dass die Pflicht ungeprüft ist. Ein Test, der über einen anderen Einstiegspunkt läuft,
+bekommt dieselbe Ausnahme von einer der übrigen drei. N14 ist deshalb nicht ungeprüft, sondern
+unbestimmt. Bei N11 wurde ein Test rot, die Klasse stimmt also; die drei übrigen Träger sind
+trotzdem ungemessen, und ohne sie ist offen, ob dort etwas fehlt.
+
+**Norm.** Wer eine Pflicht mit der Rücknahmeprobe misst, bestimmt zuerst die vollständige Menge
+ihrer Träger und neutralisiert sie geschlossen. Erst dann heißt ein grüner Lauf, dass die Pflicht
+ungeprüft ist. Bleibt bei geschlossener Neutralisierung ein Test rot, ist sie geprüft, auch wenn
+keine Einzelstelle für sich rot zu färben war.
+
+**Was nicht folgt.** Die vierfache Prüfung ist kein Defekt. `04 §3.5` verlangt die Bindung vor
+jedem Feldzugriff, und jede der vier Funktionen ist ein eigener Einstiegspunkt, der sie nicht
+voraussetzen darf. Redundanz ist hier die Umsetzung der Norm, nicht ihr Versagen. Was fehlt, ist
+nicht eine Zusammenlegung, sondern das Wissen, ob alle vier gemeint sind — das entscheidet ein
+eigener Eintrag nach dem Nachlauf.
+
+**Verhältnis zu Prüfregel 41.** Die Regel verlangt, eine Abweichung zu bewerten, bevor sie als
+Defekt gilt. D245 ergänzt den umgekehrten Fall: eine *ausbleibende* Abweichung ist erst dann ein
+Befund, wenn ausgeschlossen ist, dass ein paralleler Träger sie aufgefangen hat.
