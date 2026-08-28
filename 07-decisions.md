@@ -9149,3 +9149,88 @@ eigener Eintrag nach dem Nachlauf.
 **Verhältnis zu Prüfregel 41.** Die Regel verlangt, eine Abweichung zu bewerten, bevor sie als
 Defekt gilt. D245 ergänzt den umgekehrten Fall: eine *ausbleibende* Abweichung ist erst dann ein
 Befund, wenn ausgeschlossen ist, dass ein paralleler Träger sie aufgefangen hat.
+
+---
+
+### D246 — Abnahme der Rücknahmeproben: zwölf Pflichten, zehn geprüft
+
+**Der Lauf.** `00ab-mussproben`, Prompt-Commit `28afdde`, Proben in `c9ada0e`, Nachlauf in
+`e03ec1d`. Befund in `00ab-mussproben-befund.md`. Produktivcode, Tests und Werkzeuge sind
+unberührt; der Diff gegen den Branchpunkt enthält nur die Befunddatei und die beiden Dateien
+dieses Auftrags. `make check-all` grün, 597 Tests plus 14 Eigenschaftstests.
+
+**Die Menge ist zwölf, nicht vierzehn.** Zwei der vierzehn Kennungen aus D242 benennen keine
+eigene Pflicht, und das ist ein Ergebnis des Laufs, nicht eine nachträgliche Zurechtlegung.
+N05 ist die Konkretisierung von N04 für den kanonischen Fall und teilt sich mit ihr eine einzige
+Vergleichsstelle; eine Neutralisierung, die nur eine von beiden träfe, gibt es nicht. N01 hat
+keinen eigenen Träger: `00 §7` schreibt die Bindungsregel nicht selbst vor, sondern verweist für
+sie auf `01 §2.2`, und der Code setzt sie generisch für jedes `nuc:`-Prädikat am Einlesepfad
+durch. Damit zählt N01 wie N02 bis N05 zur Atom-Bindungsregel.
+
+**Ergebnis.**
+
+| Klasse | Pflichten |
+| --- | --- |
+| geprüft | N03, N04, N06, N08, N09, N10, N11, N12, N13, N14 |
+| unbestimmt | N02 |
+| ungeprüft | N07 |
+| ohne Träger | keine |
+
+**Was der Nachlauf gedreht hat.** N14 galt nach der ersten Probe als ungeprüft. Geschlossen
+neutralisiert über alle vier Träger werden sechs Tests rot; die Pflicht ist geprüft, und der erste
+Befund war ein Artefakt der Einzelstelle. Bei N11 hat der Nachlauf acht Träger gefunden statt der
+fünf des ersten Befundes — die Argumentprüfung in `verdict_status` war ungenannt — und alle acht
+zugleich neutralisiert ergeben acht rote Tests. Beide Male hat D245 gegriffen.
+
+**Zwei Einschränkungen, die das Wort geprüft nicht trägt.** N09 ist über den Vermerk
+`VOUCH_WITHOUT_TEXP` geprüft, und dieser Vermerk bleibt nach D119 ausdrücklich **ohne Wirkung**:
+der Vouch bleibt im Budget-Set und bindet weiter unbegrenzt. Die Pflicht aus `02 §6.2` ist damit
+beobachtet, nicht durchgesetzt — beschlossen so, nicht versehentlich. N10 hat drei
+Erzeugungsstellen für `INVALID_V_TYPE` in `profiles/credit.py` und genau eine Teststelle; rot wird
+der Lauf über Key 0 der Obligation, Key 1 und die Quittung sind ungemessen. Wer die Zahl zehn
+zitiert, zitiert diese beiden Fußnoten mit.
+
+**Grenze der Aussage.** Es gilt weiter D243: gemessen sind die markierten Pflichten, nicht die
+Normativität der Spec.
+
+---
+
+### D247 — N07: der Vektor trägt nicht, was der Test zu sehen behauptet
+
+**Befund.** `01 §5.3` verlangt, dass ein Verifizierer ein `t_exp` auf einem `core/*`-Claim
+ignoriert. `_is_temporally_valid` löst das mit einem frühen `return True` für `core/*`. Wird dieser
+Zweig entfernt, bleibt der Lauf grün: der einzige Test dafür klassifiziert TV3, und TV3 trägt kein
+`t_exp`. Ohne gesetztes `t_exp` greift die nächste Zeile mit demselben Ergebnis. Der Test kann
+nicht sehen, was er zu sehen behauptet.
+
+**Dieselbe Klasse wie D117.** Auch dort prüft ein Test eine schwächere Aussage, als sein Name
+verspricht, weil die Welt die Bedingung nicht herstellt. Der Unterschied: dort steht der Vorbehalt
+in einer Ankerdatei, hier hätte ihn niemand bemerkt.
+
+**Beschluss.** Die Reparatur ist ein Vektor oder eine Sondierwelt mit einem `core/*`-Claim, der
+ein abgelaufenes `t_exp` trägt, und ein Test, der dessen Gültigkeit prüft. Sie gehört in einen
+eigenen Lauf mit Rücknahmeprobe: ohne den `core/*`-Zweig muss der neue Test rot werden. Nicht in
+dieser Sitzung.
+
+---
+
+### D248 — N02: der Alias-Lookahead ist tot, und die Probe hat es nicht gezeigt
+
+**Befund im Code.** `parse_predicate` prüft `_CANONICAL_SCOPE` vor `_ALIAS_SCOPE`. Ein
+scope-Teil aus 64 Hexziffern wird deshalb im ersten Zweig gefangen und erreicht den zweiten nie.
+Der negative Lookahead in `_ALIAS_SCOPE` kann also nichts ausschließen, was nicht schon
+ausgeschlossen wäre. Zweiter Fall derselben Art in `resolve_scope`: in der Bedingung
+`claim.N is None or claim.N != expected` ist der linke Zweig redundant, weil `None` nie gleich
+`expected` ist. Träger der Pflicht ist dort allein die Prüfung im Alias-Zweig.
+
+**Warum die Klasse unbestimmt ist und nicht ungeprüft.** Die Probe hat die beiden Lookaheads
+neutralisiert und die **Reihenfolge** stehen lassen. Die Reihenfolge ist aber der eigentliche
+Träger. Nach D245 wäre geschlossen zu neutralisieren, also zusätzlich die beiden Zweige zu
+tauschen. Das ist nicht gemessen worden, und die Vermutung, dass dann
+`test_alias_matching_64_hex_rejected` rot wird, bleibt eine Vermutung. D245 ist beim Schreiben
+selbst an dieser Stelle nicht angewandt worden.
+
+**Beschluss.** Nicht in dieser Sitzung nachmessen: eine Pflicht von zwölf, gegen eine dritte
+Werkzeugrunde. Der Punkt geht offen und ausdrücklich als ungemessen auf die Liste. Die Reparatur —
+toten Lookahead und redundante Bedingung löschen — ist eine Codelöschung und gehört zusammen mit
+der Probe in einen Lauf.
