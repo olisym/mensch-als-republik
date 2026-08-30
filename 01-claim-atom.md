@@ -166,10 +166,17 @@ Regeln:
    Anwesend ⟺ Key vorhanden.
 6. Keine doppelten Keys. Keine Floats im Atom (`v` ist opake Bytes).
 
-**Durchsetzung (normativ):** Ein Verifizierer, der Bytes empfängt, **MUSS** den dekodierten Core
-neu kanonisch serialisieren und mit den empfangenen Bytes **byte-genau** vergleichen. Bei
-Abweichung → Reject (`NON_CANONICAL_ENCODING`, Anhang B). Ohne diesen Check ist die Kodierung
-mehrdeutig und `claim_id` faktisch vom Autor frei wählbar (§2.4, Invariante 5).
+**Durchsetzung (normativ):** Ein Verifizierer, der Bytes empfängt, **MUSS** die dekodierte Map —
+alle Felder einschließlich `σ` — neu kanonisch serialisieren und mit den empfangenen Bytes
+**byte-genau** vergleichen. Bei Abweichung → Reject (`NON_CANONICAL_ENCODING`, Anhang B). Ohne
+diesen Check ist die Kodierung mehrdeutig und `claim_id` faktisch vom Autor frei wählbar
+(§2.4, Invariante 5).
+
+> **Verglichen wird die Map, nicht der Core.** Der Core ist die Map ohne `σ` (§4) und kommt in den
+> empfangenen Bytes nie für sich vor: er ist das signierte und das adressierte Objekt, nicht das
+> Soll der Wire-Form. Ein Vergleich des Cores gegen die empfangenen Bytes wäre für jeden
+> signierten Claim falsch. Die Kanonizität des Cores folgt aus der der Map, weil `σ` den höchsten
+> Key trägt und sein Wegfall die Kodierung der übrigen Einträge unberührt lässt.
 
 ---
 
@@ -397,8 +404,8 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
 **Strukturell gültig** gdw.:
 
 1. `version` wird unterstützt;
-2. der Core ist **kanonisch** kodiert (§3: Re-Serialisierung byte-gleich), dekodierbar, ohne
-   doppelte Keys, mit korrekten Feldtypen;
+2. die empfangenen Bytes sind **kanonisch** kodiert (§3: Re-Serialisierung byte-gleich, über die
+   Map einschließlich `σ`), dekodierbar, ohne doppelte Keys, mit korrekten Feldtypen;
 3. `J.tag` ist im geschlossenen Enum (§2.1);
 4. Namensraum von `p` ist `core` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
    `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈

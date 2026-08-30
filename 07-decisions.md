@@ -9708,3 +9708,41 @@ Abweichungszahl. Achtzehn Treffer haben null Befunde erzeugt, ein Treffer danebe
 Liste siebzehn. Wer eine Zweitimplementierung nur gegen Vektoren misst, wirft den Hauptteil des
 Ertrags weg. Das ändert die Erwartung an eine mögliche dritte Fassung: verlangt wird die Liste,
 gemessen wird die Häufung der Fragen, nicht die der Abweichungen.
+
+---
+
+### D261 — `01 §3`: verglichen wird die dekodierte Map, nicht der Core
+
+**Der Defekt.** Der Durchsetzungssatz in `01 §3` verlangt, den dekodierten **Core** neu kanonisch
+zu serialisieren und mit den **empfangenen Bytes** byte-genau zu vergleichen. Der Core ist nach
+`01 §4` die Map ohne `σ`; die empfangenen Bytes eines signierten Claims enthalten `σ` als Key 9.
+Wörtlich befolgt lehnt die Regel jeden signierten Claim ab. Der Satz kommt in der Datei genau
+einmal vor; die Reject-Tabelle in Anhang B nennt die Bedingung neutral als Re-Serialisierung
+gegen empfangene Bytes und ist nicht betroffen.
+
+**Beschluss.** Verglichen wird die dekodierte Map einschließlich `σ`. `01 §3` wird entsprechend
+gefasst und um eine Begründung ergänzt: der Core kommt in den empfangenen Bytes nie für sich vor,
+und aus der Kanonizität der Map folgt die des Cores, weil `σ` den höchsten Key trägt und sein
+Wegfall die Kodierung der übrigen Einträge unberührt lässt. `01 §6` Punkt 2 trägt dieselbe
+Zuschreibung in schwächerer Form und wird mitgezogen: kanonisch kodiert sind die empfangenen
+Bytes, nicht der Core. Die Reihenfolge der vier Bedingungen in Punkt 2 bleibt unangetastet; sie
+gehört zum offenen Beschluss über BV2 (D260).
+
+**Gemessen, nicht angenommen.** Die Python-Fassung prüft in `cbor_canon.is_canonical` die
+empfangenen Bytes gegen ihre eigene Re-Serialisierung, also die volle Map; der Aufruf sitzt in
+`verifier.py` in `structural_check` unter der Marke 2c. Die Go-Fassung hat unabhängig davon
+dieselbe Lesart gewählt und sie in `00ad-fragen-befund §1` samt zweier verworfener Alternativen
+aufgeschrieben. Keine der beiden Fassungen folgt dem Text; beide folgen derselben Reparatur.
+
+**Was ein Vektor hier kann und was nicht.** Er kann die wörtliche Lesart ausschließen: eine
+Fassung, die sie befolgt, fällt an jedem positiven Vektor durch. Er kann den Defekt nicht
+anzeigen, denn jede Fassung, die die Vektoren besteht, hat den Text bereits stillschweigend
+repariert. Sichtbar wurde er allein dadurch, dass eine zweite Fassung ihre Abweichung
+aufgeschrieben hat (D260). Für diese Klasse wird kein Vektor gebaut, weil es keinen geben kann.
+
+**Verworfen:** den Core aus der Wire-Form zu schneiden und nur diesen Ausschnitt zu vergleichen.
+Der Schnitt ist ohne vorheriges Dekodieren nicht definiert, und die Kanonizität von `σ` bliebe
+ungeprüft. Ebenfalls verworfen, die Kanonizitätsprüfung zu streichen: sie ist es, die die
+Wire-Form eindeutig macht (`01 §2.4`, Invariante 5). Ebenfalls verworfen, den Satz stehen zu
+lassen und die Lesart nur im Register zu vermerken — der Text ist die normative Wahrheit, und
+eine dritte Fassung liest ihn und nicht das Register.
