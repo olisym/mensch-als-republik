@@ -323,7 +323,8 @@ Autorenkette (`h_prev`), nie aus Wall-Clock `t`** — über eine partitionierbar
 > das widerrufene Vertrauen *wiederbeleben* → **Über-Vertrauen**, exakt die eine gefährliche
 > Richtung (Trust-Flow §7). Lifecycle ist **monoton**: einmal wirksam gesehen, permanent
 > wirksam. Positiver Vektor: **TV5** (Anhang C) — ein `core/revoke@1` mit gesetztem `t_exp`,
-> der jenseits von `t_exp` weiter `active` ist.
+> der jenseits von `t_exp` weiter `active` ist. Das Ignorieren schließt die Feld-Konsistenz aus
+> §6 Punkt 7 ein: `t ≥ t_exp` ist auf einem `core/*`-Claim **kein** Reject.
 
 ### 5.4 Default-Sicht & Policy-Override
 
@@ -409,13 +410,14 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
 3. `J.tag` ist im geschlossenen Enum (§2.1);
 4. Namensraum von `p` ist `core` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
    `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈
-   `{revoke@1, supersede@1}` und `J.tag == claim-ref` und `ziel.I == C.I`;
+   `{revoke@1, supersede@1}` und `J.tag == claim-ref` (sonst `MALFORMED_CBOR`) und, **sofern der
+   Ziel-Claim lokal bekannt ist**, `ziel.I == C.I` (sonst `FOREIGN_LIFECYCLE`);
 5. `Ed25519-Verify(C.I, DOM_SIG ‖ bytes, C.σ)` ist wahr;
 6. `h_prev ≠ 32×0x00` (§4); ist `h_prev == SHA-256(DOM_ID_GEN ‖ C.I)`, ist `C` ein
    **Genesis**-Claim;
-7. falls `t` **und** `t_exp` vorhanden: `t < t_exp` (reine Feld-Konsistenz — ein Claim, der
-   behauptet, vor seiner eigenen Erstellung abzulaufen, ist inkohärent; **kein** Wall-Clock
-   nötig).
+7. falls `t` **und** `t_exp` vorhanden und `p` kein `core/*`: `t < t_exp` (reine
+   Feld-Konsistenz — ein Claim, der behauptet, vor seiner eigenen Erstellung abzulaufen, ist
+   inkohärent; **kein** Wall-Clock nötig). Auf `core/*` entfällt die Prüfung mit dem Feld (§5.3).
 
 **Zeit — `now` ist bewusst lokal und subjektiv (normativ).** Die Gültigkeitsprüfung gegen `t_exp`
 lautet: falls `t_exp` vorhanden, gilt `C` als *zeitlich gültig* gdw. `now ≤ t_exp`, wobei `now`
@@ -647,15 +649,15 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 |------|----------|
 | `UNSUPPORTED_VERSION` | `version` nicht unterstützt |
 | `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3); dazu zählt dekodierbare indefinite-length (BV3) |
-| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp |
+| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
 | `UNKNOWN_NAMESPACE` | Namensraum von `p` ist weder `core` noch `nuc:` (§2.2) |
 | `BAD_SCOPE_BINDING` | `nuc:…` ohne `N`, oder `N ≠ bytes.fromhex(scope)` bei kanonischer Kodierung (§2.2 R3) |
 | `RESERVED_CORE_PREDICATE` | `core/*` ∉ `{revoke@1, supersede@1}` (§2.4 Inv. 4) |
-| `FOREIGN_LIFECYCLE` | `core/revoke`/`supersede` mit `ziel.I ≠ C.I` (§5.1) |
+| `FOREIGN_LIFECYCLE` | `core/revoke`/`supersede` mit `ziel.I ≠ C.I` bei lokal bekanntem Ziel-Claim (§5.1) |
 | `BAD_SIGNATURE` | Ed25519-Verifikation schlägt fehl |
 | `INVALID_GENESIS_ANCHOR` | `h_prev == 32×0x00` (§4) |
-| `INCOHERENT_EXPIRY` | `t` und `t_exp` vorhanden und `t ≥ t_exp` |
+| `INCOHERENT_EXPIRY` | `t` und `t_exp` vorhanden und `t ≥ t_exp`; nicht auf `core/*` (§5.3) |
 
 **Vorrang bei mehreren Mängeln (normativ).** Trägt eine Bytefolge mehrere Mängel, entscheidet
 nicht die Prüfreihenfolge, sondern der Inhalt der Aussage. `NON_CANONICAL_ENCODING` behauptet, es
@@ -669,7 +671,8 @@ keine Folgen.
 
 - **Gossip-Replay**: identische `claim_id` erneut empfangen → **idempotenter No-op**.
 - **Unbekannter Vorgänger**: → `pending` (nicht Reject), siehe B.1.
-- **`t_exp` auf `core/*`**: → **ignorieren** (Monotonie §5.3), Claim ansonsten normal behandeln.
+- **`t_exp` auf `core/*`**: → **ignorieren** (Monotonie §5.3), Claim ansonsten normal behandeln;
+  auch `t ≥ t_exp` löst dort keinen Reject aus (§6 Punkt 7).
 - **Lokaler Ablauf abweichend von anderen Verifizierern**: legitim, kein Fehler (§6, `now`).
 
 ---

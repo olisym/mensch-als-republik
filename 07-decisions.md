@@ -9788,3 +9788,74 @@ bindet ohne Gewinn. Verworfen, BV2 zu streichen: sein Ausgang ist richtig, nur s
 es nicht. Verworfen, die Marken `2a` bis `2d` in `verifier.py` umzubenennen: sie sind lokale
 Kommentarmarken und kein Verweisziel, sobald kein normativer Text sich auf sie beruft. Gerät die
 Nummerierung je wieder in einen Prompt oder eine Spec-Datei, ist der Befund dieser Eintrag.
+
+---
+
+### D263 — `core/*`: falscher `J.tag` ist `MALFORMED_CBOR`, `ziel.I` nur bei bekanntem Ziel
+
+**Der Defekt.** `01 §6` Punkt 4 verlangt für `core/*` drei Bedingungen: das Prädikat ist eines der
+beiden gesegneten, `J.tag == claim-ref`, und `ziel.I == C.I`. Die dritte ist am Atom allein nicht
+entscheidbar — `ziel` steht nur als `claim_id` im Feld `J`, die Identity des Ziels in einem
+anderen Claim. Ein Verifizierer ohne Speicher kann sie weder erfüllen noch verletzen. Für die
+zweite nennt `Anhang B.2` keinen Code. Das ist der Defekttyp aus D261 in seiner zweiten Ausprägung:
+der Text verlangt wörtlich etwas, das keine zustandslose Fassung leisten kann, und die beiden
+Fassungen haben ihn verschieden gelesen.
+
+**Gemessen.** Die Python-Fassung wirft bei `core/*` mit `J.tag != claim-ref` `MALFORMED_CBOR`
+(`verifier.py`, Schritt 4) und prüft `ziel.I` nur, wenn ein Store übergeben ist und den Ziel-Claim
+kennt; ohne Store fällt `_check_foreign_lifecycle` still durch. Die Go-Fassung meldet beim
+falschen Tag `FOREIGN_LIFECYCLE` und begründet das in `00ad-fragen-befund §2` damit, dass der Tag
+lokal sichtbar ist und die Selbstbezüglichkeit unmöglich macht.
+
+**Beschluss.** `J.tag != claim-ref` auf `core/*` ist `MALFORMED_CBOR`. `ziel.I == C.I` wird
+geprüft, sobald der Ziel-Claim lokal bekannt ist, und entfällt sonst ersatzlos; `FOREIGN_LIFECYCLE`
+bleibt an diese Bedingung gebunden. `01 §6` Punkt 4 und die beiden Zeilen in `Anhang B.2` werden
+entsprechend gefasst.
+
+**Warum nicht `FOREIGN_LIFECYCLE` für den Tag.** Ein Code ist eine Behauptung (D262).
+`FOREIGN_LIFECYCLE` behauptet, ein Lebenszyklus-Claim ziele auf den Claim eines fremden Autors.
+Wer ohne Speicher arbeitet, hat das nicht gemessen; gesehen hat er nur, dass das Feld nicht die
+Form trägt, die `01 §5.1` für Selbstbezüglichkeit verlangt. Behauptet werden darf, was gemessen
+wurde.
+
+**Verworfen:** ein zwölfter Code für „Tag passt nicht zum Prädikat". Elf Codes tragen den
+Fehlerkanal, zehn davon mit Vektor; ein weiterer kostet jede fremde Fassung eine Zeile und sagt
+nichts, was `MALFORMED_CBOR` nicht sagt — die Feldbelegung ist für dieses Prädikat unzulässig.
+Verworfen auch, `ziel.I == C.I` aus Punkt 4 zu streichen: die Bedingung gilt, sobald das Ziel
+bekannt ist, und `01 §5.1` hängt an ihr.
+
+**Folge.** Für den falschen Tag fehlt ein Vektor; er wird gebaut. Die Go-Fassung weicht an dieser
+Stelle ab, und wie bei D262 ist die Abweichung nach dem Beschluss eine über die Fassung.
+
+---
+
+### D264 — `t_exp` auf `core/*` entfällt auch für die Feld-Konsistenz
+
+**Die Frage.** `01 §5.3` verlangt, ein `t_exp` auf einem `core/*`-Claim zu ignorieren. `01 §6`
+Punkt 7 verlangt unbedingt `t < t_exp`, sobald beide Felder da sind. Gilt die Feld-Konsistenz auf
+Lifecycle-Claims weiter, oder fällt sie mit dem Feld?
+
+**Gemessen.** Die Python-Fassung prüft Punkt 7 unbedingt und lehnt einen `core/revoke@1` mit
+`t ≥ t_exp` als `INCOHERENT_EXPIRY` ab. Die Go-Fassung lässt die Prüfung dort entfallen
+(`00ad-fragen-befund §5`). NV11 trifft die Frage nicht, er trägt ein `nuc:…/vouch@1`.
+
+**Beschluss.** Auf `core/*` findet die Prüfung `t < t_exp` nicht statt. Das Feld hat dort keine
+Wirkung, auch keine ablehnende.
+
+**Begründung, aus der Spec selbst.** `01 §5.3` nennt den Grund für das Ignorieren beim Namen: ein
+ablaufender Widerruf belebt widerrufenes Vertrauen wieder, Über-Vertrauen, die eine gefährliche
+Richtung. Ein Reject wegen `t ≥ t_exp` hat exakt dieselbe Wirkung wie der Ablauf — der Widerruf
+wird nicht wirksam, der widerrufene Claim bleibt aktiv. Die Feld-Hygiene aus Punkt 7 kauft nichts,
+was diesen Preis wert wäre. Dazu kommt die Selbstbezüglichkeit aus `01 §5.2`: abgelehnt würde
+nicht die Aussage eines Dritten, sondern die Rücknahme des Autors über seine eigene frühere
+Aussage. Wer sie ablehnt, hält den Autor an der stärkeren Behauptung fest.
+
+**Verworfen:** `t_exp` auf `core/*` ganz zu verbieten. TV5 lebt von seiner Zulässigkeit, und
+`01 §5.3` sagt SHOULD, nicht MUST NOT. Verworfen auch, die Feld-Konsistenz als bloße Hygiene
+stehen zu lassen: sie ist Teil der strukturellen Gültigkeit und entscheidet damit über den Reject,
+nicht über einen Vermerk.
+
+**Folge.** Die Referenz ändert sich, nicht die Zweitimplementierung — das ist die erste Stelle, an
+der die fremde Fassung die Python-Seite korrigiert. Gebraucht werden: die Änderung in
+`verifier.py` mit Rücknahmeprobe und ein positiver Vektor, ein `core/revoke@1` mit `t ≥ t_exp`,
+der `ok` liefert.
