@@ -657,6 +657,14 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 | `INVALID_GENESIS_ANCHOR` | `h_prev == 32×0x00` (§4) |
 | `INCOHERENT_EXPIRY` | `t` und `t_exp` vorhanden und `t ≥ t_exp` |
 
+**Vorrang bei mehreren Mängeln (normativ).** Trägt eine Bytefolge mehrere Mängel, entscheidet
+nicht die Prüfreihenfolge, sondern der Inhalt der Aussage. `NON_CANONICAL_ENCODING` behauptet, es
+gebe eine kanonische Kodierung desselben Inhalts, die gültig wäre. Trägt der dekodierte Inhalt
+einen Mangel, den keine Kodierung behebt (Nicht-uint-Schlüssel, doppelter Key, falscher Feldtyp),
+ist der Code `MALFORMED_CBOR` — gleichgültig, an welchem Schritt eine Implementierung ihn findet
+(BV2). Eine Prüfreihenfolge wird damit nicht normiert; die Aufzählungen in §6 sind Konjunktionen,
+keine Folgen.
+
 ### B.3 Nicht-Fehler (bewusst kein Reject)
 
 - **Gossip-Replay**: identische `claim_id` erneut empfangen → **idempotenter No-op**.
@@ -870,11 +878,11 @@ kommt, ist unlesbar. Eine Implementierung, die den Rundlauf ungeschützt aufruft
 erwartet = Reject: MALFORMED_CBOR
 ```
 
-Der Grund ist der **Schlüsseltyp**, nicht die Längenform. Der Vektor legt damit den Vorrang fest:
-eine Implementierung, die zuerst auf Kanonizität prüft, antwortet `NON_CANONICAL_ENCODING` und
-behauptet, es gebe eine kanonische Kodierung desselben Inhalts, die gültig wäre — die gibt es
-nicht, ein `str`-Schlüssel bleibt in jeder Kodierung ungültig. Die Prüfreihenfolge aus §6 (2b vor
-2c) ist normativ und dieser Vektor prüft sie.
+Der Grund ist der **Schlüsseltyp**, nicht die Längenform. Eine Implementierung, die zuerst auf
+Kanonizität prüft, antwortet `NON_CANONICAL_ENCODING` und behauptet damit, es gebe eine kanonische
+Kodierung desselben Inhalts, die gültig wäre — die gibt es nicht, ein `str`-Schlüssel bleibt in
+jeder Kodierung ungültig. Der Vektor prüft die Vorrangregel aus `Anhang B.2`, nicht eine
+Prüfreihenfolge: an welchem Schritt eine Fassung den Mangel findet, bleibt ihr überlassen.
 
 #### BV3 — indefinite-length als **einziger** Mangel → `NON_CANONICAL_ENCODING`
 

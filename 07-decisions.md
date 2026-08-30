@@ -9746,3 +9746,45 @@ ungeprüft. Ebenfalls verworfen, die Kanonizitätsprüfung zu streichen: sie ist
 Wire-Form eindeutig macht (`01 §2.4`, Invariante 5). Ebenfalls verworfen, den Satz stehen zu
 lassen und die Lesart nur im Register zu vermerken — der Text ist die normative Wahrheit, und
 eine dritte Fassung liest ihn und nicht das Register.
+
+---
+
+### D262 — Der Vorrang der Fehlerklassen wird inhaltlich normiert, nicht als Prüfreihenfolge
+
+**Die Lage, gemessen.** BV2 begründet seinen Ausgang mit einer Prüfreihenfolge aus `01 §6`, die er
+als 2b vor 2c benennt. Die Zeichenfolge kommt in `01-claim-atom.md` genau einmal vor, nämlich in
+dieser Begründung; sie stammt aus den Kommentarmarken von `verifier.py`. Die Einleitung von C.8
+sagt das Gegenteil: geprüft wird, welchen Code der Verifizierer liefert, unabhängig davon, an
+welchem Schritt seiner Prüfreihenfolge er ihn findet. Seit D261 nennt `01 §6` Punkt 2 die
+kanonische Kodierung in seiner Aufzählung sogar zuerst.
+
+**Beschluss.** Normiert wird der Vorrang, nicht die Reihenfolge. `Anhang B.2` bekommt eine Regel:
+`NON_CANONICAL_ENCODING` behauptet, es gebe eine kanonische Kodierung desselben Inhalts, die
+gültig wäre; trägt der dekodierte Inhalt einen Mangel, den keine Kodierung behebt, ist der Code
+`MALFORMED_CBOR`. BV2 beruft sich auf diese Regel statt auf eine Schrittnummer. Der Ausgang des
+Vektors bleibt unverändert.
+
+**Warum nicht die Reihenfolge.** Die Ordnungsunabhängigkeit ist eine tragende Eigenschaft und
+keine Nachlässigkeit: `01 §6` verlangt, dass jedes Gerät die Zustände offline aus den gehaltenen
+Bytes berechnet, und die Einleitung von C.8 macht daraus eine Zusage an fremde Implementierungen
+mit anderer CBOR-Bibliothek. Eine normierte Schrittfolge bände jede Fassung an einen Ablauf, ohne
+einen einzigen Ausgang zusätzlich festzulegen — dieselben Fälle entscheidet die inhaltliche Regel,
+und sie ist an jedem einzelnen Claim prüfbar. Der Preis ist benannt: wer die Kanonizität zuerst
+prüft, muss vor dem Reject feststellen, dass der Inhalt sonst zulässig ist. Das ist eine Pflicht
+über den Code, nicht über den Ablauf.
+
+**Wirkung auf die beiden Fassungen.** Die Python-Fassung findet den Nicht-uint-Schlüssel in
+`structural_check` vor der Kanonizitätsprüfung und liefert `MALFORMED_CBOR`; sie bleibt
+unberührt. Die Go-Fassung prüft zuerst auf Kanonizität und liefert an BV2
+`NON_CANONICAL_ENCODING`. Ihre Abweichung war vor diesem Beschluss ein Befund über den Text und
+ist danach einer über die Fassung. Das ist die einzige der neunzehn Messungen, die kippt.
+
+**Reichweite.** Entschieden ist allein die Überschneidung von Kodierungs- und Inhaltsmangel. Die
+vollständige Ordnung der zehn Fehlerklassen, die `00ad-fragen-befund §4` vorschlägt, bleibt offen
+und ist keine Norm; sie beschreibt, was eine Fassung getan hat.
+
+**Verworfen:** die Prüfreihenfolge zu normieren — sie widerspricht der Einleitung von C.8 und
+bindet ohne Gewinn. Verworfen, BV2 zu streichen: sein Ausgang ist richtig, nur seine Berufung war
+es nicht. Verworfen, die Marken `2a` bis `2d` in `verifier.py` umzubenennen: sie sind lokale
+Kommentarmarken und kein Verweisziel, sobald kein normativer Text sich auf sie beruft. Gerät die
+Nummerierung je wieder in einen Prompt oder eine Spec-Datei, ist der Befund dieser Eintrag.
