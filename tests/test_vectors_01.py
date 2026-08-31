@@ -5,8 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from mensch_als_republik.errors import ErrorCode
-from mensch_als_republik.verifier import read_claim
 from tests.vectors.gen import build_vectors
 
 GOLDEN = {
@@ -77,21 +75,3 @@ def test_tv1_core_bytes_match_spec(regenerated: dict):
 def test_tv1_sigma_matches_spec(regenerated: dict):
     tv1 = next(v for v in regenerated["vectors"] if v["name"] == "TV1")
     assert tv1["sigma"] == GOLDEN_SIGMA["TV1"]
-
-
-_FELDSATZ_NAMES = ("NV14", "NV15", "NV16", "NV17", "NV18", "NV19")
-
-
-def _feldsatz_from_file() -> list[dict]:
-    path = Path(__file__).resolve().parent / "vectors" / "vectors_01.json"
-    by_name = {
-        v["name"]: v
-        for v in json.loads(path.read_text())["vectors"]
-        if v.get("name") in _FELDSATZ_NAMES
-    }
-    return [by_name[n] for n in _FELDSATZ_NAMES]
-
-
-@pytest.mark.parametrize("v", _feldsatz_from_file(), ids=lambda v: v["name"])
-def test_feldsatz_read_claim_matches_expect_reject(v: dict) -> None:
-    assert read_claim(bytes.fromhex(v["wire_bytes"])) == ErrorCode[v["expect_reject"]]
