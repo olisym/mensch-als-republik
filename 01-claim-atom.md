@@ -406,7 +406,9 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
 
 1. `version` wird unterstützt;
 2. die empfangenen Bytes sind **kanonisch** kodiert (§3: Re-Serialisierung byte-gleich, über die
-   Map einschließlich `σ`), dekodierbar, ohne doppelte Keys, mit korrekten Feldtypen;
+   Map einschließlich `σ`), dekodierbar, ohne doppelte Keys, und tragen den Feldsatz aus §2:
+   jedes Pflichtfeld vorhanden, kein Key außerhalb der Tabelle, Typen und Längen wie dort
+   angegeben;
 3. `J.tag` ist im geschlossenen Enum (§2.1);
 4. Namensraum von `p` ist `core` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
    `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈
@@ -649,7 +651,7 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 |------|----------|
 | `UNSUPPORTED_VERSION` | `version` nicht unterstützt |
 | `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3); dazu zählt dekodierbare indefinite-length (BV3) |
-| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
+| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp, fehlendes Pflichtfeld, Key außerhalb der Feldtabelle oder falsche Byte- bzw. Array-Länge (§2) / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
 | `UNKNOWN_NAMESPACE` | Namensraum von `p` ist weder `core` noch `nuc:` (§2.2) |
 | `BAD_SCOPE_BINDING` | `nuc:…` ohne `N`, oder `N ≠ bytes.fromhex(scope)` bei kanonischer Kodierung (§2.2 R3) |
@@ -666,6 +668,20 @@ einen Mangel, den keine Kodierung behebt (Nicht-uint-Schlüssel, doppelter Key, 
 ist der Code `MALFORMED_CBOR` — gleichgültig, an welchem Schritt eine Implementierung ihn findet
 (BV2). Eine Prüfreihenfolge wird damit nicht normiert; die Aufzählungen in §6 sind Konjunktionen,
 keine Folgen.
+
+**Der Code ist ein Grund, kein Zustand (normativ).** B.1 kennt genau einen Reject-Zustand,
+`malformed`. Die Codes dieser Tabelle benennen, woran er hängt; über den Zustand entscheiden sie
+nicht. Deshalb wird **keine Gesamtordnung** der Klassen normiert: tragen mehrere Codes eine wahre
+Aussage über dieselbe Bytefolge, ist die Wahl der Implementierung überlassen. Verboten ist allein
+der falsche Satz — ein Code, dessen Aussage die Bytefolge nicht trägt. Die Vektoren in Anhang C
+binden die Wahl nur, soweit sie sie stellen: C.10 trägt acht Claims mit je genau einem Mangel,
+und der einzige Vektor mit zwei Mängeln ist BV2, den der Vorrang entscheidet und keine
+Reihenfolge.
+
+**Die Feldtabelle gilt je Version (normativ).** Der Feldsatz aus §2 ist der von `version` 1. Wird
+eine Version nicht unterstützt, ist der Code `UNSUPPORTED_VERSION`; Pflichtfelder, Keys und Längen
+werden dann nicht mehr gegen §2 geprüft. Eine fremde Version darf einen anderen Feldsatz tragen,
+und `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle setzt.
 
 ### B.3 Nicht-Fehler (bewusst kein Reject)
 

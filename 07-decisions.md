@@ -9859,3 +9859,72 @@ nicht über einen Vermerk.
 der die fremde Fassung die Python-Seite korrigiert. Gebraucht werden: die Änderung in
 `verifier.py` mit Rücknahmeprobe und ein positiver Vektor, ein `core/revoke@1` mit `t ≥ t_exp`,
 der `ok` liefert.
+
+---
+
+### D265 — Keine Gesamtordnung der Fehlerklassen; der Code ist Grund, kein Zustand
+
+**Die Frage.** `00ad-fragen-befund §4` schlägt eine Prüfreihenfolge über zehn Fehlerklassen vor.
+D262 hat davon ein Stück entschieden, den Vorrang zwischen Kodierungs- und Inhaltsmangel. Soll der
+Rest normiert werden, oder bleibt die Liste ein Befund?
+
+**Gemessen.** `01 §B.1` führt genau einen Reject-Zustand, `malformed`. Die elf Einträge in
+`01 §B.2` stehen unter der Überschrift „Fehlerklassen (Reject-Gründe)". Der Absatz unter der
+Zustandstabelle erklärt alle Zustände außer `expired` für verifiziererübergreifend determiniert —
+die Aussage gilt dem Zustand, nicht dem Grund. `01 §C.10` sagt von seinen acht Vektoren selbst,
+jeder trage genau einen Mangel; der einzige Vektor mit zweien ist BV2 (D262).
+
+**Beschluss.** Keine Gesamtordnung. Tragen mehrere Codes eine wahre Aussage über dieselbe
+Bytefolge, ist die Wahl frei. Normativ bleibt allein das Verbot des falschen Satzes aus D262, und
+es gilt für alle elf Klassen, nicht nur für die drei dort genannten Inhaltsmängel. Der Satz kommt
+nach den Vorrang-Absatz in `01 §B.2`; die Liste in `00ad-fragen-befund §4` bleibt Befund.
+`01 §6` bleibt unberührt — seine Aufzählung ist eine Konjunktion, keine Folge (D262).
+
+**Begründung.** Eine Ordnung entschiede keinen einzigen zusätzlichen Ausgang. Abgelehnt wird so
+oder so, und der Zustand ist derselbe; sie entschiede nur, welcher von mehreren wahren Sätzen
+genannt wird. Der Preis wäre dauerhaft: jede fremde Fassung an einen Ablauf gebunden, den sie
+nicht braucht, und jeder künftige Code in die Ordnung einzuhängen. Das ist die Rechnung aus D262,
+eine Ebene höher — dort ist der Vorrang normiert worden, weil er Ausgänge entscheidet, und die
+Reihenfolge nicht, weil sie keine entscheidet.
+
+**Verworfen:** die Liste des Befunds als Norm. Sie ist nicht einmal durchweg zulässig — ihr
+Schritt 2 vor Schritt 3 ist genau die Lesart, die D262 an BV2 verworfen hat. Verworfen auch, den
+Code als Zustandskomponente zu führen: dann müssten alle Fassungen je Bytefolge übereinstimmen,
+und die Gesamtordnung wäre die Folge, nicht die Wahl.
+
+**Folge.** Anhang C bleibt scharf, aber eng: ein negativer Vektor bindet den Code für den Mangel,
+den er trägt. Ein Vektor mit zwei Mängeln ist nur dann eine Norm, wenn der Vorrang ihn entscheidet.
+
+---
+
+### D266 — Feldsatz-Verstöße sind `MALFORMED_CBOR`; die Feldtabelle gilt je Version
+
+**Die Frage.** `00ad-fragen-befund §7` fragt nach dem Code für einen Key außerhalb der Tabelle,
+ein fehlendes Pflichtfeld, `I` mit 31 Byte, `J` mit Länge ungleich 2. `01 §2` führt die Tabelle
+mit Pflicht und Größe; `01 §B.2` nennt als Auslöser nur „falscher Feldtyp".
+
+**Gemessen.** Die Zeile in `01 §B.2` listet fünf Auslöser; Länge, Pflicht und fremder Key stehen
+nicht darunter. `01 §6` Punkt 2 verlangt „korrekte Feldtypen" und nennt den Feldsatz nicht. Die
+Go-Fassung liest „falscher Feldtyp" weit und fängt alle vier Fälle.
+
+**Beschluss.** Die weite Lesart wird Text. Fehlendes Pflichtfeld, Key außerhalb der Feldtabelle
+und falsche Byte- oder Array-Länge sind `MALFORMED_CBOR`. `01 §6` Punkt 2 und die Zeile in
+`01 §B.2` werden entsprechend gefasst.
+
+**Begründung.** Es ist derselbe Defekttyp wie in D261 und D263: die Tabelle in `01 §2` ist
+normativ, aber kein Code hängt an ihrer Verletzung. Ein fremder Key ist dabei der schärfste Fall —
+er ändert den Core, und `claim_id` wäre damit nicht mehr die eine Adresse des Inhalts, sondern
+eine von mehreren (`01 §2.4` Invariante 5). Bei fehlendem Pflichtfeld entfällt jede Prüfung, die
+an ihm hängt; ablehnen ist die sichere Richtung.
+
+**Der zweite Teil folgt aus D262.** Bei nicht unterstützter Version werden Feldsatz-Prüfungen
+nicht mehr angestellt: `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle
+setzt, und eine fremde Version darf einen anderen Feldsatz tragen. Der Satz wäre falsch. Er wird
+trotzdem ausgeschrieben, weil er sonst aus zwei Einträgen zusammenzusetzen wäre.
+
+**Verworfen:** eine eigene Fehlerklasse für Längen- oder Pflichtverstöße. `01 §B.2` hat keine, und
+ein zwölfter Code kostet jede fremde Fassung eine Zeile — dieselbe Rechnung wie in D263. Verworfen
+auch, fremde Keys zu ignorieren; das ist die zweite ID-Familie und trifft `01 §2.4` Invariante 5.
+
+**Folge.** Für alle vier Fälle fehlt ein Vektor. D265 macht sie nicht zur Pflicht; jeder von ihnen
+trüge genau einen Mangel und wäre damit von der Ordnungsfrage unberührt.
