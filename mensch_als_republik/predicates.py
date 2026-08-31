@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from mensch_als_republik.atom import Claim
 from mensch_als_republik.errors import (
     BadScopeBinding,
+    InvalidPredicate,
     MalformedCbor,
     ReservedCorePredicate,
     UnknownNamespace,
@@ -51,7 +52,7 @@ def parse_predicate(p: str) -> ParsedPredicate:
 
     if p.startswith("nuc:"):
         if not _NUC_PREDICATE.match(p):
-            raise UnknownNamespace()
+            raise InvalidPredicate()
         body = p[4:]
         scope_part, rest = body.split("/", 1)
         name, version = rest.split("@", 1)
@@ -69,7 +70,7 @@ def parse_predicate(p: str) -> ParsedPredicate:
                 version=version,
                 scope_alias=scope_part,
             )
-        raise UnknownNamespace()
+        raise InvalidPredicate()
 
     raise UnknownNamespace()
 

@@ -11,6 +11,7 @@ class ErrorCode(str, Enum):
     MALFORMED_CBOR = "MALFORMED_CBOR"
     UNKNOWN_J_TAG = "UNKNOWN_J_TAG"
     UNKNOWN_NAMESPACE = "UNKNOWN_NAMESPACE"
+    INVALID_PREDICATE = "INVALID_PREDICATE"
     BAD_SCOPE_BINDING = "BAD_SCOPE_BINDING"
     RESERVED_CORE_PREDICATE = "RESERVED_CORE_PREDICATE"
     FOREIGN_LIFECYCLE = "FOREIGN_LIFECYCLE"
@@ -48,6 +49,10 @@ class UnknownJTag(VerifierError):
 
 class UnknownNamespace(VerifierError):
     code = ErrorCode.UNKNOWN_NAMESPACE
+
+
+class InvalidPredicate(VerifierError):
+    code = ErrorCode.INVALID_PREDICATE
 
 
 class BadScopeBinding(VerifierError):

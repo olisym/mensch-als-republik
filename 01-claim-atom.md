@@ -1176,6 +1176,30 @@ claim_id = 8d253635ff9d59cca68fa760c589a3393551053a4ea08a5c78ce936d7541bddc
 erwartet = Reject: MALFORMED_CBOR
 ```
 
+### C.12 NV13 — Formverstoß unter nuc:
+
+Der Name ist `VOUCH` statt `vouch`. Das verletzt die Form, die Anhang A für
+`nuc:…` verlangt. `UNKNOWN_NAMESPACE` behauptet, der Namensraum sei unbekannt;
+er ist `nuc:`. Der Code ist `INVALID_PREDICATE`.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, BOB], 3:"nuc:6530…5557/VOUCH@1",
+         4:h'a1001864', 5:N, 6:1700000411, 8:h_prev_genesis(ALICE) }
+
+bytes    = a800010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4
+           ee37a25df60f5b8fc9b39403784c6e75633a3635333039666532333364613330
+           6664613036316437633565663030326236623830653432363832636435346437
+           3033616231336662366337643266353535372f564f55434840310444a1001864
+           05582065309fe233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d
+           2f5557061a6553f29b08582062db0b05f44c17e2dfe7f371d631845fdd5858dd
+           94c37d327a28f73b25625430
+claim_id = ffc2ae3df57e3c6753037fd601a8aa5d6cd67bb2d6a9bc31073084024b1595ff
+σ        = 9e7548f45283682ee306cf8ae5ec3c2b043286d355eb0225a692a2475346c659
+           c14c2b2d97497aa421b9f4b737b0c2f9c6be1e6e3d959e00d712debeda9d4c08
+erwartet = Reject: INVALID_PREDICATE
+```
+
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 
 - **Genesis-`h_prev` vereinheitlicht** auf `SHA-256(DOM_ID_GEN ‖ I)` (Feldtabelle, §4, §6);

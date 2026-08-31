@@ -7,6 +7,7 @@ import pytest
 from mensch_als_republik.atom import Claim
 from mensch_als_republik.errors import (
     BadScopeBinding,
+    InvalidPredicate,
     MalformedCbor,
     ReservedCorePredicate,
     UnknownNamespace,
@@ -60,6 +61,21 @@ def test_parse_core_revoke():
 def test_unknown_namespace_svc():
     with pytest.raises(UnknownNamespace):
         parse_predicate("svc:foo/bar@1")
+
+
+def test_invalid_predicate_uppercase_name():
+    with pytest.raises(InvalidPredicate):
+        parse_predicate(f"nuc:{N.hex()}/VOUCH@1")
+
+
+def test_invalid_predicate_version_zero():
+    with pytest.raises(InvalidPredicate):
+        parse_predicate(f"nuc:{N.hex()}/vouch@0")
+
+
+def test_invalid_predicate_uppercase_alias_scope():
+    with pytest.raises(InvalidPredicate):
+        parse_predicate("nuc:Hasenpfote/vouch@1")
 
 
 def test_reserved_core_predicate_vouch():

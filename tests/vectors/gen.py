@@ -332,6 +332,19 @@ def build_vectors() -> dict:
     )
     nv12 = _finalize(nv12_unsigned, alice_sk)
 
+    # NV13 — Großbuchstaben im nuc:-Namen (01 §C.12, D267)
+    nv13_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, BOB_PUB),
+        p="nuc:" + N.hex() + "/VOUCH@1",
+        v=V_VOUCH,
+        N=N,
+        t=1_700_000_411,
+        h_prev=h_gen_alice,
+    )
+    nv13 = _finalize(nv13_unsigned, alice_sk)
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -382,6 +395,7 @@ def build_vectors() -> dict:
             _vec("NV11", nv11, expect_reject="INCOHERENT_EXPIRY"),
             _vec("TV6", tv6),
             _vec("NV12", nv12, expect_reject="MALFORMED_CBOR"),
+            _vec("NV13", nv13, expect_reject="INVALID_PREDICATE"),
         ],
     }
 
