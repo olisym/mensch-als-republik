@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import io
 from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol
+
+from cbor2 import CBORDecoder
 
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import (
@@ -94,16 +97,21 @@ class InMemoryStore:
         return list(self._by_id.values())
 
 
+def _is_cbor_uint(value: object) -> bool:
+    """True gdw. value ein CBOR-uint ist (01 §2). bool ist Unterklasse von int, kein uint."""
+    return type(value) is int and value >= 0
+
+
 def _validate_field_types(m: dict) -> None:
     """Feldtypen aus 01 §2 prüfen."""
-    if not isinstance(m.get(0), int):
+    if not _is_cbor_uint(m.get(0)):
         raise MalformedCbor()
     if not isinstance(m.get(1), bytes) or len(m[1]) != 32:
         raise MalformedCbor()
     j = m.get(2)
     if not isinstance(j, list) or len(j) != 2:
         raise MalformedCbor()
-    if not isinstance(j[0], int) or not isinstance(j[1], bytes) or len(j[1]) != 32:
+    if not _is_cbor_uint(j[0]) or not isinstance(j[1], bytes) or len(j[1]) != 32:
         raise MalformedCbor()
     if not isinstance(m.get(3), str):
         raise MalformedCbor()
@@ -111,9 +119,9 @@ def _validate_field_types(m: dict) -> None:
         raise MalformedCbor()
     if 5 in m and (not isinstance(m[5], bytes) or len(m[5]) != 32):
         raise MalformedCbor()
-    if not isinstance(m.get(6), int):
+    if not _is_cbor_uint(m.get(6)):
         raise MalformedCbor()
-    if 7 in m and not isinstance(m[7], int):
+    if 7 in m and not _is_cbor_uint(m[7]):
         raise MalformedCbor()
     if not isinstance(m.get(8), bytes) or len(m[8]) != 32:
         raise MalformedCbor()
@@ -142,14 +150,18 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
     """
     # 2a: dekodierbar
     try:
-        obj = cbor_canon.decode(data)
+        fp = io.BytesIO(data)
+        obj = CBORDecoder(fp, allow_duplicate_keys=False).decode()
     except Exception as exc:
         raise MalformedCbor() from exc
+
+    if fp.tell() != len(data):
+        raise MalformedCbor()
 
     if not isinstance(obj, dict):
         raise MalformedCbor()
 
-    # 2b: uint-Keys, keine doppelten (decode garantiert letzteres bei cbor2)
+    # 2b: uint-Keys, keine doppelten (semantische Gleichheit der dekodierten Schlüssel)
     for k in obj:
         if not isinstance(k, int):
             raise MalformedCbor()
@@ -163,6 +175,12 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
         raise NonCanonicalEncoding()
 
     # 2d: Feldtypen
+    version = obj.get(0)
+    if _is_cbor_uint(version) and version != _SUPPORTED_VERSION:
+        raise UnsupportedVersion()
+    allowed = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+    if any(k not in allowed for k in obj):
+        raise MalformedCbor()
     required = {0, 1, 2, 3, 6, 8, 9}
     if not required.issubset(obj.keys()):
         raise MalformedCbor()

@@ -14,12 +14,13 @@ from mensch_als_republik.atom import (
     Claim,
     claim_id,
     core_bytes,
+    core_map,
     id_genesis_anchor,
     sign,
     signed_bytes,
     signed_map,
 )
-from mensch_als_republik.domains import DOM_NUC_GEN
+from mensch_als_republik.domains import DOM_NUC_GEN, DOM_SIG
 from mensch_als_republik import cbor_canon
 from tests.helpers import SEED_ALICE, SEED_BOB
 
@@ -83,6 +84,15 @@ def _sk(seed: bytes) -> Ed25519PrivateKey:
 
 def _finalize(claim: Claim, sk: Ed25519PrivateKey) -> Claim:
     return replace(claim, sigma=sign(sk, claim))
+
+
+def _signed_wire(core: dict, sk: Ed25519PrivateKey) -> bytes:
+    """Core kanonisch kodieren, mit sk über DOM_SIG ‖ core_bytes signieren, Map inkl. σ."""
+    core_b = cbor_canon.encode(core)
+    sigma = sk.sign(DOM_SIG + core_b)
+    signed = dict(core)
+    signed[9] = sigma
+    return cbor_canon.encode(signed)
 
 
 def _vec(name: str, claim: Claim, *, expect_reject: str | None = None) -> dict:
@@ -345,6 +355,44 @@ def build_vectors() -> dict:
     )
     nv13 = _finalize(nv13_unsigned, alice_sk)
 
+    tv1_core = core_map(tv1)
+
+    # NV14 — Key 20 am TV1-Core, neu signiert (01 §C.13, D266)
+    nv14_core = dict(tv1_core)
+    nv14_core[20] = 1
+    nv14_wire = _signed_wire(nv14_core, alice_sk)
+
+    # NV15 — Key 6 trägt CBOR true, neu signiert (01 §C.13, D272)
+    nv15_core = dict(tv1_core)
+    nv15_core[6] = True
+    nv15_wire = _signed_wire(nv15_core, alice_sk)
+
+    # NV16 — Key 6 trägt -5, neu signiert (01 §C.13, D272)
+    nv16_core = dict(tv1_core)
+    nv16_core[6] = -5
+    nv16_wire = _signed_wire(nv16_core, alice_sk)
+
+    # NV17 — Key 6 doppelt im unveränderten signierten TV1 (01 §C.13, D271)
+    tv1_wire = signed_bytes(tv1)
+    pair_6_a = cbor_canon.encode(6) + cbor_canon.encode(1_700_000_000)
+    pair_6_b = cbor_canon.encode(6) + cbor_canon.encode(1_700_000_001)
+    assert tv1_wire[0] == 0xAA
+    body = tv1_wire[1:]
+    assert body.count(pair_6_a) == 1
+    idx = body.index(pair_6_a)
+    nv17_wire = (
+        bytes([0xAB]) + body[: idx + len(pair_6_a)] + pair_6_b + body[idx + len(pair_6_a) :]
+    )
+
+    # NV18 — version 2, Key 6 abwesend, neu signiert (01 §C.13, D266)
+    nv18_core = dict(tv1_core)
+    nv18_core[0] = 2
+    del nv18_core[6]
+    nv18_wire = _signed_wire(nv18_core, alice_sk)
+
+    # NV19 — signiertes TV1 plus ein Byte 0x00 (01 §C.13, D270)
+    nv19_wire = signed_bytes(tv1) + b"\x00"
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -396,6 +444,36 @@ def build_vectors() -> dict:
             _vec("TV6", tv6),
             _vec("NV12", nv12, expect_reject="MALFORMED_CBOR"),
             _vec("NV13", nv13, expect_reject="INVALID_PREDICATE"),
+            {
+                "name": "NV14",
+                "wire_bytes": nv14_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV15",
+                "wire_bytes": nv15_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV16",
+                "wire_bytes": nv16_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV17",
+                "wire_bytes": nv17_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV18",
+                "wire_bytes": nv18_wire.hex(),
+                "expect_reject": "UNSUPPORTED_VERSION",
+            },
+            {
+                "name": "NV19",
+                "wire_bytes": nv19_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
         ],
     }
 
