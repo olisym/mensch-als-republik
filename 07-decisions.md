@@ -9928,3 +9928,53 @@ auch, fremde Keys zu ignorieren; das ist die zweite ID-Familie und trifft `01 §
 
 **Folge.** Für alle vier Fälle fehlt ein Vektor. D265 macht sie nicht zur Pflicht; jeder von ihnen
 trüge genau einen Mangel und wäre damit von der Ordnungsfrage unberührt.
+
+---
+
+### D267 — Zwölfter Reject-Code `INVALID_PREDICATE` für Formverstöße unter `nuc:`
+
+**Die Frage.** `00ad-fragen-befund §6`: Anhang A ist als normativ überschrieben und bindet Scope,
+Name und Version eines Prädikats. `01 §B.2` kennt keinen Code für einen Formverstoß.
+`UNKNOWN_NAMESPACE` gilt dem Namensraum, `RESERVED_CORE_PREDICATE` dem geschlossenen `core`,
+`BAD_SCOPE_BINDING` der Bindung an `N`. Welcher Code trägt `nuc:hasenpfote/VOUCH@1`?
+
+**Gemessen.** `predicates.py` wirft für jeden String mit `nuc:`-Präfix, der die nuc-Regex nicht
+matcht, `UnknownNamespace` — Scope, Name und Version ohne Unterschied. Die Go-Fassung liest es
+ebenso (`00ad-fragen-befund §6`). Träger im Test sind zwei Fälle, beide mit fremdem Präfix
+(`svc:foo/bar@1`); kein bestehender Test und kein Vektor liegt auf dem strittigen Fall. NV6 trägt
+`foo/vouch@1` und ist von der Frage nicht berührt.
+
+**Beschluss.** Ein zwölfter Code, `INVALID_PREDICATE`. Er trägt jeden String mit `nuc:`-Präfix,
+der die Grammatik aus Anhang A nicht erfüllt — fehlerhafter Scope, fehlerhafter Name, fehlerhafte
+Version. `UNKNOWN_NAMESPACE` wird auf seinen Wortlaut zurückgeschnitten: weder `core/`- noch
+`nuc:`-Präfix. `RESERVED_CORE_PREDICATE` und `BAD_SCOPE_BINDING` bleiben unberührt. Gefasst
+werden `01 §6` Punkt 4, die Zeile in `01 §B.2`, der Absatz in `01 §2.2` und der Schluss von
+Anhang A.
+
+**Begründung.** D265 verbietet den falschen Satz. `UNKNOWN_NAMESPACE` behauptet, der Namensraum
+sei unbekannt; bei `nuc:hasenpfote/VOUCH@1` ist er bekannt und die Behauptung falsch. Beide
+Fassungen machen sie heute, und dass sie übereinstimmen, sagt darüber nichts — es ist der Fall aus
+D237, in dem der Text gar keinen Code vorsah und beide dieselbe Lücke gleich gefüllt haben. Der
+Preis ist gemessen und klein: keine bestehende Zusicherung wandert, kein Vektor ändert sich, in
+`predicates.py` sind es zwei Zeilen.
+
+**Warum die Form überhaupt durchgesetzt wird.** `01 §2.2` nennt den Prädikat-Namen opak — das gilt
+seiner **Bedeutung**, nicht seiner **Form**; derselbe Absatz sagt, neue Profile seien neue *Namen*
+unter `nuc:`, und Anhang A sagt, welche Zeichenfolgen Namen sind. Die Form nicht durchzusetzen
+hieße, eine als normativ überschriebene Grammatik zur Zierde zu erklären und dabei genau den
+Defekt zu erzeugen, den D266 eine Runde vorher behoben hat. Dazu kommt der Verwechslungsvektor aus
+`01 §2.4`: `vouch@01` neben `vouch@1` ist für die Profilschicht ein anderer String und für einen
+Menschen derselbe.
+
+**Verworfen:** die Auslöserzeile von `UNKNOWN_NAMESPACE` auf „Form verletzt Anhang A" zu
+verbreitern und bei elf Codes zu bleiben. Das kostet nichts und macht den Satz wahr — aber es
+macht ihn wahr, indem es die Wörter verschiebt, und lässt einen Codenamen zurück, der über die
+Fehlerursache täuscht. Ein Grund, der die Ursache falsch benennt, hat seinen einzigen Zweck
+verloren (D265). Verworfen auch, Name und Version gar nicht zu prüfen und nur den Scope zu binden:
+das erweitert die angenommene Menge dauerhaft, und die Umkehrung ist teurer als die Einschränkung.
+
+**Folge.** Gebraucht werden: `errors.py` um eine Klasse, die beiden `raise` in `predicates.py`,
+ein negativer Vektor in Anhang C mit einer Rücknahmeprobe. Ohne Vektor fiele die Abdeckung aus
+D257 von zehn Codes auf zehn von zwölf zurück; mit ihm sind es elf von zwölf. Historische
+Zählungen „elf Reject-Codes" in Prompts und älteren Registereinträgen bleiben stehen: sie waren
+wahr, als sie geschrieben wurden.

@@ -102,7 +102,9 @@ formale Grammatik steht in **Anhang A**; dieser Abschnitt bleibt normativ maßge
   **`nuc:<scope>`** (Anhang A). Ein Prädikat, dessen Namensraum **weder** `core` **noch** `nuc:`
   ist, ist **strukturell ungültig → Reject** (`UNKNOWN_NAMESPACE`, Anhang B). Das hält die
   Scope-Autorität einzig an `N` (§2.4, Invariante 2) und verhindert einen wildwachsenden
-  Namensraum-Zoo neben `N`.
+  Namensraum-Zoo neben `N`. Ein Prädikat mit `nuc:`-Präfix, das die Grammatik aus Anhang A
+  **nicht** erfüllt, ist ebenfalls strukturell ungültig → Reject (`INVALID_PREDICATE`, Anhang B).
+  Der Prädikat-Name ist **bedeutungs**-opak, nicht **form**-frei.
 - Namensraum **`core`** ist protokoll-reserviert und **geschlossen**: genau `core/revoke@1` und
   `core/supersede@1` (§5). Jedes andere `core/*` ist strukturell ungültig → Reject (§2.4,
   Invariante 4).
@@ -410,8 +412,9 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
    jedes Pflichtfeld vorhanden, kein Key außerhalb der Tabelle, Typen und Längen wie dort
    angegeben;
 3. `J.tag` ist im geschlossenen Enum (§2.1);
-4. Namensraum von `p` ist `core` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
-   `nuc:…`-Prädikat: Bindungsregel §2.2 Regel 3 erfüllt; bei `core/*`: Prädikat ∈
+4. `p` beginnt mit `core/` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
+   `nuc:…`-Prädikat: die Form erfüllt die Grammatik aus Anhang A (sonst `INVALID_PREDICATE`) und
+   die Bindungsregel §2.2 Regel 3 (sonst `BAD_SCOPE_BINDING`); bei `core/*`: Prädikat ∈
    `{revoke@1, supersede@1}` und `J.tag == claim-ref` (sonst `MALFORMED_CBOR`) und, **sofern der
    Ziel-Claim lokal bekannt ist**, `ziel.I == C.I` (sonst `FOREIGN_LIFECYCLE`);
 5. `Ed25519-Verify(C.I, DOM_SIG ‖ bytes, C.σ)` ist wahr;
@@ -618,6 +621,10 @@ nuc predicate   : ^nuc:(?:[0-9a-f]{64}|(?![0-9a-f]{64}/)[a-z0-9_-]+)/[a-z0-9_-]+
 Bindung an `N`: siehe §2.2 Regel 3 und §2.4 Invarianten 2–3. Die Grammatik prüft **Form**;
 die **Autorität** prüft immer `N`.
 
+Ein `nuc:`-Prädikat, das diese Grammatik verletzt, ist `INVALID_PREDICATE` (Anhang B.2). Ein
+String ohne `core/`- und ohne `nuc:`-Präfix ist `UNKNOWN_NAMESPACE`; ein `core/*` außerhalb der
+beiden gesegneten Prädikate ist `RESERVED_CORE_PREDICATE`.
+
 ---
 
 ## Anhang B — Verifizierer-Verhalten & Zustandsmaschine (normativ)
@@ -653,7 +660,8 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 | `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3); dazu zählt dekodierbare indefinite-length (BV3) |
 | `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp, fehlendes Pflichtfeld, Key außerhalb der Feldtabelle oder falsche Byte- bzw. Array-Länge (§2) / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
-| `UNKNOWN_NAMESPACE` | Namensraum von `p` ist weder `core` noch `nuc:` (§2.2) |
+| `UNKNOWN_NAMESPACE` | `p` beginnt weder mit `core/` noch mit `nuc:` (§2.2) |
+| `INVALID_PREDICATE` | `p` beginnt mit `nuc:`, erfüllt aber die Grammatik aus Anhang A nicht |
 | `BAD_SCOPE_BINDING` | `nuc:…` ohne `N`, oder `N ≠ bytes.fromhex(scope)` bei kanonischer Kodierung (§2.2 R3) |
 | `RESERVED_CORE_PREDICATE` | `core/*` ∉ `{revoke@1, supersede@1}` (§2.4 Inv. 4) |
 | `FOREIGN_LIFECYCLE` | `core/revoke`/`supersede` mit `ziel.I ≠ C.I` bei lokal bekanntem Ziel-Claim (§5.1) |
