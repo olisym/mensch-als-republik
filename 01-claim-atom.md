@@ -168,6 +168,13 @@ Regeln:
    Anwesend ⟺ Key vorhanden.
 6. Keine doppelten Keys. Keine Floats im Atom (`v` ist opake Bytes).
 
+**Die Eingabe ist genau ein Item (normativ).** Die empfangenen Bytes sind die Kodierung **eines**
+CBOR-Items und enthalten nichts darüber hinaus. Eine Folge mit Restbytes ist keine Kodierung eines
+Claims — auch dann nicht, wenn die Restbytes selbst ein gültiger Claim sind — und wird abgelehnt
+(`MALFORMED_CBOR`, Anhang B). Der Satz entscheidet mehr als einen Code: ohne ihn bliebe offen, ob
+ein Verifizierer den angehängten zweiten Claim verarbeiten darf, und die Antwort „nicht-kanonisch"
+verwirft ihn stillschweigend.
+
 **Durchsetzung (normativ):** Ein Verifizierer, der Bytes empfängt, **MUSS** die dekodierte Map —
 alle Felder einschließlich `σ` — neu kanonisch serialisieren und mit den empfangenen Bytes
 **byte-genau** vergleichen. Bei Abweichung → Reject (`NON_CANONICAL_ENCODING`, Anhang B). Ohne
@@ -669,7 +676,7 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 |------|----------|
 | `UNSUPPORTED_VERSION` | `version` nicht unterstützt |
 | `NON_CANONICAL_ENCODING` | Re-Serialisierung ≠ empfangene Bytes (§3); dazu zählt dekodierbare indefinite-length (BV3) |
-| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp, fehlendes Pflichtfeld, Key außerhalb der Feldtabelle oder falsche Byte- bzw. Array-Länge (§2) / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
+| `MALFORMED_CBOR` | nicht dekodierbar (auch: unabgeschlossene indefinite-length, Break in Wertposition, Restbytes hinter dem Item) / doppelte Keys / Nicht-uint-Schlüssel / falscher Feldtyp, fehlendes Pflichtfeld, Key außerhalb der Feldtabelle oder falsche Byte- bzw. Array-Länge (§2) / `J.tag ≠ claim-ref` bei `core/*` (§6 Punkt 4) |
 | `UNKNOWN_J_TAG` | `J.tag` ∉ `{1,2,3}` (§2.1) |
 | `UNKNOWN_NAMESPACE` | `p` beginnt weder mit `core/` noch mit `nuc:` (§2.2) |
 | `INVALID_PREDICATE` | `p` beginnt mit `nuc:`, erfüllt aber die Grammatik aus Anhang A nicht |

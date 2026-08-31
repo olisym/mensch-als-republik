@@ -10020,3 +10020,157 @@ und Uhr hat, soll den vollen Umfang prüfen, nicht den kleineren.
 dritte Fassung (D258) ist damit sagbar, was sie bauen soll, ohne auf das Register zu verweisen.
 Ein Prüfer für den Begriff selbst ist nicht gebaut und wird es vorerst nicht: die Aussage ist eine
 über den Text, nicht über eine Menge im Repo.
+
+---
+
+### D269 — Die Hex-Schnittstelle ist keine Norm, erzwingt aber einen falschen Satz
+
+**Die Frage.** `00ad-fragen-befund §8` fragt nach Hex-Alphabet, Innen-Whitespace, Leerzeilen und
+der Zusage „je Eingabezeile genau eine Ausgabezeile". Gestellt hat sie der Auftrag an die
+Go-Fassung (D256); die Spec kennt sie nicht.
+
+**Beschluss.** Kein Normbezug. Die Hex-Zeilen sind Transport in den Harness, nicht Wire-Form.
+`01 §3` spricht von empfangenen Bytes und sagt nichts darüber, wie sie ankommen. Die Lesart des
+Befunds bleibt eine Eigenschaft der Fassung und wird nicht Text.
+
+**Ein Befund bleibt trotzdem.** Die 1:1-Zusage zwingt den Harness, auch dort einen Reject-Code
+auszugeben, wo gar keine Bytefolge entstanden ist: ungerade Länge, Nicht-Hex-Zeichen,
+Innen-Whitespace. `MALFORMED_CBOR` behauptet dann etwas über empfangene Bytes, und es wurden keine
+empfangen. Das ist der falsche Satz, den D265 als einzige Norm über der Codewahl stehen lässt.
+Der Grenzfall ist die leere Zeile: die leere Bytefolge ist eine Bytefolge und ist kein Claim,
+dort trägt der Code.
+
+**Folge.** Nicht für die Spec, sondern für den nächsten Auftrag. Eine dritte Fassung (D258)
+bekommt eine Schnittstelle, die Transportfehler und Verdikt getrennt ausgibt — ein eigenes Wort
+für „diese Zeile ist keine Bytefolge", das kein Code aus `01 §B.2` ist. Der Auftrag der Go-Fassung
+wird nicht nachgezogen; er ist gelaufen, und sein Ergebnis ist gemessen.
+
+**Verworfen:** eine Klasse `BAD_INPUT` in `01 §B.2` aufzunehmen. Sie beträfe keinen Verifizierer,
+sondern eine Aufrufkonvention, und jede fremde Fassung müsste sie tragen, ohne dass ein Claim sie
+je auslöst — dieselbe Rechnung wie in D263 und D266. Verworfen auch, Leerzeilen zu überspringen:
+das bräche die Zusage, die den zeilenweisen Vergleich zweier Fassungen erst möglich macht.
+
+---
+
+### D270 — Die empfangenen Bytes sind genau ein CBOR-Item; Restbytes sind `MALFORMED_CBOR`
+
+**Die Frage.** `00ad-fragen-befund §9` fragt, ob `claim ‖ 0x00` nicht-kanonisch oder nicht
+dekodierbar ist, und behandelt das als Wahl zwischen zwei Codes. Die Frage darunter ist eine
+andere: was die Eingabe eines Verifizierers überhaupt ist.
+
+**Gemessen.** `01 §3` Regel 1 sagt „Top-Level ist eine CBOR-Map"; das Wort „Item" kommt in
+`01-claim-atom.md` genau einmal vor, in Regel 2 über indefinite-length. `01 §6` Punkt 2 verlangt
+„dekodierbar" und definiert es nicht. Die Python-Fassung liefert an `TV1 ‖ 0x00` wie an
+`TV1 ‖ TV1` `NON_CANONICAL_ENCODING`, gemessen an geeichtem Bestand: 626 grün, acht Vektoren mit
+dokumentiertem Ausgang reproduziert. Die Go-Fassung hat `MALFORMED_CBOR` gewählt und die Wahl in
+`00ad-fragen-befund §9` aufgeschrieben.
+
+**Beschluss.** `01 §3` bekommt den Satz, dass die empfangenen Bytes die Kodierung genau eines
+CBOR-Items sind und nichts darüber hinaus enthalten. Restbytes hinter dem Item sind
+`MALFORMED_CBOR`; die Zeile in `01 §B.2` nennt sie.
+
+**Warum die Freiheit aus D265 hier nicht greift.** D265 überlässt die Wahl, wo mehrere Codes eine
+wahre Aussage über dieselbe Bytefolge tragen. Ohne den Arity-Satz reicht die Offenheit weiter als
+bis zum Code: `TV1 ‖ TV1` ist dann unentschieden, und ein Verifizierer dürfte den zweiten Claim
+ebenso gut verarbeiten wie verwerfen. Die Fassung tut heute ein Drittes — sie liest die Folge als
+nicht-kanonische Kodierung des ersten und verwirft den zweiten signierten Claim stillschweigend.
+Was mit den Bytes geschieht, ist keine Codewahl.
+
+**Warum `MALFORMED_CBOR`.** `NON_CANONICAL_ENCODING` behauptet nach D262, es gebe eine kanonische
+Kodierung desselben Inhalts, die gültig wäre. Die Behauptung setzt voraus, dass die empfangenen
+Bytes eine Kodierung dieses Inhalts sind. Eine Folge zweier Items ist keine Kodierung einer Map;
+die Voraussetzung fällt weg, und mit ihr der Satz.
+
+**Verworfen:** die Frage unter D265 offen zu lassen — die Offenheit wäre nicht auf den Code
+beschränkt. Verworfen, den Satz als siebte Regel in die Liste in `01 §3` zu nehmen: die sechs
+Regeln beschreiben die Kodierung einer Map, die Arity beschreibt die Eingabe und steht vor ihnen.
+Verworfen, Restbytes zu überlesen und den ersten Claim zu nehmen: dann trüge dieselbe `claim_id`
+beliebig viele Wire-Formen, und `01 §2.4` Invariante 5 fiele in genau der Richtung, die D272 an
+der Fassung misst.
+
+---
+
+### D271 — `00ad-fragen-befund §10` und `§11` ändern keine Norm
+
+**Die Frage.** `00ad-fragen-befund §10` fragt nach Indefinite-Length, Break, Floats, Tags und
+Simple Values, `§11` danach, ob `0x01` und `0x18 0x01` derselbe Map-Key sind.
+
+**Beschluss.** Beide sind vom Text entschieden; die Lesart des Befunds ist die der Spec. Kein Satz
+in `01` ändert sich, keine neue Klasse kommt hinzu.
+
+**`§10` im einzelnen.** Dekodierbare indefinite-length ist `NON_CANONICAL_ENCODING` (BV3),
+unabgeschlossene Länge und Break in Wertposition sind `MALFORMED_CBOR` (BV1, `01 §B.2`). Major 6
+und Major 7 in Feldposition sind falscher Feldtyp und damit `MALFORMED_CBOR` (D266) — kein Feld in
+`01 §2` trägt Tag, Float, Boolean oder Null. Ein Top-Level, das keine Map ist, trägt kein
+Pflichtfeld und fällt unter dieselbe Zeile.
+
+**`§11` im einzelnen.** D262 entscheidet es: eine Map mit zwei Einträgen gleichen Schlüsselwerts
+trägt einen Mangel, den keine Kodierung behebt. Maßgeblich ist damit die semantische Gleichheit
+der dekodierten Schlüssel, und die Kodierungslänge des Schlüssels ist gleichgültig. `01 §B.2`
+nennt doppelte Keys ausdrücklich unter `MALFORMED_CBOR`.
+
+**Verworfen:** die zehn Fehlerklassen aus `00ad-fragen-befund §4` doch noch zu ordnen, weil beide
+Fragen an einer Ordnung hingen. Sie hängen nicht daran: entschieden hat in beiden Fällen der
+Inhalt der Aussage, nicht ihre Stelle in einer Reihe. D265 bleibt unberührt.
+
+**Was die Prüfung nebenbei ergeben hat.** Die Fassung folgt dem Text an beiden Stellen nicht. Das
+ist ein Befund über sie und nicht über die Norm; er steht in D272.
+
+---
+
+### D272 — D266 ist Text ohne Code: fünf gemessene Abweichungen der Fassung
+
+**Der Anlass.** D266 hat Feldsatz-Verstöße auf `MALFORMED_CBOR` gelegt und die Geltung der
+Feldtabelle je Version normiert. Der Beschluss ist in `01 §2`, `01 §6` Punkt 2 und `01 §B.2`
+gefahren worden. Ein Werkzeuglauf hat ihn nicht gebaut, und die Fassung ist nie gegen ihn gemessen
+worden. Aufgefallen ist das bei der Prüfung von `00ad-fragen-befund §10` und `§11` (D271).
+
+**Gemessen.** Am ausgepackten Bestand, geeicht an 626 grünen Tests und acht Vektoren mit
+dokumentiertem Ausgang, dann Mutanten von TV1, mit dem Alice-Seed neu signiert, wo die Signatur
+betroffen war:
+
+| Bytefolge | Fassung liefert | Norm verlangt |
+|---|---|---|
+| TV1 mit angehängtem Key 20, Signatur unangetastet | angenommen, `claim_id` unverändert | `MALFORMED_CBOR` (D266) |
+| `version` als `true` (`h'f5'`), neu signiert | angenommen, `version` liest `True` | `MALFORMED_CBOR` (`01 §2`) |
+| `t` als `true`, `false` oder negativ, neu signiert | angenommen | `MALFORMED_CBOR` (`01 §2`) |
+| Key 6 doppelt, Map-Header von `h'a9'` auf `h'aa'` | `NON_CANONICAL_ENCODING` | `MALFORMED_CBOR` (`01 §B.2`) |
+| `version` 2 mit fehlendem `t` oder `I` mit 31 Byte | `MALFORMED_CBOR` | `UNSUPPORTED_VERSION` (D266) |
+
+**Der erste Fall ist schärfer, als D266 ihn gedacht hat.** Dort ist der fremde Key als zweite
+ID-Familie verworfen worden. Gemessen ist die Umkehrung. Die Kanonizitätsprüfung sieht nichts,
+weil die erweiterte Map selbst kanonisch kodiert ist; der Verifizierer baut sein Preimage aus
+einer Map, die er zuvor auf die bekannten Keys zurückschneidet. Der fremde Key fällt also weg,
+bevor die Signatur geprüft wird. Sie verifiziert, `claim_id` bleibt dieselbe, der Claim wird
+angenommen. Zwei Wire-Formen von 309 und 311 Byte tragen damit eine Adresse und dedupen
+gegeneinander weg (`01 §B.3`, Gossip-Replay). `01 §2.4` Invariante 5 nennt als Zweck, dass
+`claim_id` eine echte Inhaltsadresse ist und Dedup und Equivocation-Erkennung nicht vergiftet
+werden; in dieser Richtung fällt sie ohne Zutun des Autors — anhängen kann jeder Dritte.
+
+**Die zweite Ursache ist eine Eigenheit der Sprache.** `bool` ist in Python eine Unterklasse von
+`int`, und `True == 1`. Der Typtest auf `int` lässt `h'f5'` und `h'f4'` durch, und der
+Versionsvergleich gegen `1` fällt für `True` positiv aus. Damit hat derselbe logische Claim eine
+zweite gültige `claim_id` — das Grinding, das Invariante 5 ausschließt. Negative Integer passieren
+aus demselben Grund die Tore; `01 §2` schreibt uint.
+
+**Nullprobe vor dem Prompt.** Die vier Typtore auf CBOR-uint verengt, ohne einen einzigen neuen
+Test: 626 grün vor und nach der Änderung, und alle sieben Mutanten kippen auf `MALFORMED_CBOR`.
+Der Bestand ist für diese Klasse vollständig blind, und er blockiert die Reparatur nicht. Die
+Rücknahmeprobe des kommenden Laufs ist damit vorab geeicht (Prüfregeln 49, 51).
+
+**Beschluss.** Ein Werkzeuglauf repariert die fünf Ausgänge und legt die Vektoren dazu; er bekommt
+einen eigenen Prompt und einen eigenen Anhangsabschnitt in `01`. Die Norm ändert sich dabei nicht
+— jeder der fünf Ausgänge steht bereits im Text. Der Kommentar in `verifier.py`, doppelte Keys
+seien vom Dekoder ausgeschlossen, ist falsch und fällt mit.
+
+**Verworfen:** die Reparatur in denselben Schnitt zu legen wie die Registereinträge. Der Textteil
+ist über Zielhashes abnehmbar, der Codeteil nicht; gemischt wäre keiner von beiden sauber
+abzunehmen. Verworfen auch, eine Prüfreihenfolge vorzuschreiben, damit die Version vor dem
+Feldsatz geprüft wird: D262 normiert Ausgänge und keine Reihenfolge, und der Prompt fixiert
+deshalb Welten und Codes, nicht Schritte.
+
+**Folge für die Zweitimplementierung.** D266 hält fest, dass die Go-Fassung alle vier Fälle aus
+`00ad-fragen-befund §7` fängt, und sie hat das aus dem Text vor D266 getan. Die Python-Fassung
+fängt keinen davon. Damit ist die Referenz an fünf Ausgängen die abweichende Fassung; in D262 war
+es die Go-Fassung an einem. Das ist der Ertrag, den D237 sich von einer zweiten Fassung versprochen
+hat, und er fällt zum ersten Mal auf die Referenz zurück.
