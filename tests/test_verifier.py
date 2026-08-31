@@ -137,6 +137,18 @@ def test_read_claim_tv1_matches_structural_check():
     assert claim_id(result) == claim_id(checked)
 
 
+def test_tv6_read_claim_accepts():
+    """core/* mit t >= t_exp: read_claim liefert einen Claim (01 §5.3, D264)."""
+    result = read_claim(bytes.fromhex(_vec("TV6")["signed_bytes"]))
+    assert isinstance(result, Claim)
+
+
+def test_nv12_read_claim_malformed_cbor():
+    """core/* mit J.tag != claim-ref: MALFORMED_CBOR (01 §6 Punkt 4, D263)."""
+    result = read_claim(bytes.fromhex(_vec("NV12")["signed_bytes"]))
+    assert result == ErrorCode.MALFORMED_CBOR
+
+
 def test_nv2_reserializes_to_tv1_core():
     nv2 = _vec("NV2")
     core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])

@@ -1110,6 +1110,48 @@ claim_id = 32dd820ac291f75319369563f9eb10fe30de77607cb24cbb5a6778798a57ff3c
 erwartet = Reject: INCOHERENT_EXPIRY
 ```
 
+### C.11 TV6 und NV12 — `t_exp` auf `core/*` und falscher `J.tag`
+
+#### TV6 — `core/revoke@1` mit `t ≥ t_exp`
+
+Auf `core/*` bleibt `t_exp` ohne Wirkung. Deshalb ist auch `t ≥ t_exp` kein
+Reject (§5.3). TV6 trägt `t = 1700000410` und `t_exp = 1700000405` und gilt.
+
+```
+core = { 0:1, 1:ALICE, 2:[2, TV1.claim_id], 3:"core/revoke@1",
+         6:1700000410, 7:1700000405, 8:TV5.claim_id }
+
+bytes    = a700010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c0282025820f95d430e40df736cbdffd7bf82af4f77e0c7af8692
+           565f3b2a151c2c1ae8660c036d636f72652f7265766f6b654031061a6553f29a
+           071a6553f2950858208b19196274b2a8ac08e9a34337de5f445e6efd19fb7515
+           5eb187b069f5fd8022
+claim_id = 990b870c9e1c92d7fc442c70cdfe3b2d06d04ca41c522c6efe9e0834902d952e
+σ        = 77e2d66ddf07a87414030be860efd0e97020ddc3f11d53e184ba27d40f7610de
+           6a2420816325aa5d2f7a75ee8670006b27e213bbb7ad69dc09f25daacb596008
+```
+
+#### NV12 — `J.tag` 1 → `MALFORMED_CBOR`
+
+Der Tag ist `1` statt `claim-ref`. Das verletzt die Form, die §6 Punkt 4 für
+`core/*` verlangt. Ohne bekannten Ziel-Claim kann `FOREIGN_LIFECYCLE` nichts
+behaupten; der Code ist `MALFORMED_CBOR`.
+
+```
+core = { 0:1, 1:ALICE, 2:[1, ALICE], 3:"core/revoke@1",
+         6:1700000409, 8:h_prev_genesis(ALICE) }
+
+bytes    = a600010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
+           8801b40f6f5c02820158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d
+           94121bf3748801b40f6f5c036d636f72652f7265766f6b654031061a6553f299
+           08582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a28f73b25
+           625430
+claim_id = 8d253635ff9d59cca68fa760c589a3393551053a4ea08a5c78ce936d7541bddc
+σ        = 9fac85e00bccce34144f33e885bdfe60b8d9d4a4d298de74d30dd99198b0f1fd
+           80c2df73397c417e4aa7ec2aea22865d76185fba1bac5d0566f51113df4ba306
+erwartet = Reject: MALFORMED_CBOR
+```
+
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 
 - **Genesis-`h_prev` vereinheitlicht** auf `SHA-256(DOM_ID_GEN ‖ I)` (Feldtabelle, §4, §6);

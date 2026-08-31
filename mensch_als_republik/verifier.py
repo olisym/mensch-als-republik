@@ -201,7 +201,7 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
         raise InvalidGenesisAnchor()
 
     # 7: t < t_exp
-    if claim.t_exp is not None and claim.t >= claim.t_exp:
+    if not is_core_predicate(claim) and claim.t_exp is not None and claim.t >= claim.t_exp:
         raise IncoherentExpiry()
 
     return claim

@@ -170,6 +170,7 @@ def build_vectors() -> dict:
         h_prev=tv3_cid,
     )
     tv5 = _finalize(tv5_unsigned, alice_sk)
+    tv5_cid = claim_id(tv5)
 
     # TV4 — accept-rules Bob, Genesis
     tv4_unsigned = Claim(
@@ -308,6 +309,29 @@ def build_vectors() -> dict:
     )
     nv11 = _finalize(nv11_unsigned, alice_sk)
 
+    # TV6 — core/revoke@1 mit t >= t_exp, verkettet auf TV5 (01 §C.11, D264)
+    tv6_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(2, tv1_cid),
+        p=P_REVOKE,
+        t=1_700_000_410,
+        t_exp=1_700_000_405,
+        h_prev=tv5_cid,
+    )
+    tv6 = _finalize(tv6_unsigned, alice_sk)
+
+    # NV12 — core/revoke@1 mit J.tag 1 statt claim-ref (01 §C.11, D263)
+    nv12_unsigned = Claim(
+        version=1,
+        I=ALICE_PUB,
+        J=(1, ALICE_PUB),
+        p=P_REVOKE,
+        t=1_700_000_409,
+        h_prev=h_gen_alice,
+    )
+    nv12 = _finalize(nv12_unsigned, alice_sk)
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -356,6 +380,8 @@ def build_vectors() -> dict:
             _vec("NV9", nv9, expect_reject="RESERVED_CORE_PREDICATE"),
             _vec("NV10", nv10, expect_reject="BAD_SIGNATURE"),
             _vec("NV11", nv11, expect_reject="INCOHERENT_EXPIRY"),
+            _vec("TV6", tv6),
+            _vec("NV12", nv12, expect_reject="MALFORMED_CBOR"),
         ],
     }
 
