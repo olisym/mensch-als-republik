@@ -9978,3 +9978,45 @@ ein negativer Vektor in Anhang C mit einer Rücknahmeprobe. Ohne Vektor fiele di
 D257 von zehn Codes auf zehn von zwölf zurück; mit ihm sind es elf von zwölf. Historische
 Zählungen „elf Reject-Codes" in Prompts und älteren Registereinträgen bleiben stehen: sie waren
 wahr, als sie geschrieben wurden.
+
+---
+
+### D268 — Selbstenthaltene Gültigkeit wird benannt; `00ad-fragen-befund §3` ändert keine Norm
+
+**Die Frage.** `00ad-fragen-befund §3` legt fest, dass eine zustandslose Fassung weder die Uhr
+noch den Vorgänger befragt. Ist das eine Abweichung von der Spec oder deren korrekte Lesart? Und
+wenn es die Lesart ist: wie heißt der Prüfumfang, den eine solche Fassung abdeckt?
+
+**Gemessen.** `01 §6` Punkt 7 sagt selbst „kein Wall-Clock nötig". `01 §B.3` führt den unbekannten
+Vorgänger unter den Nicht-Fehlern; `01 §B.1` nennt `expired` den einzigen verifizierer-relativen
+Zustand. Von den sieben Punkten in `01 §6` hängt nach D263 genau einer an einem Speicher:
+`ziel.I == C.I` in Punkt 4, und der greift nur, sofern der Ziel-Claim lokal bekannt ist. Die
+übrigen sechs und der Rest von Punkt 4 sind aus den empfangenen Bytes allein entscheidbar.
+
+**Beschluss.** Die Lesart des Befunds ist die der Spec; an ihr ändert sich nichts. Benannt wird
+der Umfang: **selbstenthaltene Gültigkeit** sind die Punkte 1 bis 7 ohne den bedingten Konjunkt
+aus Punkt 4. Der Absatz steht in `01 §6` hinter Punkt 7. Er definiert und verlangt nichts.
+
+**Begründung.** „Zustandslose Stufe von Layer 01" ist seit D256 ein Ausdruck des Registers, nicht
+der Spec; er hat den Umfang der Go-Fassung bezeichnet und den Prüfstand ihrer Abnahme, ohne dass
+irgendwo stünde, welche Punkte dazugehören. Der Ausdruck ist inzwischen dreimal tragend gewesen —
+D256, D258, D259 — und eine dritte Fassung müsste ihn wieder erraten. Dass er sich sauber
+definieren lässt, ist erst durch D263 wahr geworden: vorher war `ziel.I == C.I` unbedingt und der
+Umfang damit nicht abschließbar.
+
+**Der Zusatz, der ihn tragfähig macht.** Wissen kann das Urteil nur verengen. Ein selbstenthalten
+gültiger Claim kann strukturell ungültig werden, sobald sein Ziel bekannt ist; umgekehrt kann
+kein Zuwachs an Wissen einen Reject aufheben. Damit ist der Umfang eine sichere Untermenge und
+kein zweiter, konkurrierender Gültigkeitsbegriff — die Richtung ist dieselbe wie bei `expired`
+und bei `pending` (`01 §6`, Unter-Vertrauen).
+
+**Verworfen:** den bedingten Konjunkt aus der strukturellen Gültigkeit herauszunehmen und in einen
+eigenen Zustand zu heben. Das änderte die Zustandsmenge in `01 §B.1` von acht auf neun und
+entschiede keinen einzigen Ausgang zusätzlich; `FOREIGN_LIFECYCLE` bliebe derselbe Code am
+denselben Bedingungen. Verworfen auch, den Begriff als MUSS zu fassen: eine Fassung, die Speicher
+und Uhr hat, soll den vollen Umfang prüfen, nicht den kleineren.
+
+**Folge.** Die Abnahme einer Fassung ohne Speicher hat jetzt einen benannten Bezugspunkt. Für eine
+dritte Fassung (D258) ist damit sagbar, was sie bauen soll, ohne auf das Register zu verweisen.
+Ein Prüfer für den Begriff selbst ist nicht gebaut und wird es vorerst nicht: die Aussage ist eine
+über den Text, nicht über eine Menge im Repo.

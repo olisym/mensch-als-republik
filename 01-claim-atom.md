@@ -424,6 +424,17 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
    Feld-Konsistenz — ein Claim, der behauptet, vor seiner eigenen Erstellung abzulaufen, ist
    inkohärent; **kein** Wall-Clock nötig). Auf `core/*` entfällt die Prüfung mit dem Feld (§5.3).
 
+**Selbstenthaltene Gültigkeit (normativ).** Die Punkte 1 bis 7 sind bis auf einen Konjunkt aus den
+empfangenen Bytes allein entscheidbar — ohne Uhr, ohne Speicher, ohne Netz. Der eine Konjunkt ist
+`ziel.I == C.I` in Punkt 4, und er greift nur, sofern der Ziel-Claim lokal bekannt ist. Ein Claim
+heißt **selbstenthalten gültig**, wenn die Punkte 1 bis 7 ohne diesen Konjunkt erfüllt sind. Der
+Begriff verlangt nichts, er benennt: er ist der Prüfumfang eines Geräts ohne Speicher (A1) und
+damit der Bezugspunkt für Fassungen, die nur diesen Teil bauen. Wissen kann das Urteil nur
+**verengen** — ein selbstenthalten gültiger Claim kann strukturell ungültig werden, sobald sein
+Ziel bekannt ist; der umgekehrte Weg existiert nicht. Zeitliche Gültigkeit, `pending` und `linked`
+liegen außerhalb: sie brauchen Uhr beziehungsweise Speicher, und keines von beiden ist ein Reject
+(Anhang B.3).
+
 **Zeit — `now` ist bewusst lokal und subjektiv (normativ).** Die Gültigkeitsprüfung gegen `t_exp`
 lautet: falls `t_exp` vorhanden, gilt `C` als *zeitlich gültig* gdw. `now ≤ t_exp`, wobei `now`
 die **lokale Zeitquelle des Verifizierers** ist (eigene Uhr **oder** ein Zeitdienst, dem er
