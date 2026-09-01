@@ -10782,3 +10782,71 @@ weil er beide Pfade trifft.
 Messung Arbeit erzeugt — zwölf ungebundene Reject-Codewerte, elf blinde Feldtabellentore. Diese
 nicht. Das ist kein Grund, die Messung nachträglich für überflüssig zu halten: dieselbe Vermutung
 stand vor D279 über den Reject-Codes und war dort falsch.
+
+---
+
+### D287 — Die zehn Doppelerzeuger sind erreichbar und bekommen je einen Träger
+
+**Anlass.** D281 hat zehn nie erreichte Erzeugerstellen von Vermerken auf die offene Liste gesetzt
+und ausdrücklich nicht entschieden, was mit ihnen geschieht. D283 hat für den Fehlerkanal die Frage
+gestellt, die hier zu beantworten ist: unerreichbar und zu streichen, oder erreichbar und
+ungeprüft.
+
+**Gemessen.** Die zehn Stellen sind zeilengenau geortet und liegen genau dort, wo D281 sie
+benannt hat. **Keine davon ist toter Code.** Neun sind aus gewöhnlichen Welten erreichbar; die
+zehnte nur aus einem von Hand gebauten `TallyResult`.
+
+| Stelle | Vermerk | Auslösende Welt |
+|---|---|---|
+| `governance/tally.py` `read_v` | `UNPARSABLE_V` | `v` dekodiert kanonisch und ist keine Map |
+| `profiles/payload.py` `read_v` | `UNPARSABLE_V` | dieselbe Form |
+| `trust/groups.py` `_decode_weight` | `UNPARSABLE_VOUCH_PAYLOAD` | `v[0]` ist keine nichtnegative Ganzzahl |
+| `governance/tally.py` `constitution_governable` | `MALFORMED_PARTICIPANTS` | `participants` ist keine Folge |
+| `governance/tally.py` `decide` | `MALFORMED_THRESHOLD` | `thresholds` trägt die anzuwendende Klasse nicht |
+| `governance/epoch.py` `verify_ratification` | `TALLY_UNEVALUABLE` | Auszählung ohne `participants` |
+| `profiles/credit.py` Obligation | `INVALID_V_TYPE` | `v[1]` ist keine Bytefolge |
+| `profiles/credit.py` Quittung | `INVALID_V_TYPE` | `v[0]` ist kein uint |
+| `profiles/membership.py` | `SCOPE_MISMATCH` | `grant-membership` mit fremdem `N` |
+| `profiles/verdict.py` | `UNKNOWN_ACCUSATION` | Verdikt auf einen Claim, den der Store nicht kennt |
+
+**Beschluss.** Zehn Träger, keine Streichung. Findet der Lauf eine der zehn Stellen doch
+unerreichbar, wird das gemeldet und nicht weggeräumt — die Ableitung steht hier, die Messung liegt
+im Lauf.
+
+**Drei Leser desselben Feldes, dieselbe blinde Stelle.** `governance/tally.read_v`,
+`profiles/payload.read_v` und `trust/groups._decode_weight` lesen alle `v` nach der Form aus
+`03 §1.3`, die D276 für jede Schicht normativ gemacht hat. In allen dreien ist der Zweig „dekodiert,
+kanonisch, aber nicht die erwartete Form" ungeprüft geblieben, während die beiden Nachbarzweige —
+Dekodierfehler und Kanonizität — je einen Test tragen. Die Lücke ist keine drei Zufälle, sondern
+eine Form, die dreimal abgeschrieben und dreimal gleich unvollständig geprüft wurde.
+
+**Das Tor in `verify_ratification` trägt und wird darum nicht gestrichen.** `decide` baut ein
+`TallyResult` an genau zwei Stellen: mit `participants = None` und `state = UNEVALUABLE`, oder mit
+beidem gesetzt. Durch `decide` ist der Zweig also unerreichbar. Er ist trotzdem kein toter Code:
+`verify_ratification` nimmt die Auszählung als Parameter, und ohne das Tor liefe `ratify.I not in
+participants` gegen `None`. Anders als in D283 ist der erzeugte Vermerk hier **wahr** — eine
+Auszählung ohne Teilnehmermenge ist nicht auswertbar. Der Träger baut das `TallyResult` direkt.
+
+**Zwei Träger waren grün, ohne ihre Zeile zu erreichen.** Vorab gemessen und berichtigt. Der eine
+prüfte `MALFORMED_THRESHOLD` und traf das Nachbartor für den Schwellenindex; der andere prüfte
+`UNPARSABLE_VOUCH_PAYLOAD` und traf das Tor für die fehlende Null. `decide` erzeugt
+`MALFORMED_THRESHOLD` an drei Stellen, `_decode_weight` erzeugt `UNPARSABLE_VOUCH_PAYLOAD` an drei
+Stellen — ein Test, der den Vermerk behauptet, sagt nicht, welches Tor ihn erzeugt hat. Genau die
+Lücke aus Prüfregel 57, diesmal beim Bau des Trägers selbst. Die Überdeckung des Trägers gegen
+seine Zielzeile hat beide in einem Lauf gefunden; zehn Rücknahmeproben hätten dasselbe in zehn
+Läufen gefunden. Die Überdeckung ist der billige Vorlauf von Prüfregel 49, keine neue Regel.
+
+**Ein elfter Fall, doppelt geschützt.** Für `MALFORMED_PARTICIPANTS` war die erste Welt eine
+Zeichenkette. Nimmt man das Typtor zurück, läuft die Schleife über die Zeichen, findet keine
+32-Byte-Folge und erzeugt denselben Vermerk eine Prüfung später — die Probe bliebe stumm grün. Die
+gewählte Welt ist eine Map mit einem 32-Byte-Schlüssel: sie passiert die Schleife vollständig und
+lässt nur das Typtor übrig. Alle zehn Proben schließen damit einzeln (Prüfregeln 49, 51).
+
+**Verworfen: die zehn Stellen zu streichen.** Das war die Antwort in D283 und sie passt hier nicht.
+Dort waren die Zweige durch eine vollständige Fallunterscheidung ausgeschlossen; hier fehlt nur die
+Welt, die sie auslöst. Neun der zehn sind aus einem gewöhnlichen Claim erreichbar, und drei davon
+liegen im Lesepfad für `v`, also an der Stelle, an der ein fremder Autor am ehesten etwas
+Unerwartetes schickt.
+
+**Verworfen: je Vermerk ein Träger statt je Stelle.** Das ist der Zustand, den D281 gemessen hat:
+47 von 48 Namen gebunden, und trotzdem zehn Stellen ohne Prüfung. Der Name ist nicht die Stelle.
