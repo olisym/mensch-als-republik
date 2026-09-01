@@ -11034,10 +11034,20 @@ Aussage. Den Code auf `MALFORMED_CBOR` zu ziehen hieße, den Vektor für die Kan
 verlieren, den einzigen, den `01` dafür hat.
 
 **Ein zweiter Mangel fällt mit.** NV2 ist bisher der einzige Vektor ohne Drahtbytes und damit der
-einzige, den der Bestand nicht fährt — festgehalten in `einlesen-a-abnahme.md` und geprüft von
-`test_reject_vectors_without_wire_are_exactly_nv2`. Mit der neuen Fassung ist er eine Bytefolge wie
-jede andere, wird parametrisiert gefahren und die Ausnahme entfällt. Der Vektor, der den Widerspruch
-trug, war genau der, den niemand ausgeführt hat.
+einzige, der nicht in der parametrisierten Vektorprüfung steht — festgehalten in
+`einlesen-a-abnahme.md` und geprüft von `test_reject_vectors_without_wire_are_exactly_nv2`. Mit der
+neuen Fassung ist er eine Bytefolge wie jede andere, wird parametrisiert gefahren und die Ausnahme
+entfällt.
+
+**Berichtigung an dieser Stelle.** Bei der Abnahme des Laufs stand hier zunächst, der Vektor mit dem
+Widerspruch sei genau der, den niemand ausgeführt habe. Das ist zu stark. Nachgemessen:
+`tests/test_verifier.py` hat in `_nv2_wire` die signierte Fassung im Test **selbst gebaut** — den
+gedruckten Core dekodiert, `σ` als Key 9 angehängt, nicht-kanonisch zurückgeschrieben — und zwei
+Tests darauf gefahren. Diese Rekonstruktion ergibt byte-genau dieselben 309 Byte, die dieser
+Beschluss festlegt. Nicht ausgeführt war also die **gedruckte** Bytefolge, und falsch war der
+Spec-Text; der Code hatte die Lücke bereits im Test geschlossen, ohne sie zu melden. Damit ist der
+Befund enger und zugleich schärfer: eine Testdatei hat einen Vektor stillschweigend berichtigt,
+statt den Vektor zu berichtigen. Der Lauf zieht diese Rekonstruktion in die Vektordatei zurück.
 
 **Nicht nachgezogen.** `einlesen-a-abnahme.md`, `einlesen-a-prompt.md` und
 `einlesen-a-nachlauf-prompt.md` halten fest, dass NV2 keine Drahtbytes trägt. Das war zutreffend,

@@ -147,7 +147,7 @@ def test_nv12_read_claim_malformed_cbor():
     assert result == ErrorCode.MALFORMED_CBOR
 
 
-def test_nv2_reserializes_to_tv1_core():
+def test_nv2_reserializes_to_tv1_signed():
     nv2 = bytes.fromhex(_vec("NV2")["wire_bytes"])
     tv1_signed = bytes.fromhex(_vec("TV1")["signed_bytes"])
     assert cbor_canon.reserialize(nv2) == tv1_signed
