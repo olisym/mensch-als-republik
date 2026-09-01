@@ -10886,3 +10886,120 @@ reinen Textschnitt.
 **Verworfen: die Regeln nach Herkunft zu gliedern.** Die Datei nennt ihre Herkunft bereits in der
 Schlussliste, und die Herkunft sagt nichts darüber, wann eine Regel greift. Wer prüft, sucht den
 Zeitpunkt.
+
+---
+
+### D289 — Bauform der Mutation: erst das vollständige Gitter, dann die Kombinationen
+
+**Anlass.** D258 hält am Ende fest, dass zufällige Bytes fast durchweg dieselbe Fehlerklasse
+liefern und eine Kampagne mutierte gültige Claims braucht — und lässt die Bauform dieser Mutation
+ausdrücklich offen. Prüfregel 15 verlangt hier die Literaturprüfung: der Fork wird außerhalb von
+MaR seit zwölf Jahren an genau unserem Gegenstand bearbeitet, nämlich signierten strukturierten
+Nachrichten, deren Prüfung eine informell geschriebene Spec umsetzt.
+
+**Der Literaturbefund, in drei Schritten.**
+
+- *Frankencert* (Brubaker u. a., 2014) ist die Urform: Zertifikate werden in ihre Felder zerlegt
+  und zufällig neu zusammengesetzt, das Orakel ist die Uneinigkeit zweier Implementierungen. Teuer
+  und ungeführt — zehn Millionen Eingaben aus 100 000 Saatzertifikaten ergaben zehn verschiedene
+  Abweichungen.
+- *Mucert* (Chen und Su, 2015) behält die Bauform und führt sie über MCMC-Sampling. Tausend
+  Mucerts liefern dreimal so viele verschiedene Abweichungen wie acht Millionen Frankencerts.
+  Führung schlägt Menge um vier Größenordnungen.
+- *NEZHA* (Petsios u. a., 2017) tauscht die Führungsgröße aus: nicht die Überdeckung einer
+  Implementierung, sondern die Verschiedenheit der Ausgabetupel zwischen allen Implementierungen.
+  52-fache Rate gegenüber Frankencert, 27-fache gegenüber Mucert; die reine Blackbox-Führung über
+  Rückgabewerte war dabei so gut wie die Pfadführung mit Instrumentierung.
+
+**Die Zahl, die für MaR entscheidet.** NEZHA hat die Empfindlichkeit gegen die Feinheit des
+Fehleralphabets ausgemessen. Drei Bibliotheken, künstlich auf höchstens 32 Codes beschränkt, finden
+merklich weniger; bei sechzehn Codes über alle drei findet das Verfahren **überhaupt nichts** mehr.
+`01 §B.2` kennt zwölf. MaR liegt unterhalb der Schwelle, an der die evolutionäre Führung über
+Ausgabetupel nachweislich zu tragen aufhört. Damit ist das Verfahren, das die Literatur als bestes
+ausweist, für unseren Gegenstand nicht das erste Mittel.
+
+**Der zweite Befund gegen den bloßen Nachbau.** Frankencert und Mucert fanden drei beziehungsweise
+fünfzehn Abweichungen, die NEZHA verfehlte — weil sie auf der Ebene der Felder mutieren und die
+Struktur nicht verletzen, während NEZHA formunkundig auf Bytes arbeitet. Feldweise Mutation ohne
+Führung findet anderes als byteweise Mutation mit Führung, nicht weniger.
+
+**Beschluss 1 — Stufe 1 ist ein vollständiges Gitter und braucht keine Führung.** Die Maschinerie
+der Literatur ist für offene Formate gebaut; `01 §2` hat zehn Felder. Über zehn Felder mal eine
+feste Operatorenmenge führt kein Suchverfahren, sondern eine Aufzählung. Saat sind die gültigen
+Vektoren aus Anhang C, nicht Zufallsbytes. Mutiert wird die **dekodierte Map**, nicht die
+Bytefolge; je Feld: Typ tauschen, Länge ändern, Key entfernen, Key außerhalb der Tabelle
+hinzufügen, Wert aus einem anderen Vektor übernehmen. Danach kanonisch neu kodieren.
+
+**Beschluss 2 — jeder Mutant der Stufe 1 wird über seinen mutierten Core neu signiert.** Ohne das
+stirbt jeder an `BAD_SIGNATURE`, und die Kampagne misst die Signaturprüfung statt der Spec. Es ist
+dasselbe Argument, mit dem D257 verlangt, dass ein Vektor genau den Mangel trägt, den er behauptet.
+
+**Beschluss 3 — eine dritte Familie bleibt unsigniert.** Mutanten, deren Signatur nicht nachgezogen
+wird, prüfen, wo `BAD_SIGNATURE` gegenüber den übrigen Codes steht. Nach D265 ist diese Ordnung
+nicht normiert; das ist der wahrscheinlichste Ort einer stillen Übereinkunft zwischen zwei
+Fassungen, die der Text nicht deckt.
+
+**Beschluss 4 — Stufe 2 ist zufällig und betrifft nur Kombinationen.** Zwei und drei gleichzeitige
+Mängel erreicht das Gitter nicht, und dort können zwei Fassungen sich über den **Vorrang** uneinig
+sein — wieder D265. Erst hier trägt die Ausgabe-Diversität als Führung, weil das Tupel bei
+mehreren Mängeln überhaupt Streuung bekommt.
+
+**Beschluss 5 — die Beobachtungsgröße ist breiter als die zwölf Codes.** Das Tupel trägt zusätzlich
+den Ausgang „angenommen" mitsamt der `claim_id`. Zwei Fassungen, die dieselben Bytes annehmen und
+ihnen verschiedene `claim_id` geben, sind der schwerste Befund, den die Kampagne erzeugen kann, und
+ein reiner Code-Vergleich sähe ihn nicht. Das ist zugleich die Antwort auf das enge Alphabet: wer
+die Ausgabe nicht verbreitern kann, muss die Eingabe aufzählen.
+
+**Verworfen: die evolutionäre Führung als Hauptverfahren.** Sie ist das Mittel gegen einen Raum,
+den man nicht ausschöpfen kann. Unserer besteht aus zehn Feldern und einer Handvoll Operatoren.
+
+**Verworfen: Mutation auf der Bytefolge.** Sie erzeugt fast nur `MALFORMED_CBOR` — das steht schon
+in D258 — und sie kann nicht neu signieren, weil sie die Feldgrenzen nicht kennt.
+
+**Was von D257 hier ausdrücklich nicht gilt.** Ein Mangel je Artefakt ist eine Regel für Anhang C,
+wo eine gedruckte Erwartung neben dem Vektor steht. Die Kampagne hat keine gedruckte Erwartung; ihr
+Orakel ist die Uneinigkeit. Mehrfache Mängel sind dort nicht nur zulässig, sie sind der Zweck der
+zweiten Stufe.
+
+---
+
+### D290 — Der Anker der Kampagne ist der laufende Stand, und der Preis wird benannt
+
+**Anlass.** D258 Beschluss 3 verlangt, dass alle Fassungen denselben Spec-Stand lesen, und nennt
+als Anker den Commit, auf dem Anhang C zehn der elf Reject-Codes trägt. Seither sind D266 bis D272,
+D279, D280 und D285 in `01-claim-atom.md` eingegangen; der zwölfte Code ist mit D267 dazugekommen,
+Anhang C trägt mit `§C.14` und `§C.15` zwölf weitere negative Vektoren. Der Text, den die Go-Fassung
+gelesen hat, ist nicht mehr der Text, der heute in `main` steht.
+
+**Der Unterschied, der bisher übersehen wurde.** D258 Beschluss 3 regelt den Fall mehrerer
+**neuer** Fassungen: ohne gemeinsamen Anker gibt es keine Häufung, und die Häufung ist das
+Instrument. Die hier beschlossene Kampagne vergleicht aber zwei **vorhandene** Artefakte, und eines
+davon ist gegen den alten Text gebaut. Liefe sie so, wäre jede Abweichung, die D266 bis D285 bereits
+entschieden haben, ein Treffer — und diese Treffer sind keine Fragen an die Spec, sondern
+Wiedervorlagen. Sie würden den Befund ersäufen.
+
+**Beschluss.** Die Go-Fassung wird auf den laufenden Stand gebracht, bevor die Kampagne fährt; die
+Kampagne misst den Text, wie er heute dasteht. Begründung: gesucht wird die Mehrdeutigkeit, die ein
+künftiger Implementierer vorfindet. Die Mehrdeutigkeit des alten Textes ist Archäologie — ihre
+Antworten stehen in D266 bis D285 und haben seit D280 Vektoren.
+
+**Der Preis, benannt.** Die Go-Fassung liest damit einen Text, der wegen ihrer eigenen Fragen
+repariert wurde; sie ist an den Antworten geschult und in diesem Umfang nicht mehr unabhängig. Was
+die Kampagne verliert, sind Falschnegative an genau den Stellen, die `00ad-fragen-befund.md` schon
+benannt hat. Was sie behält, ist tragfähig: eine Uneinigkeit über den **reparierten** Text heißt,
+dass die Reparatur das Verhalten nicht festlegt, und das ist ein schärferer Befund als eine
+Uneinigkeit über den alten.
+
+**Für neue Fassungen bleibt D258 Beschluss 3 unverändert.** Eine dritte Fassung liest einen
+eingefrorenen Anker, und dieser Anker ist ab jetzt der Stand, gegen den auch die Go-Fassung
+nachgezogen wird. Ohne diesen Satz wandert der Anker mit jeder Sitzung, und die Häufung, die D258
+messen will, wäre nie wieder herstellbar.
+
+**Verworfen: die Kampagne gegen den alten Anker fahren und die bekannten Abweichungen vorher
+herausfiltern.** Der Filter wäre eine Liste aus zwanzig Registereinträgen, von Hand gepflegt, und
+jede Lücke darin erzeugt einen Scheinbefund, jede Übervorsicht ein stilles Übersehen. Ein Filter,
+der so groß ist wie der Befund, den er reinigen soll, ist kein Filter.
+
+**Verworfen: zuerst eine dritte Fassung gegen den alten Anker.** Das wäre der sauberste Versuch für
+die Frage nach der Häufung — und die falsche Frage zuerst. Die Spec-Arbeit braucht die
+Mehrdeutigkeit von heute; die Häufung ist ein Nebenertrag, der nicht die Reihenfolge bestimmt.
