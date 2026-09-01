@@ -11003,3 +11003,87 @@ der so groß ist wie der Befund, den er reinigen soll, ist kein Filter.
 **Verworfen: zuerst eine dritte Fassung gegen den alten Anker.** Das wäre der sauberste Versuch für
 die Frage nach der Häufung — und die falsche Frage zuerst. Die Spec-Arbeit braucht die
 Mehrdeutigkeit von heute; die Häufung ist ein Nebenertrag, der nicht die Reihenfolge bestimmt.
+
+---
+
+### D291 — NV2 bekommt seine Signatur; der Vektor trug zwei Mängel statt einem
+
+**Anlass.** Der Nachzug der Go-Fassung nach D290 hat fünf neue Einträge in ihrer Fragenliste
+erzeugt. Einer davon fragt, was gilt, wenn eine Bytefolge zugleich nicht kanonisch kodiert ist und
+ein Pflichtfeld vermissen lässt, und benennt `C.7` als den Fall.
+
+**Gemessen.** Die in `C.7` gedruckte Bytefolge trägt die Keys 0 bis 8. **Key 9 fehlt.** Sie ist der
+*Core* von TV1, unsortiert kodiert, nicht die signierte Map. Damit trägt der Vektor zwei Mängel:
+eine nicht-kanonische Kodierung und ein fehlendes Pflichtfeld.
+
+**Warum das den Code falsch macht.** `B.2` erklärt, `NON_CANONICAL_ENCODING` behaupte, es gebe eine
+kanonische Kodierung desselben Inhalts, die gültig wäre. Für die gedruckte Folge ist das falsch:
+ihre kanonische Kodierung ist TV1s Core, und der ist ohne `σ` kein gültiger Claim. Nach D262 ist ein
+Code, dessen Aussage die Bytefolge nicht trägt, das einzige, was über allen Codewahlen verboten ist.
+Der Vektor hat seit `00c` einen Code gedruckt, den er selbst widerlegt.
+
+**Beschluss.** NV2 wird die vollständige signierte TV1-Map, einschließlich `σ`, in der
+Key-Reihenfolge 8,6,5,3,2,1,0,7,4,9 kodiert. 309 Byte. Der erwartete Code bleibt
+`NON_CANONICAL_ENCODING` und ist damit zum ersten Mal wahr: die kanonische Kodierung desselben
+Inhalts ist TV1, und TV1 ist gültig.
+
+**Warum der Vektor geändert wird und nicht sein Code.** Die Absicht von `C.7` steht in seiner
+Überschrift — nicht-kanonische Kodierung, sonst nichts. Ein Vektor trägt nach D257 genau den
+Mangel, den er behauptet. Das fehlende `σ` war ein Fehler beim Abschreiben der Konstante, keine
+Aussage. Den Code auf `MALFORMED_CBOR` zu ziehen hieße, den Vektor für die Kanonizität zu
+verlieren, den einzigen, den `01` dafür hat.
+
+**Ein zweiter Mangel fällt mit.** NV2 ist bisher der einzige Vektor ohne Drahtbytes und damit der
+einzige, den der Bestand nicht fährt — festgehalten in `einlesen-a-abnahme.md` und geprüft von
+`test_reject_vectors_without_wire_are_exactly_nv2`. Mit der neuen Fassung ist er eine Bytefolge wie
+jede andere, wird parametrisiert gefahren und die Ausnahme entfällt. Der Vektor, der den Widerspruch
+trug, war genau der, den niemand ausgeführt hat.
+
+**Nicht nachgezogen.** `einlesen-a-abnahme.md`, `einlesen-a-prompt.md` und
+`einlesen-a-nachlauf-prompt.md` halten fest, dass NV2 keine Drahtbytes trägt. Das war zutreffend,
+als es geschrieben wurde. Befund- und Prompt-Dateien sind Protokoll eines Laufs und werden nicht
+rückwirkend berichtigt; dieselbe Begründung wie in D232.
+
+---
+
+### D292 — Der Vorrang nennt seine Fälle abschließend; `§6` Punkt 4 wird aufgeteilt
+
+**Anlass.** Zwei weitere Einträge aus dem Nachzug der Go-Fassung. Beide betreffen Stellen, an denen
+der Text eine Entscheidung erzwingt, ohne sie zu treffen — und an beiden haben Referenz und
+Go-Fassung dieselbe Wahl getroffen, ohne dass der Text sie vorgibt.
+
+**Erstens: der Vorrang in `B.2` zählte Beispiele, wo er eine Menge braucht.** Der Satz nennt
+Nicht-uint-Schlüssel, doppelten Key und falschen Feldtyp als Mängel, die keine Kodierung behebt.
+Nicht genannt sind zwei Fälle, die dieselbe Eigenschaft haben: die oberste Ebene ist keine Map, und
+ein Pflichtfeld fehlt. Für den ersten hat D285 mit `C.15` einen Vektor beschlossen — und damit eine
+Norm in einen Anhang gelegt, statt sie in `B.2` auszusprechen. Genau das musste die Go-Fassung neu
+entscheiden, drei Sitzungen nach dem Beschluss.
+
+**Beschluss 1.** Die Aufzählung wird vollständig und ausdrücklich abschließend: keine Map, kein
+uint-Schlüssel, doppelter Key, fehlendes Pflichtfeld, Key außerhalb der Feldtabelle, falscher Typ
+oder falsche Länge. Was nicht in ihr steht, hebt `NON_CANONICAL_ENCODING` nicht auf.
+
+**Zweitens: `§6` Punkt 4 hängt ein „sonst" an eine Konjunktion.** Der Text lautet: bei `core/*`
+Prädikat ∈ `{revoke@1, supersede@1}` **und** `J.tag == claim-ref` (sonst `MALFORMED_CBOR`). Das
+Klammerwort kann auf beide Bedingungen gehen — dann wäre `core/rotate@1` ein `MALFORMED_CBOR` — oder
+nur auf die zweite. `B.2` und `§2.4` Invariante 4 sagen `RESERVED_CORE_PREDICATE`; `§6` allein sagt
+es nicht.
+
+**Beschluss 2.** Die drei Bedingungen werden einzeln geführt, jede mit ihrem eigenen Code.
+
+**Warum das kein Verhalten ändert.** Beide Fassungen tun das Beschlossene schon. Nachgemessen:
+`core/rotate@1` liefert in der Referenz `RESERVED_CORE_PREDICATE`, `core/revoke@1` mit `J.tag` 1
+oder 3 liefert `MALFORMED_CBOR`, und die Go-Fassung liefert dasselbe. Der Schnitt schreibt auf, was
+gilt; er ändert es nicht. Genau deshalb ist er billig und genau deshalb wäre er ohne die zweite
+Fassung nie aufgefallen — eine Mehrdeutigkeit, die alle gleich auflösen, sieht niemand von innen.
+
+**Was der Nachzug sonst noch gebracht hat, und was nicht.** Fünf neue Fragen, drei davon Defekte
+(diese beiden und der aus D291). Zwei sind Klarstellungen ohne Verhaltensfolge: ob der Präfixtest
+auf den Rohstring geht — der Text sagt „beginnt mit", und beide Fassungen lesen es so — und ob ein
+Break in Wertposition beim Dekodieren oder beim Re-Serialisieren scheitert, was `B.2` ausdrücklich
+freistellt. Sie werden nicht Text.
+
+**Der Ertrag von D290, beziffert.** Elf von siebzehn alten Fragen hat der reparierte Text
+geschlossen, sechs blieben offen, fünf kamen hinzu. Der Nachzug allein, ohne eine einzige Mutation,
+hat drei Defekte gefunden. Das ist der Beleg dafür, dass die Kampagne aus D289 gegen den heutigen
+Text zu fahren ist und nicht gegen den alten.
