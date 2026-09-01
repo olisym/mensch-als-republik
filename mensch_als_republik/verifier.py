@@ -43,7 +43,6 @@ _J_TAG_CLAIM_REF = 2
 
 
 class State(str, Enum):
-    MALFORMED = "malformed"
     PENDING = "pending"
     LINKED = "linked"
     ACTIVE = "active"

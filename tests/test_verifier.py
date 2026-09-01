@@ -1,5 +1,6 @@
 """Tests für Verifizierer und Zustandsmaschine."""
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -29,6 +30,7 @@ from mensch_als_republik.verifier import (
     read_claim,
     structural_check,
 )
+from tests.helpers import Identity, store_with
 
 VECTORS = json.loads(
     (Path(__file__).resolve().parent / "vectors" / "vectors_01.json").read_text()
@@ -262,6 +264,30 @@ def test_core_revoke_with_expired_t_exp_stays_active():
     store.add(tv5)
     result = classify(tv5, store, now=1_800_000_000)
     assert result.state == State.ACTIVE
+
+
+def test_classify_superseded() -> None:
+    """Ziel eines eigenen core/supersede@1 ist State.SUPERSEDED (01 §B.1, D278)."""
+    scope = hashlib.sha256(b"scope:d278").digest()
+    alice = Identity("alice")
+    bob = Identity("bob")
+    v = alice.vouch(bob, n=1, scope=scope, t=100)
+    sup = alice.supersede(v, t=200)
+    store = store_with(v, sup)
+    result = classify(v, store, now=300)
+    assert result.state == State.SUPERSEDED
+
+
+def test_classify_revoked() -> None:
+    """Gegenprobe: Ziel eines eigenen core/revoke@1 ist State.REVOKED (01 §B.1, D278)."""
+    scope = hashlib.sha256(b"scope:d278").digest()
+    alice = Identity("alice")
+    bob = Identity("bob")
+    v = alice.vouch(bob, n=1, scope=scope, t=100)
+    rev = alice.revoke(v, t=200)
+    store = store_with(v, rev)
+    result = classify(v, store, now=300)
+    assert result.state == State.REVOKED
 
 
 # --- Error class coverage ---

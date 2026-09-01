@@ -5,6 +5,7 @@ PR-INV-11: derselbe Kopplungsfall mit policy-Parameter (03-prompt §0 / D87).
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -114,3 +115,27 @@ def test_classify_all_never_raises_on_mixed_scopes() -> None:
     result = classify_all(store, 100, policy)
     assert len(result) == 3
     _assert_coupled(store, now=100, policy=policy)
+
+
+def test_classify_all_superseded() -> None:
+    """Ziel eines eigenen core/supersede@1 ist State.SUPERSEDED (01 §B.1, D278)."""
+    scope = hashlib.sha256(b"scope:d278").digest()
+    alice = Identity("alice")
+    bob = Identity("bob")
+    v = alice.vouch(bob, n=1, scope=scope, t=100)
+    sup = alice.supersede(v, t=200)
+    store = store_with(v, sup)
+    result = classify_all(store, 300)
+    assert result[claim_id(v)].state == State.SUPERSEDED
+
+
+def test_classify_all_revoked() -> None:
+    """Gegenprobe: Ziel eines eigenen core/revoke@1 ist State.REVOKED (01 §B.1, D278)."""
+    scope = hashlib.sha256(b"scope:d278").digest()
+    alice = Identity("alice")
+    bob = Identity("bob")
+    v = alice.vouch(bob, n=1, scope=scope, t=100)
+    rev = alice.revoke(v, t=200)
+    store = store_with(v, rev)
+    result = classify_all(store, 300)
+    assert result[claim_id(v)].state == State.REVOKED
