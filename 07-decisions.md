@@ -10376,3 +10376,28 @@ Defektform sind, gegen die D274 selbst argumentiert hat.
 **Folge.** Reparatur auf demselben Branch vor dem Merge, mit den Vektoren `GV-52` und `GV-53`.
 Die Rücknahmeprobe ist der `except`-Zweig: steht dort wieder `pass` mit anschließendem
 Weiterlesen, wird `GV-52` rot.
+
+### D277 — Die Lagen 2 und 3 überschneiden sich; die Kanonizität wird zuerst geprüft
+
+**Befund aus der Abnahme.** D276 beschreibt die Lage 2 als „Dekodierung oder Re-Serialisierung
+wirft, oder das Ergebnis ist keine Map" und die Lage 3 als „lesbar und nicht kanonisch". Beides
+trifft auf dasselbe `v` zu, wenn es weder kanonisch noch eine Map ist. Der Text entscheidet
+nicht, welcher Vermerk dann gilt; die Aufzählung ist keine Prüfreihenfolge.
+
+**Gemessen am gelieferten Stand, sieben Randlagen in einem Lauf.** `h'1801'` trägt
+`NON_CANONICAL_V`, `h'01'` trägt `UNPARSABLE_V`. Die gebaute Fassung prüft also die Kanonizität
+vor der Form. Beide Ausgänge lassen die Stimme wegfallen; unterschieden hat sich nur der Name.
+
+**Beschluss.** Die gebaute Reihenfolge wird zur Norm, und `04 §2.3` sagt es. Der Grund liegt
+nicht in der Bequemlichkeit, sondern in `03 §1.3`: dort steht dieselbe Reihenfolge, und D276 hat
+sich für die Form dieser Stelle entschieden. Eine zweite Schicht mit umgekehrter Reihenfolge wäre
+genau die Doppelung, gegen die D276 selbst argumentiert hat.
+
+**Verworfen: Lage 2 zuerst.** Das Argument wäre, „keine Map" sei die gröbere Aussage und solle
+deshalb zuerst greifen. Verworfen, weil es die Kanonizitätsprüfung an einer Stelle wirkungslos
+machte, an der sie etwas aussagt: `h'1801'` ist ein Kanonizitätsverstoß, und ihn als bloße
+Formverfehlung zu melden verlöre die Auskunft, die den Autor angeht.
+
+**Kein Vektor.** Der Fall ist eine Kante zwischen zwei Lagen, die beide bereits einen Vektor
+haben (`GV-52`, `GV-48`), und beide Ausgänge sind unschädlich. Er steht als benannter Punkt im
+Text und in diesem Eintrag, nicht in `04-golden-anchors.md §7`.

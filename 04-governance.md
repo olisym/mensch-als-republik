@@ -153,6 +153,13 @@ Fehler der Re-Serialisierung abfängt und danach weiterliest, zählt diese Stimm
 Profile-II `§1.3` benennt dieselbe Lage ebenso. Ein abwesendes `v` bleibt davon unberührt und
 behält bei `vote@1` den Vermerk `UNKNOWN_VOTE_CHOICE`.
 
+**Lage 2 und Lage 3 überschneiden sich; die Kanonizität geht vor** (D277). Ein `v` kann zugleich
+nicht kanonisch und keine Map sein — `h'1801'` etwa, die Zahl `1` in nicht-kürzester Form. Es ist
+dann Lage 3 und trägt `NON_CANONICAL_V`, weil die Kanonizität vor der Form geprüft wird, wie in
+Profile-II `§1.3`. `h'01'` dagegen ist kanonisch und keine Map: Lage 2, `UNPARSABLE_V`. Die
+Aufzählung oben nennt Lage 2 zuerst, weil sie die unauffälligere ist, nicht weil sie zuerst
+geprüft würde.
+
 ### 2.4 Das Vorschlagsobjekt
 
 Content-adressiert, kein Claim:
