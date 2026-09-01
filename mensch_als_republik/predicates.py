@@ -16,7 +16,6 @@ from mensch_als_republik.errors import (
 )
 
 _CANONICAL_SCOPE = re.compile(r"^[0-9a-f]{64}$")
-_ALIAS_SCOPE = re.compile(r"^(?![0-9a-f]{64}$)[a-z0-9_-]+$")
 _NAME = re.compile(r"^[a-z0-9_-]+$")
 _VERSION = re.compile(r"^[1-9][0-9]*$")
 _CORE_PREDICATE = re.compile(r"^core/(revoke|supersede)@[1-9][0-9]*$")
@@ -63,14 +62,12 @@ def parse_predicate(p: str) -> ParsedPredicate:
                 version=version,
                 scope_hex=scope_part,
             )
-        if _ALIAS_SCOPE.match(scope_part):
-            return ParsedPredicate(
-                namespace="nuc",
-                name=name,
-                version=version,
-                scope_alias=scope_part,
-            )
-        raise InvalidPredicate()
+        return ParsedPredicate(
+            namespace="nuc",
+            name=name,
+            version=version,
+            scope_alias=scope_part,
+        )
 
     raise UnknownNamespace()
 
@@ -80,11 +77,12 @@ def resolve_scope(claim: Claim) -> bytes:
     Aufgelösten Scope aus Claim bestimmen (01 §2.2).
 
     Raises BadScopeBinding wenn Bindungsregel verletzt.
+    Raises ValueError wenn der Claim ein core/*-Claim ist (01 §2.3, D284).
     """
     parsed = parse_predicate(claim.p)
 
     if parsed.namespace == "core":
-        raise BadScopeBinding()
+        raise ValueError("core/* claim has no scope")
 
     if parsed.scope_hex is not None:
         expected = bytes.fromhex(parsed.scope_hex)

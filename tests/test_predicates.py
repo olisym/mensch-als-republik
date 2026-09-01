@@ -83,6 +83,12 @@ def test_reserved_core_predicate_vouch():
         parse_predicate("core/vouch@1")
 
 
+def test_resolve_scope_core_raises_value_error():
+    """core/* hat keinen Scope: Aufruferfehler, kein Reject (01 §2.3, D284)."""
+    with pytest.raises(ValueError):
+        resolve_scope(_claim("core/revoke@1", N_field=None))
+
+
 def test_bad_scope_binding_wrong_n():
     p = f"nuc:{N.hex()}/vouch@1"
     with pytest.raises(BadScopeBinding):

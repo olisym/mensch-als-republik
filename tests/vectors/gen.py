@@ -450,6 +450,9 @@ def build_vectors() -> dict:
     del nv30_core[3]
     nv30_wire = _signed_wire(nv30_core, alice_sk)
 
+    # NV31 — zehn TV1-Werte als Array statt als Map (01 §C.15, D285)
+    nv31_wire = cbor_canon.encode([tv1_signed[k] for k in sorted(tv1_signed)])
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -584,6 +587,12 @@ def build_vectors() -> dict:
             {
                 "name": "NV30",
                 "wire_bytes": nv30_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            # NV31 — 01 §C.15, D285
+            {
+                "name": "NV31",
+                "wire_bytes": nv31_wire.hex(),
                 "expect_reject": "MALFORMED_CBOR",
             },
         ],

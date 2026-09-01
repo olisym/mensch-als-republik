@@ -23,6 +23,7 @@ from mensch_als_republik.errors import (
     UnknownNamespace,
     UnsupportedVersion,
 )
+from mensch_als_republik.index import classify_all
 from mensch_als_republik.verifier import (
     InMemoryStore,
     State,
@@ -30,7 +31,7 @@ from mensch_als_republik.verifier import (
     read_claim,
     structural_check,
 )
-from tests.helpers import Identity, store_with
+from tests.helpers import Identity, scope_id, store_with
 
 VECTORS = json.loads(
     (Path(__file__).resolve().parent / "vectors" / "vectors_01.json").read_text()
@@ -288,6 +289,28 @@ def test_classify_revoked() -> None:
     store = store_with(v, rev)
     result = classify(v, store, now=300)
     assert result.state == State.REVOKED
+
+
+def test_classify_foreign_lifecycle() -> None:
+    """Fremder Widerruf: classify wirft ForeignLifecycle (D283)."""
+    erste = Identity("erste")
+    zweite = Identity("zweite")
+    vouch = erste.vouch(zweite, n=1, scope=scope_id("foreign-lifecycle"), t=1000)
+    revoke = zweite.revoke(vouch, t=1001)
+    store = store_with(vouch, revoke)
+    with pytest.raises(ForeignLifecycle):
+        classify(revoke, store)
+
+
+def test_classify_all_foreign_lifecycle() -> None:
+    """Fremder Widerruf: classify_all wirft ForeignLifecycle (D283)."""
+    erste = Identity("erste")
+    zweite = Identity("zweite")
+    vouch = erste.vouch(zweite, n=1, scope=scope_id("foreign-lifecycle"), t=1000)
+    revoke = zweite.revoke(vouch, t=1001)
+    store = store_with(vouch, revoke)
+    with pytest.raises(ForeignLifecycle):
+        classify_all(store, 1500)
 
 
 # --- Error class coverage ---

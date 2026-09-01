@@ -187,10 +187,6 @@ def structural_check(data: bytes, store: ClaimStore | None = None) -> Claim:
 
     claim = claim_from_map(obj)
 
-    # 1: version
-    if claim.version != _SUPPORTED_VERSION:
-        raise UnsupportedVersion()
-
     # 3: J.tag
     if claim.J[0] not in _VALID_J_TAGS:
         raise UnknownJTag()
