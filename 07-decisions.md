@@ -10174,3 +10174,90 @@ deshalb Welten und Codes, nicht Schritte.
 fängt keinen davon. Damit ist die Referenz an fünf Ausgängen die abweichende Fassung; in D262 war
 es die Go-Fassung an einem. Das ist der Ertrag, den D237 sich von einer zweiten Fassung versprochen
 hat, und er fällt zum ersten Mal auf die Referenz zurück.
+
+---
+
+### D273 — `00ad-fragen-befund §12` bis `§17` ändern keine Norm; der Befund ist abgearbeitet
+
+**Die Fragen.** Sechs Abschnitte: `N` auf `core/*`, Alias gegen 64-Hex, die Profilregeln und `v`,
+das Signatur-Preimage, der Genesis-Anker außer Null, die kanonische Map-Sortierung.
+
+**Beschluss.** Alle sechs sind vom Text entschieden; die Lesart des Befunds ist in jedem Fall die
+der Spec. Kein Satz in `01` ändert sich. Aus dem Abschnitt zu den Profilregeln folgt eine eigene
+Entscheidung an anderer Stelle, D274.
+
+**Geprüft, nicht angenommen.**
+
+- **`N` auf `core/*`.** `01 §2.3` schreibt „z. B. ein reiner Identity-Announce oder ein
+  `core/*`-Claim". Das ist ein Beispiel und kein Verbot. `check_scope_binding` löst den Scope nur
+  unter `nuc:` auf; `N` auf einem `core/*`-Claim ist weder verboten noch an `p` gebunden.
+- **Alias gegen 64-Hex.** Invariante 3 in `01 §2.4` reserviert genau `^[0-9a-f]{64}$` der
+  kanonischen Kodierung. Der Code trägt dasselbe Muster, und der Alias-Zweig nimmt `N` als
+  einzige Quelle, ohne Byte-Vergleich gegen den Alias-Text. Zeichenfolgen der Länge 63 und 65
+  sind damit Alias. Die Frage nach dem Lookahead ist mit D255 entschieden: die ABNF in Anhang A
+  ist maßgeblich.
+- **Signatur-Preimage.** `01 §4` schreibt die Verkettung, nicht `cbor(...)`; `domains.py` führt
+  die Separatoren als rohe ASCII-Bytes. Gemessen: ein `I` aus lauter Einsbits und ein `I` aus
+  lauter Nullbytes liefern beide `BAD_SIGNATURE` und keine Exception.
+- **Genesis-Anker.** `01 §6` Punkt 6 macht allein den Nullvektor zum Reject. Die
+  Genesis-Gleichung ordnet ein, sie verlangt nichts; ohne Log-Zustand gibt es keinen „ersten"
+  Claim.
+- **Map-Sortierung.** Die Frage kann in einem Claim nicht auftreten. Für uints fallen kodierte
+  und numerische Ordnung immer zusammen: die kürzeste Form wächst in der Länge monoton mit dem
+  Wert, und innerhalb einer Längenklasse ist die Bytefolge die Zahl. Über 5305 Werte bis 2 hoch
+  64 nachgerechnet, identisch. Da `01 §3` Nicht-uint-Keys ausschließt, ist die Unterscheidung
+  gegenstandslos.
+
+**Damit ist `00ad-fragen-befund.md` abgearbeitet.** Siebzehn Abschnitte, geschlossen von D261 bis
+D273. Elf davon haben keinen Normtext bewegt. Was der Befund insgesamt getragen hat: einen
+zwölften Reject-Code (D267), den Arity-Satz in `01 §3` (D270), die Geltung der Feldtabelle je
+Version (D266) und den Fund, der ihn überragt — D272, fünf Ausgänge, an denen die Referenzfassung
+vom geltenden Text abwich. Das ist die Ausbeute, die D237 sich von einer zweiten Fassung
+versprochen hat.
+
+**Verworfen:** die drei Abschnitte ohne Codebefund offen zu halten, bis eine dritte Fassung
+dieselbe Frage noch einmal stellt. Text und Code stimmen an allen dreien überein; ein offener
+Punkt, auf den niemand handeln kann, kostet bei jedem Sitzungsstart und trägt nichts.
+
+---
+
+### D274 — Kanonizität von `v` gilt auch in der Auszählung; `04 §2.3` sagt es jetzt
+
+**Die Lücke.** `01 §7.1` setzt die Kanonizitätsanforderung aus `01 §3` dort durch, wo `v` gelesen
+wird, und nennt zwei Stellen: Trust-Flow `§3.1` für Key `0` und Profile-II `§1.3` für die
+Profil-Keys. Der Absatz handelt von `vouch@1`, deshalb nennt er nur zwei. `vote@1` und `ratify@1`
+lesen `v` ebenfalls, und `04-governance.md` sagt zur Kanonizität an keiner Stelle etwas.
+
+**Gemessen.** `profiles/payload.py` und `trust/groups.py` prüfen `is_canonical(v)` im selben `try`
+wie den Dekodierschritt (D83). `governance/tally.py` und `governance/epoch.py` prüfen nichts.
+`_choice` liefert für `h'a1001801'` — Key 0, Wert 1 in nicht-kürzester Form — dieselbe Eins wie
+für `h'a10001'`. Eine so kodierte Stimme zählt also, während derselbe Defekt in einem Vouch einen
+`NON_CANONICAL_V`-Vermerk erzeugt und den defekten Teil wegfallen lässt.
+
+**Was schon dicht ist.** `_is_yes_choice` und `_is_known_choice` prüfen mit `type(value) is int`
+und lassen CBOR `true` nicht als Ja durch — dieselbe Konstruktion, die der Verifizierer mit D272
+bekommen hat. Der Boolean-Pfad ist in der Auszählung nie offen gewesen.
+
+**Beschluss.** Der Grundsatz aus `01 §7.1` gilt bereits; `04` hat den Satz nur nie geschrieben.
+`04 §2.3` bekommt ihn: die auszählende Schicht dekodiert `v` und prüft die Re-Serialisierung im
+selben Zug, in der Form aus Profile-II `§1.3`. Ein Verstoß erzeugt den Vermerk `NON_CANONICAL_V`
+und lässt den defekten Teil wegfallen — nie einen Reject und nie den Abwesend-Default. Bei
+`vote@1` zählt die Stimme dann weder als Ja noch als Nein, wie bei einem unbekannten `choice`;
+bei `ratify@1` fällt die Zeugenmenge weg, die nach `04 §2.3` ohnehin austauschbarer Beleg und
+nicht Teil der Epochenidentität ist.
+
+**Warum nicht ausnehmen.** Die Gegenposition wäre, `v` in der Governance ausdrücklich ungeprüft
+zu lassen. Sie scheitert daran, dass dann die Zahl der zählenden Stimmen eines Autors an einem
+Kodierungsdetail hängt, das keine Schicht prüft, und `01 §2.4` Invariante 5 nennt genau das
+Grinding mehrerer Kodierungen desselben Inhalts als das, was die Kanonizität verhindern soll.
+Zwei Schichten, die dasselbe Feld verschieden streng lesen, sind außerdem die Defektform, die
+D272 gerade gekostet hat.
+
+**Nicht gemessen und nicht nötig.** Ob die Ausschlusslogik in `governance/tally.py` zwei so
+entstandene Stimmen desselben Autors als Doppelstimme behandelt, ist offen geblieben. Die Frage
+entfällt mit dem Beschluss, weil die zweite Stimme nicht mehr zählt.
+
+**Folge.** Ein Werkzeuglauf zieht `governance/tally.py` und `governance/epoch.py` auf die Form
+von `read_v` und legt `NON_CANONICAL_V` in die Governance-Vermerke. Eigener Prompt, eigene Runde.
+Der Textsatz in `04 §2.3` fährt mit diesem Eintrag; der Code folgt und ist bis dahin ein
+benannter Rückstand, kein stiller.

@@ -135,6 +135,14 @@ ist von einer Nein-Stimme in der Wirkung nicht unterschieden (`§3.2`), aber in 
 Materialisiert eine gesättigte Entscheidung (`§4`). Die Zeugenmenge in `v` Key `0` ist ein
 **austauschbarer Beleg**, kein Teil der Epochenidentität.
 
+**Kanonizität von `v` (normativ).** `01 §7.1` setzt die Anforderung aus `01 §3` dort durch, wo `v`
+gelesen wird. `vote@1` und `ratify@1` sind zwei solche Stellen: die auszählende Schicht dekodiert
+`v` und prüft die Re-Serialisierung im selben Zug, in der Form aus Profile-II `§1.3`. Ein Verstoß
+erzeugt den Vermerk `NON_CANONICAL_V` und lässt den defekten Teil wegfallen — **nie** einen Reject
+und **nie** den Abwesend-Default. Bei `vote@1` zählt die Stimme dann weder als Ja noch als Nein,
+wie bei einem unbekannten `choice`; bei `ratify@1` fällt die Zeugenmenge weg, die ohnehin
+austauschbarer Beleg ist (D274).
+
 ### 2.4 Das Vorschlagsobjekt
 
 Content-adressiert, kein Claim:
