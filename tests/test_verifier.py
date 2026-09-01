@@ -464,3 +464,9 @@ def test_incoherent_expiry():
 def test_non_canonical_positive_canonical_passes():
     wire = bytes.fromhex(_vec("TV1")["signed_bytes"])
     assert cbor_canon.is_canonical(wire)
+
+
+def test_error_code_value_equals_member_name() -> None:
+    """Membername und Wert von ErrorCode sind identisch (01 §B.2, D279)."""
+    for member in ErrorCode:
+        assert member.value == member.name

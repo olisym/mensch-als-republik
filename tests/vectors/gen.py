@@ -393,6 +393,63 @@ def build_vectors() -> dict:
     # NV19 — signiertes TV1 plus ein Byte 0x00 (01 §C.13, D270)
     nv19_wire = signed_bytes(tv1) + b"\x00"
 
+    # NV20 — Key 0 trägt CBOR true statt 1 (01 §C.14, D280)
+    nv20_core = dict(tv1_core)
+    nv20_core[0] = True
+    nv20_wire = _signed_wire(nv20_core, alice_sk)
+
+    # NV21 — Key 1 trägt die ersten 31 Byte seines bisherigen Wertes (01 §C.14, D280)
+    nv21_core = dict(tv1_core)
+    nv21_core[1] = nv21_core[1][:31]
+    nv21_wire = _signed_wire(nv21_core, alice_sk)
+
+    # NV22 — Key 2 trägt [1, BOB_PUB, BOB_PUB] (01 §C.14, D280)
+    nv22_core = dict(tv1_core)
+    nv22_core[2] = [1, BOB_PUB, BOB_PUB]
+    nv22_wire = _signed_wire(nv22_core, alice_sk)
+
+    # NV23 — Key 2 trägt [true, BOB_PUB] (01 §C.14, D280)
+    nv23_core = dict(tv1_core)
+    nv23_core[2] = [True, BOB_PUB]
+    nv23_wire = _signed_wire(nv23_core, alice_sk)
+
+    # NV24 — Key 3 trägt die Zahl 1 statt einer Zeichenfolge (01 §C.14, D280)
+    nv24_core = dict(tv1_core)
+    nv24_core[3] = 1
+    nv24_wire = _signed_wire(nv24_core, alice_sk)
+
+    # NV25 — Key 4 trägt die Zahl 1 statt einer Bytefolge (01 §C.14, D280)
+    nv25_core = dict(tv1_core)
+    nv25_core[4] = 1
+    nv25_wire = _signed_wire(nv25_core, alice_sk)
+
+    # NV26 — Key 5 trägt die ersten 31 Byte seines bisherigen Wertes (01 §C.14, D280)
+    nv26_core = dict(tv1_core)
+    nv26_core[5] = nv26_core[5][:31]
+    nv26_wire = _signed_wire(nv26_core, alice_sk)
+
+    # NV27 — Key 7 trägt CBOR true (01 §C.14, D280)
+    nv27_core = dict(tv1_core)
+    nv27_core[7] = True
+    nv27_wire = _signed_wire(nv27_core, alice_sk)
+
+    # NV28 — Key 8 trägt die ersten 31 Byte seines bisherigen Wertes (01 §C.14, D280)
+    nv28_core = dict(tv1_core)
+    nv28_core[8] = nv28_core[8][:31]
+    nv28_wire = _signed_wire(nv28_core, alice_sk)
+
+    # NV29 — Core unverändert; Key 9 trägt die ersten 63 Byte der Signatur (01 §C.14, D280)
+    nv29_core_b = cbor_canon.encode(tv1_core)
+    nv29_sigma = alice_sk.sign(DOM_SIG + nv29_core_b)
+    nv29_signed = dict(tv1_core)
+    nv29_signed[9] = nv29_sigma[:63]
+    nv29_wire = cbor_canon.encode(nv29_signed)
+
+    # NV30 — Key 3 fehlt (01 §C.14, D280)
+    nv30_core = dict(tv1_core)
+    del nv30_core[3]
+    nv30_wire = _signed_wire(nv30_core, alice_sk)
+
     nv2_core = bytes.fromhex(NV2_CORE_HEX)
 
     return {
@@ -472,6 +529,61 @@ def build_vectors() -> dict:
             {
                 "name": "NV19",
                 "wire_bytes": nv19_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV20",
+                "wire_bytes": nv20_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV21",
+                "wire_bytes": nv21_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV22",
+                "wire_bytes": nv22_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV23",
+                "wire_bytes": nv23_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV24",
+                "wire_bytes": nv24_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV25",
+                "wire_bytes": nv25_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV26",
+                "wire_bytes": nv26_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV27",
+                "wire_bytes": nv27_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV28",
+                "wire_bytes": nv28_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV29",
+                "wire_bytes": nv29_wire.hex(),
+                "expect_reject": "MALFORMED_CBOR",
+            },
+            {
+                "name": "NV30",
+                "wire_bytes": nv30_wire.hex(),
                 "expect_reject": "MALFORMED_CBOR",
             },
         ],
