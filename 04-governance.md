@@ -208,6 +208,15 @@ noch die andere. Vermerk `AMBIGUOUS_VOTE`, Subjekt sind beide `claim_id`. Die Pa
 > Verschiedenes. Wer das Muster aus `03` überträgt, erzeugt ein Ergebnis aus einer Aussage, die
 > niemand gemacht hat (D101).
 
+**Kanonizität von `v` in Bedingung 5** (D274). Ist `v` nicht kanonisch kodiert, wird sein Inhalt
+gar nicht erst gelesen: Vermerk `NON_CANONICAL_V`, Subjekt die `claim_id` der Stimme, und die
+Stimme zählt weder als Ja noch als Nein — an derselben Stelle und mit derselben Wirkung wie ein
+unbekanntes `choice` (`§2.3`). Die Prüfung steht damit **vor** der Zusammenfassung nach Autor:
+ein Autor mit einer kanonischen und einer nicht-kanonischen Stimme auf denselben Vorschlag
+bekommt `NON_CANONICAL_V` und **nicht** `AMBIGUOUS_VOTE`, und seine kanonische Stimme zählt. Das
+ist keine Ausnahme von der Regel darüber, sondern ihre Voraussetzung: zwei Stimmen sagen nur dann
+Verschiedenes, wenn beide etwas sagen.
+
 ### 3.2 Die Auszählung
 
 Sei `n = |P|`, sei `[num, den]` die anzuwendende Schwelle (`§3.4`), seien `Ja` und `Nein` die
@@ -429,6 +438,13 @@ ist und nicht die Ursache: Holen nützt nichts, weil es nichts zu holen gibt. Da
 `claim_id` des `ratify@1` — die Zeugenliste ist ein Feld und hat keine eigene Adresse, wie
 `genesis[5]` und `genesis[6]` in `§3.5`.
 
+**Nicht-kanonisches `v`** (D274). Ist `v` nicht kanonisch kodiert, fällt die Zeugenmenge weg,
+und der Claim etabliert keine Epoche. Der Vermerk ist `NON_CANONICAL_V` und **nicht**
+`UNSUPPORTED_RATIFICATION`: das Kriterium dieser Tabelle ist die Auskunft an den Beobachter, und
+die Auskunft „das `v` ist nicht kanonisch" enthält „er trägt nicht" bereits und nennt zusätzlich
+den Grund. Das Subjekt ist die `claim_id` des `ratify@1`, aus demselben Grund wie in der zweiten
+Zeile — die Zeugenliste ist ein Feld und hat keine eigene Adresse.
+
 **Bedingung 6 — die Zielverfassung muss regieren können** (D200).
 
 | Lage in der Zielverfassung | Vermerk, Subjekt `proposal.constitution_hash` |
@@ -553,6 +569,14 @@ welcher Epoche er gehört. Eine Stimme, die in Wahrheit zu `i+1` gehört, schlä
 Auszählung in `i` durch. Der Autor ist nicht für eine Epoche ausgesetzt, sondern für jede, die
 eine Kettenauflösung nach `§4.5` noch braucht — und das schließt bereits erreichte Epochen ein
 (D178).
+
+**Eine Stimme mit nicht-kanonischem `v` ist keine Ja-Stimme** (D274). Sie löst deshalb keinen
+Ausschluss nach dieser Regel aus, weder für sich noch für die andere Ja-Stimme ihres Autors;
+Vermerk `NON_CANONICAL_V`, Subjekt ihre `claim_id`. Der Vermerk entsteht auch dann, wenn die
+Stimme auf einen anderen Vorschlag zeigt als den ausgezählten: er hängt am Lesen von `v` und
+nicht am Vorschlag. Das ist die Gegenrichtung zu `UNKNOWN_PROPOSAL` und nur scheinbar
+inkonsistent — dort ist die Stimme eine gültige Ja-Stimme mit unbestimmter Epoche, hier ist sie
+keine Ja-Stimme.
 
 ### 4.5 Die Kette
 

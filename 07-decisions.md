@@ -10261,3 +10261,66 @@ entfällt mit dem Beschluss, weil die zweite Stimme nicht mehr zählt.
 von `read_v` und legt `NON_CANONICAL_V` in die Governance-Vermerke. Eigener Prompt, eigene Runde.
 Der Textsatz in `04 §2.3` fährt mit diesem Eintrag; der Code folgt und ist bis dahin ein
 benannter Rückstand, kein stiller.
+
+### D275 — Wo `NON_CANONICAL_V` entsteht und was er verdrängt; D274 hat sich verrechnet
+
+**Gemessen, vier Welten, Bestand gegen eine Fassung mit der Prüfung.** Die Fassung ist lokal
+gebaut und nicht ausgeliefert; sie diente der Eichung der Rücknahmeproben (Prüfregeln 49, 51).
+
+| Welt | Bestand | mit der Prüfung |
+|---|---|---|
+| eine nicht-kanonische Ja-Stimme allein | zählt als Ja, kein Vermerk | fällt weg, `NON_CANONICAL_V` |
+| kanonisches Ja + nicht-kanonisches Ja, selber Autor, selber Vorschlag | `AMBIGUOUS_VOTE`, beide fallen weg | `NON_CANONICAL_V`, das kanonische Ja zählt |
+| nicht-kanonisches Zweit-Ja auf einen anderen Vorschlag | `CONFLICTING_APPROVAL`, Autor ausgeschlossen | `NON_CANONICAL_V`, das erste Ja zählt |
+| `ratify@1` mit nicht-kanonischem `v` | **Folgeepoche entsteht**, kein Vermerk | keine Epoche |
+
+Der vierte Fall ist der schärfste: ein Epochenwechsel materialisiert heute auf einem
+nicht-kanonischen Zeugenbeleg, stillschweigend und ohne Vermerk.
+
+**Berichtigung an D274.** Dort steht, die Frage nach der Ausschlusslogik entfalle mit dem
+Beschluss, weil die zweite Stimme nicht mehr zähle. Das ist falsch. Sie entfällt nicht, sie
+kippt: heute fallen beide Stimmen weg, mit der Prüfung zählt die kanonische. Der Satz war eine
+Ableitung ohne Messung und hat den Ort der Prüfung als gleichgültig behandelt, obwohl er das
+Ergebnis bestimmt. Prüfregel 25 gilt auch für den eigenen Registereintrag von gestern.
+
+**Beschluss 1 — der Ort.** Die Kanonizitätsprüfung steht dort, wo `v` gelesen wird, also vor der
+Zusammenfassung nach Autor und vor der Ausschlussprüfung nach `04 §4.4`. `04 §3.1` sagt bereits,
+dass die Formprüfungen vor der Zustandsprüfung stehen; die Kanonizität ist eine Formprüfung und
+reiht sich dort ein. Die Wirkung ist die eines unbekannten `choice`, und `04 §2.3` nennt genau
+diese Parallele. Gemessen: ein unbekanntes `choice` desselben Autors lässt dessen kanonische
+Stimme heute schon zählen — die Parallele ist also nicht neu, sondern schon gebaut.
+
+**Beschluss 2 — die Form, nicht der Code.** Governance bekommt einen eigenen Leser in der Form
+von `profiles/payload.py::read_v`, keinen Import von `ProfileFinding`. `04 §3.5` hält den
+Governance-Enum getrennt (D94); ein Layer-03-Import für eine Zweiwertabbildung kauft nichts und
+koppelt zwei Schichten, die verschiedene Vermerksräume haben. `04 §2.3` verlangt die Form aus
+Profile-II `§1.3`, nicht deren Funktion.
+
+**Beschluss 3 — ein `v`, das nicht dekodiert, bleibt wo es ist.** D274 nennt genau einen Vermerk.
+Ein nicht dekodierbares `v` behält sein heutiges Ergebnis: `UNKNOWN_VOTE_CHOICE` bei `vote@1`,
+`UNSUPPORTED_RATIFICATION` bei `ratify@1`. Ein `UNPARSABLE_V` in den Governance-Vermerken wäre
+Scope über D274 hinaus und wird hier **nicht** eingeführt. Verworfen, nicht vergessen: die
+Unterscheidung zwischen „nicht lesbar" und „nicht kanonisch" ist in `03` vorhanden und in `04`
+nicht, und ob das ein Defekt ist, steht offen.
+
+**Beschluss 4 — bei `ratify@1` verdrängt der neue Vermerk den alten.** Ein nicht-kanonisches `v`
+erzeugt `NON_CANONICAL_V` und **nicht** `UNSUPPORTED_RATIFICATION`. Das Kriterium der Tabelle in
+`04 §4.1` ist nach D207 die Auskunft an den Beobachter und nicht die Ursache; „nicht kanonisch"
+enthält „trägt nicht" bereits und nennt zusätzlich den Grund. Subjekt bleibt die `claim_id` des
+`ratify@1`, weil die Zeugenliste ein Feld ohne eigene Adresse ist.
+
+**Beschluss 5 — der Vermerk hängt am Lesen, nicht am ausgezählten Vorschlag.** Die
+Ausschlussschleife nach `04 §4.4` liest `v` fremder Ja-Stimmen und muss dieselbe Prüfung fahren,
+sonst schließt ein nicht-kanonisches Ja weiter aus (dritte Welt oben). Sie erzeugt dabei
+`NON_CANONICAL_V` mit der `claim_id` der fremden Stimme als Subjekt. Die Alternative — die
+Wirkung entfällt lautlos — ist verworfen: sie nähme eine bisher sichtbare Folge aus den
+Vermerken heraus, ohne etwas an ihre Stelle zu setzen, und die Schleife trägt mit
+`UNKNOWN_PROPOSAL` und `CONFLICTING_APPROVAL` ohnehin fremde `claim_id` als Subjekt.
+
+**Nullprobe.** Die Codeänderung ohne neue Tests lässt alle 632 Tests grün. Der Bestand ist an
+dieser Stelle blind; kein bestehender Test bewegt sich, und alle vier Welten kippen. Die vier
+Rücknahmeproben des Laufs sind damit vorab geeicht.
+
+**Text.** `04 §3.1`, `04 §4.1` und `04 §4.4` bekommen je einen Absatz, `04-golden-anchors §7` die
+Vektoren `GV-48` bis `GV-51`. Der Code folgt im selben Lauf; anders als bei D266 und D274 bleibt
+kein Textsatz ohne Träger.
