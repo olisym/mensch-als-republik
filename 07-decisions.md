@@ -10455,3 +10455,83 @@ gespeichert" und „gespeichert und inaktiv" — die Grenze, an der `01 §B.1` u
 
 **Nicht in diesem Beschluss.** `LINKED` hängt an genau einem Test. Das ist dünn, aber gebunden;
 ob es reicht, ist offen und wird hier nicht entschieden.
+
+---
+
+### D279 — Der Wert eines Reject-Codes ist seine Drahtform und wird als solcher gebunden
+
+**Anlass.** Eine Mutantenkampagne auf die zwölf Reject-Codes, nach dem Verfahren aus D278. Erste
+Probe: je Code den Wert des Aufzählungsmembers auf einen Sentinel gesetzt, danach der volle
+Bestand. Alle zwölf überleben.
+
+**Der Grund ist gemessen, nicht vermutet.** `tests/test_verifier.py` vergleicht den Ausgang eines
+Vektors gegen einen Lookup in `ErrorCode` über den **Membernamen**. Kein Test im Bestand vergleicht
+einen Codewert als Zeichenfolge. Elf der zwölf Codes stehen in `tests/vectors/vectors_01.json` als
+`expect_reject`; gebunden ist damit ihr Name, nicht ihr Wert.
+
+**Beschluss.** Der Wert eines `ErrorCode`-Members ist die Drahtform des Codes, und Membername und
+Wert sind identisch. Ein Träger behauptet das über alle Member zugleich.
+
+**Begründung.** `01 §B.2` führt die Codes als Zeichenfolgen, und Anhang C ist das einzige Artefakt,
+das eine fremde Fassung von ihnen sieht (D250, D257). Driftete ein Wert von seinem Namen ab, bliebe
+der Bestand grün und die fremde Fassung vergliche gegen etwas anderes. Ein Aufzählungswert, den
+niemand behauptet, ist derselbe Fall wie `SUPERSEDED` in D278: erzeugt, wirksam, austauschbar.
+
+**Verworfen: den Vergleich in `tests/test_verifier.py` vom Namen auf den Wert umzustellen.** Das
+bindet nur die Codes, die in Vektoren vorkommen — heute elf von zwölf, und `FOREIGN_LIFECYCLE` kann
+nach D263 keinen zustandslosen Vektor bekommen. Ein Träger über die Aufzählung bindet alle zwölf
+und kostet drei Zeilen.
+
+---
+
+### D280 — Die Feldtabelle aus `01 §2` bekommt Zeile für Zeile einen negativen Vektor
+
+**Anlass.** Zweite Probe derselben Kampagne: an jeder der 37 Erzeugerstellen im Verifizierer den
+erzeugten Code durch einen fremden ersetzt, je Mutant der volle Bestand. Achtzehn werden gefangen,
+neunzehn überleben. Mit Überdeckung getrennt: drei Stellen werden erreicht und behaupten ihren Code
+ungebunden, sechzehn werden vom Bestand nie erreicht.
+
+**Der Befund.** Die Feldtabelle in `01 §2` hat zehn Felder; der Verifizierer prüft sie mit elf
+Toren, weil `J` außen und innen geprüft wird. Zusammen mit der Prüfung auf den Pflichtfeldsatz sind
+es zwölf. Der Bestand löst genau eines davon aus, das Tor auf `t`. D266 hat vier Fälle benannt:
+fremder Key, fehlendes Pflichtfeld, `I` mit 31 Byte, `J` mit Länge ungleich zwei. Ein Vektor liegt
+auf dem ersten (NV14 in `01 §C.13`), die anderen drei haben keinen. D272 hat fünf Ausgänge gemessen
+und den Lauf beauftragt, die Vektoren dazuzulegen; für den Ausgang mit `version` als CBOR `true`
+ist keiner entstanden. Beide Male ist die Abnahme gegen das gelaufen, was geliefert wurde, und
+nicht gegen das, was geschuldet war.
+
+**Beschluss.** Elf negative Vektoren, angehängt als neuer Anhangsabschnitt hinter `01 §C.13`. Jeder
+verletzt genau eine Zeile der Feldtabelle aus `01 §2` oder den Pflichtfeldsatz, jeder ist im
+Übrigen kanonisch kodiert und über seinen eigenen Core signiert, und jeder erwartet
+`MALFORMED_CBOR`.
+
+**Vollständig statt nur die vier benannten Fälle.** Die vier aus D266 sind nicht die vier
+gefährlichsten, sondern die vier, die eine zweite Fassung zufällig gefragt hat. Gemessen ist, dass
+elf Tore blind sind; eine Auswahl daraus hinterließe sieben, die niemand vermisst, bis sie in einer
+späteren Kampagne wieder auffallen. Die Tabelle ist die Einheit, in der `01 §2` normiert, und sie
+ist klein genug, um sie in einem Lauf vollständig zu belegen.
+
+**Zur Forderung aus D257, dass ein Vektor genau einen Mangel trägt.** Zwei der elf tragen einen
+Mangel, den auch die Signaturprüfung sähe: ein `I` mit 31 Byte ist kein Schlüssel, ein `sigma` mit
+63 Byte keine Signatur. Sie behaupten trotzdem nichts über die Prüfreihenfolge, weil kein anderer
+Code wahr wäre. `BAD_SIGNATURE` behauptet eine falsche Signatur; gemessen ist eine Feldlänge
+außerhalb der Tabelle (D262, D265).
+
+**Zwei Tore sind doppelt geschützt, und das ist vorab gemessen.** Wird das Typtor auf `p` allein
+neutralisiert, fängt `parse_predicate` denselben Fall (D213) und der Vektor bleibt grün. Wird die
+Prüfung auf den Pflichtfeldsatz allein neutralisiert, fängt das Typtor auf `p` das fehlende Feld,
+weil es gegen `None` prüft. Die beiden Rücknahmeproben nehmen deshalb zwei Tore zugleich zurück;
+die neun übrigen treffen ihr Tor allein. Ohne diese Eichung wären zwei von elf Proben stumm grün
+geblieben (Prüfregeln 49, 51).
+
+**Verworfen: Sondierwelten statt Vektoren.** Dieselbe Rechnung wie in D250 und D257. Anhang C ist
+das einzige Artefakt, das eine fremde Fassung sieht, und die Feldtabelle ist genau die Art Pflicht,
+die eine fremde Fassung weit auslegt — D266 hält fest, dass die Go-Fassung alle vier Fälle fing,
+bevor der Text es verlangte, und D272, dass die Referenz keinen davon fing.
+
+**Nicht in diesem Beschluss.** Acht überlebende Erzeugerstellen außerhalb der Feldtabelle: das
+zweite Versionstor hinter dem Aufbau des Claims, das Tor für `FOREIGN_LIFECYCLE` in der
+Klassifikation und sein Duplikat im Index, das Formtor unter `nuc:` für einen Scope, der weder
+kanonisch noch Alias ist, und das Tor für `core/*` in `resolve_scope`. Dazu die drei erreichten,
+aber ungebundenen Stellen. Sie gehen auf die offene Liste. Das zweite Versionstor ist nach dem
+Kontrollfluss vermutlich unerreichbar; das ist eine Ableitung und braucht eine eigene Messung.
