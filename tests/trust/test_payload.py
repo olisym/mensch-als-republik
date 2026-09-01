@@ -150,3 +150,11 @@ def test_v_canon_e2e() -> None:
     assert r.value == 0
     assert Finding(TrustFinding.NON_CANONICAL_V, claim_id(claim)) in r.findings
     assert not any(f.kind == TrustFinding.OVERCOMMITTED_AUTHOR for f in r.findings)
+
+
+def test_n_is_not_int() -> None:
+    """v[0] ist keine Ganzzahl: UNPARSABLE_VOUCH_PAYLOAD (02a §2.3, D287)."""
+    assert _decode_weight(cbor_canon.encode({0: "x"}), 4) == (
+        None,
+        TrustFinding.UNPARSABLE_VOUCH_PAYLOAD,
+    )
