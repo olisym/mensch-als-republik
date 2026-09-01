@@ -1562,6 +1562,40 @@ bytes    = a900010158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf374
 erwartet = Reject: MALFORMED_CBOR
 ```
 
+### C.15 NV31 — die Drahtform ist kein Map
+
+`01 §3` Regel 1 verlangt, dass die oberste Ebene eine CBOR-Map mit uint-Keys ist. NV31 verletzt
+genau diese Regel und sonst keine: er trägt die zehn Werte von TV1 in aufsteigender
+Key-Reihenfolge als CBOR-Array, ist im Übrigen kanonisch kodiert, und die Signatur in der letzten
+Position ist die von TV1 und über dessen Core gültig.
+
+Der Vektor fragt, ob eine Implementierung die Felder über ihre Keys liest oder über ihre Position.
+Wer sie über die Position liest, baut aus diesen 299 Byte TV1 zurück, findet die Signatur gültig
+und akzeptiert einen Claim, den `01 §3` nicht kennt — mit derselben `claim_id` wie TV1. Das ist
+dieselbe Bauart wie NV22 (§C.14): eine Drahtform, die auf dem Weg zum Preimage zurechtgeschnitten
+wird und deshalb an der Signatur nicht scheitert.
+
+Der Code ist `MALFORMED_CBOR` und nicht `NON_CANONICAL_ENCODING`. Die Bytes sind kanonisches
+CBOR; ihre Re-Serialisierung ist byte-gleich. `NON_CANONICAL_ENCODING` wäre eine falsche Aussage
+über sie (D262). Kanonizität ist in `01 §3` an der Claim-Map erklärt — was keine Map ist, ist kein
+Claim, dessen Kodierung sich beurteilen ließe.
+
+#### NV31 — zehn TV1-Werte als Array statt als Map → `MALFORMED_CBOR`
+
+```
+bytes    = 8a0158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801
+           b40f6f5c820158208139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a2
+           5df60f5b8fc9b394784c6e75633a363533303966653233336461333066646130
+           3631643763356566303032623662383065343236383263643534643730336162
+           31336662366337643266353535372f766f756368403144a1001864582065309f
+           e233da30fda061d7c5ef002b6b80e42682cd54d703ab13fb6c7d2f55571a6553
+           f1001a67748580582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d
+           327a28f73b256254305840ef3b6674898a1f037bdb58dc485926b4f0de01ef99
+           5d6cbf7d6387c4dd33679f63da403f2f2d1c4bb39513484dee2c74387ec904bb
+           ab0aa22b8bdb376fb1c401
+erwartet = Reject: MALFORMED_CBOR
+```
+
 ## Änderungshistorie ggü. Vorentwurf (v1-Konsolidierung)
 
 - **Genesis-`h_prev` vereinheitlicht** auf `SHA-256(DOM_ID_GEN ‖ I)` (Feldtabelle, §4, §6);

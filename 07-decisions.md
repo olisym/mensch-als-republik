@@ -10609,3 +10609,126 @@ eigener Schnitt, weil sie jede Nummer berührt und die Nummern stabil bleiben m�
 **Verworfen: die Regeln einzeln zu setzen, wenn sie gebraucht werden.** Das ist der Zustand, aus
 dem die Kandidatenliste entstanden ist. Eine Regel wird gebraucht, bevor jemand weiß, dass er sie
 braucht; das ist ihr Zweck.
+
+---
+
+### D283 — Die fünf nie erreichten Erzeugerstellen: zwei sind unerreichbar, drei bekommen Träger
+
+**Anlass.** D280 hat acht überlebende Erzeugerstellen außerhalb der Feldtabelle auf die offene
+Liste gesetzt, fünf davon namentlich, drei als „erreicht, aber ungebunden" ohne Namen. Dieser
+Eintrag schließt die Liste.
+
+**Gemessen, im ausgepackten Baum, Überdeckung vor Mutation (Prüfregel 53).** 37 Erzeugerstellen
+von Reject-Codes im Produktivcode. Fünf erreicht der Bestand nie: das zweite Versionstor
+(`verifier.py`, hinter dem Aufbau des Claims), das Formtor unter `nuc:` für einen Scope, der weder
+kanonisch noch Alias ist (`predicates.py`), die beiden Tore für `FOREIGN_LIFECYCLE` in `classify`
+und im Index, und das Tor für `core/*` in `resolve_scope`. Die 32 erreichten je auf einen fremden
+Code mutiert, fällt 31 von 32; der einzige Überlebende ist das Tor „Top-Level ist kein Map".
+
+**Die Zahl aus D280 ist damit berichtigt.** Dort standen drei erreichte, aber ungebundene Stellen;
+gemessen ist eine. Die elf Vektoren aus D280 haben zwei davon mitgebunden, ohne dass die Abnahme
+es behauptet hat.
+
+**Zwei Stellen sind unerreichbar und werden gestrichen.**
+
+- Das zweite Versionstor. `claim_from_map` übernimmt `m[0]` unverändert; vor ihm hat entweder das
+  erste Versionstor bei einem uint ungleich 1 geworfen oder die Feldtypprüfung bei allem, was kein
+  uint ist. Die Fallunterscheidung ist vollständig, es bleibt kein Wert übrig. Nachgefahren mit
+  zwölf Werten über alle CBOR-Typklassen: fünf enden in `UNSUPPORTED_VERSION`, sieben in
+  `MALFORMED_CBOR`, keiner erreicht das zweite Tor.
+- Das Formtor unter `nuc:`. Wenn die Grammatik-Regex gematcht hat, ist der Teil vor dem ersten
+  Schrägstrich entweder 64 Hexziffern — dann greift der kanonische Zweig — oder er erfüllt
+  `[a-z0-9_-]+` und ist nicht 64 Hexziffern, denn genau das steht als Lookahead in der Grammatik.
+  Der Alias-Test danach entscheidet nichts; er wiederholt eine Bedingung, die die Grammatik schon
+  durchgesetzt hat. Nachgefahren mit 250 000 konstruierten Prädikaten, die auf die Grammatik
+  passen: keines fällt durch beide Scope-Tests.
+
+Mit dem Formtor fällt die Alias-Regex selbst. Der kanonische Test bleibt, weil er *unterscheidet*
+— Hex-Scope gegen Alias-Scope —, nicht weil er prüft. Die Alias-Form ist damit nicht aus dem Code
+verschwunden: sie steht in der Grammatik-Regex, die Anhang A abbildet, und dort gehört sie hin.
+
+**Warum streichen und nicht Träger bauen.** Ein Tor, das kein Wert erreichen kann, erzeugt einen
+Reject-Code, der über keinen Claim je wahr wird — dieselbe Klasse von Aussage, die D262 verbietet,
+nur unbeobachtbar. Es kostet in jeder künftigen Kampagne einen Mutanten und eine Erklärung, und es
+behauptet gegenüber einem Leser eine Prüfung, die der Kontrollfluss längst erledigt hat. Der
+Nachweis der Unerreichbarkeit ist hier nicht Abwesenheit von Evidenz: beide Male ist die
+Fallunterscheidung vollständig und nachgefahren.
+
+**Drei Stellen bekommen Träger.** Die beiden `FOREIGN_LIFECYCLE`-Tore je eine Sondierwelt, das
+Tor in `resolve_scope` einen Träger nach D284. Für `FOREIGN_LIFECYCLE` ist ein Vektor nach D263
+ausgeschlossen und nach D268 liegt der Fall als einziger außerhalb der selbstenthaltenen
+Gültigkeit; die Welt ist zweistufig: den fremden Lifecycle-Claim lesen, solange sein Ziel unbekannt
+ist, dann das Ziel nachlegen, dann klassifizieren. Beide Tore sind gemessen erreichbar — eine Welt,
+zwei Einstiege, `classify` und `classify_all`. Beide Rücknahmeproben sind vorab gefahren und
+schließen einzeln (Prüfregel 49).
+
+**Nicht in diesem Beschluss.** Die zehn toten Doppelerzeuger von Vermerken aus D281. Sie liegen in
+der Vermerksschicht, nicht im Fehlerkanal, und die dortige Frage ist eine andere: nicht
+„unerreichbar oder ungebunden", sondern „zweite Stelle desselben Namens".
+
+---
+
+### D284 — `resolve_scope` auf `core/*` ist ein Aufruferfehler, kein Reject
+
+**Anlass.** Eine der fünf nie erreichten Stellen aus D283. `resolve_scope` wirft für ein
+`core/*`-Prädikat `BAD_SCOPE_BINDING`. Vom Draht ist die Stelle nicht erreichbar, weil
+`check_scope_binding` `resolve_scope` nur für `nuc:` aufruft.
+
+**Der Befund.** `BAD_SCOPE_BINDING` behauptet die Verletzung der Bindungsregel aus `01 §2.2`
+Regel 3. Diese Regel gilt ihrem Wortlaut nach „für jedes `nuc:…`-Profil". `01 §2.3` sagt
+ausdrücklich, dass ein `core/*`-Claim kontextfrei ist und kein `N` trägt. Ein solcher Claim
+verletzt die Bindungsregel nicht — er fällt nicht unter sie. Der Code wäre eine falsche Aussage
+über den Claim (D262), und dass sie den Draht heute nicht erreicht, macht sie nicht wahr.
+
+**Beschluss.** Die Stelle wirft `ValueError`. Das ist kein Reject-Code, sondern die Meldung, dass
+der Aufrufer nach dem Scope eines Claims gefragt hat, der keinen hat. Der Träger ist ein Test auf
+genau diesen Aufruf.
+
+**Der Bestand kennt diese Trennung schon.** `classify` wirft `ValueError`, wenn eine Policy fremden
+Scopes hereingereicht wird (`01 §5.4`). Ein Reject-Code ist eine Aussage über einen Claim; ein
+`ValueError` ist eine Aussage über einen Aufruf. Die zwölf Codes aus Anhang B.2 sind Gründe, aus
+denen Bytes zurückgewiesen werden (D265), und kein Vokabular für Programmierfehler.
+
+**Verworfen: die Stelle streichen.** Sie ist erreichbar — `resolve_scope` ist eine öffentliche
+Funktion, die `01 §2.2` Regel 4 namentlich als Partitionierungsschritt der Evaluatoren nennt. Ohne
+das Tor liefe ein `core/*`-Claim in den Alias-Zweig und stürbe dort an `N is None`, wieder mit
+`BAD_SCOPE_BINDING` — dieselbe falsche Aussage, nur eine Zeile später und ohne Absicht. Streichen
+wäre hier keine Beseitigung von totem Code, sondern das Verstecken einer Vorbedingung.
+
+**Verworfen: `BAD_SCOPE_BINDING` behalten und nur einen Test dazulegen.** Der Test hielte die
+falsche Aussage fest, statt sie zu beseitigen. Ein Träger für ein Tor ist nur so viel wert wie das
+Tor.
+
+---
+
+### D285 — NV31: die Drahtform ist kein Map
+
+**Anlass.** Die einzige erreichte, aber ungebundene Erzeugerstelle aus D283: das Tor auf
+„Top-Level ist kein Map". `01 §3` Regel 1 verlangt eine CBOR-Map mit uint-Keys; kein Vektor und
+kein Test hat je behauptet, welcher Code aus ihrer Verletzung folgt.
+
+**Beschluss.** Ein zwölfter negativer Vektor, `NV31`, als neuer Anhangsabschnitt `01 §C.15` hinter
+`§C.14` (D250). Er trägt die zehn Werte von TV1 in aufsteigender Key-Reihenfolge als CBOR-Array,
+299 Byte, kanonisch kodiert, mit der unveränderten Signatur von TV1. Erwarteter Code:
+`MALFORMED_CBOR`.
+
+**Warum das Array der zehn Werte und nicht die leere Liste.** Beide verletzen dieselbe Regel und
+beide liefern denselben Code; die leere Liste isoliert das Tor sogar schärfer, weil sie am
+Key-Typtor vorbeikommt. Sie behauptet aber nichts, was eine fremde Fassung falsch machen könnte.
+Das Array der zehn Werte ist der Angriff: eine Fassung, die die Felder über ihre Position liest,
+baut daraus TV1 zurück, prüft die Signatur gegen den aus der Map gebauten Core erfolgreich und
+akzeptiert einen Claim mit TV1s `claim_id`. Dieselbe Bauart wie NV22 aus D280 — eine Drahtform,
+die auf dem Weg zum Preimage zurechtgeschnitten wird. Anhang C ist das einzige Artefakt, das eine
+fremde Fassung sieht (D250, D257, D280); der Vektor ist dort mehr wert als seine 299 Byte kosten.
+
+**Der Preis, benannt.** Der Vektor ist doppelt geschützt: entfernt man allein das Map-Tor, fängt
+ihn das Key-Typtor, weil die Iteration über eine Liste deren Werte liefert und der zweite Wert
+kein int ist. Die Rücknahmeprobe nimmt deshalb beide Tore zugleich zurück. Vorab gemessen: mit
+einem Tor bleibt sie stumm grün, mit beiden wird sie rot (Prüfregeln 49, 51). Damit bindet NV31
+das Paar, nicht das einzelne Tor — für ein Artefakt, das den Code festlegt und nicht den Weg
+dorthin (Anhang C, Vorbemerkung zu den Byte-Vektoren), ist das die richtige Auflösung.
+
+**Warum `MALFORMED_CBOR` und nicht `NON_CANONICAL_ENCODING`.** Die 299 Byte sind kanonisches CBOR;
+ihre Re-Serialisierung ist byte-gleich. `NON_CANONICAL_ENCODING` behauptet, dass dieselbe Aussage
+anders hätte kodiert werden müssen — über diese Bytes ist das falsch (D262). `01 §3` erklärt
+Kanonizität an der Claim-Map; was keine Map ist, hat keine Kodierung, die sich beurteilen ließe.
