@@ -337,6 +337,8 @@ Vermerk erscheint, und die Stimme zählt nicht.
 | `GV-49` | derselbe Autor mit einer kanonischen und einer nicht-kanonischen Ja-Stimme auf denselben Vorschlag | `NON_CANONICAL_V`, **kein** `AMBIGUOUS_VOTE`, die kanonische Stimme zählt |
 | `GV-50` | nicht-kanonisches Zweit-Ja desselben Autors auf einen **anderen** Vorschlag derselben Epoche | `NON_CANONICAL_V`, **kein** `CONFLICTING_APPROVAL`, das erste Ja zählt |
 | `GV-51` | `ratify.v` nicht kanonisch kodiert, Zeugenmenge sonst tragend | `NON_CANONICAL_V`, keine Epoche |
+| `GV-52` | `vote.v = h'a2000101ff'` — dekodiert zu Key `0`, Wert `1`, re-serialisiert nicht | `UNPARSABLE_V`, die Stimme zählt nicht |
+| `GV-53` | dieselbe Kodierung als Zweit-Ja desselben Autors auf einen **anderen** Vorschlag derselben Epoche | `UNPARSABLE_V`, **kein** `CONFLICTING_APPROVAL`, das erste Ja zählt |
 
 `GV-24` ist mit dem Bestandsnukleus aus `00 §3.1` unmittelbar prüfbar: `N = 65309fe2…` setzt
 `weight_mode = 1` und liefert damit `UNEVALUABLE`, nie ein Ergebnis. Derselbe Nukleus trifft auch

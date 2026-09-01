@@ -10324,3 +10324,55 @@ Rücknahmeproben des Laufs sind damit vorab geeicht.
 **Text.** `04 §3.1`, `04 §4.1` und `04 §4.4` bekommen je einen Absatz, `04-golden-anchors §7` die
 Vektoren `GV-48` bis `GV-51`. Der Code folgt im selben Lauf; anders als bei D266 und D274 bleibt
 kein Textsatz ohne Träger.
+
+### D276 — Die Form aus `03 §1.3` ist normativ; `UNPARSABLE_V` kommt in die Governance
+
+**Befund aus der Abnahme des D275-Laufs.** Der Lauf hat `decode` und `is_canonical` in denselben
+`try` gestellt, wie verlangt, aber den `except`-Zweig auf `pass` gesetzt und danach
+weitergelesen. Damit fällt eine Stimme, deren Re-Serialisierung wirft, durch die
+Kanonizitätsprüfung hindurch und wird anschließend von `_choice` erneut dekodiert — erfolgreich.
+
+**Gemessen, drei Fassungen, ein Claim mit `v = h'a2000101ff'`.** Die Bytes kodieren eine Map mit
+zwei Paaren: Key `0` auf Wert `1`, Key `1` auf das nackte Break-Byte. `cbor2.loads` liefert dafür
+ein internes Sentinel, `cbor2.dumps` wirft darauf. Der Claim ist vollständig gültig; `read_claim`
+liefert ihn und keinen Reject-Code, weil der Umschlag kanonisch ist und der Inhalt eines `bstr`
+vom Verifizierer nicht gelesen wird.
+
+| Fassung | Ergebnis |
+|---|---|
+| Bestand vor dem Lauf | zählt als Ja, kein Vermerk |
+| Lauf `cbf1a1e` | zählt als Ja, kein Vermerk — **unverändert** |
+| Form aus `03 §1.3` | zählt nicht, Vermerk |
+
+Derselbe Griff in der Ausschlussschleife nach `04 §4.4`: eine so kodierte fremde Ja-Stimme
+schließt ihren Autor weiterhin aus, weil `_choice` sie als Ja liest.
+
+**Beschluss 1 — die Form ist normativ, nicht nur der `try`.** `04 §2.3` verlangt die Form aus
+Profile-II `§1.3`, und deren tragender Teil ist, dass der `except`-Zweig **abbricht** statt
+weiterzulesen. Ein `try`, dessen `except` auf `pass` steht, erfüllt den Buchstaben und nicht den
+Satz. Governance bekommt **einen** Leser mit den vier Lagen aus `04 §2.3`; `tally.py` und
+`epoch.py` rufen ihn, statt die Prüfung je Stelle noch einmal hinzuschreiben. Der Lauf hat sie
+zweimal wörtlich dupliziert und dabei dreifach dekodiert.
+
+**Beschluss 2 — `UNPARSABLE_V` kommt in `GovernanceFinding`.** D275 Beschluss 3 hat ihn
+zurückgestellt und die Frage ausdrücklich offen gelassen. Sie ist jetzt gemessen und mit Ja zu
+beantworten: ohne ihn verlöre die Ausschlussschleife eine bisher sichtbare Wirkung ersatzlos, und
+genau dieses Argument hat D275 Beschluss 5 für `NON_CANONICAL_V` schon einmal gezogen. Der
+Vermerk gilt für die zweite Lage: `v` vorhanden, Dekodierung oder Re-Serialisierung wirft, oder
+das Ergebnis ist keine Map. Er tritt im Kandidatenfilter an die Stelle von
+`UNKNOWN_VOTE_CHOICE`; kein Bestandsvektor ist betroffen, weil `GV-19` mit `v[0] = 2` in der
+vierten Lage liegt.
+
+**Beschluss 3 — das abwesende `v` bleibt, wo es ist.** Ohne `v` gibt es kein `v[0]`, und `04 §3.1`
+Bedingung 5 verlangt genau dieses. Der Vermerk bleibt `UNKNOWN_VOTE_CHOICE`. `UNPARSABLE_V` sagt
+„da ist etwas und es ist nicht lesbar", nicht „da ist nichts".
+
+**Verworfen: nicht re-serialisierbar als Unterfall von nicht-kanonisch.** Der Vermerk wäre dann
+`NON_CANONICAL_V`, mit dem Argument, `01 §3` definiere Kanonizität als Gleichheit mit der
+Re-Serialisierung, und was keine habe, sei nicht gleich. Verworfen, weil `03 §1.3` dieselbe Lage
+als `UNPARSABLE_V` führt und zwei Schichten, die dasselbe Feld verschieden benennen, die
+Defektform sind, gegen die D274 selbst argumentiert hat.
+
+**Folge.** Reparatur auf demselben Branch vor dem Merge, mit den Vektoren `GV-52` und `GV-53`.
+Die Rücknahmeprobe ist der `except`-Zweig: steht dort wieder `pass` mit anschließendem
+Weiterlesen, wird `GV-52` rot.

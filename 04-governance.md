@@ -143,6 +143,16 @@ und **nie** den Abwesend-Default. Bei `vote@1` zählt die Stimme dann weder als 
 wie bei einem unbekannten `choice`; bei `ratify@1` fällt die Zeugenmenge weg, die ohnehin
 austauschbarer Beleg ist (D274).
 
+**Wenn `v` sich nicht lesen lässt** (D276). Die Prüfung kennt **vier** Lagen, nicht zwei: `v` ist
+abwesend; `v` ist vorhanden und nicht lesbar, weil die Dekodierung **oder** die Re-Serialisierung
+scheitert oder das Ergebnis keine Map ist; `v` ist lesbar und nicht kanonisch; `v` ist lesbar und
+kanonisch. Die zweite Lage ist eigens genannt, weil sie sonst als vierte durchgeht: `h'a2000101ff'`
+dekodiert zu einer Map mit Key `0` und Wert `1` und lässt sich nicht re-serialisieren. Wer den
+Fehler der Re-Serialisierung abfängt und danach weiterliest, zählt diese Stimme. Ihr Vermerk ist
+`UNPARSABLE_V` und nicht `NON_CANONICAL_V`: an ihr ist die Kanonizität nicht entscheidbar, und
+Profile-II `§1.3` benennt dieselbe Lage ebenso. Ein abwesendes `v` bleibt davon unberührt und
+behält bei `vote@1` den Vermerk `UNKNOWN_VOTE_CHOICE`.
+
 ### 2.4 Das Vorschlagsobjekt
 
 Content-adressiert, kein Claim:
