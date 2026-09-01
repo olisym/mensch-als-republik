@@ -54,6 +54,7 @@ from .fixtures import (
     propose_claim,
     ratify_claim,
     vote,
+    vote_noncanonical_v,
 )
 
 
@@ -880,3 +881,103 @@ def test_GV_47() -> None:
         result = _malformed_amendment(pair)
         assert result.state is TallyState.UNEVALUABLE
         assert GovernanceFinding.MALFORMED_THRESHOLD in _kinds(result)
+
+
+def test_GV_48() -> None:
+    alice, _bob, _carol, _dave, _eve = fresh_p2()
+    bad = vote_noncanonical_v(alice, PROPOSAL_2, t=1)
+    result = _tally(
+        store_with(bad),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C2,
+        target=C3,
+        known={PROPOSAL_2.proposal_hash: PROPOSAL_2},
+    )
+    assert result.state is TallyState.PENDING
+    assert result.yes == ()
+    assert result.no == ()
+    assert _kinds(result) == {GovernanceFinding.NON_CANONICAL_V}
+    assert result.findings == (
+        Finding(GovernanceFinding.NON_CANONICAL_V, claim_id(bad)),
+    )
+
+
+def test_GV_49() -> None:
+    alice, _bob, _carol, _dave, _eve = fresh_p2()
+    first = vote(alice, PROPOSAL_2, choice=1, t=1)
+    second = vote_noncanonical_v(alice, PROPOSAL_2, t=2)
+    result = _tally(
+        store_with(first, second),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C2,
+        target=C3,
+        known={PROPOSAL_2.proposal_hash: PROPOSAL_2},
+    )
+    assert result.state is TallyState.PENDING
+    assert result.yes == (claim_id(first),)
+    assert result.no == ()
+    assert Finding(GovernanceFinding.NON_CANONICAL_V, claim_id(second)) in result.findings
+    assert GovernanceFinding.AMBIGUOUS_VOTE not in _kinds(result)
+
+
+def test_GV_50() -> None:
+    alice, _bob, _carol, _dave, _eve = fresh_p2()
+    first = vote(alice, PROPOSAL_2, choice=1, t=1)
+    second = vote_noncanonical_v(alice, PROPOSAL_ALT_A, t=2)
+    result = _tally(
+        store_with(first, second),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C2,
+        target=C3,
+        known={
+            PROPOSAL_2.proposal_hash: PROPOSAL_2,
+            PROPOSAL_ALT_A.proposal_hash: PROPOSAL_ALT_A,
+        },
+    )
+    assert result.yes == (claim_id(first),)
+    assert Finding(GovernanceFinding.NON_CANONICAL_V, claim_id(second)) in result.findings
+    assert GovernanceFinding.CONFLICTING_APPROVAL not in _kinds(result)
+
+
+def test_GV_51() -> None:
+    alice, bob, carol, dave, _eve = fresh_p2()
+    votes = [
+        vote(alice, PROPOSAL_2, choice=1, t=1),
+        vote(bob, PROPOSAL_2, choice=1, t=1),
+        vote(carol, PROPOSAL_2, choice=1, t=1),
+        vote(dave, PROPOSAL_2, choice=1, t=1),
+    ]
+    store = store_with(*votes)
+    tally = _tally(
+        store, epoch=EPOCH_2, proposal=PROPOSAL_2, constitution=C2, target=C3
+    )
+    assert tally.state is TallyState.PASSED
+    assert len(tally.yes) == 4
+    canonical_v = cbor_canon.encode({0: list(tally.yes)})
+    assert canonical_v[:2] == bytes.fromhex("a100")
+    assert canonical_v[2:3] == bytes.fromhex("84")
+    noncanonical_v = canonical_v[:2] + bytes.fromhex("9804") + canonical_v[3:]
+    r = alice.claim(
+        p=nuc(N_D, "ratify"),
+        J=(3, PROPOSAL_2.proposal_hash),
+        t=5,
+        N=N_D,
+        v=noncanonical_v,
+    )
+    store.add(r)
+    result = verify_ratification(
+        store,
+        ratify=r,
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        tally=tally,
+        target_constitution_obj=C3,
+        now=NOW,
+        policy=policy_of(C2),
+    )
+    assert result.next_epoch is None
+    assert Finding(GovernanceFinding.NON_CANONICAL_V, claim_id(r)) in result.findings
+    assert GovernanceFinding.UNSUPPORTED_RATIFICATION not in _kinds(result)

@@ -32,19 +32,23 @@ class RatificationResult:
     findings: tuple[Finding, ...]
 
 
-def _cited(ratify: Claim) -> list[object] | None:
+def _cited(ratify: Claim) -> tuple[list[object] | None, GovernanceFinding | None]:
+    """Zeugenliste aus ``ratify.v`` (04-governance.md §4.1, 04-governance.md §2.3, D83, D275)."""
     if ratify.v is None:
-        return None
+        return None, None
     try:
         obj = cbor_canon.decode(ratify.v)
+        canonical = cbor_canon.is_canonical(ratify.v)
     except Exception:
-        return None
+        return None, None
+    if not canonical:
+        return None, GovernanceFinding.NON_CANONICAL_V
     if not isinstance(obj, dict):
-        return None
+        return None, None
     cited = obj.get(0)
     if not isinstance(cited, list):
-        return None
-    return cited
+        return None, None
+    return cited, None
 
 
 def _unsupported(ratify: Claim, tally: TallyResult) -> RatificationResult:
@@ -70,7 +74,7 @@ def verify_ratification(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200, D203)."""
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200, D203, D275)."""
     if (
         proposal.scope != epoch.scope
         or tally.epoch_id != epoch.epoch_id
@@ -129,7 +133,20 @@ def verify_ratification(
     rid = claim_id(ratify)
     if rid not in by_cid or by_cid[rid].state is not State.ACTIVE:
         return _unsupported(ratify, tally)
-    cited = _cited(ratify)
+    cited, v_kind = _cited(ratify)
+    if v_kind is GovernanceFinding.NON_CANONICAL_V:
+        return RatificationResult(
+            next_epoch=None,
+            findings=dedupe_sort(
+                [
+                    Finding(
+                        kind=GovernanceFinding.NON_CANONICAL_V,
+                        subject=claim_id(ratify),
+                    ),
+                    *tally.findings,
+                ]
+            ),
+        )
     if cited is None:
         return _unsupported(ratify, tally)
     witness_findings: list[Finding] = []

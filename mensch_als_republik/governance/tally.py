@@ -183,7 +183,7 @@ def decide(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> TallyResult:
-    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112, D145)."""
+    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112, D145, D274, D275)."""
     if proposal.scope != epoch.scope:
         raise ValueError("proposal scope does not match epoch scope")
     if (
@@ -278,6 +278,18 @@ def decide(
         if vote.t_exp is not None:
             findings.append(Finding(kind=GovernanceFinding.VOTE_WITH_EXPIRY, subject=cid))
             continue
+        if vote.v is not None:
+            try:
+                cbor_canon.decode(vote.v)
+                canonical = cbor_canon.is_canonical(vote.v)
+            except Exception:
+                pass
+            else:
+                if not canonical:
+                    findings.append(
+                        Finding(kind=GovernanceFinding.NON_CANONICAL_V, subject=cid)
+                    )
+                    continue
         choice = _choice(vote)
         if not _is_known_choice(choice):
             findings.append(
@@ -314,6 +326,21 @@ def decide(
                 continue
             if by_cid[other_cid].state is not State.ACTIVE:
                 continue
+            if other.v is not None:
+                try:
+                    cbor_canon.decode(other.v)
+                    canonical = cbor_canon.is_canonical(other.v)
+                except Exception:
+                    pass
+                else:
+                    if not canonical:
+                        findings.append(
+                            Finding(
+                                kind=GovernanceFinding.NON_CANONICAL_V,
+                                subject=other_cid,
+                            )
+                        )
+                        continue
             if not _is_yes_choice(_choice(other)):
                 continue
             if other.J == (3, proposal.proposal_hash):

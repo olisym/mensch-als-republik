@@ -263,6 +263,30 @@ def vote(
     )
 
 
+def vote_noncanonical_v(
+    identity: Identity,
+    proposal: Proposal,
+    *,
+    t: int,
+    scope: bytes | None = None,
+    t_exp: int | None = None,
+) -> Claim:
+    """Dieselbe Stimme wie ``vote`` mit nicht-kanonischem ``v`` (D274, D275).
+
+    ``h'a1001801'`` ist Key 0, Wert 1 in nicht-kürzester Form; kanonisch ist
+    ``h'a10001'``.
+    """
+    use_scope = scope if scope is not None else N_D
+    return identity.claim(
+        p=nuc(use_scope, "vote"),
+        J=(3, proposal.proposal_hash),
+        t=t,
+        N=use_scope,
+        v=bytes.fromhex("a1001801"),
+        t_exp=t_exp,
+    )
+
+
 def ratify_claim(
     identity: Identity,
     proposal: Proposal,
