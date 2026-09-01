@@ -10732,3 +10732,53 @@ dorthin (Anhang C, Vorbemerkung zu den Byte-Vektoren), ist das die richtige Aufl
 ihre Re-Serialisierung ist byte-gleich. `NON_CANONICAL_ENCODING` behauptet, dass dieselbe Aussage
 anders hätte kodiert werden müssen — über diese Bytes ist das falsch (D262). `01 §3` erklärt
 Kanonizität an der Claim-Map; was keine Map ist, hat keine Kodierung, die sich beurteilen ließe.
+
+---
+
+### D286 — Die Zustandsmatrix ist vollständig: 42 von 42 Paaren gefangen
+
+**Anlass.** D278 hat die Mutantenmatrix über die Klassifikationszustände eingeführt und 28 der 42
+geordneten Paare gefahren; die restlichen vierzehn standen als „billig, mechanisch" auf der offenen
+Liste. Dieser Eintrag hält das Ergebnis des vollständigen Laufs fest.
+
+**Gemessen.** Sieben Zustände, vierzehn Erzeugerstellen — sieben in `verifier.py`, sieben in
+`index.py`. Je Paar beide Dateien zugleich mutiert und der volle Bestand gefahren, 42 Läufe im
+ausgepackten Baum, geeicht auf 658 Tests. Kein Paar überlebt. Die kleinste Fangbreite je
+Quellzustand:
+
+| von | kleinste Zahl roter Tests |
+|---|---|
+| `ACTIVE` | 205 |
+| `EQUIVOCATION_FLAGGED` | 7 |
+| `EXPIRED` | 6 |
+| `REVOKED` | 5 |
+| `PENDING` | 3 |
+| `SUPERSEDED` | 2 |
+| `LINKED` | 1 |
+
+**Die drei Überlebenden aus D278 sind gefallen.** Dort blieben `SUPERSEDED` nach `REVOKED`,
+`PENDING` und `EQUIVOCATION_FLAGGED` bei null roten Tests. Jedes dieser drei Paare fängt jetzt
+zwei Tests. Der mit D278 Beschluss 1 gebaute Träger leistet genau das, wofür er geschrieben wurde
+— und das ist hier zum ersten Mal gemessen und nicht nur behauptet.
+
+**`LINKED` ist gebunden, aber an einem einzigen Test — in jede der sechs Richtungen.** Die
+Gleichheit der Zahl über alle sechs Mutationen zeigt, dass es derselbe Test ist. Das ist der
+Befund aus D278, jetzt beziffert. Er bleibt auf der offenen Liste und bekommt keinen Lauf: ein
+zweiter Träger ohne benanntes Risiko ist Zeremonie, und der eine Test bindet den Namen. Wer
+`01 §B.1` an dieser Stelle ändert, wird es merken.
+
+**Beschluss.** Die Zustandsmatrix gilt als geschlossen; kein Lauf folgt. Der Schritt aus D278 ist
+damit für alle drei Mengen zu Ende gemessen: Zustände hier, Reject-Codes mit D279 und D280,
+Vermerke mit D281. In allen drei Mengen ist der Befund derselbe Form: die Namen sind gebunden, die
+Lücken liegen bei einzelnen Erzeugerstellen, nicht bei den Namen.
+
+**Verworfen: die Matrix auf Stellenebene, vierzehn Quellen statt sieben.** Dieselbe Rechnung wie in
+D281. Die Trennung von `verifier.py` und `index.py` fände, welcher der beiden Pfade einen bereits
+gebundenen Zustand trägt; der Preis ist die doppelte Rechenzeit für eine Aufteilung ohne Adressat.
+Für `SUPERSEDED` hat D278 diese Frage ausdrücklich offengelassen und der Träger beantwortet sie,
+weil er beide Pfade trifft.
+
+**Der Nullbefund ist das Ergebnis.** Zwei der drei Mengen aus D278 haben bei der vollständigen
+Messung Arbeit erzeugt — zwölf ungebundene Reject-Codewerte, elf blinde Feldtabellentore. Diese
+nicht. Das ist kein Grund, die Messung nachträglich für überflüssig zu halten: dieselbe Vermutung
+stand vor D279 über den Reject-Codes und war dort falsch.
