@@ -10850,3 +10850,39 @@ Unerwartetes schickt.
 
 **Verworfen: je Vermerk ein Träger statt je Stelle.** Das ist der Zustand, den D281 gemessen hat:
 47 von 48 Namen gebunden, und trotzdem zehn Stellen ohne Prüfung. Der Name ist nicht die Stelle.
+
+---
+
+### D288 — `pruefregeln.md` bekommt elf Abschnitte; die Nummern bleiben, wo sie sind
+
+**Anlass.** D249 hält seit `00y` fest, dass die Datei ab Regel 37 eine Gliederung braucht; D282 hat
+den Rückstand mit acht weiteren Regeln vergrößert und den Schnitt ausdrücklich als eigenen Vorgang
+benannt. Gemessen: von 59 Regeln standen 32 unter einer einzigen Überschrift, „Beim Bauen und Lesen
+von Tests", darunter der Merge-Block, der Zeilenumbruch von Verweisen und die Alterung der
+Projektkopie.
+
+**Beschluss.** Elf Abschnitte entlang des Arbeitsbogens, dem die Datei ihre Ordnung ohnehin
+entnimmt: Entwerfen, Typen und Felder, normativer Text, Code und Spec nebeneinander, Reihenfolgen
+und Stufen, Prompt, Tests, Rücknahmeproben und Mutanten, Messen, Blöcke und Splices, Abnahme und
+Merge. Die Nummern bleiben unverändert; sie stehen im Text nicht mehr in Reihenfolge, und der Kopf
+sagt das.
+
+**Warum die Nummern nicht mitwandern.** Sie sind der einzige stabile Griff auf eine Regel. Register
+und Prompts zitieren sie zu Dutzenden, und ein Prompt aus `00m` bleibt lesbar, solange die 34 die
+34 ist. Eine Umnummerierung machte jeden früheren Verweis still falsch — genau der Fehler, gegen
+den Prüfregel 27 gerichtet ist, nur flächig.
+
+**Vier Regeln wechseln den Abschnitt.** 22, 24 und 25 standen bei „Code und Spec nebeneinander"
+beziehungsweise beim normativen Text und greifen beim Schreiben des Prompts. 23 stand beim
+normativen Text und ist eine Rücknahmeprobe. Alle vier sind an ihren Zeitpunkt gerückt; kein
+Regeltext ist angefasst.
+
+**Wie der Schnitt geprüft ist.** Das Skript zerlegt die Datei an den Regelköpfen, setzt die Blöcke
+nach der Zuordnung neu und behauptet danach dreierlei: 59 Blöcke, jede Nummer genau einmal, und die
+Menge der Blocktexte vor und nach dem Schnitt ist zeichengleich. Damit ist eine Umstellung von einer
+Änderung unterscheidbar, ohne die 443 Zeilen zu lesen — dieselbe Bauart wie der Zielhash bei einem
+reinen Textschnitt.
+
+**Verworfen: die Regeln nach Herkunft zu gliedern.** Die Datei nennt ihre Herkunft bereits in der
+Schlussliste, und die Herkunft sagt nichts darüber, wann eine Regel greift. Wer prüft, sucht den
+Zeitpunkt.
