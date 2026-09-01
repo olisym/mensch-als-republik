@@ -10535,3 +10535,77 @@ Klassifikation und sein Duplikat im Index, das Formtor unter `nuc:` für einen S
 kanonisch noch Alias ist, und das Tor für `core/*` in `resolve_scope`. Dazu die drei erreichten,
 aber ungebundenen Stellen. Sie gehen auf die offene Liste. Das zweite Versionstor ist nach dem
 Kontrollfluss vermutlich unerreichbar; das ist eine Ableitung und braucht eine eigene Messung.
+
+---
+
+### D281 — Die Vermerkskampagne ist gefahren: 47 von 48 gebunden, ein bekannter Einzelfall
+
+**Anlass.** D278 hat die Mutantenmatrix für die Klassifikationszustände eingeführt und ihre
+Ausdehnung auf die Reject-Codes und die Vermerkskonstanten als nächsten Schritt benannt. Die
+Reject-Codes sind mit D279 und D280 erledigt. Dieser Eintrag hält das Ergebnis für die Vermerke
+fest.
+
+**Gemessen.** Fünf Aufzählungen tragen die Vermerke: `GovernanceFinding`, `ProfileFinding`,
+`TrustFinding`, `NucleusFinding` und `PolicyWarning`, zusammen 48 Member an 82 Erzeugerstellen im
+Produktivcode. Zuerst die Überdeckung, dann die Mutation (Prüfregel 53): elf der 82 Stellen
+erreicht der Bestand nie, und je Member alle Vorkommen zugleich auf ein anderes Member derselben
+Aufzählung gesetzt, fallen 47 von 48 Mutanten. Der einzige Überlebende ist `EPOCH_FORK`, und er
+hat nach D138 und D176 bewusst keinen Produktivträger.
+
+**Beschluss.** Die Vermerkskonstanten gelten als gebunden; kein Lauf folgt. Der Schritt aus D278
+ist damit für alle drei Mengen abgeschlossen: Zustände, Reject-Codes, Vermerke.
+
+**Die Grenze dieser Messung, benannt.** Die Mutation setzt alle Vorkommen eines Members zugleich.
+Sie belegt, dass der Name irgendwo behauptet wird, nicht dass jede seiner Erzeugerstellen gebunden
+ist — genau die Lücke, die Prüfregel 57 beschreibt. Zehn der elf nie erreichten Stellen sind
+Doppelerzeuger eines Vermerks, der anderswo erzeugt und geprüft wird: `INVALID_V_TYPE` und
+`UNPARSABLE_V` je zweimal, dazu `MALFORMED_PARTICIPANTS`, `MALFORMED_THRESHOLD`, `SCOPE_MISMATCH`,
+`TALLY_UNEVALUABLE`, `UNKNOWN_ACCUSATION` und `UNPARSABLE_VOUCH_PAYLOAD`. Sie gehen auf die offene
+Liste, nicht in einen Lauf.
+
+**Warum kein Lauf.** Ein Nullbefund ist ein Ergebnis. Die drei Mengen unterscheiden sich messbar:
+bei den Zuständen war einer von sieben austauschbar, bei den Reject-Codes waren zwölf von zwölf
+über ihren Wert ungebunden und elf von zwölf Toren der Feldtabelle unerreicht, bei den Vermerken
+ist einer von 48 offen und der ist benannt. Die Vermutung, die Vermerksschicht sei so dünn geprüft
+wie der Fehlerkanal, ist widerlegt.
+
+**Verworfen: die Matrix auf Stellenebene zu fahren, 82 Läufe statt 48.** Sie fände genau die
+Doppelerzeuger, die die Überdeckung schon benannt hat, und für die erreichten Stellen wäre der
+Ertrag die Aufteilung eines bereits gebundenen Namens auf seine Träger. Der Preis ist eine
+Verdopplung der Rechenzeit für eine Verfeinerung ohne Adressat. Wird eine der zehn Doppelstellen
+später berührt, ist sie einzeln zu messen.
+
+---
+
+### D282 — Prüfregeln 52 bis 59
+
+**Anlass.** Die Kandidatenliste stand bei sechs Einträgen und ist in `00ai` auf acht gewachsen.
+Eine Kandidatenliste, die nicht geschrieben wird, wird nicht kürzer; ungeschriebene Regeln sind in
+Prompts nicht zitierbar und in der nächsten Sitzung verloren.
+
+**Beschluss.** Acht Regeln, 52 bis 59, im bestehenden Format angehängt. Ihre Herkunft wird in der
+Schlussliste der Datei ergänzt.
+
+- **52** — der Prüfer misst am Code, nicht am Register (aus D278).
+- **53** — die Überdeckung geht der Mutation voraus (aus D280).
+- **54** — wer eine Form vorschreibt, benennt ihren tragenden Teil (aus D276).
+- **55** — ein Anzahl-Assert in einem Splice wird abgelesen, nicht gerechnet (aus `00ah`).
+- **56** — ein Bericht ohne den Diff ist keine Lieferung (aus `00ah`).
+- **57** — wo zwei Pfade gekoppelt geprüft werden, braucht jeder zusätzlich einen Träger (aus
+  D278).
+- **58** — im Merge-Block steht `git push` vor `git branch -d` (aus `00ag`).
+- **59** — eine aus einem Diff rekonstruierte Fassung wird über Quellhashes verankert (aus `00af`).
+
+**Was ausdrücklich nicht dazukommt.** Die Eichung einer Rücknahmeprobe an doppelt geschützten
+Toren, aufgefallen in `00ai` an `NV24` und `NV30`, ist keine neue Regel. Sie ist Prüfregel 49 —
+geschlossene Neutralisierung — zusammen mit Prüfregel 51 — Eichung an einem vorhandenen Element.
+Beide haben in `00ai` genau das geleistet, wofür sie geschrieben wurden; eine dritte Regel daneben
+verdünnte sie.
+
+**Die Gliederung bleibt offen.** D249 hält fest, dass die Datei ab Regel 37 eine Gliederung
+braucht. Acht weitere Regeln machen das dringender und nicht anders; die Gliederung ist ein
+eigener Schnitt, weil sie jede Nummer berührt und die Nummern stabil bleiben müssen.
+
+**Verworfen: die Regeln einzeln zu setzen, wenn sie gebraucht werden.** Das ist der Zustand, aus
+dem die Kandidatenliste entstanden ist. Eine Regel wird gebraucht, bevor jemand weiß, dass er sie
+braucht; das ist ihr Zweck.

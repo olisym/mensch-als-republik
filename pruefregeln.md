@@ -370,6 +370,61 @@ für die Bytes — weil es die signierten Bytes suchte, der Anhang aber nach dem
 Core und die Signatur getrennt führt. Ein Probelauf gegen TV1 hätte das im ersten Zug gezeigt und
 einen Umlauf gespart. Ergänzt Prüfregel 49: eine Probe sichert die Richtung, nicht den Maßstab.
 
+**52. Wer ungebundenes Verhalten sucht, misst am Code und nicht am Register.**
+Die Frage „welcher Registereintrag beschließt Verhalten und taucht in keinem Test auf" liefert in
+`00ah` 47 Kandidaten und damit kein Signal; die Frage „welcher Vermerks- oder Verdiktcode im
+Produktivcode taucht in keinem Test auf" liefert vier, von denen zwei benannt waren und zwei
+nicht. Der Grund ist mechanisch: D-Nummern stehen selten im Code, Codes stehen immer dort. Ein
+Suchmuster, das über das Register läuft, misst die Dokumentation; nur eines, das über die
+Bezeichner im Produktivcode läuft, misst den Bestand (D278).
+
+**53. Die Überdeckung geht der Mutation voraus.**
+Ein Mutant an einer Stelle, die kein Test erreicht, überlebt immer und sagt nichts. Ein Lauf mit
+`coverage` trennt die Menge vorab in „nie erreicht" und „erreicht"; nur die zweite Klasse braucht
+Mutanten, und der Befund der ersten steht schon fest. In `00ai` fielen so von 37 Erzeugerstellen
+19 als überlebende Mutanten an, davon 16 nie erreicht — die teure Messung war nur für die
+restlichen drei nötig. Umgekehrt gilt die Grenze: erreicht heißt nicht gebunden, und dafür bleibt
+die Mutation das einzige Mittel (D280).
+
+**54. Wer eine Form vorschreibt, benennt ihren tragenden Teil.**
+Ein Prompt, der eine Codeform verlangt, bekommt die Form und nicht notwendig ihre Wirkung. In
+`00ah` verlangte er `decode` und `is_canonical` im selben `try`; gebaut wurde genau das, und der
+tragende Teil war ein anderer — dass der `except`-Zweig abbricht statt fortzufahren. Der Lauf traf
+den Buchstaben und verfehlte den Satz. Wer eine Form vorschreibt, schreibt dazu, was sie leisten
+soll, und formuliert das Abnahmekriterium an der Wirkung, nicht an der Silhouette (D276).
+
+**55. Ein Anzahl-Assert in einem Splice wird abgelesen, nicht gerechnet.**
+Ein Assert auf eine erwartete Anzahl fängt mehr als eine Anwesenheitsprüfung (Prüfregel 42), aber
+nur, wenn die Zahl stimmt. In `00ah` sind drei von vier Anzahl-Asserts beim ersten Lauf gefallen,
+jedes Mal, weil die Zahl im Kopf gerechnet statt im Wegwerfbaum gemessen war. Jeder Fehlschlag
+kostet einen Durchlauf und ist der billigste vermeidbare Fehler der Sitzung. Die Zahl wird vor dem
+Schreiben des Skripts im ausgepackten Baum gegriffen.
+
+**56. Ein Bericht ohne den Diff ist keine Lieferung.**
+Ein Werkzeugbericht, der den Diff als geliefert bezeichnet, ohne ihn zu enthalten, wird nicht als
+Lieferung behandelt und nicht abgenommen; der Diff wird nachgefordert. In `00ah` enthielt der
+nachgeforderte Diff den Defekt, den der Bericht nicht sah. Das ist kein Formalismus, sondern der
+Grundsatz aus der dauerhaften Anweisung in seiner engsten Form: geprüft wird der Diff, nicht die
+Meldung darüber.
+
+**57. Wo zwei Pfade gekoppelt geprüft werden, braucht jeder zusätzlich einen Träger.**
+Ein Test, der zwei Erzeugerpfade gegeneinander hält, bindet die Übereinstimmung und nicht den
+Wert. In `00ah` blieb der Kopplungstest zwischen `classify` und `classify_all` grün, während beide
+Pfade denselben falschen Zustand lieferten; er war die ganze Zeit da und hat `SUPERSEDED` nie
+gesichert. Neben die Kopplung gehört je Pfad ein Träger, der den Wert behauptet (D278).
+
+**58. Im Merge-Block steht `git push` vor `git branch -d`.**
+`git branch -d` prüft die Zusammenführung gegen den Upstream. Ein lokal gemergter Branch gilt als
+unzusammengeführt, solange `main` nicht gepusht ist, und der Löschbefehl scheitert mitten in der
+Kette. Die Reihenfolge ist damit nicht Geschmack, sondern Bedingung.
+
+**59. Eine aus einem Diff rekonstruierte Fassung wird über Quellhashes verankert.**
+Wer einen gelieferten Diff im ausgepackten Baum nachbaut, um gegen die Fassung statt gegen ihre
+Beschreibung zu messen, hat zwei Fehlerquellen: den Diff und die Rekonstruktion. Ein
+`sha256sum -c` über vier bis sechs Quelldateien schließt die zweite und geht als zweiter Job in
+denselben Block wie der Hash-Test der gelieferten Dateien. Der Archivhash der Projektkopie taugt
+dafür nicht, und der `--header-text` kann eine Sitzung alt sein.
+
 ---
 
 ## Herkunft der Nummern
@@ -380,7 +435,8 @@ aus `sitzungsstart-einlesepfad.md`, 16–18 aus `sitzungsstart-buchfuehrung.md`,
 D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
-44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257.
+44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
+52 bis 59 aus D282.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
