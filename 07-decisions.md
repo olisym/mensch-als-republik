@@ -10401,3 +10401,57 @@ Formverfehlung zu melden verlöre die Auskunft, die den Autor angeht.
 **Kein Vektor.** Der Fall ist eine Kante zwischen zwei Lagen, die beide bereits einen Vektor
 haben (`GV-52`, `GV-48`), und beide Ausgänge sind unschädlich. Er steht als benannter Punkt im
 Text und in diesem Eintrag, nicht in `04-golden-anchors.md §7`.
+
+### D278 — `superseded` überlebt drei Mutanten; `malformed` hat keinen Erzeuger
+
+**Wie gesucht wurde.** Das Suchmuster aus `00ag` — welcher Beschluss taucht in keinem Test auf —
+ist über D-Nummern zu grob: 47 Registereinträge nennen einen Vermerks- oder Verdiktcode und
+kommen in keiner Testdatei vor. Die Umkehrung trägt: von den 73 Vermerks- und Verdiktcodes im
+Produktivcode kommen vier in keinem Test vor. Zwei davon sind benannt (`EPOCH_FORK` nach D138 und
+D176, `FOREIGN_LIFECYCLE` nach D263 und D268); zwei waren es nicht: `State.MALFORMED` und
+`State.SUPERSEDED`.
+
+**Erste Messung: Erreichbarkeit.** Die Erzeugerstellen von `State.SUPERSEDED` wurden mit einem
+Seiteneffekt versehen und der Bestand gefahren. Sie werden 34-mal erreicht, 30-mal aus
+`index.py`, viermal aus `verifier.py`. Der Zustand ist also nicht tot, nur ungenannt.
+`State.MALFORMED` hat im ganzen Produktivcode **keine** Erzeugerstelle.
+
+**Zweite Messung: eine Mutantenmatrix über die Zustandszuweisungen.** Beide Erzeugerdateien
+zugleich mutiert, je Mutant der volle Bestand gefahren. Für jeden der sieben erzeugten Zustände
+wurde mindestens eine Mutation gefahren, für `SUPERSEDED` alle sechs.
+
+| von `SUPERSEDED` nach | rote Tests |
+|---|---|
+| `ACTIVE` | 4 |
+| `EXPIRED` | 1 |
+| `LINKED` | 1 |
+| `REVOKED` | **0** |
+| `PENDING` | **0** |
+| `EQUIVOCATION_FLAGGED` | **0** |
+
+Sechs der sieben Zustände kippen bei jeder gefahrenen Mutation; `ACTIVE` bei über 200 Tests,
+`EXPIRED` und `EQUIVOCATION_FLAGGED` bei sechs bis sieben, `LINKED` bei genau einem.
+`SUPERSEDED` ist der einzige, der Mutanten überlebt. Gebunden ist an ihm nur, dass er nicht
+`ACTIVE`, `EXPIRED` oder `LINKED` ist — also die Aussage „gültig, inaktiv". Seine Trennung von
+`REVOKED`, `PENDING` und `EQUIVOCATION_FLAGGED` ist ungeprüft, obwohl `01 §B.1` für die drei
+verschiedene Bedingungen und für `pending` und `equivocation-flagged` sogar ein anderes
+Verhalten vorschreibt.
+
+**Beschluss 1 — `superseded` bekommt einen Träger, der den Namen behauptet.** Ein Test, der nur
+„inaktiv" oder `trust_usable is False` prüft, ist genau der Test, den die drei überlebenden
+Mutanten schon passieren. Der Träger muss `State.SUPERSEDED` behaupten, und er muss beide
+Erzeugerpfade treffen, `verifier.py` und `index.py` — die Matrix hat beide zugleich mutiert und
+kann deshalb nicht sagen, ob einer allein gebunden wäre.
+
+**Beschluss 2 — `State.MALFORMED` wird gelöscht.** `01 §B.1` führt `malformed` mit dem Verhalten
+„Reject, nicht speichern". Die Klassifikation beschreibt einen gehaltenen Claim; ein nicht
+gehaltener hat keinen Zustand, sondern einen Reject-Code. Ein Aufzählungswert ohne Erzeuger ist
+ein Versprechen, das nie eingelöst wird, und wer `State` liest, sucht ihn. Die Tabelle in
+`01 §B.1` bleibt achtzeilig, weil sie richtig ist; ein Absatz darunter benennt die Differenz.
+
+**Verworfen: `State.MALFORMED` behalten und einen Erzeuger bauen.** Das hieße, den Reject-Pfad
+von `read_claim` in eine `Classification` umzuleiten, und damit fiele die Grenze zwischen „nicht
+gespeichert" und „gespeichert und inaktiv" — die Grenze, an der `01 §B.1` und D272 hängen.
+
+**Nicht in diesem Beschluss.** `LINKED` hängt an genau einem Test. Das ist dünn, aber gebunden;
+ob es reicht, ist offen und wird hier nicht entschieden.

@@ -662,6 +662,12 @@ Alle Zustände sind aus den gehaltenen Bytes + lokaler Zeit ohne Weltwissen best
 | `expired` | linked, `t_exp` vorhanden und `now > t_exp` (lokal!) | lokal **inaktiv**; andernorts evtl. active |
 | `equivocation-flagged` | zweiter gültiger Claim mit gleichem `(I, h_prev)`, andere `claim_id` | **beide speichern**, Autor flaggen; Downstream nicht rückwirkend invalide |
 
+**`malformed` ist kein Klassifikationsergebnis** (D278). Die übrigen sieben Zeilen beschreiben
+einen gehaltenen Claim; `malformed` beschreibt die Verweigerung, ihn zu halten. Eine Fassung, die
+die Klassifikation als Aufzählung führt, führt darin sieben Werte und nicht acht — der achte kann
+nie entstehen, weil der Claim, der ihn trüge, nicht gespeichert wird. Woran es lag, sagen die
+Reject-Codes aus `§6`, nicht ein Zustand.
+
 `expired` ist der einzige Zustand mit legitim **verifizierer-relativer** Belegung (§6, `now`
 lokal). Alle anderen sind über Verifizierer hinweg deterministisch gegeben denselben Bytes
 **und derselben Policy**. Zwei Verifizierer mit verschiedenen Verfassungsobjekten für dasselbe
