@@ -87,14 +87,30 @@ def applied_threshold(old_obj: dict, new_obj: dict, klass: str) -> tuple[int, in
     return ratio_max((old_th[0], old_th[1]), (new_th[0], new_th[1]))
 
 
-def _choice(vote: Claim) -> object:
-    if vote.v is None:
-        return None
+def read_v(v: bytes | None) -> tuple[dict | None, GovernanceFinding | None]:
+    """Liest ``v`` in der Form aus 03-profiles.md §1.3 (04-governance.md §2.3, D83, D276).
+
+    Vier Lagen: abwesend; vorhanden und nicht lesbar; lesbar und nicht kanonisch;
+    lesbar und kanonisch. ``decode`` und ``is_canonical`` stehen im selben ``try``;
+    der ``except``-Zweig führt in die zweite Lage, nicht am ``try`` vorbei.
+    """
+    if v is None:
+        return None, None
     try:
-        obj = cbor_canon.decode(vote.v)
+        obj = cbor_canon.decode(v)
+        canonical = cbor_canon.is_canonical(v)
     except Exception:
-        return None
+        return None, GovernanceFinding.UNPARSABLE_V
+    if not canonical:
+        return None, GovernanceFinding.NON_CANONICAL_V
     if not isinstance(obj, dict):
+        return None, GovernanceFinding.UNPARSABLE_V
+    return obj, None
+
+
+def _choice(vote: Claim) -> object:
+    obj, _kind = read_v(vote.v)
+    if obj is None:
         return None
     return obj.get(0)
 
@@ -183,7 +199,7 @@ def decide(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> TallyResult:
-    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112, D145, D274, D275)."""
+    """Zählt Stimmen einer Epoche gegen einen Vorschlag (04-governance.md §3, D112, D145, D274, D275, D276)."""
     if proposal.scope != epoch.scope:
         raise ValueError("proposal scope does not match epoch scope")
     if (
@@ -278,19 +294,14 @@ def decide(
         if vote.t_exp is not None:
             findings.append(Finding(kind=GovernanceFinding.VOTE_WITH_EXPIRY, subject=cid))
             continue
-        if vote.v is not None:
-            try:
-                cbor_canon.decode(vote.v)
-                canonical = cbor_canon.is_canonical(vote.v)
-            except Exception:
-                pass
-            else:
-                if not canonical:
-                    findings.append(
-                        Finding(kind=GovernanceFinding.NON_CANONICAL_V, subject=cid)
-                    )
-                    continue
-        choice = _choice(vote)
+        obj, v_kind = read_v(vote.v)
+        if v_kind is GovernanceFinding.UNPARSABLE_V:
+            findings.append(Finding(kind=GovernanceFinding.UNPARSABLE_V, subject=cid))
+            continue
+        if v_kind is GovernanceFinding.NON_CANONICAL_V:
+            findings.append(Finding(kind=GovernanceFinding.NON_CANONICAL_V, subject=cid))
+            continue
+        choice = None if obj is None else obj.get(0)
         if not _is_known_choice(choice):
             findings.append(
                 Finding(kind=GovernanceFinding.UNKNOWN_VOTE_CHOICE, subject=cid)
@@ -326,22 +337,18 @@ def decide(
                 continue
             if by_cid[other_cid].state is not State.ACTIVE:
                 continue
-            if other.v is not None:
-                try:
-                    cbor_canon.decode(other.v)
-                    canonical = cbor_canon.is_canonical(other.v)
-                except Exception:
-                    pass
-                else:
-                    if not canonical:
-                        findings.append(
-                            Finding(
-                                kind=GovernanceFinding.NON_CANONICAL_V,
-                                subject=other_cid,
-                            )
-                        )
-                        continue
-            if not _is_yes_choice(_choice(other)):
+            obj, v_kind = read_v(other.v)
+            if v_kind is GovernanceFinding.UNPARSABLE_V:
+                findings.append(
+                    Finding(kind=GovernanceFinding.UNPARSABLE_V, subject=other_cid)
+                )
+                continue
+            if v_kind is GovernanceFinding.NON_CANONICAL_V:
+                findings.append(
+                    Finding(kind=GovernanceFinding.NON_CANONICAL_V, subject=other_cid)
+                )
+                continue
+            if not _is_yes_choice(None if obj is None else obj.get(0)):
                 continue
             if other.J == (3, proposal.proposal_hash):
                 continue

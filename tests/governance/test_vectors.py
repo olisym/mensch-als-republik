@@ -55,6 +55,7 @@ from .fixtures import (
     ratify_claim,
     vote,
     vote_noncanonical_v,
+    vote_unparsable_v,
 )
 
 
@@ -981,3 +982,45 @@ def test_GV_51() -> None:
     assert result.next_epoch is None
     assert Finding(GovernanceFinding.NON_CANONICAL_V, claim_id(r)) in result.findings
     assert GovernanceFinding.UNSUPPORTED_RATIFICATION not in _kinds(result)
+
+
+def test_GV_52() -> None:
+    alice, _bob, _carol, _dave, _eve = fresh_p2()
+    bad = vote_unparsable_v(alice, PROPOSAL_2, t=1)
+    result = _tally(
+        store_with(bad),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C2,
+        target=C3,
+        known={PROPOSAL_2.proposal_hash: PROPOSAL_2},
+    )
+    assert result.state is TallyState.PENDING
+    assert result.yes == ()
+    assert result.no == ()
+    assert _kinds(result) == {GovernanceFinding.UNPARSABLE_V}
+    assert result.findings == (
+        Finding(GovernanceFinding.UNPARSABLE_V, claim_id(bad)),
+    )
+    assert GovernanceFinding.NON_CANONICAL_V not in _kinds(result)
+    assert GovernanceFinding.UNKNOWN_VOTE_CHOICE not in _kinds(result)
+
+
+def test_GV_53() -> None:
+    alice, _bob, _carol, _dave, _eve = fresh_p2()
+    first = vote(alice, PROPOSAL_2, choice=1, t=1)
+    second = vote_unparsable_v(alice, PROPOSAL_ALT_A, t=2)
+    result = _tally(
+        store_with(first, second),
+        epoch=EPOCH_2,
+        proposal=PROPOSAL_2,
+        constitution=C2,
+        target=C3,
+        known={
+            PROPOSAL_2.proposal_hash: PROPOSAL_2,
+            PROPOSAL_ALT_A.proposal_hash: PROPOSAL_ALT_A,
+        },
+    )
+    assert result.yes == (claim_id(first),)
+    assert Finding(GovernanceFinding.UNPARSABLE_V, claim_id(second)) in result.findings
+    assert GovernanceFinding.CONFLICTING_APPROVAL not in _kinds(result)

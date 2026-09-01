@@ -287,6 +287,30 @@ def vote_noncanonical_v(
     )
 
 
+def vote_unparsable_v(
+    identity: Identity,
+    proposal: Proposal,
+    *,
+    t: int,
+    scope: bytes | None = None,
+    t_exp: int | None = None,
+) -> Claim:
+    """Dieselbe Stimme wie ``vote`` mit nicht lesbarem ``v`` (D276).
+
+    ``h'a2000101ff'`` dekodiert zu Key 0, Wert 1 und Key 1 auf das nackte
+    Break-Byte; die Re-Serialisierung wirft.
+    """
+    use_scope = scope if scope is not None else N_D
+    return identity.claim(
+        p=nuc(use_scope, "vote"),
+        J=(3, proposal.proposal_hash),
+        t=t,
+        N=use_scope,
+        v=bytes.fromhex("a2000101ff"),
+        t_exp=t_exp,
+    )
+
+
 def ratify_claim(
     identity: Identity,
     proposal: Proposal,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
 from mensch_als_republik.atom import Claim, claim_id
 from mensch_als_republik.governance.findings import (
     Finding,
@@ -17,6 +16,7 @@ from mensch_als_republik.governance.tally import (
     TallyState,
     constitution_governable,
     reached,
+    read_v,
 )
 from mensch_als_republik.index import classify_all
 from mensch_als_republik.policy import NucleusPolicy, constitution_hash
@@ -33,17 +33,15 @@ class RatificationResult:
 
 
 def _cited(ratify: Claim) -> tuple[list[object] | None, GovernanceFinding | None]:
-    """Zeugenliste aus ``ratify.v`` (04-governance.md §4.1, 04-governance.md §2.3, D83, D275)."""
-    if ratify.v is None:
-        return None, None
-    try:
-        obj = cbor_canon.decode(ratify.v)
-        canonical = cbor_canon.is_canonical(ratify.v)
-    except Exception:
-        return None, None
-    if not canonical:
-        return None, GovernanceFinding.NON_CANONICAL_V
-    if not isinstance(obj, dict):
+    """Zeugenliste aus ``ratify.v`` (04-governance.md §4.1, 04-governance.md §2.3, D83, D275, D276).
+
+    Nur Lage 3 verdrängt ``UNSUPPORTED_RATIFICATION`` durch ``NON_CANONICAL_V``.
+    Lage 1 und Lage 2 behalten das heutige Ergebnis.
+    """
+    obj, kind = read_v(ratify.v)
+    if kind is GovernanceFinding.NON_CANONICAL_V:
+        return None, kind
+    if obj is None:
         return None, None
     cited = obj.get(0)
     if not isinstance(cited, list):
@@ -74,7 +72,7 @@ def verify_ratification(
     now: int,
     policy: NucleusPolicy | None = None,
 ) -> RatificationResult:
-    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200, D203, D275)."""
+    """Prüft ein ``ratify@1`` gegen eine Auszählung (04-governance.md §4.1, D106, D109, D112, D200, D203, D275, D276)."""
     if (
         proposal.scope != epoch.scope
         or tally.epoch_id != epoch.epoch_id

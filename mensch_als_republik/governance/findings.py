@@ -30,6 +30,7 @@ class GovernanceFinding(str, Enum):
     EPOCH_PROPOSAL_UNAVAILABLE = "EPOCH_PROPOSAL_UNAVAILABLE"
     EPOCH_FORK = "EPOCH_FORK"
     NON_CANONICAL_V = "NON_CANONICAL_V"
+    UNPARSABLE_V = "UNPARSABLE_V"
 
 
 @dataclass(frozen=True, slots=True, order=True)
