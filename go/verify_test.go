@@ -240,7 +240,12 @@ func TestVerifyTable(t *testing.T) {
 		{
 			name: "indefinite array as top-level",
 			raw:  []byte{0x9f, 0x01, 0xff},
-			want: "reject NON_CANONICAL_ENCODING",
+			want: "reject MALFORMED_CBOR",
+		},
+		{
+			name: "indefinite map with text key",
+			raw:  mustHex("bf616100ff"),
+			want: "reject MALFORMED_CBOR",
 		},
 		{
 			name: "indefinite J array",
@@ -346,23 +351,28 @@ func TestVerifyTable(t *testing.T) {
 		{
 			name: "nuc empty scope",
 			raw:  signFields(aliceSeed(), baseNucFields("nuc:/vouch@1", n)),
-			want: "reject UNKNOWN_NAMESPACE",
+			want: "reject INVALID_PREDICATE",
 		},
 		{
 			name: "nuc uppercase hex scope",
 			raw: signFields(aliceSeed(), baseNucFields(
 				"nuc:"+strings.ToUpper(scopeNHex)+"/vouch@1", n)),
-			want: "reject UNKNOWN_NAMESPACE",
+			want: "reject INVALID_PREDICATE",
 		},
 		{
 			name: "nuc version leading zero",
 			raw:  signFields(aliceSeed(), baseNucFields("nuc:hasenpfote/vouch@01", n)),
-			want: "reject UNKNOWN_NAMESPACE",
+			want: "reject INVALID_PREDICATE",
 		},
 		{
 			name: "nuc name uppercase",
 			raw:  signFields(aliceSeed(), baseNucFields("nuc:hasenpfote/Vouch@1", n)),
-			want: "reject UNKNOWN_NAMESPACE",
+			want: "reject INVALID_PREDICATE",
+		},
+		{
+			name: "nuc without slash",
+			raw:  signFields(aliceSeed(), baseNucFields("nuc:hasenpfote", n)),
+			want: "reject INVALID_PREDICATE",
 		},
 		{
 			name: "reserved core foo",
@@ -402,12 +412,12 @@ func TestVerifyTable(t *testing.T) {
 		{
 			name: "core revoke with identity J",
 			raw:  signFields(aliceSeed(), baseCoreFields("core/revoke@1", 1, bobPub())),
-			want: "reject FOREIGN_LIFECYCLE",
+			want: "reject MALFORMED_CBOR",
 		},
 		{
 			name: "core supersede with object-hash J",
 			raw:  signFields(aliceSeed(), baseCoreFields("core/supersede@1", 3, target)),
-			want: "reject FOREIGN_LIFECYCLE",
+			want: "reject MALFORMED_CBOR",
 		},
 		{
 			name: "zero h_prev",

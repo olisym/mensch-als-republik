@@ -24,6 +24,9 @@ Verworfen, Core-Anteil aus dem Wire zu schneiden und nur diesen zu vergleichen: 
 vorheriges Dekodieren ist der Schnitt nicht definiert, und die Kanonizität von `σ`
 bliebe ungeprüft.
 
+**Heute:** Der Text entscheidet das in §3 (Durchsetzung: die dekodierte Map einschließlich
+`σ`; Block „Verglichen wird die Map, nicht der Core").
+
 ---
 
 ## 2. Auftrag vs. §6 Regel 4 / `FOREIGN_LIFECYCLE` — `ziel.I == C.I`
@@ -38,6 +41,12 @@ macht die Selbstbezüglichkeit unmöglich.
 
 **Verworfen:** `FOREIGN_LIFECYCLE` nie zu emittieren (dann hätte die Klasse in diesem
 Layer keinen Auslöser). Verworfen, den Ziel-Claim nachzuschlagen — das ist Weltwissen.
+
+**Heute:** Der Text entscheidet das in §6 Punkt 4, Anhang B.2 (`J.tag ≠ claim-ref` bei
+`core/*` → `MALFORMED_CBOR`; `FOREIGN_LIFECYCLE` nur bei lokal bekanntem Ziel) und im
+Absatz „Selbstenthaltene Gültigkeit". Die frühere Lesart, den lokalen Tag-Mangel als
+`FOREIGN_LIFECYCLE` zu führen, ist damit verworfen. `FOREIGN_LIFECYCLE` wird in diesem
+Layer nicht emittiert.
 
 ---
 
@@ -54,6 +63,10 @@ gibt es kein `pending`. Ausgabe ist nur `ok` plus `claim_id` oder `reject` plus 
 **Verworfen:** `time.Now()` für `t_exp` (Auftrag: keine Zeitzugriffe; `expired` ist
 verifizierer-relativ und kein Reject). Verworfen, unbekannten Vorgänger als Reject zu
 werten (spec: halten, nicht ablehnen).
+
+**Heute:** Der Text benennt denselben Prüfumfang in §6 als „selbstenthalten gültig"
+(Punkte 1–7 ohne den Konjunkt `ziel.I == C.I`). Zeitliche Gültigkeit, `pending` und
+`linked` bleiben außerhalb; keines davon ist ein Reject (Anhang B.3).
 
 ---
 
@@ -84,6 +97,15 @@ Null-Anker ist unabhängig von der Urheberschaft ungültig.
 `BAD_SIGNATURE` statt `INVALID_GENESIS_ANCHOR` ausgeben). Verworfen, den ersten
 Dekodierfehler hinter der Kanonizitätsprüfung zu verstecken.
 
+**Heute:** Der Text entscheidet in Anhang B.2: keine Gesamtordnung der Klassen; verboten
+ist nur ein Code, dessen Aussage die Bytefolge nicht trägt. `NON_CANONICAL_ENCODING`
+ist falsch, wenn der dekodierte Inhalt einen Mangel trägt, den keine Kodierung behebt
+(Nicht-uint-Schlüssel, doppelter Key, falscher Feldtyp). Die Feldtabelle gilt je Version:
+bei ununterstützter Version ist der Code `UNSUPPORTED_VERSION`, v1-Pflichtfelder werden
+dann nicht geprüft. Die oben stehende Reihenfolge bleibt als Implementierungswahl, soweit
+mehrere wahre Aussagen möglich sind; sie wurde an den Vorrang (nicht-uint-Keys und
+Nicht-Map vor Kanonizität) und an `J.tag ≠ claim-ref` → `MALFORMED_CBOR` angeglichen.
+
 ---
 
 ## 5. §5.3 / B.3 — `t_exp` auf `core/*` und `INCOHERENT_EXPIRY`
@@ -99,6 +121,9 @@ normal weitergeprüft.
 nicht in eine Entscheidung einfließen zu lassen; ein Reject wäre das Gegenteil.
 Verworfen, `t_exp` auf `core/*` als `MALFORMED_CBOR` abzulehnen — B.3 sagt bewusst
 kein Fehler.
+
+**Heute:** Der Text entscheidet das in §6 Punkt 7, §5.3 und Anhang B.3: auf `core/*`
+entfällt die Feld-Konsistenz `t < t_exp`; `t ≥ t_exp` löst dort keinen Reject aus.
 
 ---
 
@@ -123,6 +148,10 @@ kein Fehler.
 ist Policy der Grammatik, nicht CBOR). Verworfen, eine nicht in B.2 stehende Klasse
 zu erfinden.
 
+**Heute:** Der Text entscheidet das in §2.2, Anhang A und Anhang B.2: ein `nuc:`-Präfix,
+das die Grammatik verletzt, ist `INVALID_PREDICATE`. Die frühere Lesart, solche
+Formverstöße unter `UNKNOWN_NAMESPACE` zu führen, ist damit verworfen.
+
 ---
 
 ## 7. Extra-Keys, fehlende Pflichtfelder, falsche Längen
@@ -141,6 +170,10 @@ Claim). Verworfen, Längenfehler als eigene Klasse — B.2 hat keine.
 
 Bei `version != 1` werden Extra-Keys und v1-Pflichtfelder nicht mehr geprüft
 (`UNSUPPORTED_VERSION`). Eine fremde Version darf einen anderen Feldsatz haben.
+
+**Heute:** Der Text entscheidet das in Anhang B.2 (`MALFORMED_CBOR`: falscher Feldtyp,
+fehlendes Pflichtfeld, Key außerhalb der Feldtabelle, falsche Byte- bzw. Array-Länge)
+und im Absatz „Die Feldtabelle gilt je Version".
 
 ---
 
@@ -178,6 +211,9 @@ Eingabe vergleichen und `NON_CANONICAL_ENCODING` zu melden — das würde Traili
 indefiniter Länge in einen Topf werfen. BV3 ist dekodierbare Indefinite-Length *im*
 Item.
 
+**Heute:** Der Text entscheidet das in §3 („Die Eingabe ist genau ein Item") und
+Anhang B.2 (`MALFORMED_CBOR`: Restbytes hinter dem Item).
+
 ---
 
 ## 10. Indefinite-Length, Break, Floats, Tags, Simple Values
@@ -197,6 +233,12 @@ unassigned simples), ungültiges UTF-8 in tstr, reservierte Additional-Info →
 Verworfen, Floats kanonisch zu re-kodieren und als `NON_CANONICAL_ENCODING` zu
 führen — sie sind im Atom nicht vorgesehen, und B.2 packt falsche Typen unter
 `MALFORMED_CBOR`.
+
+**Heute:** Der Text bindet die drei Längenform-Fälle in Anhang B.2 und C.8: dekodierbare
+indefinite-length als einziger Mangel → `NON_CANONICAL_ENCODING`; unabgeschlossen oder
+Break in Wertposition → `MALFORMED_CBOR`; indefinite-length plus Nicht-uint-Schlüssel →
+`MALFORMED_CBOR` (Vorrang). Floats und Simple Values bleiben ohne eigenen Code;
+`MALFORMED_CBOR` als falscher Feldtyp gilt weiter.
 
 ---
 
@@ -256,6 +298,9 @@ darf 1, 2 oder 3 sein, sobald der Namensraum `nuc:` ist. Nur `core/*` zwingt Tag
 das wäre Bedeutung, und der Auftrag hält Weltwissen und Profile draußen. Die
 Kanonizität von `v` prüft „die lesende Schicht“ (§7.1).
 
+**Heute:** Der Text hält in §7.1 fest, dass das Atom `v` nicht liest und ein Verstoß
+dort nie ein Reject ist. Die Profil-Belegungen bleiben außerhalb.
+
 ---
 
 ## 15. Signatur-Preimage und Go-Ed25519
@@ -302,3 +347,96 @@ die Claim-Semantik greift.
 **Verworfen:** Nur uint-Keys 0–9 zu akzeptieren schon im Decoder (dann wäre eine
 unsortierte Text-Key-Map `MALFORMED_CBOR` statt ggf. `NON_CANONICAL_ENCODING`).
 Encoding-Fehler sollen sichtbar bleiben (BV3-Logik).
+
+**Heute:** Die Sortierung (RFC 8949, kodierte Key-Form) bleibt unentschieden im Text
+und wird weiter so gelesen. Der Vorrang in Anhang B.2 ändert den zweiten Teil: eine
+Map mit Nicht-uint-Schlüsseln ist `MALFORMED_CBOR`, auch wenn sie zusätzlich nicht
+kanonisch kodiert ist. Die frühere Sorge, Text-Keys hinter der Kanonizität zu
+verstecken, ist damit vom Text selbst aufgelöst.
+
+---
+
+## 18. §6 Punkt 4 — woran bindet „sonst `MALFORMED_CBOR`“
+
+**Offen:** Punkt 4 schreibt: bei `core/*`: Prädikat ∈ `{revoke@1, supersede@1}` und
+`J.tag == claim-ref` (sonst `MALFORMED_CBOR`). Das „sonst“ kann auf die ganze
+Konjunktion gehen — dann wäre auch `core/rotate@1` `MALFORMED_CBOR` — oder nur auf
+den Tag.
+
+**Lesart:** Nur auf `J.tag`. Ein `core/*` außerhalb `{revoke@1, supersede@1}` ist
+`RESERVED_CORE_PREDICATE`. Anhang B.2 und Anhang A sagen das ausdrücklich; §2.2 und
+§2.4 Invariante 4 ebenfalls.
+
+**Verworfen:** Die Konjunktion als Ganzes unter `MALFORMED_CBOR` zu führen. Das
+würde der Fehlerklasse in B.2 widersprechen.
+
+---
+
+## 19. §6 Punkt 4 / Anhang A — Präfix `core/` und `nuc:` am Rohstring
+
+**Offen:** „`p` beginnt mit `core/` oder `nuc:`“ kann den Rohstring meinen oder den
+nach dem ersten `/` geparsten Namensraum. `nuc:/vouch@1` beginnt mit `nuc:`, hat
+aber keinen Scope. `CORE/revoke@1` hat nach dem Slash den Namen `revoke`, aber das
+Präfix ist nicht `core/`.
+
+**Lesart:** Präfixtest auf den Rohstring. Beginnt `p` mit `nuc:` und verletzt die
+Grammatik, ist der Code `INVALID_PREDICATE` — auch ohne `/`, mit leerem Scope, mit
+Großbuchstaben im Namen, mit führender Null in der Version. Beginnt `p` mit `core/`,
+ist jedes andere Reststück `RESERVED_CORE_PREDICATE`. Alles ohne diese zwei Präfixe
+ist `UNKNOWN_NAMESPACE`.
+
+**Verworfen:** Erst in Namensraum und Rest zu splitten und `nuc:` nur am Token zu
+prüfen (`nuc:/vouch@1` wäre dann `UNKNOWN_NAMESPACE`, weil der Token `nuc:` mit
+leerem Scope kein anerkannter Namensraum wäre). Der Text sagt „beginnt mit“.
+Verworfen, `CORE/…` als `core` zu falten — die Grammatik ist kleinschreibungspflichtig.
+
+---
+
+## 20. Anhang B.2 Vorrang — Top-Level keine Map
+
+**Offen:** Der Vorrang nennt als unfixierbare Mängel Nicht-uint-Schlüssel, doppelte
+Keys und falschen Feldtyp. Ob eine Top-Level-Array- oder -Bytefolge, die nur in der
+Längenform von ihrer kanonischen Kodierung abweicht, `NON_CANONICAL_ENCODING` oder
+`MALFORMED_CBOR` ist, steht dort nicht.
+
+**Lesart:** `MALFORMED_CBOR`. §3 Regel 1 verlangt eine Map. `NON_CANONICAL_ENCODING`
+behauptet, es gebe eine kanonische Kodierung desselben Inhalts, die gültig wäre;
+eine definite Array-Kodierung wäre immer noch kein Claim. C.15 sagt dasselbe für
+ein kanonisches Array.
+
+**Verworfen:** Indefinite Arrays als `NON_CANONICAL_ENCODING` zu führen, weil die
+Re-Serialisierung andere Bytes liefert. Das wäre dieselbe falsche Aussage, die B.2
+an BV2 verbietet.
+
+---
+
+## 21. Anhang B.2 Vorrang — fehlendes Pflichtfeld und Kanonizität
+
+**Offen:** Der Vorrang listet fehlende Pflichtfelder nicht unter den Mängeln, die
+`NON_CANONICAL_ENCODING` unwahr machen. Eine nicht-kanonisch kodierte Map ohne `σ`
+trägt beides: Encoding-Mangel und fehlendes Pflichtfeld.
+
+**Lesart:** Kanonizität wird nach Map/uint-Keys und vor dem v1-Feldsatz geprüft. Eine
+wohlgetypte, nur unsortiert kodierte Map ohne `σ` ist `NON_CANONICAL_ENCODING`. C.7
+führt genau diesen Fall (derselbe Core wie TV1, unsortierte Keys, ohne `σ`) unter
+jenem Code. Fehlende Pflichtfelder sind ein v1-Tabellenmangel und greifen, sobald
+die Kodierung selbst kein eigenes Urteil mehr trägt.
+
+**Verworfen:** Fehlendes `σ` immer als `MALFORMED_CBOR`, auch wenn die Bytes zugleich
+nicht kanonisch sind. Der Vorrang nennt diesen Mangel nicht, und C.7 würde sonst einen
+falschen Satz über jene Folge erzwingen.
+
+---
+
+## 22. C.8 BV1 — Break in Wertposition, Dekodieren oder Re-Serialisieren
+
+**Offen:** Der begleitende Text zu BV1 beschreibt eine Implementierung, die die Map
+`{0: <break>}` dekodiert und erst beim Re-Serialisieren scheitert. Ein Decoder, der
+Break außerhalb von Indefinite-Length nicht als Wert akzeptiert, scheitert früher.
+
+**Lesart:** Break in Wertposition ist `MALFORMED_CBOR` schon beim Dekodieren. Anhang B.2
+nennt „Break in Wertposition“ unter `MALFORMED_CBOR` und lässt den Schritt frei.
+
+**Verworfen:** Einen eigenen Break-Wert im Decoder zu halten, nur um den Rundlauf
+werfen zu lassen. Der Code wäre derselbe; der Text verlangt den Schritt nicht.
+

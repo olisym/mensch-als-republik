@@ -14,6 +14,7 @@ const (
 	classMalformedCBOR         = "MALFORMED_CBOR"
 	classUnknownJTag           = "UNKNOWN_J_TAG"
 	classUnknownNamespace      = "UNKNOWN_NAMESPACE"
+	classInvalidPredicate      = "INVALID_PREDICATE"
 	classBadScopeBinding       = "BAD_SCOPE_BINDING"
 	classReservedCorePredicate = "RESERVED_CORE_PREDICATE"
 	classForeignLifecycle      = "FOREIGN_LIFECYCLE"
@@ -59,6 +60,19 @@ func verify(raw []byte) outcome {
 	if err != nil {
 		return reject(classMalformedCBOR)
 	}
+
+	// Non-uint keys and a non-map top-level are content defects that no
+	// encoding would turn into a valid claim. NON_CANONICAL_ENCODING would
+	// assert the opposite (Anhang B.2 Vorrang).
+	if v.kind != cborMap {
+		return reject(classMalformedCBOR)
+	}
+	for _, p := range v.m {
+		if p.k.kind != cborUint {
+			return reject(classMalformedCBOR)
+		}
+	}
+
 	if !bytes.Equal(encodeCBOR(v), raw) {
 		return reject(classNonCanonicalEncoding)
 	}
@@ -96,7 +110,7 @@ func verify(raw []byte) outcome {
 	switch pred.kind {
 	case predCore:
 		if c.jTag != 2 {
-			return reject(classForeignLifecycle)
+			return reject(classMalformedCBOR)
 		}
 	case predNucCanonical:
 		if !c.hasN || !bytes.Equal(c.n, pred.scopeID) {
@@ -283,43 +297,37 @@ type parsedPred struct {
 }
 
 func parsePredicate(p string) (parsedPred, string) {
-	ns, rest, ok := splitOnce(p, '/')
-	if !ok {
-		return parsedPred{}, classUnknownNamespace
-	}
-	name, ver, ok := splitOnce(rest, '@')
-	if !ok {
-		if ns == "core" {
-			return parsedPred{}, classReservedCorePredicate
+	// Prefix test on the raw string, not on a parsed namespace token
+	// (§6 Punkt 4, Anhang A: "beginnt mit core/" / "beginnt mit nuc:").
+	if strings.HasPrefix(p, "core/") {
+		rest := p[len("core/"):]
+		if rest == "revoke@1" || rest == "supersede@1" {
+			return parsedPred{kind: predCore}, ""
 		}
-		return parsedPred{}, classUnknownNamespace
+		return parsedPred{}, classReservedCorePredicate
 	}
-
-	if ns == "core" {
-		if !validName(name) || !validVersion(ver) || ver != "1" || (name != "revoke" && name != "supersede") {
-			return parsedPred{}, classReservedCorePredicate
+	if strings.HasPrefix(p, "nuc:") {
+		scopeAndRest := p[len("nuc:"):]
+		scope, rest, ok := splitOnce(scopeAndRest, '/')
+		if !ok {
+			return parsedPred{}, classInvalidPredicate
 		}
-		return parsedPred{kind: predCore}, ""
-	}
-
-	if strings.HasPrefix(ns, "nuc:") {
-		if !validName(name) || !validVersion(ver) {
-			return parsedPred{}, classUnknownNamespace
+		name, ver, ok := splitOnce(rest, '@')
+		if !ok || !validName(name) || !validVersion(ver) {
+			return parsedPred{}, classInvalidPredicate
 		}
-		scope := ns[len("nuc:"):]
 		if validCanonicalScope(scope) {
 			id, err := hex.DecodeString(scope)
 			if err != nil || len(id) != 32 {
-				return parsedPred{}, classUnknownNamespace
+				return parsedPred{}, classInvalidPredicate
 			}
 			return parsedPred{kind: predNucCanonical, scopeID: id}, ""
 		}
 		if validAliasScope(scope) {
 			return parsedPred{kind: predNucAlias}, ""
 		}
-		return parsedPred{}, classUnknownNamespace
+		return parsedPred{}, classInvalidPredicate
 	}
-
 	return parsedPred{}, classUnknownNamespace
 }
 
