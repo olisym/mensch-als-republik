@@ -65,18 +65,6 @@ V_VOUCH = bytes.fromhex("a1001864")
 BV1_HEX = "a100ff"
 BV2_HEX = "bf616100ff"
 
-# NV2: nicht-kanonisches CBOR desselben TV1-Cores (Key-Reihenfolge 8,6,5,3,2,1,0,7,4)
-NV2_CORE_HEX = (
-    "a908582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a28f73b"
-    "25625430061a6553f10005582065309fe233da30fda061d7c5ef002b6b80e426"
-    "82cd54d703ab13fb6c7d2f555703784c6e75633a363533303966653233336461"
-    "3330666461303631643763356566303032623662383065343236383263643534"
-    "64373033616231336662366337643266353535372f766f756368403102820158"
-    "208139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b3"
-    "940158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801"
-    "b40f6f5c0001071a677485800444a1001864"
-)
-
 
 def _sk(seed: bytes) -> Ed25519PrivateKey:
     return Ed25519PrivateKey.from_private_bytes(seed)
@@ -142,6 +130,11 @@ def build_vectors() -> dict:
             for k in sorted(tv1_signed)
         )
         + b"\xff"
+    )
+    nv2_key_order = [8, 6, 5, 3, 2, 1, 0, 7, 4, 9]
+    nv2_wire = bytes([0xA0 + len(nv2_key_order)]) + b"".join(
+        cbor_canon.encode(k) + cbor_canon.encode(tv1_signed[k])
+        for k in nv2_key_order
     )
 
     # TV2 — accept-rules Alice, verkettet auf TV1
@@ -453,8 +446,6 @@ def build_vectors() -> dict:
     # NV31 — zehn TV1-Werte als Array statt als Map (01 §C.15, D285)
     nv31_wire = cbor_canon.encode([tv1_signed[k] for k in sorted(tv1_signed)])
 
-    nv2_core = bytes.fromhex(NV2_CORE_HEX)
-
     return {
         "params": {
             "ALICE": ALICE_PUB.hex(),
@@ -473,8 +464,7 @@ def build_vectors() -> dict:
             _vec("NV3", nv3),
             {
                 "name": "NV2",
-                "core_bytes_noncanonical": nv2_core.hex(),
-                "reserializes_to": core_bytes(tv1).hex(),
+                "wire_bytes": nv2_wire.hex(),
                 "expect_reject": "NON_CANONICAL_ENCODING",
             },
             {

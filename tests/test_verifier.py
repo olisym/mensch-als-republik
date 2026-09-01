@@ -69,13 +69,7 @@ def test_nv1_invalid_genesis_anchor_not_pending():
 
 
 def _nv2_wire() -> bytes:
-    nv2 = _vec("NV2")
-    # Nicht-kanonischer Core + σ als Key 9 angehängt (ebenfalls nicht kanonisch sortiert)
-    core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
-    sigma = bytes.fromhex(_vec("TV1")["sigma"])
-    obj = cbor2.loads(core_nc)
-    obj[9] = sigma
-    return cbor2.dumps(obj, canonical=False)
+    return bytes.fromhex(_vec("NV2")["wire_bytes"])
 
 
 def test_nv2_non_canonical_encoding():
@@ -121,15 +115,16 @@ def test_read_claim_reject_vectors(v: dict):
     assert read_claim(bytes.fromhex(hex_bytes)) == ErrorCode[v["expect_reject"]]
 
 
-def test_reject_vectors_without_wire_are_exactly_nv2():
-    excluded = {
+def test_reject_vectors_all_carry_wire():
+    """Jeder Vektor mit expect_reject trägt Drahtbytes (D291)."""
+    missing = {
         v["name"]
         for v in VECTORS["vectors"]
         if "expect_reject" in v
         and "wire_bytes" not in v
         and "signed_bytes" not in v
     }
-    assert excluded == {"NV2"}
+    assert missing == set()
 
 
 def test_read_claim_tv1_matches_structural_check():
@@ -153,9 +148,9 @@ def test_nv12_read_claim_malformed_cbor():
 
 
 def test_nv2_reserializes_to_tv1_core():
-    nv2 = _vec("NV2")
-    core_nc = bytes.fromhex(nv2["core_bytes_noncanonical"])
-    assert cbor_canon.reserialize(core_nc).hex() == nv2["reserializes_to"]
+    nv2 = bytes.fromhex(_vec("NV2")["wire_bytes"])
+    tv1_signed = bytes.fromhex(_vec("TV1")["signed_bytes"])
+    assert cbor_canon.reserialize(nv2) == tv1_signed
 
 
 def test_bv3_reserializes_to_tv1_signed():
