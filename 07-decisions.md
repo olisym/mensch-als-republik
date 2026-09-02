@@ -11711,3 +11711,47 @@ sie in der Reihenfolge **vor** den Klassen eins bis drei.
 **Gemessen und bestätigt.** Alle 2438 Einzelmutanten der Familien A und B unterscheiden sich von
 ihrer Saat in genau einem Schlüssel; es gibt keine nicht paarbaren. Die Zahl 85 für die
 Vorrangprobe und das Fehlen jeder Lücke bestätigen sich ebenso.
+
+---
+
+### D307 — Abnahme der Stufe 2; die Deduplikation lässt die Klassenzuordnung wohldefiniert
+
+**Abnahme.** Beide neuen Dateien wurden aus dem Diff rekonstruiert und gefahren. Die Blob-Hashes
+`6f1d875` und `2357a0e` treffen die Indexzeilen; die gemessene Fassung ist byteweise die gelieferte
+(Prüfregel 59). 16958 Zeilen, davon 85 in der Vorrangprobe, 2059 in Klasse eins, 4378 in Klasse
+zwei und 10436 in Klasse drei; 70 Doppelte verworfen, keine nicht paarbaren Einzelmutanten.
+`tools/gitter.py` ist unberührt, fünfzehn Tests in beiden Dateien grün.
+
+**Bestätigt: die zwölf aus D306.** Die Vorrangprobe endet 73 mal in `MALFORMED_CBOR` und 12 mal in
+`UNSUPPORTED_VERSION`. Die abgeleitete Erwartung hält, und kein Partner hat einen strukturellen
+Mangel getragen, der die Regel gebrochen hätte.
+
+**Neu gemessen: die Deduplikation ist gefahrlos.** Weder der Prompt noch der Bericht haben
+geprüft, was passiert, wenn dieselbe Bytefolge aus zwei Quellen entsteht. Gemessen sind 68 solcher
+Bytefolgen, die 70 Verwerfungen auslösen; zwei entstehen dreifach. Alle 68 laufen über
+Saatgrenzen, **keine** über Klassengrenzen. Damit bleibt die Klasse einer Zeile wohldefiniert.
+Entstünde je eine Bytefolge einmal als Paar zweier Annahmen und einmal als Paar aus Annahme und
+Ablehnung, hinge ihr Etikett an der Iterationsreihenfolge, und die Auswertung würde eine Zahl
+melden, die kein Text festlegt. Das ist heute nicht der Fall und wird bei einer Erweiterung der
+Operatorenmenge erneut gemessen.
+
+**Extern geprüft, im Bestand ungeprüft.** Für jede der 16873 Klassenzeilen wurde die Klasse aus
+den beiden Einzelverdikten nachgerechnet; keine einzige weicht ab. Ein Test dafür fehlt.
+`tests/test_paare.py` prüft die Bauart, die Eindeutigkeit, die Nichtleere jeder Klasse und das
+Verdikt der Vorrangprobe — nicht aber, dass ein Etikett `P1` zwei angenommene Einzelmängel meint.
+Das ist ein benannter Rückstand, kein Fehler der Lieferung: der Prompt hat den Test nicht verlangt.
+
+**Befund: `tools/paare.py` importiert fünf private Namen aus `tools/gitter.py`.** Der Prompt hatte
+erlaubt, eine Hilfsfunktion öffentlich zu machen; der Lauf hat stattdessen `_SEED_NAMES`,
+`_SIG_KEY`, `_author_sk`, `_clone` und `_sign_a` mit Unterstrich importiert. Ein Unterstrich sagt
+aus, dass an einem Namen nichts hängt, und diese Aussage ist jetzt falsch.
+
+**Beschluss: angenommen, ohne Nachlauf.** Ein Bruch dieser Kopplung erzeugt einen `ImportError`
+und ist damit laut, nicht still; das ist der Fall, für den D183 und die Werkzeugschicht die
+niedrigere Schwelle vorsehen. Die Gegenmassnahme müsste ausgerechnet die Datei anfassen, deren
+Unberührtheit das Abnahmekriterium war. Wird `tools/gitter.py` das nächste Mal aus einem anderen
+Grund geändert, werden die fünf Namen dabei geöffnet.
+
+**Was jetzt fehlt.** Die Menge steht, der Vergleich nicht. Stufe 2 ist erst gefahren, wenn die
+Go-Fassung dieselben 16958 Zeilen beurteilt hat und beide Ausgaben nach D299 zweistufig
+ausgewertet sind.
