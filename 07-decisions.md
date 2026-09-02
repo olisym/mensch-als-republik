@@ -11821,3 +11821,11 @@ nicht unterstützte Version lesen, und dann wäre `UNSUPPORTED_VERSION` der Code
 dass die Feldtabelle nicht mehr prüfbar wäre und 176 Zeilen ihr Verdikt umdrehten. Die Referenz
 entscheidet es seit je richtig; der Text trug es nicht. Ein zweiter Fund derselben Art wie D308
 selbst, aus der Nullprobe zu dessen eigener Ergänzung.
+
+**Der Rückstand ist geschlossen.** `test_foreign_version_requires_a_readable_uint` in
+`tests/test_gitter.py` bindet beide Sätze an die Mutantenmenge: von 2502 Zeilen tragen 2260 die
+Version 1, 66 eine lesbar fremde Version und erhalten sämtlich `UNSUPPORTED_VERSION`, und 176
+tragen keine lesbare Version und erhalten sämtlich `MALFORMED_CBOR`. Der uint-Begriff steht als
+`type(wert) is int` im Test, nicht als `isinstance`, sonst ginge ein `True` im Versionsfeld als
+Version 1 durch (D272). Beide Rücknahmeproben greifen am Verifizierer an und machen je eine der
+beiden Gruppen rot.
