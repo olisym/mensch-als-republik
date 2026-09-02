@@ -11419,3 +11419,56 @@ allem überein, was der Text festlegt, einschließlich zehn der zwölf Fehlerkla
 Häufung, die D258 wollte, und es ist der erste Beleg dafür, dass die Reparaturen aus D291 und D292
 gehalten haben. Was es nicht zeigt: eine Mehrdeutigkeit, die beide Fassungen gleich auflösen,
 sieht auch dieser Vergleich nicht — die Grenze aus `00aj` steht unverändert.
+
+---
+
+### D300 — Der Registerindex lernt Anhangsverweise
+
+**Anlass.** Prüfregel 38 nennt `tools/register_index.py` den billigsten ersten Griff vor jeder
+Position. In `00ak` war er stumm: `01 §B.2` liefert eine leere Zeile, weil die Verweiserkennung
+nach dem Paragraphenzeichen nur eine Ziffernfolge kennt. Der normative Absatz, der D299 entschieden
+hätte, steht in einem Anhang. Der Mangel stand als Kleinkram auf der offenen Liste und hat zwei
+Züge gekostet.
+
+**Gemessen.** Mit der Anhangsform erkennt der Index sechs weitere Abschnitte und 23 weitere
+Verweise; die Zahl der Abschnitte steigt von 115 auf 121, und kein bestehender Eintrag ändert sich.
+`01 §B.2` allein trägt elf Einträge: D265, D266, D267, D269, D270, D271, D272, D279, D289, D293 und
+D299. Genau die Menge, die die Vorrangfrage entschieden hätte.
+
+**Beschluss.** Die Verweiserkennung nimmt neben der Ziffernform auch die Anhangsform aus D230 an —
+ein Großbuchstabe, ein Punkt, dann eine Ziffernfolge, die weitere punktgetrennte Ziffern tragen
+kann. Die Ziffernform bleibt unverändert. Der Index bekommt seinen ersten Test; bisher hatte er
+keinen.
+
+**Die Grenze bleibt, wo D229 sie gezogen hat.** Der Index sagt, welche Einträge einen Abschnitt
+nennen, nicht ob sie ihn richtig nennen. Ein vollständigerer Index macht Prüfregel 27 nicht
+überflüssig — er macht sie nur bezahlbar.
+
+---
+
+### D301 — Die Backslashes in den Wurzel-Markdowns sind tragend, kein Rückstand
+
+**Der Befund.** Die offene Liste führt sieben Zeilen in fünf Dateien als Kleinkram und daneben die
+neunzehn Zeilen der `sitzungsstart`-Reihe. Nachgesehen, was dort steht:
+
+- Vier Zeilen in `02b-golden-anchors.md` und eine in `02-spec-nachzug.md` escapen einen senkrechten
+  Strich **innerhalb einer Tabellenzelle**. Ohne den Backslash bricht die Zelle, weil der Strich
+  der Spaltentrenner ist. Der Ausdruck ist eine Betragsklammer, keine Escape-Sequenz für ein Byte.
+- Die Zeile in `01-claim-atom.md` escapet einen Stern am Zeilenanfang. Ohne den Backslash wird aus
+  der Fußnote ein Listenpunkt.
+- Die beiden übrigen und die neunzehn der `sitzungsstart`-Reihe stehen in zitierten Suchmustern
+  innerhalb von Inline-Code und sind deren Inhalt.
+
+**Beschluss 1 — die Regel gilt Escape-Sequenzen in normativem Text, nicht der Markdown-Auszeichnung
+und nicht zitierten Mustern.** Bytes werden als `h'ff'` geschrieben; das ist ihr Zweck. Ein
+Backslash, der einen Tabellentrenner oder einen Listenmarker neutralisiert, ist Auszeichnung und
+kein Inhalt. Der Posten wird von der offenen Liste gestrichen, nicht abgearbeitet.
+
+**Beschluss 2 — die beiden baren Verweise in `02b-abnahme.md` bekommen die Dateinamensform.** Sie
+zeigen auf `B.4` und `C.3` **derselben** Datei. Die Kurzform `02b` wäre falsch, weil
+`02b-golden-anchors.md` kein `B.4` trägt; `tools/check_specs.py` fängt sie, nachgeprüft. Richtig
+ist die Dateinamensform. Damit sind beide Verweise geprüft statt nur vorhanden — und der dritte
+Posten des angekündigten Kleinkram-Laufs ist erledigt, ohne dass er stattgefunden hat.
+
+**Was daran allgemein ist.** Ein Posten auf der offenen Liste ist eine Behauptung wie jede andere
+und untersteht Prüfregel 27. Zwei der drei Punkte waren keine Mängel, der dritte war eine Zeile.
