@@ -11444,6 +11444,17 @@ keinen.
 nennen, nicht ob sie ihn richtig nennen. Ein vollständigerer Index macht Prüfregel 27 nicht
 überflüssig — er macht sie nur bezahlbar.
 
+**Nachgetragen nach dem Lauf.** Die Liste zu `01 §B.2` trägt zwölf Einträge, nicht elf, und die
+sechs neuen Abschnitte tragen 24 Verweise, nicht 23. Der zwölfte ist D300 selbst: der Eintrag nennt
+den Abschnitt, und er existierte bei der Messung noch nicht. Beide Zahlen oben sind an einem
+Register ohne diesen Eintrag gemessen.
+
+**Eine Grenze des Tests, benannt.** `test_b2_list_is_derived_from_register_text` leitet die
+erwartete Menge über das Vorkommen der Zeichenfolge ab, nicht über die Verweisgrammatik — sonst
+prüfte er das Werkzeug mit dem Werkzeug. Der Preis: entstünde je ein Abschnitt `B.2.1` oder `B.20`,
+zählte die Ableitung ihn zu `B.2`, und der Test würde falsch rot. Heute gibt es keinen, und die
+Nichtzirkularität ist den Preis wert (Prüfregel 51 in der Gegenrichtung).
+
 ---
 
 ### D301 — Die Backslashes in den Wurzel-Markdowns sind tragend, kein Rückstand
