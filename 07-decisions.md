@@ -11524,3 +11524,50 @@ behauptet wird — eine Datei ohne Herkunftsangabe behauptet nichts.
 
 **Was daneben liegt.** `~/mar-go/spec` trägt nur `01-claim-atom.md`. Das ist der Umfang aus D256
 und D268 und keine Lücke; eine dritte Fassung mit anderem Umfang bräuchte einen eigenen Anker.
+
+---
+
+### D303 — Familie C: nicht-kanonische Kodierung auf der unmutierten Saat
+
+**Anlass.** Das Gitter erreicht zehn der zwölf Reject-Codes, gemessen über die 2438 Mutanten des
+Bestands. `NON_CANONICAL_ENCODING` fehlt bauartbedingt: alle drei Erzeugungswege in
+`tools/gitter.py` enden in `cbor_canon.encode`, und was kanonisch kodiert wurde, kann den Code
+nicht auslösen. Anhang C erreicht ihn zweimal, über eigene Vektoren, nicht über das Gitter.
+
+**Beschluss 1 — eine dritte Familie auf der Byteebene.** Familie C nimmt eine Saat unverändert und
+kodiert sie nicht-kanonisch. Der Inhalt bleibt gültig, die Bytes werden es nicht. Etikettpräfix
+`C/`, Ort `tools/gitter.py` neben den bestehenden Familien; ein eigenes Werkzeug bräuchte einen
+zweiten Aufruf im Vergleichslauf, ohne etwas zu trennen, was zusammengehört.
+
+**Beschluss 2 — Familie C wird nicht mit Inhaltsmutationen kombiniert.** Trägt der Inhalt einen der
+in `01 §B.2` abschließend aufgezählten Mängel, verdrängt der Vorrang nach `MALFORMED_CBOR` und die
+Kodierung wird stumm; das trifft vier Fünftel der abgelehnten Gittermutanten. Trägt er einen
+anderen Mangel, stehen zwei wahre Codes nebeneinander und `01 §B.2` stellt die Wahl ausdrücklich
+frei. Beide Fälle erzeugen kein Urteil, und der zweite erzeugt zusätzlich Rauschen der Art, die
+D299 bereits als Nichtbefund entlarvt hat.
+
+**Beschluss 3 — der Operatorensatz zielt auf Formvielfalt, nicht auf Saatvielfalt.** Eine
+Kodierungsform, die eine zweite Fassung anders behandelt, behandelt sie auf jeder Saat gleich
+anders; der Erkenntniswert liegt in der Zahl der Formen. Fünf Operatoren sind prototypisch
+gefahren und liefern durchweg `NON_CANONICAL_ENCODING`: die umgekehrte Schlüsselreihenfolge, der
+Map-Kopf als indefinite-length, der Map-Kopf mit breiterem Längenfeld, die Schlüssel mit breiterem
+Kopf, und der Kopf eines einzelnen Feldwerts eine Stufe breiter. Der letzte greift je Feld einzeln
+und trägt allein vierzig Zeilen.
+
+**Beschluss 4 — die Zahlen sind Prototypzahlen.** Wie in D298: die Wahl der Operatoren entscheidet
+den Umfang, nicht die Reichweite. Die Zeilenzahl der gelieferten Fassung wird bei der Abnahme
+gemessen und steht nicht im Prompt.
+
+**Was Familie C tatsächlich misst.** `01 §B.2` rechnet dekodierbare indefinite-length ausdrücklich
+zu `NON_CANONICAL_ENCODING`, während die Auslöserzeile von `MALFORMED_CBOR` mit "nicht dekodierbar"
+beginnt. Eine Fassung, die einen nicht-minimalen Kopf gar nicht erst dekodiert, hält ihren Code für
+wahr — und die Referenz hält den ihren für wahr, weil ihr Dekodierer tolerant ist. Das ist keine
+freie Wahl unter zwei wahren Sätzen, sondern eine Uneinigkeit darüber, welcher Satz wahr ist. Genau
+dafür fährt die Kampagne.
+
+**Verworfen: die Kodierungsvarianten als Vektoren in Anhang C.** Dort stehen bereits zwei; eine
+dritte Stelle im Spec-Text hätte den Generatordriftbefund aus D295 wieder aufgemacht, ohne die
+Menge zu vergrößern.
+
+**Was daneben liegt.** `FOREIGN_LIFECYCLE` bleibt auch mit Familie C unerreichbar, weil er einen
+Speicher braucht (D263, D268). Mit C sind elf der zwölf Codes über das Gitter erreichbar.
