@@ -11608,3 +11608,52 @@ beiden Felder tragen Additional Information 26, und der Prompt lässt den Operat
 aussetzen. Der Schritt von 26 auf 27 wäre möglich und ergäbe zwölf weitere Zeilen in einer
 Kodierungsform, die eine zweite Fassung anders behandeln könnte. Zurückgestellt, weil die
 Erreichbarkeit damit nicht wächst.
+
+---
+
+### D305 — Der Zuschnitt der Stufe 2 folgt der Aussagekraft, nicht der Vollständigkeit
+
+**Die Vorfrage.** Für Stufe 2 stand offen, ob die Kombinationsmenge vollständig aufgezählt oder
+gezogen wird. Beides ist verkehrt. Die Menge wird geschnitten, und der Schnitt folgt der Frage,
+wo `01 §B.2` überhaupt eine Antwort erzwingt.
+
+**Gemessen.** Paare aus zwei Mängeln auf verschiedenen Feldern derselben Saat innerhalb derselben
+Familie ergeben 216692 Kombinationen. Nach den Einzelverdikten ihrer beiden Mängel zerfallen sie
+in vier Klassen: 2125 aus zwei angenommenen Mängeln, 27403 aus einem angenommenen und einem
+abgelehnten, 10436 aus zwei verschiedenen Ablehnungen, und 176728, bei denen mindestens ein Mangel
+allein schon `MALFORMED_CBOR` erzeugt.
+
+**Beschluss 1 — die Klassen eins bis drei werden vollständig aufgezählt.** Das sind 39964 Paare.
+In Klasse eins müssen beide Fassungen annehmen und dieselbe `claim_id` liefern; in Klasse zwei
+trägt nur ein Mangel einen Code, und die Wahl ist nicht frei. Beide Klassen erzwingen genau eine
+Antwort und tragen deshalb einen Befund, der nicht wieder zerfällt.
+
+**Beschluss 2 — Klasse vier wird nicht gezogen, sondern durch eine benannte Vorrangprobe
+ersetzt.** Der Vorrang aus `01 §B.2` macht dort den Partner stumm: beide Fassungen liefern
+`MALFORMED_CBOR`, und 176728 Zeilen belegen dieselbe Aussage wie ein paar Dutzend. Die Probe nimmt
+je Familie, Saat und Code einen Vertreter und paart ihn mit einem Mangel auf einem anderen Feld,
+der allein `MALFORMED_CBOR` erzeugt. Gemessen sind das 85 Fälle, und es gibt keine Kombination
+ohne Partner.
+
+**Beschluss 3 — Klasse drei wird nur auf der ersten Stufe ausgewertet.** Zwei verschiedene
+Ablehnungen nebeneinander sind der Fall, den `01 §B.2` ausdrücklich freistellt; D299 hat daraus
+zwölf Nichtbefunde erzeugt. Annahme gegen Ablehnung bleibt aussagekräftig, verschiedener Code
+nicht. Die Klasse wird gefahren, weil sie billig ist, aber ihre zweite Stufe erzeugt keinen Befund.
+
+**Beschluss 4 — Kombinationen aus drei Mängeln bleiben zurückgestellt**, bis Stufe 2 einen Befund
+erzeugt hat. Das Verhältnis von Zeilen zu Beobachtungen ist schon bei Paaren das Thema; bei
+Tripeln wächst es um zwei Größenordnungen, ohne dass eine neue Art von Aussage entsteht.
+
+**Beschluss 5 — Familie C geht nicht in die Paarbildung ein.** D303 Beschluss 2 schliesst sie aus,
+und der Grund gilt hier unverändert.
+
+**Verworfen: die vollständige Aufzählung.** Zweiundachtzig Prozent der Menge liegen in Klasse vier
+und belegen nur, dass der Vorrang hält.
+
+**Verworfen: eine gezogene Stichprobe mit festem Startwert.** Sie ist nicht stabil gegen
+Änderungen der Einzelmenge — jeder neue Operator verschiebt sie —, und ihre Nachvollziehbarkeit
+hängt an einem Implementierungsdetail statt an einer benannten Regel. Die Vorrangprobe leistet
+dasselbe und lässt sich in einem Satz beschreiben.
+
+**Die Zahlen sind Prototypzahlen** im Sinne von D298. Der Zuschnitt entscheidet sie, nicht die
+Reichweite; die gelieferte Fassung wird bei der Abnahme gemessen.
