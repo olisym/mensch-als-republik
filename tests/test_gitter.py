@@ -1,4 +1,4 @@
-"""Mutantenmenge der Stufe 1 (D289, D297, 01 §2, 01 §B.2)."""
+"""Mutantenmenge der Stufe 1 (D289, D297, D303, 01 §2, 01 §B.2, 01 §3)."""
 
 from __future__ import annotations
 
@@ -10,15 +10,13 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from mensch_als_republik import cbor_canon
 from mensch_als_republik.domains import DOM_SIG
 from mensch_als_republik.errors import ErrorCode
-from tools.gitter import main, mutant_lines
+from tools.gitter import C_OPERATORS, main, mutant_lines
 from tools.korpus import seed_lines
 from tools.verdikt import verdikt_line
 
 _SEED_NAMES = frozenset({"TV1", "TV2", "TV3", "TV4", "TV5", "TV6"})
 _AUTHOR_SEEDS = (bytes([0x01] * 32), bytes([0x02] * 32))
-_NAMED_ABSENT = frozenset(
-    {ErrorCode.NON_CANONICAL_ENCODING, ErrorCode.FOREIGN_LIFECYCLE}
-)
+_NAMED_ABSENT = frozenset({ErrorCode.FOREIGN_LIFECYCLE})
 
 
 def _author_sk(identity: bytes) -> Ed25519PrivateKey:
@@ -84,7 +82,7 @@ def test_family_a_signature_is_seed_author_over_mutant_core() -> None:
         assert mutant[9] == expected
 
 
-def test_reject_codes_are_all_error_classes_minus_two_named() -> None:
+def test_reject_codes_are_all_error_classes_minus_foreign_lifecycle() -> None:
     expected = {code.value for code in ErrorCode} - {c.value for c in _NAMED_ABSENT}
     seen: set[str] = set()
     for _label, wire_hex in mutant_lines():
@@ -105,6 +103,34 @@ def test_accepted_mutants_carry_claim_id() -> None:
         assert len(claim_hex) == 64
         assert all(ch in "0123456789abcdef" for ch in claim_hex)
     assert accepted >= 1
+
+
+def test_family_c_is_noncanonical_reencoding_of_the_seed() -> None:
+    seed_wires = {
+        name: bytes.fromhex(wire_hex)
+        for name, wire_hex in seed_lines()
+        if name in _SEED_NAMES
+    }
+    for label, wire_hex in mutant_lines():
+        wire = bytes.fromhex(wire_hex)
+        if label.startswith("C/"):
+            seed = seed_wires[label.split("/", 2)[1]]
+            assert cbor_canon.reserialize(wire) == seed
+            assert wire != seed
+        else:
+            assert cbor_canon.is_canonical(wire)
+
+
+def test_family_c_operators_each_yield_noncanonical_encoding() -> None:
+    seen = {name: 0 for name in C_OPERATORS}
+    for label, wire_hex in mutant_lines():
+        if not label.startswith("C/"):
+            continue
+        operator = label.split("/")[2]
+        assert operator in seen
+        assert verdikt_line(wire_hex) == "reject NON_CANONICAL_ENCODING"
+        seen[operator] += 1
+    assert all(count > 0 for count in seen.values()), seen
 
 
 def test_each_added_operator_yields_an_accepted_mutant() -> None:

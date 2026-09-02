@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mutantenmenge der Stufe 1 (D289, D297, 01 §2, 01 §B.2)."""
+"""Mutantenmenge der Stufe 1 (D289, D297, D303, 01 §2, 01 §B.2, 01 §3)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,14 @@ _SEED_NAMES = frozenset({"TV1", "TV2", "TV3", "TV4", "TV5", "TV6"})
 _AUTHOR_SEEDS = (bytes([0x01] * 32), bytes([0x02] * 32))
 _EXTRA_KEYS = (10, 11, 12)
 _SIG_KEY = 9
+
+C_OPERATORS: tuple[str, ...] = (
+    "reihenfolge",
+    "map_indefinite",
+    "map_breiter",
+    "schluessel_breiter",
+    "feldkopf_breiter",
+)
 
 _TYPE_PATTERNS: tuple[tuple[str, object], ...] = (
     ("uint", 0),
@@ -249,16 +257,166 @@ def _encode(m: dict[int, Any]) -> bytes:
     return cbor_canon.encode(m)
 
 
+def _item_end(data: bytes, start: int) -> int:
+    """Index hinter dem CBOR-Item ab start (RFC 8949)."""
+    initial = data[start]
+    major = initial >> 5
+    ai = initial & 0x1F
+    pos = start + 1
+    if ai < 24:
+        argument = ai
+    elif ai == 24:
+        argument = data[pos]
+        pos += 1
+    elif ai == 25:
+        argument = int.from_bytes(data[pos : pos + 2], "big")
+        pos += 2
+    elif ai == 26:
+        argument = int.from_bytes(data[pos : pos + 4], "big")
+        pos += 4
+    elif ai == 27:
+        argument = int.from_bytes(data[pos : pos + 8], "big")
+        pos += 8
+    else:
+        raise ValueError(ai)
+    if major in (0, 1, 7):
+        return pos
+    if major in (2, 3):
+        return pos + argument
+    if major == 4:
+        for _ in range(argument):
+            pos = _item_end(data, pos)
+        return pos
+    if major == 5:
+        for _ in range(argument * 2):
+            pos = _item_end(data, pos)
+        return pos
+    if major == 6:
+        return _item_end(data, pos)
+    raise ValueError(major)
+
+
+def _map_pairs(wire: bytes) -> list[tuple[bytes, bytes]]:
+    """Paare der obersten definite Map als kodierte Schlüssel und Werte."""
+    initial = wire[0]
+    if initial >> 5 != 5:
+        raise ValueError(initial)
+    ai = initial & 0x1F
+    pos = 1
+    if ai < 24:
+        n_pairs = ai
+    elif ai == 24:
+        n_pairs = wire[pos]
+        pos += 1
+    else:
+        raise ValueError(ai)
+    pairs: list[tuple[bytes, bytes]] = []
+    for _ in range(n_pairs):
+        key_end = _item_end(wire, pos)
+        key = wire[pos:key_end]
+        pos = key_end
+        val_end = _item_end(wire, pos)
+        val = wire[pos:val_end]
+        pos = val_end
+        pairs.append((key, val))
+    if pos != len(wire):
+        raise ValueError(pos)
+    return pairs
+
+
+def _widen_head(item: bytes) -> bytes | None:
+    """Kopf eine Stufe breiter; None, wenn der Operator nicht greift (D303)."""
+    initial = item[0]
+    major = initial >> 5
+    ai = initial & 0x1F
+    if major == 7:
+        return None
+    if ai < 24:
+        return bytes([(major << 5) | 24, ai]) + item[1:]
+    if ai == 24:
+        value = item[1]
+        return bytes([(major << 5) | 25]) + value.to_bytes(2, "big") + item[2:]
+    if ai == 25:
+        value = int.from_bytes(item[1:3], "big")
+        return bytes([(major << 5) | 26]) + value.to_bytes(4, "big") + item[3:]
+    return None
+
+
+def _map_header(n_pairs: int) -> bytes:
+    if n_pairs < 24:
+        return bytes([0xA0 + n_pairs])
+    raise ValueError(n_pairs)
+
+
+def _assemble(pairs: list[tuple[bytes, bytes]], *, indefinite: bool = False) -> bytes:
+    body = b"".join(key + val for key, val in pairs)
+    if indefinite:
+        return b"\xbf" + body + b"\xff"
+    return _map_header(len(pairs)) + body
+
+
+def _key_uint(key: bytes) -> int:
+    initial = key[0]
+    if initial >> 5 != 0:
+        raise ValueError(key)
+    ai = initial & 0x1F
+    if ai < 24:
+        return ai
+    raise ValueError(key)
+
+
+def _family_c(seed_wires: list[tuple[str, bytes]]) -> list[tuple[str, bytes]]:
+    """Nicht-kanonische Kodierung der unveränderten Saat (D303)."""
+    out: list[tuple[str, bytes]] = []
+    reihenfolge, map_indefinite, map_breiter, schluessel_breiter, feldkopf_breiter = (
+        C_OPERATORS
+    )
+    for name, wire in seed_wires:
+        pairs = _map_pairs(wire)
+        if len(pairs) > 1:
+            descending = list(reversed(pairs))
+            out.append((f"{name}/{reihenfolge}", _assemble(descending)))
+        out.append((f"{name}/{map_indefinite}", _assemble(pairs, indefinite=True)))
+        wide_header = _widen_head(_map_header(len(pairs)))
+        if wide_header is not None:
+            body = b"".join(key + val for key, val in pairs)
+            out.append((f"{name}/{map_breiter}", wide_header + body))
+        wide_keys: list[tuple[bytes, bytes]] = []
+        keys_ok = True
+        for key, val in pairs:
+            wide_key = _widen_head(key)
+            if wide_key is None:
+                keys_ok = False
+                break
+            wide_keys.append((wide_key, val))
+        if keys_ok:
+            out.append((f"{name}/{schluessel_breiter}", _assemble(wide_keys)))
+        for key, val in pairs:
+            wide_val = _widen_head(val)
+            if wide_val is None:
+                continue
+            rewritten = [
+                (k, wide_val if k == key else v) for k, v in pairs
+            ]
+            out.append(
+                (
+                    f"{name}/{feldkopf_breiter}/{_key_uint(key)}",
+                    _assemble(rewritten),
+                )
+            )
+    return out
+
+
 def mutant_lines() -> list[tuple[str, str]]:
     """Paare aus Etikett und Drahtbytes in Hex, stabile Reihenfolge (D289, D297)."""
     seeds = _load_seeds()
     seed_sk = {name: _author_sk(m[1]) for name, m in seeds}
-    seed_wires = {cbor_canon.encode(m) for _name, m in seeds}
+    seed_bytes = {cbor_canon.encode(m) for _name, m in seeds}
     seen: set[bytes] = set()
     pairs: list[tuple[str, str]] = []
 
     def _take(label: str, wire: bytes) -> None:
-        if wire in seen or wire in seed_wires:
+        if wire in seen or wire in seed_bytes:
             return
         seen.add(wire)
         pairs.append((label, wire.hex()))
@@ -271,6 +429,13 @@ def mutant_lines() -> list[tuple[str, str]]:
         _take(f"B/{body}", _encode(m))
     for body, m in _sigma_mutants(seeds):
         _take(f"B/{body}", _encode(m))
+    c_seeds = [
+        (name, bytes.fromhex(wire_hex))
+        for name, wire_hex in seed_lines()
+        if name in _SEED_NAMES
+    ]
+    for body, wire in _family_c(c_seeds):
+        _take(f"C/{body}", wire)
     return pairs
 
 
