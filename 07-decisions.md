@@ -11665,3 +11665,49 @@ Einzelmangel anders als die Referenz, landete sein Paar womöglich in Klasse vie
 Lauf. Genau dieser Unterschied wäre aber bereits auf Stufe 1 sichtbar, und dort ist er gemessen —
 D299 nennt null Befunde. Fällt auf Stufe 1 je ein Befund an, wird dieser Zuschnitt neu bewertet,
 bevor Stufe 2 erneut läuft.
+
+---
+
+### D306 — Berichtigung von D305: Klassenschnitt, Vorrangprobe und doppelte Drahtfolgen
+
+**Anlass.** Der Lauf zu D305 hat gestoppt und drei Abweichungen gemeldet, statt sie aufzulösen.
+Zwei davon sind Fehler des Registereintrags, die dritte ist eine Lücke des Prompts. Alle drei sind
+nachgemessen worden, bevor hier entschieden wird.
+
+**Berichtigung 1 — die Zahlen zu Klasse zwei und vier in D305 sind falsch.** Sie stammen aus einer
+Zählung, die ein Paar aus einer Annahme und einem `MALFORMED_CBOR` zu Klasse zwei schlug. Der
+Beschlusstext von D305 verlangt das Gegenteil: ausgegeben wird, wobei **keiner** der beiden
+Einzelmängel allein `MALFORMED_CBOR` erzeugt. Richtig sind 4382 in Klasse zwei und 199749 in
+Klasse vier; die ausgegebene Menge ist 16943 statt 39964. Der Beschluss selbst bleibt unverändert
+gültig, ebenso die Zahlen 216692, 2125 und 10436. Die Zahl 16943 stand bereits in der ersten
+Messung zu D305 und ist beim zweiten Schnitt unbemerkt verlorengegangen — der Fehler liegt beim
+Supervisor, nicht am Lauf.
+
+**Berichtigung 2 — die Vorrangprobe endet nicht durchweg in `MALFORMED_CBOR`.** Von den 85
+Fällen tragen zwölf den Code `UNSUPPORTED_VERSION`, nämlich genau die, deren nicht-strukturellen
+Partner die Version betrifft. Das ist kein Mangel der Probe, sondern der Inhalt von `01 §B.2`:
+wird eine Version nicht unterstützt, werden Pflichtfelder, Keys und Längen nicht mehr
+gegen `01 §2` geprüft, und `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle
+setzt. Der Code wäre der falsche Satz.
+
+**Beschluss — die Erwartung wird abgeleitet, nicht gesetzt.** Eine Zeile der Vorrangprobe wird
+abgelehnt mit `UNSUPPORTED_VERSION`, wenn einer ihrer beiden Einzelmängel allein diesen Code
+erzeugt, und sonst mit `MALFORMED_CBOR`. Die zwölf Zeilen bleiben in der Menge. Sie
+herauszunehmen hiesse, den einzigen Fall zu entfernen, in dem die Probe eine Verschachtelung
+prüft statt einer flachen Regel.
+
+**Was diese Regel riskiert, und warum das erwünscht ist.** Sie gilt, weil die gewählten Partner
+ihren Mangel aus der Feldtabelle beziehen. Ein struktureller Mangel — nicht dekodierbar, doppelter
+Key, Nicht-uint-Schlüssel, oberste Ebene keine Map — bliebe auch unter fremder Version wahr und
+ergäbe `MALFORMED_CBOR`. Träfe die Partnerwahl je einen solchen, würde der Test rot. Das ist
+gewollt: die Regel ist scharf, und ihr Bruch wäre ein Befund über die Vorrangordnung, kein
+Testfehler. Angepasst wird sie dann nicht stillschweigend, sondern hier.
+
+**Beschluss — doppelte Drahtfolgen.** Zwei verschiedene Saaten können denselben Paarmutanten
+ergeben; gemessen sind 70 solche Fälle. Es gilt dieselbe Regel wie im Gitter: die in der stabilen
+Reihenfolge spätere Zeile wird verworfen. Damit die Vorrangprobe davon nie getroffen wird, steht
+sie in der Reihenfolge **vor** den Klassen eins bis drei.
+
+**Gemessen und bestätigt.** Alle 2438 Einzelmutanten der Familien A und B unterscheiden sich von
+ihrer Saat in genau einem Schlüssel; es gibt keine nicht paarbaren. Die Zahl 85 für die
+Vorrangprobe und das Fehlen jeder Lücke bestätigen sich ebenso.
