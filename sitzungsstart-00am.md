@@ -58,6 +58,11 @@ Was in `00al` am meisten getragen hat:
 - **`grep` ohne `-E` kennt kein `|` als Alternative.** **`grep -c` liefert bei null Treffern
   Status 1**; eine Zählzeile, die null ergeben *darf*, geht auf `| cat`.
 - **`diff a b > datei` bricht die Kette**, weil `diff` bei Unterschieden Status 1 liefert.
+- **Ein Glob ohne Treffer bricht die Kette**, auch vor einem `rm -f`. Fish meldet
+  `No matches for wildcard` und führt den Job gar nicht erst aus; das `-f` schützt vor fehlenden
+  Dateien, nicht vor einem leeren Muster. Zum Aufräumen deshalb
+  `find /tmp -maxdepth 1 -name 'splice-*.py' -delete`, das bei null Treffern still bleibt. In
+  `00al` hat es den Schlussblock der Sitzung gekostet.
 - **Eine lange Ausgabe passt nicht in jedes Konsolenfenster.** In `00al` war eine Diagnoseliste
   nicht zurückzukopieren. Diagnoseskripte **aggregieren** deshalb und schreiben die volle Liste in
   eine Datei; ein `| cut -c1-150` am Aufruf verhindert zusätzlich den Umbruch.
