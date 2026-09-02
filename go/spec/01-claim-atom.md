@@ -421,9 +421,10 @@ Eigenschaft; sie *erzeugt* die Partitionstoleranz. Die vollständige Fehlerklass
 3. `J.tag` ist im geschlossenen Enum (§2.1);
 4. `p` beginnt mit `core/` **oder** `nuc:` (sonst `UNKNOWN_NAMESPACE`, §2.2); bei
    `nuc:…`-Prädikat: die Form erfüllt die Grammatik aus Anhang A (sonst `INVALID_PREDICATE`) und
-   die Bindungsregel §2.2 Regel 3 (sonst `BAD_SCOPE_BINDING`); bei `core/*`: Prädikat ∈
-   `{revoke@1, supersede@1}` und `J.tag == claim-ref` (sonst `MALFORMED_CBOR`) und, **sofern der
-   Ziel-Claim lokal bekannt ist**, `ziel.I == C.I` (sonst `FOREIGN_LIFECYCLE`);
+   die Bindungsregel §2.2 Regel 3 (sonst `BAD_SCOPE_BINDING`); bei `core/*` gilt jede der drei
+   Bedingungen für sich: Prädikat ∈ `{revoke@1, supersede@1}` (sonst `RESERVED_CORE_PREDICATE`,
+   §2.4 Invariante 4), `J.tag == claim-ref` (sonst `MALFORMED_CBOR`) und, **sofern der Ziel-Claim
+   lokal bekannt ist**, `ziel.I == C.I` (sonst `FOREIGN_LIFECYCLE`);
 5. `Ed25519-Verify(C.I, DOM_SIG ‖ bytes, C.σ)` ist wahr;
 6. `h_prev ≠ 32×0x00` (§4); ist `h_prev == SHA-256(DOM_ID_GEN ‖ C.I)`, ist `C` ein
    **Genesis**-Claim;
@@ -696,9 +697,12 @@ eine andere Version — und die Ratifizierung, die sie gültig macht, ist selbst
 **Vorrang bei mehreren Mängeln (normativ).** Trägt eine Bytefolge mehrere Mängel, entscheidet
 nicht die Prüfreihenfolge, sondern der Inhalt der Aussage. `NON_CANONICAL_ENCODING` behauptet, es
 gebe eine kanonische Kodierung desselben Inhalts, die gültig wäre. Trägt der dekodierte Inhalt
-einen Mangel, den keine Kodierung behebt (Nicht-uint-Schlüssel, doppelter Key, falscher Feldtyp),
-ist der Code `MALFORMED_CBOR` — gleichgültig, an welchem Schritt eine Implementierung ihn findet
-(BV2). Eine Prüfreihenfolge wird damit nicht normiert; die Aufzählungen in §6 sind Konjunktionen,
+einen Mangel, den keine Kodierung behebt, ist der Code `MALFORMED_CBOR` — gleichgültig, an welchem
+Schritt eine Implementierung ihn findet (BV2). Solche Mängel sind: die oberste Ebene ist keine Map
+(§3 Regel 1, C.15), ein Schlüssel ist kein uint, ein Key kommt doppelt vor, ein Pflichtfeld fehlt,
+ein Key steht außerhalb der Feldtabelle, ein Feld trägt den falschen Typ oder die falsche Länge
+(§2). Die Aufzählung ist abschließend: was nicht in ihr steht, hebt `NON_CANONICAL_ENCODING` nicht
+auf. Eine Prüfreihenfolge wird damit nicht normiert; die Aufzählungen in §6 sind Konjunktionen,
 keine Folgen.
 
 **Der Code ist ein Grund, kein Zustand (normativ).** B.1 kennt genau einen Reject-Zustand,
@@ -876,24 +880,29 @@ erwartet = beide Claims speichern; Autor ALICE als equivocation-flagged markiere
            Konsequenz (Slash) = ökonomische/Policy-Schicht (05)
 ```
 
-### C.7 NV2 — negativ: nicht-kanonisches CBOR desselben Cores → `NON_CANONICAL_ENCODING`
+### C.7 NV2 — negativ: nicht-kanonisch kodierte TV1-Map → `NON_CANONICAL_ENCODING`
 
-Derselbe logische Core wie TV1, aber mit **unsortierten Map-Keys** kodiert. Der Verifizierer
-dekodiert, re-serialisiert kanonisch und vergleicht — Mismatch → Reject.
+Dieselbe signierte Map wie TV1, einschließlich `σ`, aber mit **unsortierten Map-Keys** kodiert.
+Der Verifizierer dekodiert, re-serialisiert kanonisch und vergleicht — Mismatch → Reject. Der
+Vektor trägt genau diesen einen Mangel: die kanonische Kodierung desselben Inhalts ist TV1 und
+wäre gültig, und nur deshalb ist `NON_CANONICAL_ENCODING` über ihn eine wahre Aussage (B.2,
+Vorrang).
 
 ```
-nicht-kanonisch (Key-Reihenfolge 8,6,5,3,2,1,0,7,4):
-           a908582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a28f73b
+nicht-kanonisch (Key-Reihenfolge 8,6,5,3,2,1,0,7,4,9):
+           aa08582062db0b05f44c17e2dfe7f371d631845fdd5858dd94c37d327a28f73b
            25625430061a6553f10005582065309fe233da30fda061d7c5ef002b6b80e426
            82cd54d703ab13fb6c7d2f555703784c6e75633a363533303966653233336461
            3330666461303631643763356566303032623662383065343236383263643534
            64373033616231336662366337643266353535372f766f756368403102820158
            208139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b3
            940158208a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801
-           b40f6f5c0001071a677485800444a1001864
+           b40f6f5c0001071a677485800444a1001864095840ef3b6674898a1f037bdb58
+           dc485926b4f0de01ef995d6cbf7d6387c4dd33679f63da403f2f2d1c4bb39513
+           484dee2c74387ec904bbab0aa22b8bdb376fb1c401
 
 received == canonical            : false     → Reject
-reserialize(received) == canonical: true     → gleicher Core, nur nicht-kanonisch kodiert
+reserialize(received) == canonical: true     → dieselbe Map, nur nicht-kanonisch kodiert
 erwartet = Reject: NON_CANONICAL_ENCODING
 ```
 
