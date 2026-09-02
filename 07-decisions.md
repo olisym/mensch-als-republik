@@ -11246,3 +11246,74 @@ Längentor an einer Eingabe mit Innen-Whitespace und kosten nichts.
 Prompt einen geraden verlangte; der Prompt hat eine Bedingung genannt, die nicht hinreicht. Der
 Bericht war in jeder Zahl zutreffend. Deshalb steht die neue Regel bei den Berichten und nicht bei
 den Tests.
+
+---
+
+### D297 — Die Operatorenmenge aus D289 erreicht fünf von zwölf Codes und bekommt drei Operatoren
+
+**Anlass.** Vor dem Bau des Gitters stand die Frage, ob „Typ tauschen" ein Operator ist oder einer
+je Zielklasse. Gemessen wurde beides im ausgepackten Baum gegen die Referenz, und die Frage war zu
+klein gestellt.
+
+**Gemessen, Menge aus D289 Beschluss 1, Typklasse bereits aufgefächert.** Sechs gültige
+Saatvektoren, zehn Felder, fünf Operatoren: 624 Rohmutanten, nach Entdopplung 1272 verschiedene
+Drahtfolgen in zwei Familien. Erreicht werden davon **fünf** der zwölf Reject-Codes.
+
+**Der Grund liegt in der Menge, nicht in ihrer Größe.**
+
+- „Typ tauschen" erzeugt nie einen anderen Wert **derselben** Klasse. Kein Mutant trägt darum eine
+  Version ungleich eins; `UNSUPPORTED_VERSION` ist unerreichbar.
+- Kein Operator greift **in** ein zusammengesetztes Feld hinein. `J` wird nur als Ganzes ersetzt,
+  `J.tag` bleibt unberührt, `UNKNOWN_J_TAG` unerreichbar.
+- `INVALID_GENESIS_ANCHOR` verlangt zweiunddreißig Nullbytes, `INCOHERENT_EXPIRY` ein `t_exp`
+  unterhalb von `t`, `UNKNOWN_NAMESPACE` ein fremdes Präfix. Alle drei sind Werte innerhalb der
+  richtigen Klasse und keiner Typänderung erreichbar.
+
+**Beschluss 1 — die Typklasse wird aufgefächert, zehn Klassen.** Nachgemessen: alle zehn sind vom
+kanonischen Kodierer erzeugbar. Damit bleibt die Mutation auf der dekodierten Map, wie D289 es
+verlangt, und muss nicht auf die Byteebene ausweichen, die D289 ausdrücklich verwirft.
+
+**Beschluss 2 — drei Operatoren kommen hinzu, alle mechanisch.**
+
+- *Wert innerhalb der Klasse.* uint: null, eins, plus eins, minus eins, zwei hoch zweiunddreißig,
+  zwei hoch vierundsechzig minus eins. bstr: Nullfolge und Einsfolge gleicher Länge, umgekehrt, um
+  ein Byte kürzer, um ein Byte länger. tstr: Groß- und Kleinschreibung, ein Zeichen vorn, ein
+  Zeichen hinten, ein Zeichen kürzer. bool negiert; Array kürzer, länger, umgekehrt. Dieser
+  Operator **ersetzt** „Länge ändern" aus D289 und verallgemeinert ihn.
+- *Rekursion in zusammengesetzte Felder.* Auf jedes Element eines Arrays werden die Typmenge und
+  die Wertmenge angewandt.
+- *Feldkopie innerhalb desselben Claims.* Der Wert eines Feldes wird auf ein anderes gelegt.
+
+**Keiner der drei wählt Grenzwerte von Hand aus der Spec.** Das ist die Bedingung, unter der sie
+zulässig sind: ein Gitter aus handgewählten Werten prüft, was der Autor schon bedacht hat, und wäre
+nur ein zweites Anhang C. Dass die mechanischen Varianten die Grenzwerte trotzdem treffen, ist der
+Befund und nicht die Absicht.
+
+**Gemessen, erweiterte Menge.** 1217 Rohmutanten, 1146 in Familie A und 1236 in Familie B, zusammen
+2382 verschiedene Drahtfolgen. Erreicht sind **zehn** der zwölf Codes. 185 Mutanten der Familie A
+werden angenommen und tragen damit eine `claim_id` in den Vergleich. Der ganze Lauf samt Verdikten
+braucht unter einer Sekunde; das Gitter kann deshalb in der Testsuite stehen und muss kein Werkzeug
+bleiben, das nur von Hand gefahren wird.
+
+**Die zwei fehlenden fehlen aus benanntem Grund.** `NON_CANONICAL_ENCODING` ist bauartbedingt
+unerreichbar, weil Stufe 1 jeden Mutanten kanonisch neu kodiert. `FOREIGN_LIFECYCLE` braucht einen
+Speicher, liegt nach D268 als einziger Fall außerhalb der selbstenthaltenen Gültigkeit und kann
+nach D263 keinen Vektor bekommen. Beides ist entschieden und wird nicht nachgebessert.
+
+**Beschluss 3 — signiert wird mit dem Schlüssel der Saat, nicht mit dem des mutierten Feldes.**
+Wird `I` mutiert, gibt es zu ihm keinen Schlüssel. Der Mutant bekommt dennoch eine Signatur über
+seinen eigenen Core, gerechnet mit dem Autor der Saat; das Ergebnis ist `BAD_SIGNATURE`, und zwar
+ein echtes. Beim ersten Bau ist der Harness auf einen Nullschlüssel zurückgefallen und hätte
+dieselbe Zahl geliefert — dieselbe Beobachtung, andere Ursache, und niemand hätte es gesehen.
+
+**Was die Beiträge der drei Operatoren einzeln sind, gemessen.** Ohne den Wertoperator sechs Codes,
+ohne die Rekursion neun, ohne die Feldkopie zehn. Die Feldkopie trägt **keinen** eigenen Code bei;
+sie trägt sechzehn angenommene Mutanten bei, die kein anderer Operator erzeugt, und nach D289
+Beschluss 5 ist die Annahme mit `claim_id` die schwerere Beobachtung. Sie bleibt darum, aber knapp,
+und der Preis ist benannt: 466 Mutanten für sechzehn Annahmen.
+
+**Was die Verteilung sagt.** Vier Fünftel aller Mutanten enden in `MALFORMED_CBOR`. Das ist die
+Warnung aus D258 eine Ebene höher: auch feldweise Mutation trifft überwiegend dieselbe Klasse. Es
+spricht nicht gegen das Gitter, denn die Aufzählung ist billig und vollständig; es sagt, wo die
+Unterscheidungskraft sitzt — in den 185 angenommenen Mutanten und in den 146 der Familie A, die
+einen der neun übrigen Codes tragen.
