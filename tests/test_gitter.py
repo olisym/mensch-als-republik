@@ -36,6 +36,11 @@ def _seed_maps() -> dict[str, dict]:
     return maps
 
 
+def _is_cbor_uint(value: object) -> bool:
+    """True gdw. type(value) is int und nicht negativ (D272, D308)."""
+    return type(value) is int and value >= 0
+
+
 def test_labels_are_pairwise_distinct_and_outputs_match() -> None:
     pairs = mutant_lines()
     labels = [label for label, _hex in pairs]
@@ -143,3 +148,22 @@ def test_each_added_operator_yields_an_accepted_mutant() -> None:
         if operator in seen:
             seen[operator] += 1
     assert all(count > 0 for count in seen.values()), seen
+
+
+def test_foreign_version_requires_a_readable_uint() -> None:
+    readable = 0
+    unreadable = 0
+    for label, wire_hex in mutant_lines():
+        decoded = cbor_canon.decode(bytes.fromhex(wire_hex))
+        version = decoded.get(0) if isinstance(decoded, dict) else None
+        if _is_cbor_uint(version) and version == 1:
+            continue
+        verdikt = verdikt_line(wire_hex)
+        if _is_cbor_uint(version):
+            assert verdikt == "reject UNSUPPORTED_VERSION", label
+            readable += 1
+        else:
+            assert verdikt == "reject MALFORMED_CBOR", label
+            unreadable += 1
+    assert readable >= 1
+    assert unreadable >= 1
