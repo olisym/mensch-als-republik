@@ -11317,3 +11317,50 @@ Warnung aus D258 eine Ebene höher: auch feldweise Mutation trifft überwiegend 
 spricht nicht gegen das Gitter, denn die Aufzählung ist billig und vollständig; es sagt, wo die
 Unterscheidungskraft sitzt — in den 185 angenommenen Mutanten und in den 146 der Familie A, die
 einen der neun übrigen Codes tragen.
+
+**Nachgetragen mit D298.** Die drei Mutantenzahlen dieses Eintrags sind an einem Prototyp gemessen,
+dessen Vertreter der Typklassen andere waren als die der gebauten Fassung. Der laufende Stand ist
+1174 in Familie A, 1264 in Familie B und 2438 zusammen; die Rohzahl, die Zahl der Annahmen und die
+Reichweite sind unverändert.
+
+---
+
+### D298 — Die Mutantenzahlen in D297 sind Prototypzahlen; die Musterwahl entscheidet sie
+
+**Der Befund.** Der Lauf zu D297 meldet 1174 Mutanten in Familie A, 1264 in Familie B und 2438
+zusammen. D297 nennt 1146, 1236 und 2382. Das Werkzeug hat die Abweichung gemeldet statt sie
+anzupassen, wie der Prompt es verlangt.
+
+**Gemessen.** Die Operatorenmenge ist in beiden Fassungen dieselbe, und die Rohzahl 1217 stimmt
+überein. Verschieden sind die zehn Vertreter der Typklassen: der Prototyp hat nichtleere Werte
+gewählt, die gelieferte Fassung leere und Nullwerte. Wird die gelieferte Fassung allein auf die
+Muster des Prototyps umgestellt, ergeben sich 1146, 1236 und 2382 — auf den Mutanten genau. Die
+Ursache ist die Entdopplung: ein leeres Muster fällt häufiger mit einer Wertvariante zusammen als
+ein nichtleeres.
+
+**Was invariant ist, unter beiden Mustermengen gemessen.** Die Rohzahl 1217, die Zahl der
+angenommenen Mutanten 185 und die Reichweite von zehn der zwölf Codes. Das sind die Größen, an
+denen die Kampagne hängt. Die Mutantenzahl ist keine davon.
+
+**Beschluss 1 — die Vertreter der Typklassen bleiben Sache des Codes, nicht des Registers.** Sie
+ändern die Reichweite nicht, und zehn Konstanten im Register wären eine zweite Wahrheit neben
+`tools/gitter.py`, die beim nächsten Anfassen niemand nachzieht. Das Register hält die
+Operatorenmenge und die Reichweite fest; den Korpus legt der committete Code fest. Für eine dritte
+Fassung nach D258 heißt das: sie bekommt den Korpus als Hexzeilen, nicht als Bauanleitung.
+
+**Beschluss 2 — D297 bekommt einen Nachtrag statt einer Berichtigung.** Die drei Zahlen dort waren
+richtig gemessen; ihr Gegenstand ist eine Fassung, die es nicht mehr gibt. Eine Zahl, die im
+Register steht und die niemand mehr nachrechnen kann, ist genau das, wovor dieser Eintrag warnt —
+deshalb nennt D297 künftig in einer Zeile den laufenden Stand und verweist hierher.
+
+**Beschluss 3 — die Feldkopie bekommt einen Träger.** Ein Test verlangt, dass jeder der drei mit
+D297 hinzugekommenen Operatoren mindestens einen angenommenen Mutanten erzeugt. Für den
+Wertoperator und die Rekursion war das schon über die Codemenge gesichert, für die Feldkopie nicht:
+sie trägt keinen eigenen Code bei, und ihre Rechtfertigung in D297 sind allein die sechzehn
+Annahmen, die kein anderer Operator erzeugt. Geeicht mit drei Rücknahmeproben, jede einzeln, jede
+rot am selben Test.
+
+**Was der Lauf richtig gemacht hat.** Die dritte Rücknahmeprobe hat keinen Test rot gemacht, und
+der Bericht hat das gemeldet statt nachzubessern. Genau dafür steht Prüfregel 60. Ein Bericht, der
+nur die Zahl der roten Tests nennt, hätte hier eine Null gezeigt und wäre wahrscheinlich als
+Fehlbedienung durchgegangen. Die Regel verlangt den Namen, und wo kein Name steht, steht die Lücke.

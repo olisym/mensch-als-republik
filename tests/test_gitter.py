@@ -105,3 +105,15 @@ def test_accepted_mutants_carry_claim_id() -> None:
         assert len(claim_hex) == 64
         assert all(ch in "0123456789abcdef" for ch in claim_hex)
     assert accepted >= 1
+
+
+def test_each_added_operator_yields_an_accepted_mutant() -> None:
+    added = ("wert", "rekursion", "kopie")
+    seen = {name: 0 for name in added}
+    for label, wire_hex in mutant_lines():
+        if not verdikt_line(wire_hex).startswith("ok "):
+            continue
+        operator = label.split("/")[3]
+        if operator in seen:
+            seen[operator] += 1
+    assert all(count > 0 for count in seen.values()), seen
