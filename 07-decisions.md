@@ -11097,3 +11097,117 @@ freistellt. Sie werden nicht Text.
 geschlossen, sechs blieben offen, fünf kamen hinzu. Der Nachzug allein, ohne eine einzige Mutation,
 hat drei Defekte gefunden. Das ist der Beleg dafür, dass die Kampagne aus D289 gegen den heutigen
 Text zu fahren ist und nicht gegen den alten.
+
+---
+
+### D293 — Ort und Schnitt der Kampagne: Korpus und Verdikt im Repo, der Vergleich außerhalb
+
+**Die Frage.** Wo läuft das Gitter aus D289 — im Hauptrepo als Werkzeug oder als Wegwerf-Skript im
+ausgepackten Baum? Der benannte Preis der ersten Antwort: ein Werkzeug, das die Zweitfassung
+aufruft, wäre die erste Stelle, an der das Hauptrepo etwas außerhalb seiner selbst braucht.
+
+**Der Preis hängt an einem Schnitt, den niemand gefordert hat.** Er entsteht nur, wenn ein einziges
+Werkzeug Korpus, Lauf und Vergleich zugleich trägt. Zerfällt die Kampagne in drei Teile, ruft das
+Repo nichts Fremdes auf.
+
+**Beschluss 1 — der Korpusbauer liegt im Repo.** `tools/korpus.py` liefert die Drahtbytes als
+Hexzeilen und dieselbe Menge als Namensmanifest. In dieser Stufe ist die Mutationsmenge leer: der
+Korpus ist Anhang C. Das Gitter aus D289 wird darauf gesetzt, nicht daneben.
+
+**Beschluss 2 — der Verdiktläufer liegt im Repo.** `tools/verdikt.py` liest Hexzeilen und schreibt
+je Eingabezeile eine Verdiktzeile in der Form der Go-Fassung: Annahme mit der `claim_id` in Hex,
+Ablehnung mit dem Codenamen aus `01 §B.2`. Damit ist die Referenz kein Sonderfall, sondern eine
+Fassung unter Gleichen, und der Vergleich zweier Fassungen ist ein Zeilenvergleich.
+
+**Beschluss 3 — der Vergleich liegt außerhalb.** Er ruft beide Fassungen auf und legt das Ergebnis
+gegen das Manifest. Er ist Wegwerfware und bleibt es; kein Werkzeug im Repo kennt die Go-Fassung.
+
+**Warum die ersten beiden trotzdem ins Repo gehören.** D258 will die Häufung über mehrere
+Fassungen, D290 friert dafür den Anker ein. Ein Korpus, dessen Erzeuger nach der Sitzung
+verschwindet, ist für eine dritte Fassung nicht wieder herstellbar, und ein Befund, der sich nicht
+wieder herstellen lässt, ist keiner.
+
+**Beschluss 4 — der Korpus liest die committete Vektordatei, nicht den Generator.**
+`tests/vectors/vectors_01.json` ist das Artefakt, das auch eine fremde Fassung läse. Damit zeigt
+die Abhängigkeit von `tools` auf Daten und nicht auf `tests`. Die Datei ist dafür an ihren
+Generator zu binden; das entscheidet D295.
+
+**Beschluss 5 — die Hex-Konventionen der Go-Fassung werden gespiegelt, obwohl D269 sie ausdrücklich
+für nicht-normativ erklärt hat.** Ungerade Länge, Nicht-Hexzeichen und Innen-Whitespace ergeben
+`MALFORMED_CBOR`, Großbuchstaben sind zulässig, das Zeilenende wird gekürzt. Begründung: ein
+Formatunterschied erzeugt Diffzeilen, die wie ein Befund aussehen und keiner sind. Der Zweck der
+Kampagne ist Uneinigkeit über den Text, nicht Uneinigkeit über den Transport. Gemessen an sechs
+Sonderzeilen gegen die gebaute Go-Fassung, alle sechs gleich. Nötig ist das Spiegeln, weil
+`bytes.fromhex` Innen-Whitespace annimmt: ohne ausdrückliches Tor wäre die Referenz hier
+großzügiger als die Go-Fassung, und die Abweichung fiele erst an mutiertem Material auf.
+
+**Verworfen: das Wegwerf-Skript im ausgepackten Baum.** Es kostet in dieser Sitzung nichts und in
+der nächsten alles. Der ausgepackte Baum ist ein Messplatz, kein Ablageort; was dort entsteht, ist
+nach der Sitzung fort, und die Kampagne wäre einmalig statt wiederholbar.
+
+**Verworfen: ein Werkzeug im Repo, das die Go-Fassung aufruft.** Es bindet das Hauptrepo an eine
+Toolchain, ein Arbeitsverzeichnis und eine Fassung, von denen keines seine Sache ist. Der Aufruf
+gehört dorthin, wo auch der Pfad zur zweiten Fassung steht.
+
+---
+
+### D294 — Der Rückstand der Go-Fassung ist dokumentarisch; D290 wird gemessen statt nachgezogen
+
+**Die Frage.** D290 verlangt die Go-Fassung auf dem laufenden Stand, bevor die Kampagne fährt. Ihr
+gelesener Spec-Stand ist `b3cf487`, der Kopf ist `79b73a2`.
+
+**Gemessen.** Genau ein Commit berührt `01-claim-atom.md` dazwischen: `88361b2`, zweiundzwanzig
+Zeilen ein und dreizehn aus, und das ist D291 plus D292. Die gebaute Go-Fassung bei `127a74c`
+liefert über die vierzig Zeilen des heutigen Anhang C vierzig Verdikte, die den vierzig der
+Referenz Zeichen für Zeichen gleichen.
+
+**Beschluss.** Kein Code-Nachzug. Der Rückstand ist dokumentarisch: D291 setzt einen Vektor
+instand, D292 schreibt auf, was beide Fassungen bereits tun. Der Text hat sich geändert, das
+Verhalten nicht.
+
+**Warum nicht einfach nachziehen.** Ein Nachzug hätte diesen Satz nicht bestätigt, sondern
+gelöscht. Er repariert, bevor er fragt, und danach ist nicht mehr feststellbar, ob D292 Verhalten
+geändert hat oder nur beschrieben. Die Behauptung aus D292, beide Fassungen lösten die drei
+Mehrdeutigkeiten gleich auf, war bis hierher eine Behauptung; jetzt ist sie gemessen.
+
+**Die Reichweite, benannt.** Die Messung deckt vierzig Vektoren und sagt nichts über Eingaben
+außerhalb Anhang C. Genau das ist der Grund, warum die Kampagne überhaupt fährt. Einigkeit auf der
+bekannten Menge ist die Eichung des Messgeräts nach Prüfregel 51, nicht das Ergebnis.
+
+**Benannter Rückstand.** Die Spec-Kopie unter `~/mar-go/spec` trägt weiter den alten Text. Sie ist
+auf `79b73a2` zu bringen, damit der mit D290 eingefrorene Anker für eine dritte Fassung dort steht,
+wo er behauptet wird. Das ist eine Dateikopie, kein Lauf.
+
+**Was daneben liegt.** Die Go-Fassung ist ab jetzt das Orakel einer laufenden Kampagne und hat
+weiterhin kein Remote. Ein Plattenschaden nimmt nicht mehr nur eine Zweitimplementierung mit.
+
+**Verworfen: nachziehen und danach messen.** Dann wäre die Gleichheit der vierzig Verdikte trivial
+und die eigentliche Frage unbeantwortbar.
+
+---
+
+### D295 — Die Vektordatei war nicht an ihren Generator gebunden
+
+**Der Befund.** `tests/vectors/vectors_01.json` wird von `tests/vectors/gen.py` erzeugt und von
+fünf Testdateien als Fixture gelesen: `tests/test_vectors_01.py`, `tests/test_verifier.py`,
+`tests/test_atom.py`, `tests/test_vouch_payload.py` und `tests/trust/test_coupling.py`. Kein Test
+hat die beiden Artefakte aneinander gebunden. `test_claim_id_matches_golden` rechnet mit
+`build_vectors()` neu und sieht die Datei nicht; `test_vectors_json_exists` prüft aus der Datei ein
+einziges Feld. Eine veraltete Datei wäre grün durchgelaufen, und die vier übrigen Testdateien
+hätten stillschweigend alten Bestand geprüft.
+
+**Gemessen.** Heute stimmen Datei und Generator in jedem Feld überein. Der Befund ist eine offene
+Tür, kein Schaden.
+
+**Beschluss.** Ein Test bindet die geladene Datei vollständig an `build_vectors()`. Geeicht mit
+drei Rücknahmeproben in der Driftrichtung, die zählt — veraltete Datei bei laufendem Generator:
+ein geänderter Vektorname, eine geänderte Erwartung, eine geänderte `claim_id`, jede einzeln rot.
+
+**Was das nicht ist.** Nicht die bekannte Generatordrift auf der offenen Liste. Die betrifft den
+Spec-Text gegen die Vektordatei, und gegen einen eigenen Prüfer dafür spricht D233. Hier stehen
+zwei Artefakte im selben Repo nebeneinander, und die Bindung kostet eine Zeile.
+
+**Nicht geprüft: die Gegenrichtung.** Ein geänderter Generator bei stehender Datei lässt die
+Fixture selbst abstürzen, weil die NV17-Konstruktion auf einem getippten Bytepaar aus TV1 aufsetzt;
+der Bindungstest läuft dann gar nicht. Das ist keine Eigenschaft des Tests, sondern eine von
+`gen.py`, und sie bleibt als Beobachtung stehen.
