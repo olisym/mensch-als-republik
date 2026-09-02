@@ -11807,3 +11807,17 @@ verglichen.
 Wesentlichen nur die Versionsprüfung. Für einen künftigen Zuschnitt ist das ein Posten: ein
 Fünftel der Menge trägt eine Beobachtung. Ausserdem bleibt die neue Norm ungeprüft, solange kein
 Test sie an das Gitter bindet; das ist ein benannter Rückstand.
+
+**Nachtrag: die Ausnahme setzt eine lesbare Version voraus.** Die Nullprobe zum Einschub hat 176
+Einzelmutanten gefunden, die eine von 1 verschiedene `version` tragen und dennoch
+`MALFORMED_CBOR` erhalten. Sie widerlegen den neuen Satz nicht, sie schärfen ihn: bei allen 176
+ist das Feld gar nicht als uint lesbar — Bytes, Text, Array, Map, Bool, Null, Float, Tag, ein
+negativer Integer, oder das Feld fehlt. Nur 66 Mutanten tragen eine als uint lesbare fremde
+Version, und die erhalten sämtlich `UNSUPPORTED_VERSION`. Die Trennung ist vollständig und ohne
+Ausnahme.
+
+**Warum das im Text stehen muss.** Ohne diesen Satz liesse sich ein fehlendes Versionsfeld als
+nicht unterstützte Version lesen, und dann wäre `UNSUPPORTED_VERSION` der Code — mit der Folge,
+dass die Feldtabelle nicht mehr prüfbar wäre und 176 Zeilen ihr Verdikt umdrehten. Die Referenz
+entscheidet es seit je richtig; der Text trug es nicht. Ein zweiter Fund derselben Art wie D308
+selbst, aus der Nullprobe zu dessen eigener Ergänzung.

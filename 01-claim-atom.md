@@ -721,6 +721,8 @@ und `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle setzt
 für jeden Code, dessen Aussage eine Feldbedeutung aus §2 voraussetzt: unter einer nicht
 unterstützten Version trägt die Bytefolge ihn nicht, weil erst die v1-Tabelle den Feldern ihre
 Bedeutung gibt. Strukturelle Mängel bleiben unberührt, weil sie an keiner Version hängen (D308).
+Die Ausnahme setzt voraus, dass `version` als uint lesbar ist; fehlt das Feld oder trägt es einen
+anderen Typ, liegt keine fremde Version vor, sondern ein Mangel der v1-Tabelle.
 
 ### B.3 Nicht-Fehler (bewusst kein Reject)
 
