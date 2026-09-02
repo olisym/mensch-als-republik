@@ -11364,3 +11364,58 @@ rot am selben Test.
 der Bericht hat das gemeldet statt nachzubessern. Genau dafür steht Prüfregel 60. Ein Bericht, der
 nur die Zahl der roten Tests nennt, hätte hier eine Null gezeigt und wäre wahrscheinlich als
 Fehlbedienung durchgegangen. Die Regel verlangt den Namen, und wo kein Name steht, steht die Lücke.
+
+---
+
+### D299 — Erster Lauf der Kampagne: 2438 Mutanten, null Befunde; der Vergleich war falsch gebaut
+
+**Was gefahren wurde.** Der Korpus aus `tools/gitter.py`, 2438 Zeilen, durch `tools/verdikt.py` und
+durch die gebaute Go-Fassung bei `127a74c`, Zeile für Zeile verglichen. 2426 Zeilen sind gleich.
+
+**Die zwölf verschiedenen Zeilen tragen keinen Befund.** Alle liegen in Familie B, also bei
+Mutanten ohne Neusignierung. Sechs betreffen `h_prev == 32×0x00`, sechs die Fristkohärenz bei TV1,
+dem einzigen Saatvektor mit `t_exp`. Die Referenz meldet dort `BAD_SIGNATURE`, die Go-Fassung
+`INVALID_GENESIS_ANCHOR` beziehungsweise `INCOHERENT_EXPIRY`. Nachgeprüft: die Ed25519-Prüfung
+scheitert wirklich, `h_prev` ist wirklich die Nullfolge, und `t ≥ t_exp` ist wirklich erfüllt bei
+einem Prädikat, das kein `core/*` ist. Beide Codes tragen einen wahren Satz.
+
+**`01 §B.2` stellt genau das frei.** Der Absatz „Der Code ist ein Grund, kein Zustand" normiert
+ausdrücklich keine Gesamtordnung: tragen mehrere Codes eine wahre Aussage über dieselbe Bytefolge,
+ist die Wahl der Implementierung überlassen; verboten ist allein der falsche Satz. Und: die
+Aufzählungen in `§6` sind Konjunktionen, keine Folgen. Die zwölf Zeilen sind die Ausübung dieser
+Freiheit durch zwei Fassungen, die sie verschieden ausüben.
+
+**Der Befund ist das Verfahren, nicht das Ergebnis.** Ein zeilenweiser Vergleich behandelt jede
+Ausgabe als bestimmt. Wo der Text die Wahl freistellt, meldet er Freiheit als Uneinigkeit. Die
+Kampagne hätte bei jedem weiteren Lauf dieselben zwölf Zeilen wieder gemeldet, und irgendwann hätte
+jemand sie für Rauschen gehalten und nicht mehr hingesehen.
+
+**Beschluss 1 — der Vergleich wird zweistufig ausgewertet.** Stufe eins ist immer ein Befund: eine
+Fassung nimmt an und die andere lehnt ab, oder beide nehmen an und die `claim_id` unterscheidet
+sich. Stufe zwei ist ein Kandidat: beide lehnen ab, mit verschiedenem Code. Ein Kandidat wird zum
+Befund erst, wenn einer der beiden Codes einen Satz behauptet, den die Bytefolge nicht trägt — die
+Prüfung ist die Auslöserspalte in `01 §B.2`, nicht eine Rangliste. In diesem Lauf: Stufe eins null,
+Stufe zwei zwölf, davon null Befunde.
+
+**Beschluss 2 — Prüfregel 61.** Eine Abweichung zwischen zwei Fassungen ist erst ein Befund, wenn
+die Spec den Punkt festlegt. Die Regel steht in `pruefregeln.md` im Abschnitt über die Abnahme und
+den Merge; die Herkunftsliste am Dateiende nennt D299.
+
+**Was der Supervisor falsch gemacht hat.** Zwei Züge lang wurde ein Fork aufgebaut — welcher Code
+bei mehreren Mängeln gewinnt —, den `01 §B.2` in einem Absatz schließt. Es wurde eine Position
+bezogen, ein Literaturbefund eingeholt, eine eigene Begründung aufgestellt und wieder
+zurückgenommen, und erst danach der normative Absatz gelesen. Prüfregel 38 verlangt den
+Registerindex vor der Position; hier wäre schon das Lesen von `B.2` genug gewesen. Der Befund über
+den Text war ein Befund über den, der ihn nicht gelesen hat.
+
+**Ein Umstand, der es nicht entschuldigt und trotzdem zählt.** `tools/register_index.py` liefert
+für `01 §B.2` eine leere Zeile, weil der Index nur `§` mit Ziffernfolge kennt. Der billigste erste
+Griff des Arbeitsbogens ist genau dort stumm, wo dieser Text steht — in einem Anhang. Der Mangel
+stand als Kleinkram auf der offenen Liste; er hat jetzt zwei Züge gekostet und ist der nächste
+Lauf.
+
+**Was der Lauf positiv zeigt.** Zwei unabhängig gebaute Fassungen stimmen über 2438 Eingaben in
+allem überein, was der Text festlegt, einschließlich zehn der zwölf Fehlerklassen. Das ist die
+Häufung, die D258 wollte, und es ist der erste Beleg dafür, dass die Reparaturen aus D291 und D292
+gehalten haben. Was es nicht zeigt: eine Mehrdeutigkeit, die beide Fassungen gleich auflösen,
+sieht auch dieser Vergleich nicht — die Grenze aus `00aj` steht unverändert.

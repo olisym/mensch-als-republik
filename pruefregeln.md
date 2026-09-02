@@ -449,6 +449,17 @@ dafür nicht, und der `--header-text` kann eine Sitzung alt sein.
 
 ---
 
+**61. Eine Abweichung zwischen zwei Fassungen ist erst ein Befund, wenn die Spec den Punkt
+festlegt.**
+Ein Vergleich Zeile für Zeile behandelt jede Ausgabe als bestimmt. Wo der Text eine Wahl
+ausdrücklich freistellt, meldet er Freiheit als Uneinigkeit, und zwar bei jedem Lauf aufs Neue, bis
+jemand die Meldung für Rauschen hält. Vor der Bewertung steht deshalb die Frage, ob beide Ausgaben
+einen wahren Satz über dieselbe Eingabe tragen; erst wenn einer von beiden falsch ist, liegt ein
+Befund vor. In `00ak` meldete der erste Lauf der Kampagne zwölf Zeilen und enthielt keinen Befund:
+`01 §B.2` stellt die Wahl unter mehreren wahren Codes frei (D299). Der billige erste Griff ist
+Prüfregel 38 — und wo `tools/register_index.py` schweigt, weil der Verweis auf einen Anhang zeigt,
+wird gegrept statt geschlossen.
+
 ## Herkunft der Nummern
 
 Die Regeln 1–7 stammen aus `sitzungsstart-05.md`, 10–12 aus `sitzungsstart-anwendung.md`, 13–15
@@ -458,7 +469,7 @@ D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
 44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
-52 bis 59 aus D282, 60 aus D296.
+52 bis 59 aus D282, 60 aus D296, 61 aus D299.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts
