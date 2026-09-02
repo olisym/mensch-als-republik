@@ -331,6 +331,17 @@ Mutanten, und der Befund der ersten steht schon fest. In `00ai` fielen so von 37
 restlichen drei nötig. Umgekehrt gilt die Grenze: erreicht heißt nicht gebunden, und dafür bleibt
 die Mutation das einzige Mittel (D280).
 
+**60. Eine Rücknahmeprobe wird an ihrem roten Test abgenommen, nicht an ihrer Anzahl.**
+Rot heißt nur, dass irgendein Test die Neutralisierung bemerkt hat. Soll die Probe eine benannte
+Entscheidung halten, muss der rote Test derjenige sein, der sie trägt; jeder andere ist ein
+Nachbartor, und eine Zahl im Bericht kann den Unterschied nicht zeigen. Der Prompt verlangt darum
+den Namen. Dazu die Bedingung an einen Fall, der zwei Tore trennen soll: er muss das vordere Tor
+passieren und hinter dem hinteren ein anderes Ergebnis erzeugen; beides wird gemessen, bevor er in
+einen Prompt geht. In `00ak` machte das entfernte Hexziffern-Tor genau einen Test rot, und es war
+der falsche — die gespiegelte Konvention aus D293 hing an keinem Test (D296). Gegenstück zu
+Prüfregel 53 in der Gegenrichtung: dort wird der Träger an seiner Zielzeile gemessen statt an
+seinem Grün, hier die Probe an ihrem roten Test statt an ihrer Zahl.
+
 ## Beim Messen
 
 **19. Kalte Messung.** Ein grüner Testlauf auf der Arbeitskopie ist keine Aussage über den
@@ -447,7 +458,7 @@ D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
 44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
-52 bis 59 aus D282.
+52 bis 59 aus D282, 60 aus D296.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

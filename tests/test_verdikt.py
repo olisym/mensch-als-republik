@@ -61,3 +61,10 @@ def test_trailing_newline_same_verdikt() -> None:
 def test_trailing_space_tab_same_verdikt() -> None:
     wire_hex = _SEED[0][1]
     assert verdikt_line(wire_hex + " \t") == verdikt_line(wire_hex)
+
+
+def test_inner_whitespace_is_not_a_byte_sequence() -> None:
+    wire_hex = _SEED[0][1]
+    spaced = wire_hex[:8] + " " + wire_hex[8:16] + " " + wire_hex[16:]
+    assert len(spaced) % 2 == 0
+    assert verdikt_line(spaced) == "reject MALFORMED_CBOR"

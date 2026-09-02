@@ -11211,3 +11211,38 @@ zwei Artefakte im selben Repo nebeneinander, und die Bindung kostet eine Zeile.
 Fixture selbst abstürzen, weil die NV17-Konstruktion auf einem getippten Bytepaar aus TV1 aufsetzt;
 der Bindungstest läuft dann gar nicht. Das ist keine Eigenschaft des Tests, sondern eine von
 `gen.py`, und sie bleibt als Beobachtung stehen.
+
+---
+
+### D296 — Eine Rücknahmeprobe wird an ihrem roten Test abgenommen, nicht an ihrer Anzahl
+
+**Der Befund.** Der Lauf zu D293 hat die Fällemenge geliefert, die der Prompt verlangt hat, und die
+Probe „Hexziffern-Tor entfernt" schloss mit einem roten Test. Beide Aussagen stimmen, und die
+geprüfte Sache war trotzdem ungeprüft. Die zwei Zeilen mit Innen-Whitespace tragen neun und elf
+Zeichen; das Längentor davor fängt sie, bevor das Hexziffern-Tor überhaupt gefragt wird. Rot wurde
+allein die Zeile aus zwei Buchstaben z, und die wird rot, weil `bytes.fromhex` eine Ausnahme wirft
+— ein Absturz, keine Aussage über den Code. Die mit D293 Beschluss 5 beschlossene Spiegelung der
+Go-Konvention hing damit an keinem Test.
+
+**Der zweite Fehler steht im Prompt.** Er verlangte einen Trennfall gerader Länge und hielt das für
+hinreichend. Das ist es nicht: eine achtstellige Folge wie die geforderte dekodiert auch ohne
+Whitespace zu einer abgeschnittenen Map und ergibt wieder `MALFORMED_CBOR`. Der Fall käme durch das
+vordere Tor und bliebe hinter dem hinteren stumm. Ein Trennfall muss beides — das vordere Tor
+passieren und hinter dem hinteren ein anderes Ergebnis erzeugen.
+
+**Beschluss 1 — der Trennfall wird abgeleitet, nicht getippt.** Eine Vektorzeile mit zwei
+eingefügten Leerzeichen: gerade Länge, und ohne das Tor wäre das Verdikt eine Annahme statt einer
+Ablehnung. Gemessen im ausgepackten Baum: mit diesem Fall macht die Probe zwei Tests rot statt
+einem.
+
+**Beschluss 2 — Prüfregel 60.** Ein Bericht über eine Rücknahmeprobe nennt den Namen des roten
+Tests, nicht seine Anzahl. Die Regel steht in `pruefregeln.md` im Abschnitt über Rücknahmeproben
+und Mutanten; die Herkunftsliste am Dateiende nennt D296.
+
+**Was nicht geändert wird.** Die beiden ungeraden Zeilen bleiben in der Fällemenge. Sie prüfen das
+Längentor an einer Eingabe mit Innen-Whitespace und kosten nichts.
+
+**Wem der Defekt gehört.** Beiden Seiten. Das Werkzeug hat zwei ungerade Fälle geliefert, wo der
+Prompt einen geraden verlangte; der Prompt hat eine Bedingung genannt, die nicht hinreicht. Der
+Bericht war in jeder Zahl zutreffend. Deshalb steht die neue Regel bei den Berichten und nicht bei
+den Tests.
