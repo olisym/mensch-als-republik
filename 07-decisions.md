@@ -11657,3 +11657,11 @@ dasselbe und lässt sich in einem Satz beschreiben.
 
 **Die Zahlen sind Prototypzahlen** im Sinne von D298. Der Zuschnitt entscheidet sie, nicht die
 Reichweite; die gelieferte Fassung wird bei der Abnahme gemessen.
+
+**Was der Zuschnitt voraussetzt.** Die Klassifikation nach dem Einzelverdikt stammt aus der
+Referenzfassung. Sie wählt die Testmenge aus und fällt kein Urteil; das Urteil fällt danach im
+Vergleich. Tragfähig ist sie nur, solange Stufe 1 befundfrei ist: sähe eine zweite Fassung einen
+Einzelmangel anders als die Referenz, landete sein Paar womöglich in Klasse vier und käme nie zum
+Lauf. Genau dieser Unterschied wäre aber bereits auf Stufe 1 sichtbar, und dort ist er gemessen —
+D299 nennt null Befunde. Fällt auf Stufe 1 je ein Befund an, wird dieser Zuschnitt neu bewertet,
+bevor Stufe 2 erneut läuft.
