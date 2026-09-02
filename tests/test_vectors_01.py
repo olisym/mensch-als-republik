@@ -75,3 +75,7 @@ def test_tv1_core_bytes_match_spec(regenerated: dict):
 def test_tv1_sigma_matches_spec(regenerated: dict):
     tv1 = next(v for v in regenerated["vectors"] if v["name"] == "TV1")
     assert tv1["sigma"] == GOLDEN_SIGMA["TV1"]
+
+
+def test_vectors_file_matches_build_vectors(vectors_file: dict, regenerated: dict):
+    assert vectors_file == regenerated
