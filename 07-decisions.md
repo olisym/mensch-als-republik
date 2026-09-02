@@ -11755,3 +11755,55 @@ Grund geändert, werden die fünf Namen dabei geöffnet.
 **Was jetzt fehlt.** Die Menge steht, der Vergleich nicht. Stufe 2 ist erst gefahren, wenn die
 Go-Fassung dieselben 16958 Zeilen beurteilt hat und beide Ausgaben nach D299 zweistufig
 ausgewertet sind.
+
+---
+
+### D308 — Ergebnis der Stufe 2; eine Konvergenz ohne normative Grundlage
+
+**Der Lauf.** 16958 Paarmutanten, beiden Fassungen über dieselbe Hexdatei vorgelegt, Vergleich
+ausserhalb des Repos (D293). Stufe eins der Auswertung nach D299: **null Abweichungen**. Über die
+ganze Menge sind sich beide Fassungen einig, ob angenommen oder abgelehnt wird, und bei jeder
+Annahme über die `claim_id`.
+
+**Stufe zwei: 512 verschiedene Codes, kein Befund.** Sie zerfallen in zwei Muster, in denen die
+Referenz `BAD_SIGNATURE` meldet und die Zweitfassung etwas anderes. Beide sind nachgemessen: bei
+allen 224 Zeilen mit `INVALID_GENESIS_ANCHOR` trägt `h_prev` tatsächlich 32 Nullbytes, bei allen
+288 mit `INCOHERENT_EXPIRY` gilt tatsächlich `t ≥ t_exp` auf einem Prädikat ausserhalb von
+`core/*`. Und `BAD_SIGNATURE` ist ebenfalls wahr: keine der 5343 so beurteilten Zeilen trägt eine
+gültige Signatur. Zwei wahre Sätze, freie Wahl nach `01 §B.2`, keine normierte Prüfreihenfolge.
+Prüfregel 61 greift, und das Ergebnis ist derselbe Nichtbefund wie in D299 — diesmal in einem Zug
+erkannt statt in zweien.
+
+**Was der Lauf tatsächlich gefunden hat.** Von 1095 Zeilen mit wahrer Expiry-Inkohärenz zeigt die
+Zweitfassung bei 486 auf sie und meldet sonst einen anderen wahren Code; darunter 120 mal
+`UNSUPPORTED_VERSION`. Das führte auf die Frage, was eine fremde Version verdrängt — und dort
+liegt eine Lücke im Text.
+
+**Gemessen.** Die Referenz meldet bei `version` ungleich 1 **nie** einen Code, dessen Aussage eine
+Feldbedeutung aus `01 §2` voraussetzt: über 242 Einzelmutanten 66 mal `UNSUPPORTED_VERSION` und
+176 mal `MALFORMED_CBOR`, über 3490 Paarmutanten 3417 und 73. Die Zweitfassung tut in den
+fraglichen Zeilen dasselbe. Die Übereinstimmung ist vollständig.
+
+**Der Befund: sie ist nicht begründet.** `01 §B.2` nimmt unter der Überschrift zur Feldtabelle nur
+Pflichtfelder, Keys und Längen aus und begründet das damit, dass `MALFORMED_CBOR` dort einen
+Mangel behauptete, den erst die v1-Tabelle setzt. Dieselbe Begründung trägt für
+`INCOHERENT_EXPIRY`, `INVALID_GENESIS_ANCHOR`, `BAD_SCOPE_BINDING`, `UNKNOWN_NAMESPACE`,
+`INVALID_PREDICATE`, `RESERVED_CORE_PREDICATE`, `UNKNOWN_J_TAG` und `BAD_SIGNATURE` — gesagt wird
+sie für keinen davon. Zwei unabhängige Fassungen tun übereinstimmend etwas, das der Text nicht
+verlangt.
+
+**Beschluss — der Absatz wird ergänzt.** Unter fremder Version trägt eine Bytefolge keinen Code,
+dessen Aussage eine Feldbedeutung aus `01 §2` voraussetzt; strukturelle Mängel bleiben unberührt,
+weil sie an keiner Version hängen. Das ist keine Verhaltensänderung, sondern der fehlende Satz zu
+einem Verhalten, das beide Fassungen bereits zeigen.
+
+**Warum das ein Fund ist und keine Formalie.** Eine Übereinstimmung zweier Fassungen belegt nichts
+über die Spec, wenn der Text den Punkt nicht festlegt — das ist Prüfregel 61 in der
+Gegenrichtung. Eine dritte Fassung dürfte hier abweichen, ohne unrecht zu haben, und die
+Kampagne hätte den Unterschied dann als Befund gemeldet, obwohl er keiner wäre. Genau dafür wird
+verglichen.
+
+**Was daneben liegt.** 3490 der 16958 Paarmutanten tragen eine fremde Version und messen damit im
+Wesentlichen nur die Versionsprüfung. Für einen künftigen Zuschnitt ist das ein Posten: ein
+Fünftel der Menge trägt eine Beobachtung. Ausserdem bleibt die neue Norm ungeprüft, solange kein
+Test sie an das Gitter bindet; das ist ein benannter Rückstand.

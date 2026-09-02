@@ -717,7 +717,10 @@ Reihenfolge.
 **Die Feldtabelle gilt je Version (normativ).** Der Feldsatz aus §2 ist der von `version` 1. Wird
 eine Version nicht unterstützt, ist der Code `UNSUPPORTED_VERSION`; Pflichtfelder, Keys und Längen
 werden dann nicht mehr gegen §2 geprüft. Eine fremde Version darf einen anderen Feldsatz tragen,
-und `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle setzt.
+und `MALFORMED_CBOR` behauptete dort einen Mangel, den erst die v1-Tabelle setzt. Das gilt ebenso
+für jeden Code, dessen Aussage eine Feldbedeutung aus §2 voraussetzt: unter einer nicht
+unterstützten Version trägt die Bytefolge ihn nicht, weil erst die v1-Tabelle den Feldern ihre
+Bedeutung gibt. Strukturelle Mängel bleiben unberührt, weil sie an keiner Version hängen (D308).
 
 ### B.3 Nicht-Fehler (bewusst kein Reject)
 
