@@ -11483,3 +11483,44 @@ Posten des angekündigten Kleinkram-Laufs ist erledigt, ohne dass er stattgefund
 
 **Was daran allgemein ist.** Ein Posten auf der offenen Liste ist eine Behauptung wie jede andere
 und untersteht Prüfregel 27. Zwei der drei Punkte waren keine Mängel, der dritte war eine Zeile.
+
+---
+
+### D302 — Der Anker der Zweitfassung wird als Text verkörpert, nicht nur als Dateiinhalt
+
+**Die Frage.** D294 hinterlässt einen benannten Rückstand: die Spec-Kopie unter `~/mar-go/spec` ist
+nachzuziehen, damit der mit D290 eingefrorene Anker für eine dritte Fassung dort steht, wo er
+behauptet wird. Welcher Stand das ist und wo er stehen soll, sagt der Eintrag nicht.
+
+**Gemessen — der Stand.** Der Unterschied zwischen der Kopie und dem heutigen Text besteht aus drei
+Hunks in `01-claim-atom.md`, zweiundzwanzig Zeilen ein und dreizehn aus. Das sind Zeile für Zeile
+die Zahlen, die D294 für `88361b2` misst. Seither ist die Datei nicht erneut berührt worden: der
+Nachzug auf `79b73a2`, den D294 wörtlich verlangt, und der Nachzug auf den heutigen Kopf `a1f4751`
+liefern dieselbe Datei mit dem Blob `0271a180`.
+
+**Gemessen — der Ort.** Die Zeichenfolge `88361b2` kommt in `~/mar-go` in keiner Datei vor, und
+kein anderer Kurzhash steht dort. Der Anker ist ausschließlich als Dateiinhalt verkörpert. Eine
+dritte Fassung, die `spec/01-claim-atom.md` liest, kann nicht feststellen, welchen Stand sie liest;
+ein späterer Nachzug hinterlässt keine Spur, und ein versehentlicher ebenso wenig.
+
+**Beschluss 1 — die Kopie wird nachgezogen.** Zielblob `0271a180`, prüfbar mit `git hash-object`.
+
+**Beschluss 2 — der Anker bekommt eine Textform.** `spec/STAND.md` nennt die Quelle, den Commit,
+die Datei und ihren Blob-Hash. Damit ist der Anker feststellbar statt behauptet, und ein
+Verschieben ist eine sichtbare Änderung statt einer stillen.
+
+**Beschluss 3 — der benannte Commit ist `79b73a2`, nicht der laufende Kopf.** D290 friert den Anker
+ein, damit die Häufung aus D258 herstellbar bleibt. Dass die Datei heute unverändert gilt, ist ein
+Messergebnis und kein Grund, den Namen mitwandern zu lassen; `git show 79b73a2:01-claim-atom.md`
+liefert genau diese Bytes, und das ist die Prüfung, die eine dritte Fassung fahren kann.
+
+**Verworfen: den Anker auf den jeweils laufenden Kopf setzen.** Genau davor warnt D290. Der Text
+hat sich nicht geändert, also gibt es nichts zu benennen; wandert der Name trotzdem, ist bei der
+nächsten Änderung nicht mehr unterscheidbar, ob sie den Anker verschoben hat oder nicht.
+
+**Verworfen: nur die Datei kopieren, ohne Vermerk.** Damit wäre der Rückstand aus D294 dem Wortlaut
+nach erfüllt und der Sache nach nicht. Der Eintrag verlangt, dass der Anker dort steht, wo er
+behauptet wird — eine Datei ohne Herkunftsangabe behauptet nichts.
+
+**Was daneben liegt.** `~/mar-go/spec` trägt nur `01-claim-atom.md`. Das ist der Umfang aus D256
+und D268 und keine Lücke; eine dritte Fassung mit anderem Umfang bräuchte einen eigenen Anker.
