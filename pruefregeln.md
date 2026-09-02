@@ -342,6 +342,17 @@ der falsche — die gespiegelte Konvention aus D293 hing an keinem Test (D296). 
 Prüfregel 53 in der Gegenrichtung: dort wird der Träger an seiner Zielzeile gemessen statt an
 seinem Grün, hier die Probe an ihrem roten Test statt an ihrer Zahl.
 
+**62. Eine Rücknahmeprobe darf die Menge nicht leeren, über die ihr roter Test quantifiziert.**
+Ein Test der Form "für jedes Element dieser Menge gilt" ist wahr, sobald die Menge leer ist. Nimmt
+die Probe genau das weg, was die Menge füllt, wird der Test nicht rot, sondern stumm, und ein
+Bericht, der nur grün meldet, kann den Unterschied nicht zeigen. Vor jeder Probe wird darum
+gefragt, welcher Test die Nichtleere trägt; dieser ist der erwartete rote. In `00al` sollte eine
+Probe die Familie C kanonisch neu kodieren und den Bauart-Test rot machen; die Aufnahme verwarf die
+kanonischen Bytes als Saatbytes, die Familie wurde leer, und der Test blieb über der leeren Menge
+wahr (D304). Zusatz zu Prüfregel 60: dort geht es um den Namen des roten Tests, hier darum, dass er
+überhaupt rot werden kann.
+
+
 ## Beim Messen
 
 **19. Kalte Messung.** Ein grüner Testlauf auf der Arbeitskopie ist keine Aussage über den

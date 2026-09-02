@@ -11571,3 +11571,40 @@ Menge zu vergrößern.
 
 **Was daneben liegt.** `FOREIGN_LIFECYCLE` bleibt auch mit Familie C unerreichbar, weil er einen
 Speicher braucht (D263, D268). Mit C sind elf der zwölf Codes über das Gitter erreichbar.
+
+---
+
+### D304 — Abnahme der Familie C; eine Rücknahmeprobe darf ihre eigene Menge nicht leeren
+
+**Abnahme.** Die gelieferte Fassung wurde aus dem Diff rekonstruiert und gefahren, nicht aus dem
+Bericht übernommen. Die beiden Blob-Hashes `96f0fe1` und `fd9ab52` treffen die Indexzeilen des
+Diffs; damit ist die gemessene Fassung byteweise die gelieferte (Prüfregel 59).
+
+**Gemessen.** 2502 Zeilen, davon 2438 ohne Präfix und 64 mit. Die Codeverteilung der 2438 ist
+Zahl für Zahl die des Vorlaufs, einschliesslich der 1758 auf `MALFORMED_CBOR` und der 185
+Annahmen; Familie A und B sind unberührt. Alle 64 Zeilen der Familie C werden mit
+`NON_CANONICAL_ENCODING` abgelehnt, und jede führt beim kanonischen Neukodieren auf die Bytes ihrer
+Saat zurück. Etiketten und Bytes sind über die ganze Menge paarweise verschieden. Damit sind elf
+der zwölf Reject-Codes über das Gitter erreichbar; `FOREIGN_LIFECYCLE` bleibt draussen (D263,
+D268).
+
+**Befund gegen den Prompt, nicht gegen den Lauf.** Die zweite Rücknahmeprobe verlangte, die Bytes
+der Familie C vor der Ausgabe kanonisch neu zu kodieren, und erwartete den Bauart-Test rot. Sie
+wurde gefahren und blieb grün: die Aufnahme verwirft kanonische Saatbytes, die Familie wurde leer,
+und ein Test, der über sie allquantifiziert, ist über der leeren Menge wahr. Das Werkzeug hat die
+Abweichung gemeldet statt sie anzupassen, wie der Prompt es verlangt.
+
+**Prüfregel 62.** Eine Rücknahmeprobe darf die Menge nicht leeren, über die ihr roter Test
+quantifiziert. Der Zusatz zu Prüfregel 60: dort geht es darum, welcher Test rot wird, hier darum,
+dass er überhaupt rot werden kann.
+
+**Was der Bauart-Test trägt und was nicht.** Er sichert die Bauform jeder vorhandenen C-Zeile,
+nicht ihre Existenz. Getragen wird die Nichtleere allein vom Operatorentest, der zu jedem der fünf
+Namen aus der Modulkonstanten mindestens eine Zeile verlangt. Beide zusammen sind vollständig,
+einzeln ist es keiner — das ist kein Mangel, aber es ist der Grund, warum die Probe stumm blieb.
+
+**Offen, klein und benannt.** Der Operator `feldkopf_breiter` greift nicht auf `t` und `t_exp`. Die
+beiden Felder tragen Additional Information 26, und der Prompt lässt den Operator bei 26 und 27
+aussetzen. Der Schritt von 26 auf 27 wäre möglich und ergäbe zwölf weitere Zeilen in einer
+Kodierungsform, die eine zweite Fassung anders behandeln könnte. Zurückgestellt, weil die
+Erreichbarkeit damit nicht wächst.
