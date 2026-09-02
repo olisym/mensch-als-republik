@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTER = ROOT / "07-decisions.md"
 
 ENTRY = re.compile(r"^### (D\d+[a-z]?)", re.M)
-REF = re.compile(r"(?<![A-Za-z0-9])(\d+[a-z]*|VISION) §(\d+(?:\.\d+)*)")
+REF = re.compile(
+    r"(?<![A-Za-z0-9])(\d+[a-z]*|VISION) §(\d+(?:\.\d+)*|[A-Z]\.\d+(?:\.\d+)*)"
+)
 
 
 def entries(text: str) -> list[tuple[str, str]]:
