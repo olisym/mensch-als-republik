@@ -11829,3 +11829,69 @@ tragen keine lesbare Version und erhalten sämtlich `MALFORMED_CBOR`. Der uint-B
 `type(wert) is int` im Test, nicht als `isinstance`, sonst ginge ein `True` im Versionsfeld als
 Version 1 durch (D272). Beide Rücknahmeproben greifen am Verifizierer an und machen je eine der
 beiden Gruppen rot.
+
+---
+
+### D309 — Die drei Rückstände aus `00al`: Klassentest, Namensöffnung, Schritt 26 auf 27
+
+**Anlass.** D307 hat zwei Rückstände benannt und D304 einen dritten. Alle drei sind klein, benannt
+und voneinander unabhängig; keiner ändert das Verhalten des Verifizierers. Sie werden in einem Lauf
+erledigt, weil der dritte `tools/gitter.py` ohnehin anfasst und D307 die Öffnung der fünf Namen
+genau daran geknüpft hat.
+
+**Beschluss 1 — der Klassentest leitet die Klasse aus den beiden Einzelverdikten ab.** D307 hat für
+alle Klassenzeilen extern nachgerechnet, dass das Etikett `P1`, `P2` oder `P3` zur Klasse passt;
+ein Test dafür fehlt. Er wird in `tests/test_paare.py` ergänzt und formuliert die Regel aus D305
+und D306 neu: Klasse eins, wenn beide Einzelmängel angenommen werden; Klasse zwei, wenn genau
+einer; Klasse drei sonst. Zusätzlich prüft er, dass keine Klassenzeile einen Einzelmangel trägt,
+der allein `MALFORMED_CBOR` erzeugt — das ist die Aussage, die den Schnitt aus D306 Berichtigung 1
+trägt, und sie stand bisher in keinem Test.
+
+**Die Regel wird nicht importiert.** Ein Test, der die Klassenfunktion aus `tools/paare.py` holt,
+prüft sie gegen sich selbst. Die Einzelverdikte kommen aus `tools/verdikt.py`, die Rückführung des
+Paaretiketts auf seine beiden Einzeletiketten aus der Hilfe, die
+`test_vorrangprobe_verdict_is_derived_from_the_two_singles` bereits benutzt.
+
+**Beschluss 2 — die fünf Namen werden umbenannt, nicht aliasiert.** `_SEED_NAMES`, `_SIG_KEY`,
+`_author_sk`, `_clone` und `_sign_a` verlieren den Unterstrich; alle Verwendungsstellen in
+`tools/gitter.py` und `tools/paare.py` ziehen mit. Ein öffentliches Alias neben dem privaten Namen
+liesse beide am Leben und sagte damit weniger als jeder von beiden.
+
+**Die gleichnamigen Kopien in den Testdateien bleiben.** `tests/test_gitter.py` und
+`tests/test_paare.py` führen `_SEED_NAMES`, `_SIG_KEY` und `_author_sk` je eigen. Das ist kein
+Rückstand, sondern Absicht: ein Test, der seine Erwartung aus dem Prüfling importiert, prüft
+nichts.
+
+**Beschluss 3 — der Kopfverbreiterer erhält den Schritt von Additional Information 26 auf 27.**
+Damit greift `feldkopf_breiter` auch auf `t` und `t_exp`, die beide vierbytige Köpfe tragen. Der
+Ertrag ist eine Kodierungsform auf zwei Feldern, die bisher keine trug; die Erreichbarkeit der
+Reject-Codes wächst nicht, und das war schon in D304 der Grund für die Zurückstellung. Sie wird
+jetzt aufgehoben, weil die Datei ohnehin geöffnet wird.
+
+**Beschluss 4 — die neuen Zeilen bekommen einen Träger.** Bisher verlangt kein Test, welche Felder
+`feldkopf_breiter` erreicht; der Operatorentest verlangt nur, dass es überhaupt eine Zeile je
+Operator gibt. Ein Test in `tests/test_gitter.py` leitet die erwartete Etikettmenge aus den
+Saatbytes ab: ein Feld ist erreichbar genau dann, wenn der Kopf seines Wertes einen anderen Major
+als sieben und eine Additional Information kleiner als 27 trägt. Ohne diesen Träger wäre der
+Schritt aus Beschluss 3 nicht rücknehmbar prüfbar, und nach Prüfregel 62 darf die Rücknahme die
+Menge nicht leeren, über die der rote Test quantifiziert — hier bleibt sie es nicht.
+
+**Berichtigung von D304 — es sind neun Zeilen, nicht zwölf.** D304 nennt zwölf und rechnet damit
+sechs Saaten mal zwei Felder. `t_exp` ist nach `01 §2` optional und steht nur in TV1, TV5 und TV6;
+`t` ist Pflichtfeld und steht in allen sechs. Sechs plus drei ergibt neun. Die Zahl ist gemessen
+und keine Prototypzahl im Sinne von D298: sie folgt aus der Saatmenge und hat keinen
+Freiheitsgrad.
+
+**Was daneben liegt.** D308 nennt 2260 Zeilen mit Version 1 bei 2502 Zeilen der Stufe 1. Die neuen
+Zeilen tragen sämtlich Version 1, also verschiebt sich die erste Zahl. Der Eintrag bleibt
+unverändert; er beschreibt den Stand, an dem er gemessen wurde. Der Test dazu trägt keine getippte
+Zahl und bleibt gültig. Die Menge der Stufe 2 ist unberührt, weil Familie C nach D305 Beschluss 5
+nicht in die Paarbildung eingeht.
+
+**Verworfen: eine eigene Familie D für den breiteren Kopf.** Der Operator ist derselbe, nur eine
+Stufe weiter; eine zweite Familie hätte die Etiketten gespalten, ohne eine andere Art von Mangel
+zu erzeugen.
+
+**Verworfen: die fünf Namen über ein öffentliches Alias zu führen.** Der Unterstrich sagt aus, dass
+an einem Namen nichts hängt. Steht daneben ein zweiter Name ohne Unterstrich, sagt keiner von
+beiden noch etwas.
