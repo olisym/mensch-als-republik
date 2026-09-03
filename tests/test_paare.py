@@ -1,4 +1,4 @@
-"""Paarmutanten der Stufe 2 (D305, D306, D289, 01 §B.2)."""
+"""Paarmutanten der Stufe 2 (D305, D306, D289, D309, 01 §B.2)."""
 
 from __future__ import annotations
 
@@ -88,6 +88,28 @@ def test_vorrangprobe_verdict_is_derived_from_the_two_singles() -> None:
         v2 = verdikt_line(singles[b])
         expected = _UNSUPPORTED if v1 == _UNSUPPORTED or v2 == _UNSUPPORTED else _MALFORMED
         assert verdikt_line(wire_hex) == expected, label
+
+
+def test_class_prefix_matches_the_two_single_verdicts() -> None:
+    """P1/P2/P3 aus den Einzelverdikten; kein MALFORMED_CBOR im Schnitt (D305, D306, D309)."""
+    singles = {label: wire_hex for label, wire_hex in gitter_lines()}
+    for label, _wire_hex in mutant_lines():
+        if not label.startswith(("P1/", "P2/", "P3/")):
+            continue
+        a, b = _einzel_etiketten(label)
+        v1 = verdikt_line(singles[a])
+        v2 = verdikt_line(singles[b])
+        assert v1 != _MALFORMED, label
+        assert v2 != _MALFORMED, label
+        ok1 = v1.startswith("ok ")
+        ok2 = v2.startswith("ok ")
+        if ok1 and ok2:
+            expected = "P1"
+        elif ok1 or ok2:
+            expected = "P2"
+        else:
+            expected = "P3"
+        assert label.startswith(expected + "/"), label
 
 
 def test_manifest_and_hex_match_and_two_calls_agree(

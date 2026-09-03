@@ -1,4 +1,4 @@
-"""Mutantenmenge der Stufe 1 (D289, D297, D303, 01 §2, 01 §B.2, 01 §3)."""
+"""Mutantenmenge der Stufe 1 (D289, D297, D303, D309, 01 §2, 01 §B.2, 01 §3)."""
 
 from __future__ import annotations
 
@@ -167,3 +167,25 @@ def test_foreign_version_requires_a_readable_uint() -> None:
             unreadable += 1
     assert readable >= 1
     assert unreadable >= 1
+
+
+def test_feldkopf_breiter_labels_match_reachable_value_heads() -> None:
+    """Ein Etikett je Schlüssel, dessen Wertkopf Major ≠ 7 und AI < 27 trägt (D309)."""
+    operator = "feldkopf_breiter"
+    expected: set[str] = set()
+    for name, wire_hex in seed_lines():
+        if name not in _SEED_NAMES:
+            continue
+        decoded = cbor_canon.decode(bytes.fromhex(wire_hex))
+        for key, value in decoded.items():
+            head = cbor_canon.encode(value)[0]
+            major = head >> 5
+            ai = head & 0x1F
+            if major != 7 and ai < 27:
+                expected.add(f"C/{name}/{operator}/{key}")
+    actual = {
+        label
+        for label, _wire_hex in mutant_lines()
+        if label.startswith("C/") and label.split("/")[2] == operator
+    }
+    assert actual == expected

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mutantenmenge der Stufe 1 (D289, D297, D303, 01 §2, 01 §B.2, 01 §3)."""
+"""Mutantenmenge der Stufe 1 (D289, D297, D303, D309, 01 §2, 01 §B.2, 01 §3)."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from mensch_als_republik import cbor_canon
 from mensch_als_republik.domains import DOM_SIG
 from tools.korpus import seed_lines
 
-_SEED_NAMES = frozenset({"TV1", "TV2", "TV3", "TV4", "TV5", "TV6"})
+SEED_NAMES = frozenset({"TV1", "TV2", "TV3", "TV4", "TV5", "TV6"})
 _AUTHOR_SEEDS = (bytes([0x01] * 32), bytes([0x02] * 32))
 _EXTRA_KEYS = (10, 11, 12)
-_SIG_KEY = 9
+SIG_KEY = 9
 
 C_OPERATORS: tuple[str, ...] = (
     "reihenfolge",
@@ -119,7 +119,7 @@ def _value_variants(value: object) -> list[tuple[str, object]]:
 def _load_seeds() -> list[tuple[str, dict[int, Any]]]:
     seeds: list[tuple[str, dict[int, Any]]] = []
     for name, wire_hex in seed_lines():
-        if name not in _SEED_NAMES:
+        if name not in SEED_NAMES:
             continue
         decoded = cbor_canon.decode(bytes.fromhex(wire_hex))
         if not isinstance(decoded, dict):
@@ -128,7 +128,7 @@ def _load_seeds() -> list[tuple[str, dict[int, Any]]]:
     return seeds
 
 
-def _author_sk(identity: bytes) -> Ed25519PrivateKey:
+def author_sk(identity: bytes) -> Ed25519PrivateKey:
     """Schlüssel des Autors der Saat, nicht des mutierten Feldes (D297 Beschluss 3)."""
     for seed in _AUTHOR_SEEDS:
         sk = Ed25519PrivateKey.from_private_bytes(seed)
@@ -137,31 +137,31 @@ def _author_sk(identity: bytes) -> Ed25519PrivateKey:
     raise ValueError(identity.hex())
 
 
-def _clone(value: object) -> object:
+def clone(value: object) -> object:
     """Wert kopieren; CBORTag ist nicht picklebar."""
     if isinstance(value, cbor2.CBORTag):
-        return cbor2.CBORTag(value.tag, _clone(value.value))
+        return cbor2.CBORTag(value.tag, clone(value.value))
     if isinstance(value, dict):
-        return {k: _clone(v) for k, v in value.items()}
+        return {k: clone(v) for k, v in value.items()}
     if isinstance(value, list):
-        return [_clone(v) for v in value]
+        return [clone(v) for v in value]
     return value
 
 
 def _with_field(m: dict[int, Any], key: int, value: object) -> dict[int, Any]:
-    out = {k: _clone(v) for k, v in m.items()}
-    out[key] = _clone(value)
+    out = {k: clone(v) for k, v in m.items()}
+    out[key] = clone(value)
     return out
 
 
 def _without_field(m: dict[int, Any], key: int) -> dict[int, Any]:
-    out = {k: _clone(v) for k, v in m.items()}
+    out = {k: clone(v) for k, v in m.items()}
     del out[key]
     return out
 
 
 def _core_keys(m: dict[int, Any]) -> list[int]:
-    return sorted(k for k in m if k != _SIG_KEY)
+    return sorted(k for k in m if k != SIG_KEY)
 
 
 def _core_mutants(
@@ -185,8 +185,8 @@ def _core_mutants(
                     for cls, pattern in _TYPE_PATTERNS:
                         if cls == elem_cls:
                             continue
-                        arr = [_clone(item) for item in value]
-                        arr[idx] = _clone(pattern)
+                        arr = [clone(item) for item in value]
+                        arr[idx] = clone(pattern)
                         out.append(
                             (
                                 f"{name}/{key}/rekursion/{idx}/typ/{cls}",
@@ -194,8 +194,8 @@ def _core_mutants(
                             )
                         )
                     for detail, variant in _value_variants(elem):
-                        arr = [_clone(item) for item in value]
-                        arr[idx] = _clone(variant)
+                        arr = [clone(item) for item in value]
+                        arr[idx] = clone(variant)
                         out.append(
                             (
                                 f"{name}/{key}/rekursion/{idx}/wert/{detail}",
@@ -231,25 +231,25 @@ def _sigma_mutants(
     """Mutationen auf Schlüssel neun: Typ, Wert, Entfernen (D289 Beschluss 3, D297)."""
     out: list[tuple[str, dict[int, Any]]] = []
     for name, m in seeds:
-        value = m[_SIG_KEY]
+        value = m[SIG_KEY]
         own = _type_class(value)
         for cls, pattern in _TYPE_PATTERNS:
             if cls == own:
                 continue
-            out.append((f"{name}/{_SIG_KEY}/typ/{cls}", _with_field(m, _SIG_KEY, pattern)))
+            out.append((f"{name}/{SIG_KEY}/typ/{cls}", _with_field(m, SIG_KEY, pattern)))
         for detail, variant in _value_variants(value):
             out.append(
-                (f"{name}/{_SIG_KEY}/wert/{detail}", _with_field(m, _SIG_KEY, variant))
+                (f"{name}/{SIG_KEY}/wert/{detail}", _with_field(m, SIG_KEY, variant))
             )
-        out.append((f"{name}/{_SIG_KEY}/entfernen", _without_field(m, _SIG_KEY)))
+        out.append((f"{name}/{SIG_KEY}/entfernen", _without_field(m, SIG_KEY)))
     return out
 
 
-def _sign_a(m: dict[int, Any], sk: Ed25519PrivateKey) -> bytes:
-    core = {k: v for k, v in m.items() if k != _SIG_KEY}
+def sign_a(m: dict[int, Any], sk: Ed25519PrivateKey) -> bytes:
+    core = {k: v for k, v in m.items() if k != SIG_KEY}
     sigma = sk.sign(DOM_SIG + cbor_canon.encode(core))
     signed = dict(core)
-    signed[_SIG_KEY] = sigma
+    signed[SIG_KEY] = sigma
     return cbor_canon.encode(signed)
 
 
@@ -325,7 +325,7 @@ def _map_pairs(wire: bytes) -> list[tuple[bytes, bytes]]:
 
 
 def _widen_head(item: bytes) -> bytes | None:
-    """Kopf eine Stufe breiter; None, wenn der Operator nicht greift (D303)."""
+    """Kopf eine Stufe breiter; None, wenn der Operator nicht greift (D303, D309)."""
     initial = item[0]
     major = initial >> 5
     ai = initial & 0x1F
@@ -339,6 +339,9 @@ def _widen_head(item: bytes) -> bytes | None:
     if ai == 25:
         value = int.from_bytes(item[1:3], "big")
         return bytes([(major << 5) | 26]) + value.to_bytes(4, "big") + item[3:]
+    if ai == 26:
+        value = int.from_bytes(item[1:5], "big")
+        return bytes([(major << 5) | 27]) + value.to_bytes(8, "big") + item[5:]
     return None
 
 
@@ -410,7 +413,7 @@ def _family_c(seed_wires: list[tuple[str, bytes]]) -> list[tuple[str, bytes]]:
 def mutant_lines() -> list[tuple[str, str]]:
     """Paare aus Etikett und Drahtbytes in Hex, stabile Reihenfolge (D289, D297)."""
     seeds = _load_seeds()
-    seed_sk = {name: _author_sk(m[1]) for name, m in seeds}
+    seed_sk = {name: author_sk(m[1]) for name, m in seeds}
     seed_bytes = {cbor_canon.encode(m) for _name, m in seeds}
     seen: set[bytes] = set()
     pairs: list[tuple[str, str]] = []
@@ -424,7 +427,7 @@ def mutant_lines() -> list[tuple[str, str]]:
     core = _core_mutants(seeds)
     for body, m in core:
         seed_name = body.split("/", 1)[0]
-        _take(f"A/{body}", _sign_a(m, seed_sk[seed_name]))
+        _take(f"A/{body}", sign_a(m, seed_sk[seed_name]))
     for body, m in core:
         _take(f"B/{body}", _encode(m))
     for body, m in _sigma_mutants(seeds):
@@ -432,7 +435,7 @@ def mutant_lines() -> list[tuple[str, str]]:
     c_seeds = [
         (name, bytes.fromhex(wire_hex))
         for name, wire_hex in seed_lines()
-        if name in _SEED_NAMES
+        if name in SEED_NAMES
     ]
     for body, wire in _family_c(c_seeds):
         _take(f"C/{body}", wire)

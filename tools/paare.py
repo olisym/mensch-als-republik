@@ -10,11 +10,11 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from mensch_als_republik import cbor_canon
 from tools.gitter import (
-    _SEED_NAMES,
-    _SIG_KEY,
-    _author_sk,
-    _clone,
-    _sign_a,
+    SEED_NAMES,
+    SIG_KEY,
+    author_sk,
+    clone,
+    sign_a,
     mutant_lines as gitter_lines,
 )
 from tools.korpus import seed_lines
@@ -27,13 +27,13 @@ def _load_seeds() -> tuple[dict[str, dict[int, Any]], dict[str, Ed25519PrivateKe
     maps: dict[str, dict[int, Any]] = {}
     keys: dict[str, Ed25519PrivateKey] = {}
     for name, wire_hex in seed_lines():
-        if name not in _SEED_NAMES:
+        if name not in SEED_NAMES:
             continue
         decoded = cbor_canon.decode(bytes.fromhex(wire_hex))
         if not isinstance(decoded, dict):
             raise TypeError(name)
         maps[name] = decoded
-        keys[name] = _author_sk(decoded[1])
+        keys[name] = author_sk(decoded[1])
     return maps, keys
 
 
@@ -42,8 +42,8 @@ def _changed_keys(
 ) -> list[int]:
     """Schlüssel, die hinzugekommen, weggefallen oder anders belegt sind (Auftrag 3)."""
     if core_only:
-        seed_f = {k: v for k, v in seed.items() if k != _SIG_KEY}
-        mut_f = {k: v for k, v in mutant.items() if k != _SIG_KEY}
+        seed_f = {k: v for k, v in seed.items() if k != SIG_KEY}
+        mut_f = {k: v for k, v in mutant.items() if k != SIG_KEY}
     else:
         seed_f = seed
         mut_f = mutant
@@ -80,14 +80,14 @@ def _apply_two(
     family: str,
     sk: Ed25519PrivateKey,
 ) -> bytes:
-    out = {k: _clone(v) for k, v in seed.items()}
+    out = {k: clone(v) for k, v in seed.items()}
     for key, mut in ((key_a, mut_a), (key_b, mut_b)):
         if key not in mut:
             del out[key]
         else:
-            out[key] = _clone(mut[key])
+            out[key] = clone(mut[key])
     if family == "A":
-        return _sign_a(out, sk)
+        return sign_a(out, sk)
     return cbor_canon.encode(out)
 
 
