@@ -11939,3 +11939,62 @@ auffällt.
 Die Erreichbarkeit der Reject-Codes ist unverändert: elf der zwölf über das Gitter,
 `FOREIGN_LIFECYCLE` weiterhin nicht (D263, D268). Die Zahlen in D304, D307 und D308 beschreiben
 weiterhin den Stand, an dem sie gemessen wurden, und werden nicht nachgezogen.
+
+---
+
+### D311 — Moduswechsel in den Anwendungsabschnitt; drei Befunde vor der ersten Prototypzeile
+
+**Anlass.** Layer 01 ist ausgelesen. Über 2511 Einzel- und 16958 Paarmutanten hat kein einziger
+Verdikt-Unterschied einen Befund getragen; die beiden Funde aus D308 kamen aus dem Nachdenken über
+eine Übereinstimmung und aus einer Nullprobe, nicht aus der Kampagne. Weitere Verifikationsarbeit
+an derselben Achse erzeugt gerechtfertigte Arbeit ohne Ertrag. Die Frage, die das Projekt trägt,
+ist eine andere: ob sich gegenseitige Absicherung ohne Machtmonopol abbilden lässt. Sie wird beim
+Fahren beantwortet, nicht beim Prüfen.
+
+**Beschluss 1 — Prototypmodus für den Anwendungsabschnitt.** Szenarioskripte sind Wegwerfcode. Für
+sie gelten **nicht**: Registerpflicht für den Code, Golden Numbers, Rücknahmeproben,
+Zweitimplementierung, Abnahme gegen einen Prompt-Commit. Es gelten **weiter**: die Spec als
+normative Wahrheit, das Register als oberste Instanz, die Zitiergrammatik, und dass eine Messung
+eine Position ändern können muss. Ins Register wandert aus einem Prototyplauf ausschliesslich der
+**Befund**: die Stelle, an der die Spec keine Antwort hatte, eine falsche gab, oder eine erzwang,
+die ein Zentrum voraussetzt. Der Prototyp erzeugt Befunde, keine Normen.
+
+**Der Grund für die Trennung.** Der Anspruch des Projekts gilt der Spec und den Befunden. Gilt er
+auch dem Prototyp, entsteht dieselbe Schleife wie in der Kampagne: jede Runde einwandfrei, der
+Ertrag gegen null. Ein Prototyp, der die Registerschwelle nehmen muss, wird nicht gebaut.
+
+**Beschluss 2 — das erste Szenario ist zweiphasig.** Gegenseitige Absicherung unter vier
+Beteiligten, in einem Durchlauf zweimal versucht: einmal als Fonds mit einem gewählten Verwahrer,
+einmal als Umlage ohne Verwahrer. Der Kontrast ist die Messung, nicht der einzelne Durchlauf. Eine
+Phase allein zeigt nur, dass es geht oder nicht geht; beide nebeneinander zeigen, **woran** es
+hängt.
+
+**Befund 1 — Obligationen sind bilateral, ein Topf braucht einen Verwahrer.** `settlement` in
+`03 §3.3.2` verlangt ein Identity-Subjekt und nimmt nur eine Quittung des Gläubigers an. Es gibt
+keine Form, sich gegenüber einer Gruppe zu verpflichten. Wer Beiträge sammelt, ist eine benannte
+Person, und das Protokoll kann feststellen, dass sie nicht auszahlt, aber nichts erzwingen. Das
+ist keine Lücke, sondern die Konsequenz aus L3: es gibt keinen Ort, an dem Wert liegt.
+
+**Befund 2 — Abstimmungen gibt es nur über Verfassungen.** Ein Vorschlag nach `04 §2.4` besteht
+aus Scope, Vorgängerepoche und Verfassungshash. Über einen Sachverhalt kann in `04` nicht
+abgestimmt werden. Ob eine Auszahlungsentscheidung deshalb als Verfassungsänderung zu modellieren
+ist, ob sie gar keine kollektive Entscheidung sein soll, oder ob `04` einen Mechanismus vermissen
+lässt, ist offen und wird vom Szenario beantwortet, nicht hier.
+
+**Befund 3 — der Kettenrückhalt ist persistent, der Claimspeicher nicht.** `DateiRueckhalt`
+schreibt Spitze und Redo atomar auf Platte; der `Ausgang` ist bisher nur ein Adapter über
+`InMemoryStore`. Für vier getrennte Verzeichnisse fehlt ein dateibasierter Ausgang und ein Leser
+dazu. Das sind zwei Methoden und gehört nach Beschluss 1 in das Szenarioskript, nicht nach
+`mensch_als_republik/`.
+
+**Was der erste Durchlauf beantworten soll.** Ist der Zustand aus jedem der vier Verzeichnisse
+heraus gleich ablesbar, ohne dass einer mehr weiss als die anderen? Und an welcher Stelle musste
+etwas erfunden werden, das die Spec nicht hergibt?
+
+**Verworfen: eine dritte Implementierung als nächster Schritt.** D308 liefert das Argument dafür,
+und der Anker aus D302 stünde bereit. Aber eine dritte Fassung prüft dieselbe Achse wie die
+Kampagne, und die hat gemessen nichts geliefert. Sie bleibt möglich, wenn der Anwendungsabschnitt
+Fragen an `01` zurückwirft.
+
+**Verworfen: Kombinationen aus drei Mängeln.** D305 Beschluss 4 stellt sie zurück, solange Stufe 2
+keinen Befund erzeugt hat. Sie hat keinen erzeugt.
