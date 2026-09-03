@@ -11895,3 +11895,47 @@ zu erzeugen.
 **Verworfen: die fünf Namen über ein öffentliches Alias zu führen.** Der Unterstrich sagt aus, dass
 an einem Namen nichts hängt. Steht daneben ein zweiter Name ohne Unterstrich, sagt keiner von
 beiden noch etwas.
+
+---
+
+### D310 — Abnahme der drei Rückstände; die Berichtigung von D304 bestätigt sich
+
+**Abnahme.** Die gelieferte Fassung wurde aus dem Diff rekonstruiert und gefahren, nicht aus dem
+Bericht übernommen. Vier Blob-Hashes treffen die Indexzeilen auf beiden Seiten: `fd9ab52` auf
+`7638778` für `tools/gitter.py`, `6f1d875` auf `285890c` für `tools/paare.py`, `60a3a28` auf
+`3ffbc34` für `tests/test_gitter.py`, `2357a0e` auf `e85189a` für `tests/test_paare.py`. Die
+Ausgangshashes sind dieselben, die D304 und D307 genannt haben; damit steht auch die Basis
+(Prüfregel 59).
+
+**Gemessen.** 789 Tests grün. Das Gitter liefert 2511 Zeilen, davon 1174 in Familie A, 1264 in B
+und 73 in C. Der Operator `feldkopf_breiter` trägt 49 Zeilen: zehn auf TV1, je acht auf TV2, TV4,
+TV5 und TV6, sieben auf TV3. Nach Schlüssel sind es je sechs auf 0, 1, 2, 3, 6, 8 und 9, drei auf
+5 und 7, eine auf 4. Die Stufe 2 ist unberührt: 16958 Zeilen, 85 in der Vorrangprobe, 2059, 4378
+und 10436 in den drei Klassen.
+
+**Die Berichtigung aus D309 hält.** Neu sind genau neun Zeilen, sechs auf Schlüssel 6 und drei auf
+Schlüssel 7. Alle fünf Mengenzahlen waren vor dem Lauf unabhängig gerechnet und wurden dem Prompt
+vorenthalten; sie treffen ohne Abweichung.
+
+**Beide Rücknahmeproben nachgefahren, nicht geglaubt** (Prüfregel 60). Ohne den Schritt von 26 auf
+27 wird `test_feldkopf_breiter_labels_match_reachable_value_heads` rot, und die übrigen elf Tests
+der Datei bleiben grün, darunter der Operatorentest; die Erwartungsmenge behält 49 Elemente, die
+gemessene fällt auf 40, keine von beiden ist leer. Mit vertauschten Klassennummern eins und zwei
+wird `test_class_prefix_matches_the_two_single_verdicts` rot, und beide Klassen bleiben nichtleer.
+Nach dem Zurücksetzen stimmen die Blob-Hashes wieder — die Proben haben nichts hinterlassen.
+
+**Was der neue Klassentest zusätzlich trägt.** Er prüft nicht nur die Zuordnung, sondern auch, dass
+keine Klassenzeile einen Einzelmangel trägt, der allein `MALFORMED_CBOR` erzeugt. Das ist der
+Schnitt aus D306 Berichtigung 1, und er stand bis hierher in keinem Test.
+
+**Angenommen ohne Nachlauf.** Der Docstring von `tools/paare.py` nennt D309 nicht, obwohl die Datei
+geändert wurde; die Änderung ist rein mechanisch und trägt keine eigene normative Grundlage. Der
+Importblock derselben Datei ist seit der Umbenennung nicht mehr alphabetisch — `sign_a` steht
+hinter `mutant_lines` —, weil der Unterstrich vorher vor den Buchstaben sortierte. Der Linter
+beanstandet es nicht; wird die Sortierregel je eingeschaltet, ist das die erste Stelle, die
+auffällt.
+
+**Was daneben liegt.** Die drei Posten aus `00al` sind erledigt und fallen aus der offenen Liste.
+Die Erreichbarkeit der Reject-Codes ist unverändert: elf der zwölf über das Gitter,
+`FOREIGN_LIFECYCLE` weiterhin nicht (D263, D268). Die Zahlen in D304, D307 und D308 beschreiben
+weiterhin den Stand, an dem sie gemessen wurden, und werden nicht nachgezogen.
