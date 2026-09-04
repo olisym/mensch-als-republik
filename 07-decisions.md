@@ -12062,3 +12062,75 @@ sich prüft, ob eine Zusage gedeckt ist? Dafür liegt `02 §8` bereit.
 **Verworfen: `tools/szenario_absicherung.py` zu verwerfen.** Es ist Wegwerfcode nach D311 und hat
 seinen Zweck erfüllt. Es bleibt als Gegenstand des Befundberichts im Baum und wird nicht
 fortgeschrieben.
+
+---
+
+### D313 — Zwei Vorarbeiten zur Risikoteilung, und wohin eine Versicherung gehört
+
+**Anlass.** D312 formulierte als Frage für Stufe B, ob ein Gruppen-Soll aus bilateralen Akten
+entstehen kann, wenn jeder Beobachter für sich prüft, ob eine Zusage gedeckt ist. Die Frage ist
+ausserhalb von MaR seit Jahrzehnten bearbeitet, theoretisch wie praktisch. Dazu kam die Frage, ob
+eine Versicherung überhaupt der richtige Gegenstand ist oder schon eine Anwendung.
+
+**Befund 1 — die theoretische Grenze ist ein Schnitt.** Ambrus, Mobius und Szeidl modellieren
+informelle Versicherung in sozialen Netzwerken, in denen Beziehungen als soziale Sicherheit
+dienen, um Zahlungen durchzusetzen. Ihr Ergebnis: der erreichbare Versicherungsgrad wird von der
+Expansivität des Netzes bestimmt, gemessen an der Zahl der Verbindungen, die eine Gruppe zum Rest
+der Gemeinschaft hat, im Verhältnis zu ihrer Grösse. Das ist eine Aussage über Schnitte, und ein
+Schnitt ist die Grösse, die `02` über Max-Flow ohnehin rechnet. Ihr zweites Ergebnis lautet, dass
+Versicherung lokal ist: innerhalb endogen entstehender Gruppen vollständig, zwischen ihnen
+unvollständig. Das ist L2 in ökonomischer Sprache. Quelle: American Economic Review 104(1), 2014,
+Seiten 149 bis 182.
+
+**Warum das zählt.** Die theoretische Obergrenze gegenseitiger Absicherung und die Grösse, die
+Layer 02 berechnet, sind dieselbe. Das ist der erste Beleg von aussen dafür, dass Trust-Flow in
+MaR nicht Zierrat ist, sondern der Ort, an dem Deckung gemessen würde.
+
+**Befund 2 — ein dritter Weg neben Fonds und Umlage.** Teambrella hat gegenseitige Versicherung
+gebaut, ohne einen Topf zu bilden. Jedes Guthaben gehört einem Mitglied und ist zugleich unter
+geteilter Verfügung: eine Zahlung verlangt die Unterschrift des Versicherten und mehrerer
+halbzufällig bestimmter Mitglieder, sodass weder der Einzelne noch die Gruppe allein verfügt.
+Niemand haftet über das hinaus, was er selbst hinterlegt hat, und was jemand einlegt, ist zugleich
+der Höchstbetrag, den andere für ihn tragen. Quelle: Whitepaper von Paperno, Kravchuk und
+Porubaev, 2016; die verfügbaren Berichte reichen bis 2021, der heutige Zustand des Projekts wurde
+nicht gemessen.
+
+**Was daran nicht auf MaR passt.** Die Durchsetzung ist Mittelsperrung: wer seinen Anteil nicht
+zeichnet, verliert Zugriff auf das eigene Guthaben. Das verlangt eine Kette, die
+Mehrfachunterschriften auflöst, und eine Stelle, die die Mitzeichnerlisten führt. MaR hat weder
+das eine noch das andere; seine Mittel sind Ausschluss und Vertrauensentzug. Ausserdem stimmt
+Teambrella kollektiv über den Schadensfall ab — genau das, was `00 §4.2` für Substanz ablehnt. Und
+die Reziprozitätsregel ist eine Aussage über Beträge, die `03 §3.1` dem Protokoll verwehrt.
+
+**Klärung — es gibt drei Orte, nicht zwei.** `08 §3` fragt, ob ein Mechanismus die Kosten der
+Feststellung senkt oder Macht verteilt, und weist ihn danach Protokoll oder Policy zu. Der
+Schlussabsatz desselben Abschnitts nennt einen dritten: ein Werkzeug, das Claims erzeugt und
+einliest, und eine Wertschicht, die es nicht gibt.
+
+**Eine Versicherung ist keiner dieser drei, sondern eine Zusammensetzung aus allen.** Profile für
+Verpflichtung, Quittung und Verdikt aus dem Protokoll; Schwellen und Arbitratorenliste aus der
+Policy; die Zahlungen aus der Wertschicht; die Oberfläche aus dem Werkzeug. Als Erzeugnis ist sie
+Anwendung, und Prämien und Deckungssummen gehören nicht in das Protokoll.
+
+**Das Szenario baut sie nicht, es belastet die Übergänge.** Es prüft, welche Zahnräder eine
+Versicherung braucht und welche davon vorhanden sind. Das ist Protokollarbeit, und `08 §3`
+verlangt selbst, die Prüftabelle bei jedem neuen Mechanismus fortzuschreiben. Die Grenze hält, so
+lange keine Zahl in den Protokollpfad gerät; in `00an` hat das gehalten, und der Bericht wies die
+Summen getrennt aus.
+
+**Beschluss — Stufe B beginnt als Spec-Arbeit, nicht als Lauf.** Die drei Befunde ohne Ort aus
+D312 werden durch das Aufnahmekriterium geschickt und als Zeilen in die Tabelle von `08 §3`
+eingetragen: das Gruppen-Soll, die Verwahrerrolle, das Prädikat für den Fall. Erst danach lohnt
+ein weiterer Durchlauf, und dann mit der Frage, ob Vertrauensentzug als Durchsetzung reicht, wo
+Teambrella Mittelsperrung braucht.
+
+**Keine Zuordnung wird hier vorweggenommen.** Die Vermutung lautet, dass ein Gruppen-Soll Macht
+verteilt und deshalb nicht ins Protokoll gehört, dass die Verwahrerrolle Policy ist, und dass
+`accusation@1` den Fall bereits trägt. Vermutungen sind keine Einträge; die Begründung entsteht
+beim Eintragen, nicht davor.
+
+**Verworfen: die Wertschicht jetzt zu füllen.** Sie ist nach `08 §3` ein benannter und
+ausdrücklich leerer Empfänger, kein Versäumnis. Eine Anbindung an ein Inhaberinstrument nach
+`03 §3.2` bliebe zudem an einem Verwahrer hängen — an einem Betreiber, an einer Gruppe von
+Treuhändern oder an einem Hersteller gesicherter Hardware. Für die Frage, ob Absicherung ohne
+Machtstelle möglich ist, liefert keine dieser Formen eine neue Antwort.
