@@ -1,0 +1,5 @@
+{
+  "ignore": {
+    "customPatterns": ["07-decisions.md"]
+  }
+}
