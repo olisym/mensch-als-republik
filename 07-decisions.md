@@ -12468,3 +12468,18 @@ Prüfung.
 
 **Nicht-Ziel.** Ob das eigenständige Gitea-Repositorium `mar-go` danach archiviert,
 umbenannt oder stillgelegt wird, ist hier nicht entschieden. Das bleibt ein offener Posten.
+### D322 — Projektkopie: `07-decisions.md` aus der Repomix-Packung ausgeschlossen
+
+**Der Anlass.** Die Datei trug zuletzt 217.870 Tokens, 21,5 % der gepackten Kopie, bei
+unverändertem Inhalt seit Sitzungen. Das ist Overhead: kein Kontextfenster braucht das
+komplette Register, wenn eine Entscheidung nur einzelne Einträge betrifft.
+
+**Entscheidung.** `repomix.config.json` trägt `ignore.customPatterns: ["07-decisions.md"]`.
+Die Datei bleibt im Repositorium vollständig erhalten; nur die gepackte Kopie lässt sie aus,
+auch aus der Verzeichnisstruktur.
+
+**Was das nicht ändert.** `tools/register_index.py` und `grep` bleiben der Weg zu einzelnen
+Einträgen (Prüfregel 38); eine Entscheidung wird gezielt angefordert, wenn ihr genauer
+Wortlaut gebraucht wird (Prüfregel 27). Kein Werkzeug, das direkt auf `07-decisions.md`
+zeigt (`stand.py`, `register_index.py`, `splice_run.py`), ist betroffen — sie lesen die
+Datei selbst, nicht die Kopie.
