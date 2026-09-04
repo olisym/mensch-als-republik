@@ -253,6 +253,16 @@ Kriterium aus einem Modell wird als untere Schranke formuliert — dieser Test w
 vollständige Menge. Ergänzt Prüfregel 28: die Weltlage vor dem Kriterium umfasst auch die Tests,
 die das Modell nicht kennt.
 
+**63. Vor einem Prompt, der etwas bauen lässt, wird gemessen, ob es das schon gibt.**
+Ein Prompt beschreibt, was entstehen soll; ein Werkzeug baut, was der Prompt verlangt. Keiner von
+beiden sieht nach, ob der Bestand die Sache bereits trägt — der Prompt nicht, weil er die Frage
+nicht stellt, das Werkzeug nicht, weil stiller Scope-Zuwachs verboten ist. In `00an` verlangte der
+Prompt vier Beteiligte mit getrennten Verzeichnissen, einen dateibasierten Ausgang und einen Leser
+dazu; all das lag unter `tools/sim/`, samt Inbox-Konvention, deklarativen Szenarien und Tests. Das
+Werkzeug fand den Rahmen, benannte ihn und baute trotzdem neu, weil der Prompt es so verlangte
+(D312). Der Griff davor ist nicht Prüfregel 38, die auf die Spec zeigt, sondern ein Blick in den
+Baum: welches Verzeichnis trägt schon etwas, das so heisst wie der Auftrag.
+
 ## Beim Bauen und Lesen von Tests
 
 **12. Zwei Läufe, eine Variable.** Um zu zeigen, dass ein Mechanismus erreicht wird oder
@@ -480,7 +490,7 @@ D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
 44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
-52 bis 59 aus D282, 60 aus D296, 61 aus D299.
+52 bis 59 aus D282, 60 aus D296, 61 aus D299, 62 aus D304, 63 aus D312.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

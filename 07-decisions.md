@@ -11998,3 +11998,67 @@ Fragen an `01` zurückwirft.
 
 **Verworfen: Kombinationen aus drei Mängeln.** D305 Beschluss 4 stellt sie zurück, solange Stufe 2
 keinen Befund erzeugt hat. Sie hat keinen erzeugt.
+
+---
+
+### D312 — Abnahme des ersten Prototyplaufs; zwei Fehler im Prompt und was Stufe A beantwortet hat
+
+**Abnahme.** Der Lauf hat geliefert, was D311 verlangt: einen Durchlauf in zwei Phasen und eine
+Befundliste. Vierzehn Befunde, keine Erfindung, um eine Phase zu retten. Geprüft wurde nach dem
+Modus aus D311 nicht der Code gegen den Bericht, sondern die Befunde gegen die Spec.
+
+**Erster Fehler im Prompt — `00 §4.2` wurde nicht konsultiert.** Der Prompt ordnete einen Nukleus
+an und Obligationen in demselben Scope. `00 §4.2` sagt, dass Vouches, Obligationen und Quittungen
+**nicht** in den Scope gehören, dessen `participants` abgestimmt werden. Das ist Prüfregel 38 in
+ihrer einfachsten Form, und sie wurde übergangen. Der Lauf hat es als Befund gemeldet.
+
+**Das verändert die Gewichtung des ersten Befunds.** Dass eine Auszahlung keine kollektive
+Entscheidung ist, ist keine Lücke in `04`. `00 §4.2` sagt es bereits: sich verpflichten und
+quittieren sind zweiseitige Akte ohne Kollektivbeschluss. Das Szenario hat damit nicht eine
+fehlende Norm gefunden, sondern eine bestätigt, die niemand nachgeschlagen hatte.
+
+**Zweiter Fehler im Prompt — der Bestand wurde nicht gemessen.** Unter `tools/sim/` liegt ein
+Simulationsrahmen mit getrennten Beobachtern, getrennten Uhren und getrennten Schlüsseln, einem
+Verzeichnis je Teilnehmer samt Inbox, deklarativen Szenarien in JSON mit den Schritten `claim`,
+`zustellen`, `uhr`, `zeige` und `erwarte`, sechs bestehenden Szenarien und einer Testdatei. Der
+Prompt liess davon einen erheblichen Teil neu bauen. Das Werkzeug hat den Rahmen gefunden, seine
+Inbox-Konvention benannt und trotzdem eine zweite erfunden, weil der Prompt es verlangte — es hat
+gemeldet statt eigenmächtig umzubauen, und damit richtig gehandelt.
+
+**Daraus Prüfregel 63.** Vor einem Prompt, der etwas bauen lässt, wird gemessen, ob es das schon
+gibt. Der Griff davor ist nicht Prüfregel 38, die auf die Spec zeigt, sondern ein Blick in den
+Baum.
+
+**Was Stufe A beantwortet hat.** Die Verpflichtungsschicht trägt, und sie trägt für alle vier
+gleich: nach ausdrücklicher Verteilung liegt in jedem Verzeichnis derselbe Bestand, und jeder
+rechnet dieselben Tilgungszustände. Das Wiederlesen aus den Verzeichnissen ändert nichts. Damit
+ist die Frage aus D311 beantwortet, aber mit einer Bedingung: die Gleichheit ist eine Eigenschaft
+der Verteilung, nicht von `settlement`. Das Protokoll erzwingt die Kopie nicht.
+
+**Und was sie nicht trägt.** Es gibt kein Gruppen-Soll. Drei bilaterale Obligationen an dieselbe
+Person sind drei Obligationen, nicht ein Anspruch gegen eine Gemeinschaft. Es gibt keine
+Verwahrerrolle, kein Prädikat für den Versicherungsfall, keine Deckung und keine Summe. Eine
+Versicherung im gewohnten Sinn ist damit nicht abbildbar; abbildbar ist die Buchung, nicht die
+Institution.
+
+**Der zweitwichtigste Befund ist die Ununterscheidbarkeit.** `OPEN` heisst zugleich "quittiert
+nicht" und "Quittung noch nicht angekommen". Das ist die bekannte Grenze verteilter Systeme, und
+das Protokoll erbt sie. Sie begrenzt, was Reputation aus Nichtleistung ableiten darf — wer aus
+`OPEN` auf Unwilligkeit schliesst, verwechselt Partition mit Absicht.
+
+**Ungenau im Bericht.** Der Befund, der Fall habe kein Prädikat, gilt nur für ein Profil eines
+Versicherungsfalls. `accusation@1` existiert und ist nach D67 vollständig opak; es hätte den Fall
+tragen können. Der Prompt hatte den Verdikt-Cluster ausgeschlossen, die Anklage aber nicht
+ausdrücklich.
+
+**Nachtrag zu den Prüfregeln.** Die Herkunftsliste endet bei 61 aus D299; Regel 62 aus D304 wurde
+nie eingetragen. Mit diesem Eintrag kommen 62 und 63 hinzu.
+
+**Für Stufe B.** Zwei Scopes statt einem, nach `00 §4.2`: die Substanz ohne `participants`, die
+Governance getrennt. Und der Rahmen ist `tools/sim/`, nicht `tools/szenario_absicherung.py`. Die
+Frage, die Stufe B stellt: kann ein Gruppen-Soll aus bilateralen Akten entstehen, wenn jeder für
+sich prüft, ob eine Zusage gedeckt ist? Dafür liegt `02 §8` bereit.
+
+**Verworfen: `tools/szenario_absicherung.py` zu verwerfen.** Es ist Wegwerfcode nach D311 und hat
+seinen Zweck erfüllt. Es bleibt als Gegenstand des Befundberichts im Baum und wird nicht
+fortgeschrieben.
