@@ -12440,3 +12440,31 @@ driften kann.
 und ist auf die Projektkopie und die Suche in alten Gesprächen angewiesen. Beides ist
 schwächer. Mechanisch schliessen lässt sich die Lücke nicht, weil eine Sitzung im
 Repositorium kein Gegenstand ist.
+### D321 — O58: mar-go wird per `filter-repo` + Merge zu `go/`, nicht per `git subtree`
+
+**Der Anlass.** O58 nennt zwei Kandidaten offen: `git subtree` oder ein Merge mit
+`--allow-unrelated-histories` nach `git filter-repo --to-subdirectory-filter`. Beide erhalten
+die Historie; die Wahl war offen.
+
+**Entscheidung.** `git filter-repo` auf einem Wegwerf-Klon von `~/mar-go`, danach Merge mit
+`--allow-unrelated-histories` in den Hauptbaum. Nicht `git subtree`.
+
+**Begründung.** `git subtree` ist ein Contrib-Kommando, dessen Verfügbarkeit auf diesem System
+ungeprüft war. `git filter-repo` war für diesen Lauf ohnehin zu installieren und arbeitet auf
+einem Klon, der das Original unter `~/mar-go` nie berührt — ein Fehlschlag kostet nur das
+Wegwerfverzeichnis, nicht das Quellrepositorium. Das Ergebnis ist mechanisch gleichwertig: fünf
+Commits, Nachrichten, Autoren und Zeitstempel erhalten, referenzierbar unter `go/`. Die Hashes
+ändern sich zwangsläufig, weil sich der Baum jedes Commits ändert; das gilt für `subtree`
+ebenso.
+
+**Golden Number.** `~/mar-go` trug fünf Commits (`719905d` bis `4ec54cd`, Erstcommit „start:
+Auftrag und beschnittene Spec"). Nach dem Merge müssen exakt fünf Commits unter `go/`
+auffindbar sein.
+
+**Geprüft, nicht angenommen.** `tools/check_specs.py` liest Wurzel-Markdown nicht-rekursiv
+(`ROOT.glob("*.md")`). Dateien unter `go/`, etwa `go/AUFTRAG.md`, fallen nicht in die
+Bindungs- oder Zitatprüfung. Der Umzug bindet keine neue Datei und bricht keine bestehende
+Prüfung.
+
+**Nicht-Ziel.** Ob das eigenständige Gitea-Repositorium `mar-go` danach archiviert,
+umbenannt oder stillgelegt wird, ist hier nicht entschieden. Das bleibt ein offener Posten.
