@@ -141,8 +141,10 @@ def check_references(text: str, known: set[int]) -> list[str]:
     referenced = {int(n) for n in re.findall(r"\bD(\d+)\b", text)}
     unknown = sorted(referenced - known)
     if unknown:
-        return ["verweist auf unbekannte Entscheidung: "
-                + ", ".join(f"D{n}" for n in unknown)]
+        return [
+            "verweist auf unbekannte Entscheidung: "
+            + ", ".join(f"D{n}" for n in unknown)
+        ]
     return []
 
 
@@ -165,6 +167,20 @@ LAYER_FILES = {
     "02b": "02b-golden-anchors.md",
     "04a": "04a-korrektur-prompt.md",
 }
+
+# Gebunden ohne Paragraphenverweis, weil sie selbst der Einstieg sind (D314 Beschluss 2).
+ALWAYS_BOUND = frozenset(
+    {
+        "pruefregeln.md",  # das Regelwerk; Volltext der Prüfregeln, Einstieg jeder Sitzung
+        "README.md",  # Projektsicht von aussen; niemand muss sie mit Abschnitt zitieren
+        "VISION.md",  # Absicht, nicht Layer, aber der Einstieg in die Leitsätze
+        "werkzeuge.md",  # Werkzeugschicht ohne Layer-Nummer
+        "example-nucleus.md",  # gerechnetes Beispielobjekt, Anker der Tests
+        "02-golden-anchors.md",  # Ankerdatei zu 02; 02b steht bereits in LAYER_FILES
+        "03-golden-anchors.md",  # Ankerdatei zu 03
+        "sitzungsstart-00am.md",  # die aktuelle Übergabedatei
+    }
+)
 
 HEADING_NUM = re.compile(r"^#{2,4} ((?:[A-Z]\.)?\d+(?:\.\d+)*)", re.M)
 SECTION_REF = re.compile(
@@ -228,9 +244,7 @@ def check_section_refs(
             counts[ref] = counts.get(ref, 0) + 1
     problems: list[str] = []
     for name in sorted(unknown_names):
-        problems.append(
-            f"unbekannter Zitiername: {name} ({unknown_names[name]}x)"
-        )
+        problems.append(f"unbekannter Zitiername: {name} ({unknown_names[name]}x)")
     for ref in sorted(counts):
         prefix, section = ref.split(" §", 1)
         key = prefix.removesuffix(".md")
@@ -241,9 +255,7 @@ def check_section_refs(
     return n_resolved, problems
 
 
-def check_bare_refs(
-    text: str, headings: dict[str, frozenset[str]]
-) -> list[str]:
+def check_bare_refs(text: str, headings: dict[str, frozenset[str]]) -> list[str]:
     """Bare Paragraphenverweise: § plus Ziffer, kein auflösbarer Name davor (D227).
 
     Auflösbar wie in ``check_section_refs``: Kurzform über ``LAYER_FILES`` oder
@@ -270,6 +282,82 @@ def check_bare_refs(
     if n_bare:
         return [f"barer Paragraphenverweis ({n_bare}x)"]
     return []
+
+
+def section_ref_target(name: str, root_md: set[str]) -> str | None:
+    """Wurzeldatei, die ein Abschnittsverweis nennt, oder None (D221, D314).
+
+    Dieselbe Auflösung wie ``check_section_refs``: Kurzform über ``LAYER_FILES``,
+    sonst Stamm einer Wurzel-``.md``. Kein neuer Ausdruck, nur das Ziel.
+    """
+    if SHORT_NAME.fullmatch(name):
+        return LAYER_FILES.get(name)
+    filename = f"{name.removesuffix('.md')}.md"
+    if filename in root_md:
+        return filename
+    return None
+
+
+def bound_root_files() -> tuple[frozenset[str], frozenset[str]]:
+    """Gebundene und ungebundene Markdown-Dateien der Wurzel (D314).
+
+    Eine Wurzeldatei ist gebunden, wenn sie in ``LAYER_FILES`` oder
+    ``ALWAYS_BOUND`` steht, oder wenn eine Python-Datei (ausserhalb von
+    ``archiv/``) oder eine *andere gebundene* Markdown-Datei der Wurzel sie
+    in der Form eines Abschnittsverweises nennt. Eine blosse namentliche
+    Nennung bindet nicht. Eine Quelle, die selbst ungebunden ist, bindet
+    nicht: sonst fiele die gebundene Datei mit dem Archivieren der Quelle
+    wieder heraus.
+    """
+    root_md = set(SPECS)
+    cited_from_md: dict[str, set[str]] = {name: set() for name in SPECS}
+    cited_from_py: set[str] = set()
+
+    for name in SPECS:
+        text = read(ROOT / name)
+        if text is None:
+            continue
+        for match in SECTION_REF.finditer(text):
+            target = section_ref_target(match.group(1), root_md)
+            if target is None or target == name:
+                continue
+            cited_from_md[name].add(target)
+
+    for path in python_sources():
+        if "archiv" in path.parts:
+            continue
+        text = read(path)
+        if text is None:
+            continue
+        for match in SECTION_REF.finditer(text):
+            target = section_ref_target(match.group(1), root_md)
+            if target is None:
+                continue
+            cited_from_py.add(target)
+
+    bound: set[str] = set(LAYER_FILES.values()) & root_md
+    bound.update(ALWAYS_BOUND & root_md)
+    bound.update(cited_from_py & root_md)
+    growing = True
+    while growing:
+        growing = False
+        for source in list(bound):
+            for target in cited_from_md.get(source, ()):
+                if target not in bound:
+                    bound.add(target)
+                    growing = True
+
+    return frozenset(bound), frozenset(root_md - bound)
+
+
+def report_binding() -> None:
+    """Meldet gebundene und ungebundene Wurzeldateien; kein Befund (D314 Beschluss 4)."""
+    bound, unbound = bound_root_files()
+    print(f"gebunden: {len(bound)}, ungebunden: {len(unbound)}")
+    if unbound:
+        print("ungebunden:")
+        for name in sorted(unbound):
+            print(f"  {name}")
 
 
 def python_sources() -> list[Path]:
@@ -356,9 +444,11 @@ def main() -> int:
 
     if failures:
         print(f"\n{failures} Datei(en) mit Befund.")
+        report_binding()
         return 1
 
     print(f"\nAlle Spec-Dateien sauber. Register: D1–D{max(known)}.")
+    report_binding()
     return 0
 
 
