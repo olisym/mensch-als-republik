@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from tools.offen import findings, mentioned_numbers, post_numbers
 
 
@@ -68,3 +70,25 @@ def test_start_at_one_is_derived() -> None:
     joined = " ".join(problems)
     assert 1 in missing
     assert "O1" in joined
+
+
+def test_midword_o_is_not_a_mention() -> None:
+    digits = "0"
+    token = f"ISO{digits}"
+    text = f"Kennung {token}\n"
+    false = int(re.search(r"O(\d+)", token).group(1))
+    mentioned = mentioned_numbers(text)
+    assert token[-2] == "O"
+    assert false not in mentioned
+    assert mentioned == set()
+
+
+def test_real_mention_beside_midword_is_one() -> None:
+    digits = "99"
+    real = f"O{digits}"
+    mid = f"ISO{digits}"
+    text = f"{real} und {mid}\n"
+    mentioned = mentioned_numbers(text)
+    expected = {int(digits)}
+    assert mentioned == expected
+    assert len(mentioned) == 1

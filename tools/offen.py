@@ -16,7 +16,7 @@ OFFEN = ROOT / "offen.md"
 REGISTER = ROOT / "07-decisions.md"
 
 HEADING = re.compile(r"^### O(\d+)", re.M)
-MENTION = re.compile(r"O(\d+)")
+MENTION = re.compile(r"(?<![A-Za-z0-9])O(\d+)")
 
 
 def post_numbers(text: str) -> list[int]:
@@ -25,7 +25,7 @@ def post_numbers(text: str) -> list[int]:
 
 
 def mentioned_numbers(text: str) -> set[int]:
-    """Nennungen: Grossbuchstabe O unmittelbar gefolgt von einer Ziffernfolge."""
+    """Nennungen: O plus Ziffernfolge, kein Buchstabe und keine Ziffer davor (D209)."""
     return {int(n) for n in MENTION.findall(text)}
 
 
