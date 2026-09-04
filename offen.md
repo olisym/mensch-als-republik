@@ -7,7 +7,13 @@ hinzu oder wird gestrichen; die anderen werden nicht angefasst.
 Registereintrag, der ihn geschlossen hat. Damit bleibt ein Verweis wie `offen O26` dauerhaft
 lesbar.
 
-Zählvorschrift: `grep -c '^### O' offen.md`.
+**Die Schliessform.** Ein erledigter Posten behält seine Kopfzeile, bekommt den Zusatz
+„erledigt" mit dem Registereintrag, der ihn geschlossen hat, und einen Rumpf von einer Zeile. Der
+alte Text fällt weg; wer ihn braucht, findet ihn in der Historie.
+
+Zählvorschrift: `grep -c '^### O' offen.md`. Sie zählt **Identitäten**, nicht offene Punkte:
+erledigte Posten bleiben stehen, also steigt die Zahl monoton. Genau deshalb taugt sie als
+Kaltzahl — sie kann nur durch eine verlorene Fortschreibung fallen (D318).
 
 Ein Posten ist eine Vermutung über eine Lücke, keine Entscheidung. Entscheidungen stehen in
 `07-decisions.md`.
@@ -233,12 +239,10 @@ D209.
 
 D226.
 
-### O50 `ALWAYS_BOUND` nennt Wurzeldateien namentlich
+### O50 `ALWAYS_BOUND` nennt Wurzeldateien namentlich — erledigt (D318)
 
-`tools/check_specs.py` bindet die Übergabedatei über eine feste Liste. Die Liste veraltet mit
-jeder Sitzung. Mit D316 kommen `arbeitsweise.md` und `offen.md` hinzu. Auftrag: auf ein Muster
-umstellen, das die alphabetisch letzte Übergabedatei bindet, und die beiden neuen Dateien
-aufnehmen.
+`latest_handoff` bindet die jüngste Übergabedatei zur Laufzeit; die beiden Einstiegsdateien
+stehen namentlich in der Liste.
 
 ---
 

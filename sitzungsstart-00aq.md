@@ -23,8 +23,12 @@ Erster Job jeder Sitzung: `git log --oneline -1`, Testzahl, Registerstand, Prüf
 Branchzahl. Ablesen, nicht schätzen. Vor der Testzahl `.hypothesis` und `__pycache__` löschen
 (Prüfregel 19). Der Interpreter ist `.venv/bin/python`.
 
-Nach `00aq` erwartet: Register **D1–D317**, Prüfregeln **1–64**, **drei Branches**, **30**
-Markdown-Dateien in der Wurzel. Testzahl und Commit werden gemessen.
+Der Stand am Ende von `00aq`, gemessen: `f5cc3ac`, **797 Tests**, Register **D1–D318**,
+Prüfregeln **1–64**, **58 Posten**, **drei Branches**. In der Wurzel liegen 32 Markdown-Dateien,
+davon 29 gebunden.
+
+`.venv/bin/python tools/stand.py <testausgabe>` liefert die sechs Zahlen in einer Zeile, geeignet
+als Kopftext der Projektkopie (D318). Die Testzahl wird daraus gelesen, nie getippt.
 
 Die Ausgangslage war `34e1dba`, 315 Registereinträge, 27 Wurzeldateien.
 
@@ -42,8 +46,11 @@ Die Ausgangslage war `34e1dba`, 315 Registereinträge, 27 Wurzeldateien.
 ### Der Bestand
 
 `tools/`: `autor.py`, `check_specs.py`, `check_tree.py`, `example_nucleus.py`, `gitter.py`,
-`korpus.py`, `paare.py`, `register_index.py`, `splice_run.py`, `szenario_absicherung.py`,
-`verdikt.py`, dazu `sim/`.
+`korpus.py`, `offen.py`, `paare.py`, `register_index.py`, `splice_run.py`, `stand.py`,
+`szenario_absicherung.py`, `verdikt.py`, dazu `sim/`.
+
+`offen.py` prüft die Nummerierung von `offen.md` und läuft in `make check`; `stand.py` gibt die
+sechs Kaltzahlen aus. Beide sind neu seit `00aq`.
 
 **`tools/sim/` ist der Simulationsrahmen** — getrennte Beobachter, getrennte Uhren und Schlüssel,
 ein Verzeichnis je Teilnehmer mit Inbox, deklarative Szenarien in JSON mit den Schritten `claim`,
@@ -66,20 +73,28 @@ damit ausgelesen.
 - **D316** — die Übergabedatei zerfällt; `offen.md` wird nummeriert und fortgeschrieben; die
   Arbeitsteilung mit dem Werkzeug wird verbindlich. Schliesst den Posten aus D218.
 - **D317** — der Repositoriumsname wird `symbolon`; umbenannt wird später.
+- **D318** — der Kopf der Projektkopie trägt sechs Zahlen; die Postenzahl kommt hinzu, die Zahl
+  der Wurzeldateien nicht. Dazu die Abnahme des Werkzeuglaufs und ein Defekt, der vor dem Merge
+  behoben wurde.
 
 ## Der nächste Schritt
 
-Der Abschnitt heisst **Öffnung** und steht in `offen.md` als O51 bis O58. Reihenfolge:
+Der Abschnitt heisst **Öffnung** und steht in `offen.md` als O51 bis O58. Die Vorarbeit ist
+getan: O50 ist erledigt, die beiden Werkzeuge stehen. Was bleibt, ist der Weg nach draussen.
 
-1. **O50** — `ALWAYS_BOUND` auf ein Muster umstellen und `arbeitsweise.md` und `offen.md`
-   aufnehmen. Der kleinste Posten, und er blockiert die Sauberkeit der Bindungsmeldung.
-2. **Zwei Werkzeuge**: `tools/offen.py` prüft Nummerierung, Lückenlosigkeit und Registerverweise
-   in `offen.md`; `tools/stand.py` gibt die fünf Kaltzahlen in einem Aufruf aus. Vor dem Prompt
-   ist zu messen, ob `check_tree.py` das zweite schon leistet (Prüfregel 63).
-3. **O58** die beiden Implementierungen in ein Repositorium, dann **O51** Lizenz, **O52**
-   öffentlicher Spiegel, **O53** englische Schale, **O57** Förderantrag.
-4. **O54** normative Sprache und **O55** Umbenennung als eigener Abschnitt, mit eigenem
+1. **O58** — die beiden Implementierungen in ein Repositorium. Die Go-Fassung wird zu `go/` im
+   Hauptbaum, mit erhaltener Historie. Der Python-Baum wird **nicht** umgebaut. Tier 1, eigener
+   Lauf, und D302 bleibt: die eingefrorene Spec-Kopie ist der Mechanismus der Unabhängigkeit,
+   nicht die Repositoriumsgrenze.
+2. **O51** Lizenz. Ohne sie ist „open source" eine Behauptung, und eine Förderlinie verlangt eine.
+3. **O52** öffentlicher Spiegel, **O53** englische Schale — README, LICENSE, CONTRIBUTING und ein
+   Dokument zur Methode. Neu geschrieben, nicht übersetzt. Die Werkstatt bleibt deutsch.
+4. **O57** Förderantrag.
+5. **O54** normative Sprache und **O55** Umbenennung als eigener Abschnitt, mit eigenem
    Registereintrag, **nach** der Öffnung.
+
+Die Prompt-Dateien dieses Laufs bleiben vorerst in der Wurzel und werden als ungebunden gemeldet.
+Das ist die Erinnerung, sie mit der nächsten Übergabe zu archivieren.
 
 Die inhaltliche Arbeit bleibt daneben liegen: Stufe B beginnt als Spec-Arbeit (D313), die drei
 Befunde ohne Ort aus D312 werden durch das Aufnahmekriterium aus `08 §3` geschickt. Sie stehen als
