@@ -178,9 +178,32 @@ ALWAYS_BOUND = frozenset(
         "example-nucleus.md",  # gerechnetes Beispielobjekt, Anker der Tests
         "02-golden-anchors.md",  # Ankerdatei zu 02; 02b steht bereits in LAYER_FILES
         "03-golden-anchors.md",  # Ankerdatei zu 03
-        "sitzungsstart-00am.md",  # die aktuelle Übergabedatei
+        "arbeitsweise.md",  # stabile Disziplin; Einstieg nach D316, niemand zitiert sie mit Abschnitt
+        "offen.md",  # nummerierte Posten; Einstieg nach D316, niemand zitiert sie mit Abschnitt
     }
 )
+
+
+def latest_handoff(root_md: set[str]) -> str | None:
+    """Jüngste Übergabedatei der Wurzel, oder None (D314, D316).
+
+    Kandidaten sind Namen in ``root_md``, die mit ``sitzungsstart-`` beginnen
+    und auf ``.md`` enden. Verglichen wird der Teil zwischen Präfix und Endung.
+    Es gewinnt der längere; bei gleicher Länge der alphabetisch spätere.
+    Kein Kandidat bindet nichts und ist kein Fehler.
+    """
+    best: tuple[int, str, str] | None = None
+    for name in root_md:
+        if not name.startswith("sitzungsstart-") or not name.endswith(".md"):
+            continue
+        infix = name[len("sitzungsstart-") : -len(".md")]
+        key = (len(infix), infix, name)
+        if best is None or key > best:
+            best = key
+    if best is None:
+        return None
+    return best[2]
+
 
 HEADING_NUM = re.compile(r"^#{2,4} ((?:[A-Z]\.)?\d+(?:\.\d+)*)", re.M)
 SECTION_REF = re.compile(
@@ -302,7 +325,8 @@ def bound_root_files() -> tuple[frozenset[str], frozenset[str]]:
     """Gebundene und ungebundene Markdown-Dateien der Wurzel (D314).
 
     Eine Wurzeldatei ist gebunden, wenn sie in ``LAYER_FILES`` oder
-    ``ALWAYS_BOUND`` steht, oder wenn eine Python-Datei (ausserhalb von
+    ``ALWAYS_BOUND`` steht, oder die jüngste Übergabedatei ist (siehe
+    ``latest_handoff``), oder wenn eine Python-Datei (ausserhalb von
     ``archiv/``) oder eine *andere gebundene* Markdown-Datei der Wurzel sie
     in der Form eines Abschnittsverweises nennt. Eine blosse namentliche
     Nennung bindet nicht. Eine Quelle, die selbst ungebunden ist, bindet
@@ -337,6 +361,9 @@ def bound_root_files() -> tuple[frozenset[str], frozenset[str]]:
 
     bound: set[str] = set(LAYER_FILES.values()) & root_md
     bound.update(ALWAYS_BOUND & root_md)
+    handoff = latest_handoff(root_md)
+    if handoff is not None:
+        bound.add(handoff)
     bound.update(cited_from_py & root_md)
     growing = True
     while growing:

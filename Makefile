@@ -1,7 +1,7 @@
 PY := .venv/bin/python
 RUFF := .venv/bin/ruff
 
-.PHONY: test test-prop check-specs check-tree check-lint check check-all clean
+.PHONY: test test-prop check-specs check-offen check-tree check-lint check check-all clean
 
 test:
 	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +
@@ -13,15 +13,18 @@ test-prop:
 check-specs:
 	$(PY) tools/check_specs.py
 
+check-offen:
+	$(PY) tools/offen.py
+
 check-tree:
 	$(PY) tools/check_tree.py
 
 check-lint:
 	$(RUFF) check mensch_als_republik tests tools
 
-check: check-tree check-specs check-lint test
+check: check-tree check-specs check-offen check-lint test
 
-check-all: check-tree check-specs check-lint test test-prop
+check-all: check-tree check-specs check-offen check-lint test test-prop
 
 clean:
 	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +
