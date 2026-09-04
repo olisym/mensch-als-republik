@@ -12334,6 +12334,6 @@ Wächter, der gepackte gegen versionierte Dateien zählt, bleibt unberührt.
 **Eine Beobachtung zum Prompt, nicht zum Lauf.** Der Prompt verlangte für die Nummern
 "lückenlos aufsteigend"; gebaut wurde Mengensemantik ohne Reihenfolge, und das Werkzeug hat die
 Abweichung gemeldet. Die Abweichung ist besser als der Auftrag. Sobald ein neuer Posten
-thematisch in eine frühere Gruppe gehoert, steht seine Nummer mitten in der Datei; eine
+thematisch in eine frühere Gruppe gehört, steht seine Nummer mitten in der Datei; eine
 Reihenfolgeprüfung wäre dann falsch. Die Nummern sind Identität, nicht Position. Der Prompt
 war ungenau, der Bau ist richtig, und nichts wird nachgezogen.

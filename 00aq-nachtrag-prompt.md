@@ -74,3 +74,31 @@ Ein zweiter Commit auf `00aq-werkzeuge`. Der Bericht enthält den **vollständig
 gegen `be6afcb`, nicht gegen den Branchpunkt, sowie die Ausgaben zu den Punkten 2 bis 5.
 
 Widerspricht eine Messung diesem Nachtrag, wird sie **gemeldet, nicht angepasst**.
+## Auftrag 3 — Nachtrag: der zweite Test unterscheidet nicht
+
+`test_real_mention_beside_midword_is_one` benutzt für die echte Nennung und für die Wortmitte
+**dieselbe** Ziffernfolge. Da `mentioned_numbers` eine Menge liefert, kollabieren beide Treffer
+auf einen Wert, und der Test bleibt auch ohne den Schutz grün. Der Supervisor hat das
+unabhängig nachgerechnet und bestätigt; die Meldung des Werkzeugs war richtig.
+
+Der Fehler liegt im Prompt, nicht im Bau. Ein Regressionstest, der die Regression nicht sieht,
+ist keiner.
+
+**Zu tun:** die echte Nennung und die Wortmitte tragen **verschiedene** Ziffernfolgen. Die Zahl
+der Wortmitte darf keiner Postennummer entsprechen. Geprüft wird, dass die Menge genau die Zahl
+der echten Nennung enthält und die Zahl aus der Wortmitte **nicht**. Beide Werte werden aus dem
+erzeugten Text abgeleitet, nicht getippt.
+
+Der erste Test bleibt unverändert; er unterscheidet bereits.
+
+**Rücknahmeprobe:** den Schutz erneut entfernen und bestätigen, dass jetzt **beide** Tests rot
+werden. Die Rücknahme wird nicht committet.
+
+**Nicht-Ziele:** keine Änderung an `tools/offen.py`, an `tools/stand.py`, am Makefile oder an
+den übrigen Tests. Kein Merge, kein Push.
+
+**Abnahme:** `make check` grün; die Testzahl steigt nicht, weil kein Test hinzukommt; die
+Rücknahmeprobe nennt beide gefallenen Tests namentlich.
+
+**Abschluss:** ein dritter Commit auf `00aq-werkzeuge`, mit dem vollständigen `git diff` gegen
+`bfe01fa`.
