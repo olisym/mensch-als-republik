@@ -12291,3 +12291,49 @@ steht; der Posten ist `O55`. Der PyPI-Name bleibt belegt und ist `O56`; Ausweich
 
 **Der Titel bleibt.** Die Spec heisst weiter *Mensch als Republik*. `08` trägt ihn, und er sagt,
 worum es geht. Ein Repositoriumsname benennt nicht den Gegenstand.
+
+### D318 — Der Kopf der Projektkopie trägt sechs Zahlen (D224, D316)
+
+**Abnahme des Laufs `00aq-werkzeuge`.** Drei Aufträge, alle geliefert. Die Bindungsmeldung nennt
+weder die beiden neuen Einstiegsdateien noch die aktuelle Übergabedatei; der zweite Lauf liefert
+dieselbe Menge wie der erste (Prüfregel 64). Beide Rücknahmeproben zu `tools/offen.py` wurden
+vom Supervisor selbst gefahren und waren rot. Die Erwartung des Supervisors an die Bindungszahl
+war um eins zu hoch und in sich falsch, bevor sie gemessen wurde; der Lauf hat genau die drei
+Dateien gebunden, die zu binden waren.
+
+**Ein Defekt, vor dem Merge behoben.** Der Ausdruck, mit dem `tools/offen.py` Nennungen von
+Postennummern findet, hatte keinen Schutz gegen Wortmitten. Ein grosser Buchstabe O unmittelbar
+vor einer Ziffernfolge wurde auch dann als Nennung gelesen, wenn er Teil einer Normbezeichnung
+oder einer Summenformel war. Das Vorbild `tools/register_index.py` trägt den Schutz seit D209;
+der Prompt hat es als Vorbild benannt, aber die Eigenschaft nicht verlangt.
+
+Der Fehler ist in beide Richtungen scharf. Eine erfundene Zahl aus einer Wortmitte, die zufällig
+keinen Posten trifft, blockiert `make check` für alle. Eine, die zufällig einen trifft, wird
+stillschweigend angenommen. Seit diesem Lauf sitzt der Prüfer in `make check`, also blockiert die
+erste Richtung jeden Commit.
+
+**Die Nebenwirkung ist derselbe Fall wie D210.** Ein Registereintrag, der den Defekt an einem
+Beispiel beschreibt, löst ihn aus: `tools/offen.py` liest `07-decisions.md` mit. Dieser Eintrag
+nennt die Beispiele deshalb in Worten. Nach der Behebung wäre das nicht mehr nötig, aber die
+Umschreibung bleibt, weil sie ohnehin lesbarer ist.
+
+**Beschluss: der Kopf trägt sechs Zahlen.** Commit, Testzahl, Registerstand, Prüfregelzahl,
+**Postenzahl**, Branchzahl. D224 Teil 2 nannte fünf; die Postenzahl kommt hinzu, weil D316 die
+offene Liste zu einer fortgeschriebenen Datei gemacht hat und eine verlorene Fortschreibung sonst
+unbemerkt bleibt.
+
+**Nicht aufgenommen: die Zahl der Markdown-Dateien der Wurzel.** Eine Kaltzahl ist eine Zahl,
+deren Abweichung eine Entscheidung ändert. Die Branchzahl deckt einen nicht gemergten Lauf auf,
+die Postenzahl eine verlorene Fortschreibung. Die Zahl der Wurzeldateien ändert sich mit jeder
+Prompt-Datei und trägt keine Entscheidung; sie bleibt über `check_specs.py` abrufbar, wo sie
+neben der Bindungsmeldung steht und dort auch hingehört.
+
+**Was das nicht ist.** Keine Änderung an D224 Teil 1 und Teil 3: Ziel bleibt `/tmp`, und der
+Wächter, der gepackte gegen versionierte Dateien zählt, bleibt unberührt.
+
+**Eine Beobachtung zum Prompt, nicht zum Lauf.** Der Prompt verlangte für die Nummern
+"lückenlos aufsteigend"; gebaut wurde Mengensemantik ohne Reihenfolge, und das Werkzeug hat die
+Abweichung gemeldet. Die Abweichung ist besser als der Auftrag. Sobald ein neuer Posten
+thematisch in eine frühere Gruppe gehoert, steht seine Nummer mitten in der Datei; eine
+Reihenfolgeprüfung wäre dann falsch. Die Nummern sind Identität, nicht Position. Der Prompt
+war ungenau, der Bau ist richtig, und nichts wird nachgezogen.
