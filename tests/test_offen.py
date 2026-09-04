@@ -84,11 +84,13 @@ def test_midword_o_is_not_a_mention() -> None:
 
 
 def test_real_mention_beside_midword_is_one() -> None:
-    digits = "99"
-    real = f"O{digits}"
-    mid = f"ISO{digits}"
+    real_digits = "99"
+    mid_digits = "0"
+    real = f"O{real_digits}"
+    mid = f"ISO{mid_digits}"
     text = f"{real} und {mid}\n"
     mentioned = mentioned_numbers(text)
-    expected = {int(digits)}
+    expected = {int(real_digits)}
+    false = int(re.search(r"O(\d+)", mid).group(1))
     assert mentioned == expected
-    assert len(mentioned) == 1
+    assert false not in mentioned
