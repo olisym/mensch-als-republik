@@ -12134,3 +12134,53 @@ ausdrücklich leerer Empfänger, kein Versäumnis. Eine Anbindung an ein Inhaber
 `03 §3.2` bliebe zudem an einem Verwahrer hängen — an einem Betreiber, an einer Gruppe von
 Treuhändern oder an einem Hersteller gesicherter Hardware. Für die Frage, ob Absicherung ohne
 Machtstelle möglich ist, liefert keine dieser Formen eine neue Antwort.
+
+---
+
+### D314 — Das Wurzelverzeichnis bekommt eine Bindungsregel und ein Archiv
+
+**Anlass.** Das Wurzelverzeichnis trägt 128 Markdown-Dateien. Davon sind 28 normativ oder werden
+zitiert; die übrigen 100 sind Prompts, Abnahmen und Übergabedateien abgeschlossener Läufe. Für den
+Supervisor ist das billig, weil gezielt gegriffen wird. Für ein Werkzeug, das im
+Anwendungsabschnitt einen Auftrag bekommt, ist es nicht billig: es sieht 128 Dateien und kann
+nicht erkennen, welche gelten. D312 hat gezeigt, was das kostet, wenn schon der Prompt den Bestand
+nicht gemessen hat.
+
+**Nicht der Anlass ist die Grösse.** D225 hat die Sorge um die Kopiengrösse ausdrücklich
+zurückgenommen, und der Anteil des Registers hat sich seither um einen Prozentpunkt bewegt. Es
+geht um Lesbarkeit des Baums, nicht um Platz. Das Register bleibt, wo es ist.
+
+**Beschluss 1 — es bindet nur ein Paragraphenverweis.** Eine Datei bleibt im Wurzelverzeichnis,
+wenn eine Wurzeldatei oder eine Python-Datei sie in der Form `NAME §X` nennt. Eine blosse
+namentliche Nennung bindet **nicht**. Sonst nagelte jede Erwähnung im Register eine Datei für
+immer fest, und es würde nie aufgeräumt. Der Preis ist, dass eine im Register genannte Datei nach
+dem Verschieben einen Ordner tiefer liegt; der Pfad ist mit `archiv/` vorhersagbar, und die
+Prüfung nach D229 fasst Nennungen ohne Paragraphen ohnehin nicht an.
+
+**Beschluss 2 — dazu eine feste Liste.** Gebunden sind ausserdem alle Einträge aus `LAYER_FILES`,
+das Regelwerk, `README.md`, `VISION.md`, `werkzeuge.md`, `example-nucleus.md`, die beiden
+Ankerdateien zu `02` und `03`, und die jeweils aktuelle Übergabedatei. Ohne diese Liste fielen
+Dateien heraus, auf die niemand mit Paragraphen zeigt, weil sie selbst der Einstieg sind.
+
+**Beschluss 3 — Verschieben, nicht Löschen.** Ziel ist `archiv/`. `tools/check_specs.py` glob't
+die Wurzel und steigt nicht ab; damit fallen die verschobenen Dateien aus der Prüfung. Das ist für
+Historie richtig und für normativen Text falsch, und genau darum trennt Beschluss 1. Verweise in
+archivierten Dateien dürfen von da an verrotten.
+
+**Beschluss 4 — die Prüfung meldet, sie blockiert nicht.** `check_specs` nennt am Ende, wie viele
+Wurzeldateien gebunden sind und welche Kandidaten fürs Archiv wären. Eine harte Prüfung würde bei
+jedem neuen Prompt sofort scheitern, weil auf ihn beim Anlegen noch kein Paragraphenverweis zeigt;
+das wäre Zeremonie je Lauf ohne Ertrag. Eine Zahl am Ende genügt, damit die Wurzel nicht in zehn
+Sitzungen wieder zuwächst.
+
+**Was daneben liegt.** Die Kandidatenliste umfasst auch Dateien, die offene Posten tragen — etwa
+die Anhangsform-Datei aus D232 mit ihren fünf zu hohen Zeilenangaben. Der Posten bleibt offen, die
+Datei liegt danach unter `archiv/`. Das ist beabsichtigt: ein offener Posten wird im Register
+geführt, nicht durch den Ort einer Datei.
+
+**Verworfen: eine Teilung des Registers nach Ären.** D225 hat sie mit Begründung zurückgestellt,
+und es ist seither kein Engpass entstanden. Das Register wird über `tools/register_index.py`
+gelesen, nicht am Stück.
+
+**Verworfen: Löschen statt Verschieben.** Git hält die Dateien ohnehin, aber ein Pfad, den man
+tippen kann, ist billiger zu finden als ein Commit, den man suchen muss.
