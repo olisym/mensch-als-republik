@@ -79,6 +79,18 @@ Nach jeder Phase, für jeden der vier Beteiligten getrennt aus seinem eigenen Ve
 Zusätzlich, einmal am Ende: läuft dieselbe Welt aus frisch gelesenen Verzeichnissen ein zweites
 Mal mit demselben Ergebnis durch?
 
+## Preisblindheit
+
+`03 §3.1` ist normativ: `amount` wird nie gelesen, nie verglichen, nie summiert, `unit_ref` nie
+dereferenziert. Das Protokoll kann nicht sagen, ob jemand genug eingezahlt hat, ob eine Auszahlung
+der Summe der Beiträge entspricht, oder ob ein Topf gedeckt ist. Es kann nur sagen, ob eine
+einzelne Obligation offen oder getilgt ist.
+
+Das Szenario darf Beträge summieren. Aber jede solche Summe ist eine Aussage des **Szenarios**,
+nicht des Protokolls, und wird im Code und im Bericht als solche gekennzeichnet. Jede Stelle, an
+der das Szenario rechnen muss, damit die Phase überhaupt Sinn ergibt, ist ein Befund: dort endet,
+was `03` trägt.
+
 ## Nicht-Ziele
 
 - Keine Änderung an `mensch_als_republik/`, an einer Layer-Datei, an `07-decisions.md` oder
