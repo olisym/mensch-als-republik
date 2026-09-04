@@ -263,6 +263,16 @@ Werkzeug fand den Rahmen, benannte ihn und baute trotzdem neu, weil der Prompt e
 (D312). Der Griff davor ist nicht Prüfregel 38, die auf die Spec zeigt, sondern ein Blick in den
 Baum: welches Verzeichnis trägt schon etwas, das so heisst wie der Auftrag.
 
+**64. Eine Regel, die eine Menge ausdünnt, wird auf ihren zweiten Lauf geprüft, bevor sie in einen
+Prompt geht.**
+Ein Filter, der Elemente über Verweise anderer Elemente hält, kann im ersten Durchgang mehr binden
+als im zweiten: fällt eine Quelle selbst heraus, verliert ihr Ziel die Bindung. Das Ergebnis ist
+ein Aufräumen, das beim nächsten Mal wieder etwas findet, und eine gemeldete Zahl, die nichts
+bedeutet. Die Regel gehört deshalb auf gebundene Quellen eingeschränkt und bis zum Fixpunkt
+gerechnet. In `00ao` hielt eine ungebundene Nachlaufdatei eine Abnahmedatei; die Fassung im Prompt
+band 28 Dateien im ersten und 27 im zweiten Durchgang, und das Werkzeug schloss die Lücke von
+selbst (D315). Gegenstück zu Prüfregel 62: dort wird eine Menge zu leer, hier zu voll.
+
 ## Beim Bauen und Lesen von Tests
 
 **12. Zwei Läufe, eine Variable.** Um zu zeigen, dass ein Mechanismus erreicht wird oder
@@ -490,7 +500,7 @@ D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
 44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
-52 bis 59 aus D282, 60 aus D296, 61 aus D299, 62 aus D304, 63 aus D312.
+52 bis 59 aus D282, 60 aus D296, 61 aus D299, 62 aus D304, 63 aus D312, 64 aus D315.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

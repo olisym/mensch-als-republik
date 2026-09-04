@@ -12184,3 +12184,36 @@ gelesen, nicht am Stück.
 
 **Verworfen: Löschen statt Verschieben.** Git hält die Dateien ohnehin, aber ein Pfad, den man
 tippen kann, ist billiger zu finden als ein Commit, den man suchen muss.
+
+---
+
+### D315 — Abnahme des Archivlaufs; die Bindungsregel im Prompt war nicht idempotent
+
+**Abnahme.** Der Lauf hat geliefert, was D314 verlangt: die Regel als Funktion, die Meldung ohne
+Fehlschlag, 104 Umbenennungen nach `archiv/` bei voller Ähnlichkeit, und danach null ungebundene
+Wurzeldateien. `make check` bleibt bei 789 Tests.
+
+**Die Golden Numbers wichen ab, und der Fehler lag im Prompt.** Erwartet waren 28 gebundene
+Dateien, gemessen wurden 27. Der Nenner erklärt sich aus drei Prompt-Dateien, die seit der
+Vorabmessung entstanden sind. Der Zähler nicht: die eine Datei ist `einlesen-a-abnahme.md`.
+
+**Sie hing an einer Quelle, die selbst ins Archiv gehörte.** Nur
+`einlesen-a-nachlauf-prompt.md` nennt sie mit Abschnitt, und auf diese Datei zeigt niemand. Der
+Prompt verlangte, dass eine beliebige Wurzeldatei binde; das Werkzeug hat daraus gemacht, dass nur
+eine **gebundene** Quelle bindet, und bis zum Fixpunkt gerechnet. Nachgerechnet: mit der Fassung
+des Prompts hält der erste Durchgang 28 Dateien, der zweite 27, und die herausfallende ist genau
+diese. Ein Aufräumen, das beim nächsten Mal wieder etwas findet, und eine Zahl, die nichts sagt.
+
+**Das ist Scope-Zuwachs, und er war richtig.** Er wurde gemeldet, begründet und ist zwingend: ohne
+den Fixpunkt ist die Regel nicht stabil. Ein Werkzeug, das die Lücke schliesst und es sagt, tut
+mehr für die Sache als eines, das den Prompt wörtlich befolgt. Daraus Prüfregel 64.
+
+**Was daneben liegt.** Der Prompt dieses Laufs ist im selben Commit mit ins Archiv gewandert; er
+beschreibt einen abgeschlossenen Lauf und ist damit am richtigen Ort. Die Sammelfunktion für
+Python-Quellen steigt weiterhin unter `archiv/` ab; dort liegt keine Python-Datei, der Punkt ist
+folgenlos und wird nicht nachgezogen. Ein Teil des Diffs ist Umformatierung bestehender Funktionen
+durch den Formatierer, kein Semantikwechsel.
+
+**Der Bestand danach.** 27 Markdown-Dateien im Wurzelverzeichnis, 104 unter `archiv/`. Die
+verschobenen Dateien werden nicht mehr auf Zeilenlänge, Escapes und Verweise geprüft; ihre
+Verweise dürfen von hier an verrotten (D314 Beschluss 3).
