@@ -12217,3 +12217,77 @@ durch den Formatierer, kein Semantikwechsel.
 **Der Bestand danach.** 27 Markdown-Dateien im Wurzelverzeichnis, 104 unter `archiv/`. Die
 verschobenen Dateien werden nicht mehr auf Zeilenlänge, Escapes und Verweise geprüft; ihre
 Verweise dürfen von hier an verrotten (D314 Beschluss 3).
+
+### D316 — Die Übergabedatei zerfällt; die offene Liste wird nummeriert
+
+**Kontext.** Die Übergabedatei war ein Monolith, der zu jedem Sitzungsbeginn vollständig in den
+Kontext ging und jedes Mal neu geschrieben wurde. D218 nennt das monolithische Rewrite seit
+mehreren Sitzungen als offenen Posten. Der Preis fällt doppelt an: einmal als Kontext, einmal
+als Abtippen einer Liste, von der sich pro Sitzung ein oder zwei Posten ändern.
+
+**Beschluss 1.** Die offene Liste steht in `offen.md`, mit nummerierten Posten `O1` bis `On`. Sie
+wird **fortgeschrieben, nicht neu geschrieben**. Nummern werden nie wiederverwendet; ein
+geschlossener Posten bleibt als Zeile stehen, mit dem Registereintrag, der ihn geschlossen hat.
+Zählvorschrift: `grep -c '^### O' offen.md`.
+
+**Beschluss 2.** Die stabile Disziplin steht in `arbeitsweise.md`: Rollen, Arbeitsbogen,
+Prototypmodus, Risiko-Tiers, Shell, Messvorschriften, Splices, Zitiergrammatik. Sie wird selten
+angefasst und geht nicht in jede Sitzung. `pruefregeln.md` bleibt der Volltext der Regeln;
+`arbeitsweise.md` sagt, wann man dorthin greift. Die Datei `sitzungsstart-*.md` trägt nur noch
+Stand, letzte Entscheidungen und nächsten Schritt.
+
+**Beschluss 3.** Das Werkzeug misst, läuft, liest Diffs vor und macht mechanische Refactorings.
+Der Supervisor bekommt **Zahlen und Befunde, keine Dateiinhalte**. Eine Datei wird nur gelesen,
+wenn eine benannte Entscheidung von ihrem Inhalt abhängt — dann aber vollständig, und vor dem
+Prompt. Das ändert die **Messung**, nicht die Abnahme: die Abnahme bleibt beim Supervisor und
+bleibt am Diff (Prüfregel 56).
+
+**Beschluss 4.** Die Projektkopie `/tmp/mar-context.xml` wird gezogen, wenn ein Nachbau ansteht,
+nicht als Reflex. Für die Frage, ob etwas irgendwo steht, reicht ein `grep` mit wenigen Zeilen
+Ausgabe.
+
+**Begründung.** Der Engpass dieser Arbeit ist nicht die Rechenzeit, sondern der Kontext pro
+Sitzung. Die drei Posten oben sind die drei grössten Einzelposten, und keiner von ihnen trägt
+zur Prüfbarkeit bei. Was der Prüfbarkeit dient — Register, Prüfregeln, Zitiergrammatik,
+Abnahme am Diff — bleibt unverändert.
+
+**Was das schliesst.** Der Posten aus D218 zum monolithischen Rewrite ist damit erledigt. Der
+zweite Posten aus D218, dass es keine Kontextdatei für das Werkzeug gibt, bleibt offen und steht
+als `O47` in `offen.md`: `arbeitsweise.md` ist für den Supervisor geschrieben, nicht für das
+Werkzeug.
+
+**Was das nicht ist.** Kein Beschluss über die Sprache und keiner über den Umfang der Spec. Die
+Layer-Dateien sind unberührt.
+
+### D317 — Der Repositoriumsname wird `symbolon`; umbenannt wird später
+
+**Kontext.** `mensch-als-republik` ist als Verzeichnis-, Paket- und Repositoriumsname zu lang und
+im englischsprachigen Raum nicht sprechbar. Für eine Öffnung nach aussen braucht das Projekt
+einen kurzen Namen. Der **Titel** der Spec bleibt davon unberührt.
+
+**Messung, 4. September 2026.** Zwei Kandidaten wurden gegen PyPI, npm, crates.io, RubyGems und
+die GitHub-Repositoriumssuche gehalten.
+
+`symbolon`: auf PyPI belegt durch ein Paket der Version 0.1.0 aus fremdem Fach (ein Dashboard für
+Token-Verbrauch); npm, crates.io und RubyGems frei; 19 gleichnamige GitHub-Repositorien, das
+grösste mit neun Sternen, ein Universitätsprojekt zu symbolic execution.
+
+`ostracon`: auf PyPI, crates.io und RubyGems frei; auf npm belegt durch ein Werkzeug zur
+Rekonstruktion von Entscheidungshistorie aus Git-Historie; auf GitHub belegt durch
+`Finschia/ostracon` mit siebzig Sternen, **ein Konsensalgorithmus, geforkt von Tendermint Core**.
+
+**Beschluss.** Der Name ist `symbolon`. Das griechische Objekt ist die in zwei Hälften gebrochene
+Marke; die Hälften weisen sich aus, indem sie zusammenpassen. Das ist `08 §2.2`: Aussagen sind
+überprüfbar, weil sie kollidieren können, nicht weil sie signiert sind.
+
+**Begründung für die Ablehnung von `ostracon`.** Die Kollision liegt im selben Fach. Ein
+Konsensalgorithmus im Feld dezentraler Protokolle ist genau die Verwechslung, die ein Name
+verhindern soll. `symbolon` kollidiert nur mit einem 0.1.0-Paket fremden Fachs und mit keinem
+Projekt von Gewicht.
+
+**Was das nicht ist.** Kein Beschluss zur Ausführung. Umbenannt wird nichts, bevor die Öffnung
+steht; der Posten ist `O55`. Der PyPI-Name bleibt belegt und ist `O56`; Ausweichnamen wären
+`symbolon-protocol` oder `mar`, und die Frage stellt sich erst bei einer Veröffentlichung.
+
+**Der Titel bleibt.** Die Spec heisst weiter *Mensch als Republik*. `08` trägt ihn, und er sagt,
+worum es geht. Ein Repositoriumsname benennt nicht den Gegenstand.
