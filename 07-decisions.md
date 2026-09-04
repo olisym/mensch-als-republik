@@ -12337,3 +12337,64 @@ Abweichung gemeldet. Die Abweichung ist besser als der Auftrag. Sobald ein neuer
 thematisch in eine frühere Gruppe gehört, steht seine Nummer mitten in der Datei; eine
 Reihenfolgeprüfung wäre dann falsch. Die Nummern sind Identität, nicht Position. Der Prompt
 war ungenau, der Bau ist richtig, und nichts wird nachgezogen.
+
+### D319 — Zwei Lizenzen: Apache-2.0 für den Code, CC-BY-4.0 für den Text
+
+**Der Anlass.** Die Öffnung braucht eine Lizenz; ohne sie ist die Bezeichnung als offenes
+Projekt eine Behauptung. Förderlinien verlangen, dass Software vollständig unter einer
+anerkannten freien Lizenz veröffentlicht wird.
+
+**Es sind zwei Entscheidungen, nicht eine.** MaR besteht aus Code und aus Text, und der Text ist
+der grössere Teil: neun Layer-Dateien, dreihundert Registereinträge, vierundsechzig
+Prüfregeln. Eine Codelizenz auf Prosa ist eine Kategorienverwechslung; sie regelt Quelltext und
+Objektcode und sagt über ein Spezifikationsdokument nichts.
+
+**Beschluss 1: der Code steht unter Apache-2.0.** Drei Gründe, nach Gewicht.
+
+Erstens die Patentklausel. Ein Protokoll besteht aus Verfahren, und Verfahren ziehen
+Patentansprüche an. Apache-2.0 gewährt eine ausdrückliche Patentlizenz und entzieht sie jedem,
+der wegen Patenten klagt. Die MIT-Lizenz hat dazu nichts.
+
+Zweitens der Beitragsabschnitt. Apache-2.0 regelt, unter welchen Bedingungen ein fremder Beitrag
+hereinkommt. Damit braucht das Projekt **kein** CLA, und ein Beitrag von aussen kostet keinen
+Vertrag.
+
+Drittens die Anerkennung: die Lizenz ist bei jeder Distribution und jeder Förderlinie ohne
+Rückfrage durch.
+
+**Beschluss 2: Spec, Register und Prüfregeln stehen unter CC-BY-4.0.** Namensnennung, sonst
+nichts. Ein Protokoll will maximal ungehindert implementierbar sein. Steht die Spec unter
+Copyleft, wird eine unabhängige Zweitimplementierung juristisch heikel — und das ist die
+stärkste Prüfmethode, die dieses Projekt hat (D302).
+
+Nicht CC-BY-SA, weil die Weitergabeklausel bei abgeleiteten Spezifikationen dieselbe Reibung
+erzeugt. Nicht CC0, weil die Namensnennung zählt: das Register ist der Beleg der Methode.
+
+**Gegen Copyleft am Code, ausdrücklich.** Die naheliegende Wahl wäre die AGPL: ein Protokoll
+gegen Machtkonzentration, also eine Lizenz gegen Vereinnahmung. Sie ist trotzdem falsch. Die
+Netzwerkklausel richtet sich gegen gehostete Dienste; MaR ist ein Peer-Protokoll, dort greift sie
+kaum. Was sie sehr wohl tut, ist Reimplementierer abzuschrecken — und damit besteuert sie genau
+das Verfahren, das in diesem Projekt funktioniert hat.
+
+**Was die Lizenz nicht leistet.** Sie verhindert keinen kustodialen Fork. Dagegen hilft
+Markenrecht, nicht Urheberrecht, und eine Marke wird nicht angemeldet. Das ist ein benannter,
+angenommener Verlust. Was einen kustodialen Umbau strukturell verhindert, steht in `03 §3.1` und
+im Fehlen einer Verwahrerrolle: das Protokoll kann den Betrag nicht lesen. Das ist die Sorte
+Durchsetzung, die MaR baut.
+
+**Gegen eine ethische Quelllizenz, ausdrücklich.** Reticulum stellt sein Protokoll gemeinfrei
+und lizenziert die Referenzimplementierung unter selbstgeschriebenen Zusatzbedingungen. Der
+Schnitt ist derselbe wie hier und war die Anregung; die Zusatzbedingungen sind die Warnung. Eine
+Beschränkung nach Anwendungsfeld ist nicht quelloffen im Sinne der Open Source Definition,
+erzeugt Inkompatibilität mit anderen Lizenzen, und verlagert eine strukturelle Frage ins
+Urheberrecht, wo sie nur so weit trägt, wie jemand zu klagen bereit ist. Das ist dieselbe
+Konstruktion, die dieses Projekt an Zentren kritisiert.
+
+**Mechanik.** `LICENSE` trägt den Apache-Text, `LICENSE-SPEC` den CC-BY-Text, beide ohne
+Dateiendung, damit sie nicht in die Menge der Wurzel-Markdown-Dateien fallen. Die README erklärt
+die Zweiteilung. Das Urheberrecht bleibt beim Autor; ohne CLA lässt sich später nichts
+relizenzieren, sobald fremde Beiträge eingegangen sind, und das ist beabsichtigt.
+
+**Eine Messung nebenbei.** Die Linie, die in einer früheren Runde als Ziel genannt wurde, hat
+ihren letzten Aufruf im Juni 2026 geschlossen. Welche Linie heute passt, ist zu messen, bevor ein
+Antrag geschrieben wird. Der Lizenzbeschluss hängt davon nicht ab.

@@ -248,10 +248,9 @@ stehen namentlich in der Liste.
 
 ## D — Öffnung
 
-### O51 Lizenz
+### O51 Lizenz — erledigt (D319)
 
-Nicht festgelegt. Ohne Lizenz ist „open source" eine Behauptung, und eine Förderlinie verlangt
-eine.
+Apache-2.0 für den Code, CC-BY-4.0 für Spec, Register und Prüfregeln.
 
 ### O52 Öffentliches Repository und Spiegel
 
@@ -281,7 +280,10 @@ Ausweichnamen: `symbolon-protocol`, `mar`.
 
 ### O57 Förderantrag
 
-NLnet, NGI-Zero-Linie. Setzt O51 bis O53 voraus. Der Stand der laufenden Calls ist ungeprüft.
+Setzt O52 und O53 voraus. **Gemessen im September 2026:** der zuvor genannte Commons-Fonds hat
+seinen dreizehnten und letzten Aufruf am 1. Juni 2026 geschlossen, für ihn werden keine Anträge
+mehr gesucht. Andere Linien laufen weiter, mit Fristen am 3. jedes ungeraden Monats. Welche
+Linie passt, ist vor dem Schreiben eines Antrags erneut zu messen.
 
 ### O58 Die Implementierungen liegen in zwei Repositorien
 

@@ -86,7 +86,7 @@ getan: O50 ist erledigt, die beiden Werkzeuge stehen. Was bleibt, ist der Weg na
    Hauptbaum, mit erhaltener Historie. Der Python-Baum wird **nicht** umgebaut. Tier 1, eigener
    Lauf, und D302 bleibt: die eingefrorene Spec-Kopie ist der Mechanismus der Unabhängigkeit,
    nicht die Repositoriumsgrenze.
-2. **O51** Lizenz. Ohne sie ist „open source" eine Behauptung, und eine Förderlinie verlangt eine.
+2. **O51** Lizenz — erledigt (D319). Apache-2.0 für den Code, CC-BY-4.0 für den Text.
 3. **O52** öffentlicher Spiegel, **O53** englische Schale — README, LICENSE, CONTRIBUTING und ein
    Dokument zur Methode. Neu geschrieben, nicht übersetzt. Die Werkstatt bleibt deutsch.
 4. **O57** Förderantrag.
