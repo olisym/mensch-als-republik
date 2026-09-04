@@ -260,3 +260,50 @@ Abschnitt.
 
 Minimal: `cbor2` und `cryptography`, unter `dev` `pytest`, `hypothesis`, `ruff`. Kein `float`,
 kein `fractions` im Produktivcode. `now` ist immer Parameter.
+---
+
+## 10. Die Übergabe
+
+Jede Sitzung endet mit einer Übergabedatei und beginnt mit ihr (D320).
+
+### Die Datei
+
+`sitzungsstart-NNNN.md` im Wurzelverzeichnis. Sie heisst nach der Sitzung, die sie **schreibt**,
+nicht nach der, die sie startet. Die Suffixe laufen `00a` bis `00z`, dann `00aa` fort; die
+jüngste ist die mit dem längeren Namensteil, bei gleicher Länge die alphabetisch spätere.
+
+Sie trägt den Stand **vor** ihrer eigenen Übergabe. Der Commit, mit dem sie eingecheckt wird,
+steht nicht mehr darin. Wer den Kopf abschreibt statt ihn zu messen, liegt um einen Commit
+daneben.
+
+Inhalt: Rolle in zwei Sätzen, der Stand mit den sechs Kaltzahlen, die Schichten, der Bestand,
+was zuletzt entschieden wurde, der nächste Schritt. Zielgrösse unter siebzig Zeilen. Alles
+Weitere steht in `arbeitsweise.md`, `offen.md` und `pruefregeln.md`.
+
+### Am Sitzungsende
+
+Der Supervisor schreibt die Datei und liefert sie als Download. Sie kommt in die Wurzel und wird
+committet; der Commit trägt den Präfix der schreibenden Sitzung. Im selben Commit wandert eine
+ältere Übergabedatei nach `archiv/`.
+
+### Am Sitzungsanfang
+
+In den Kontext gehen **zwei** Dinge: die dauerhafte Anweisung und die jüngste Übergabedatei.
+Sonst nichts. Die anderen Dateien liegen im Repositorium und werden geholt, wenn eine
+Entscheidung an ihnen hängt.
+
+Der erste Zug ist die Kaltmessung. Die Übergabedatei ist eine Hypothese; ihre Zahlen werden
+gemessen, nicht geglaubt (Prüfregel 40).
+
+### Das Archiv
+
+Gebunden wird nur die jüngste Übergabedatei. Jede ältere erscheint in der Bindungsmeldung von
+`check_specs.py` als ungebunden — das ist kein Mangel, sondern der Auftrag, sie wegzuräumen.
+Eine archivierte Datei wird ohne Abschnitt zitiert; der Zitiername ist unbekannt, sobald sie die
+Wurzel verlässt (D314).
+
+### Die Grenze
+
+Es gibt kein Verfahren, das erzwingt, dass die Datei geschrieben wird. Fällt sie aus, startet
+die nächste Sitzung blind. Mechanisch schliessen lässt sich das nicht, weil eine Sitzung im
+Repositorium kein Gegenstand ist.

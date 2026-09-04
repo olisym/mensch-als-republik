@@ -12398,3 +12398,45 @@ relizenzieren, sobald fremde Beiträge eingegangen sind, und das ist beabsichtig
 **Eine Messung nebenbei.** Die Linie, die in einer früheren Runde als Ziel genannt wurde, hat
 ihren letzten Aufruf im Juni 2026 geschlossen. Welche Linie heute passt, ist zu messen, bevor ein
 Antrag geschrieben wird. Der Lizenzbeschluss hängt davon nicht ab.
+
+### D320 — Das Übergabeverfahren wird aufgeschrieben
+
+**Der Anlass war eine Frage.** Wo die Übergabedateien liegen und wie die Übergabe funktioniert,
+stand nirgends. Das Verfahren lief seit Dutzenden Sitzungen aus Gewohnheit. Das ist genau die
+Sorte Wissen, gegen die dieses Projekt sonst anschreibt: eine Regel, die gilt, weil sich jemand
+an sie erinnert.
+
+**Beschluss 1: die Datei heisst nach der Sitzung, die sie schreibt.** `sitzungsstart-00aq.md` ist
+von Sitzung `00aq` verfasst und eröffnet Sitzung `00ar`. Sie nennt den Stand **vor** ihrer
+eigenen Übergabe; der Übergabe-Commit selbst steht nicht mehr darin. Wer den Kopf abschreibt
+statt ihn zu messen, liegt deshalb regelmässig um einen Commit daneben (Prüfregel 40).
+
+**Beschluss 2: die Suffixe laufen einstellig, dann zweistellig.** Von `00a` bis `00z`, dann
+`00aa` fort. Die jüngste Datei ist die mit dem längeren Namensteil; bei gleicher Länge die
+alphabetisch spätere. Das ist die Regel, die `latest_handoff` in `tools/check_specs.py` seit
+D318 ausführt, und sie steht jetzt auch in Worten.
+
+**Beschluss 3: zu Sitzungsbeginn gehen zwei Dinge in den Kontext.** Die dauerhafte Anweisung und
+die jüngste Übergabedatei. Sonst nichts. `arbeitsweise.md`, `offen.md` und `pruefregeln.md`
+liegen im Repositorium und werden geholt, wenn eine Entscheidung an ihnen hängt — nicht als
+Reflex (D316 Beschluss 3 und 4).
+
+**Beschluss 4: der erste Zug ist die Kaltmessung.** Die Übergabedatei ist eine Hypothese, keine
+Messung. Ihre Zahlen werden gemessen. In dieser Sitzung wich der Stand um einen Commit ab, und
+die Abweichung war die Datei, nicht das Repositorium.
+
+**Beschluss 5: die Bindungsmeldung ist die Erinnerung ans Archivieren.** Gebunden wird nur die
+jüngste Übergabedatei; jede ältere erscheint als ungebunden. Diese Zeile ist kein Mangel,
+sondern der Auftrag, sie wegzuräumen. Der Rückstand betrug zuletzt drei Sitzungen.
+
+**Ausdrücklich nicht gebaut: ein zweiter Prüfer.** Erwogen war ein Abgleich zwischen dem
+Präfix des jüngsten Commits und der jüngsten Übergabedatei. Er misst dasselbe wie die
+Bindungsmeldung und schlüge bei jedem Commit an, der keine Übergabe ist. Zwei Prüfer auf
+denselben Gegenstand sind keine doppelte Sicherheit, sondern ein zweiter Ort, an dem eine Regel
+driften kann.
+
+**Die benannte Grenze.** Es gibt kein erzwungenes Verfahren, das sicherstellt, dass eine
+Übergabedatei überhaupt geschrieben wurde. Fällt sie aus, startet die nächste Sitzung blind
+und ist auf die Projektkopie und die Suche in alten Gesprächen angewiesen. Beides ist
+schwächer. Mechanisch schliessen lässt sich die Lücke nicht, weil eine Sitzung im
+Repositorium kein Gegenstand ist.
