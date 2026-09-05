@@ -51,11 +51,10 @@ record.
 
 ## What does *not* exist yet
 
-No real application. `08 §2.2` (the layer defining the project's own admission criteria) is
-explicit that a real test requires four real people with a genuine shared concern — not a
-simulation, not volunteers doing a favor. Waiting for that is treated as a legitimate state;
-pretending otherwise is not. Making the project visible — this repository
-included — is part of how those four people might eventually turn up.
+No real application. The register (D237) is explicit that a real test needs real people with a
+genuine shared concern — not a simulation, not volunteers doing a favor. Waiting for that is
+treated as a legitimate state; pretending otherwise is not. Making the project visible — this
+repository included — is part of how those people might eventually turn up.
 
 ## Repository layout
 
@@ -83,5 +82,5 @@ This is currently a one-person project, but it isn't built ad hoc — every chan
 against the specification, not just against what compiles. See `docs/METHOD.md` for how that
 actually works day to day.
 If you're working on related problems — decentralized coordination, protocols hardened by
-contradiction rather than authority, or you think you might be one of the four people `08
-§2.2` is waiting for — open an issue, or see `CONTRIBUTING.md`.
+contradiction rather than authority, or you think you might be one of the people the register
+(D237) is waiting for — open an issue, or see `CONTRIBUTING.md`.
