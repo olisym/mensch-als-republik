@@ -12923,3 +12923,61 @@ Z=dora, C=chris; Vouch-Graph C→B, C→Z, Z→B; Obligation B→A; `submit-arbi
 
 Jede Abweichung von (a)–(c) ist ein Befund, keine Regression — die Erwartung selbst ist die
 Messlatte, nicht ein vorab getippter Zahlenwert.
+
+---
+
+### D337 — Abnahme Szenario D: Rechenschaft unter Partition (a/b widerlegt, c bestätigt)
+
+**Anlass.** Abnahme zu D336, Branch `00aw-szenario-d`, Commit `2351ee2`. Unabhängig
+nachgebaut: Diff angewendet, `python -m tools.sim.szenario_d` selbst laufen lassen —
+Ausgabe deckungsgleich mit der gemeldeten.
+
+**Ausgeführt.** Neue Datei `tools/sim/szenario_d.py` (Wegwerf), keine Änderung an
+`symbolon/`, `welt.py`, `szenario.py`, `szenario_c.py`. `_verdict_status_namen` als
+beschränkte Kopie von `_verdict_status_row` — begründet, da `verdict_status()` explizit
+`raise ValueError("verdict not in store")` verlangt (`symbolon/profiles/verdict.py`),
+sobald der Verdikt-Claim lokal fehlt: kein Bug, sondern Vorbedingung — die Funktion
+beantwortet „ist dieses Verdikt für mich bindend", nicht „was hältst du von einem
+Verdikt, das du nicht hast".
+
+**Befund (a) — widerlegt, korrigiert eine eigene Prompt-Annahme des Supervisors.**
+Umordnung (Verdikt vor Anklage) führt zu keinem Absturz und konvergiert nach
+Nachlieferung — aber die erwarteten Marker `PENDING`/`UNRESOLVED_ACCUSED` treten nicht
+ein, weil zwei Ebenen verwechselt wurden (Prüfregel 38): `State.PENDING` (Layer 01,
+unbekannter Kettenvorgänger) ist nicht dieselbe Mechanik wie die Anklage/Verdikt-
+Querverweise in `verdict_status()` (Layer 03, eigene Finding-Familie). Die tatsächliche
+Degradation ist `UNKNOWN_ACCUSATION` (referenzierte Anklage fehlt im Store) —
+`UNRESOLVED_ACCUSED` gilt einem anderen Fall (fehlender bestrittener Claim hinter einer
+zweistufigen Anklage). Zusätzlich: Autoren besitzen ihren eigenen Claim trivial (kein
+Zustellungsbedarf) — anna bleibt deshalb durchgehend `BINDING`, weil sie `acc_a_b` selbst
+verfasst hat. Realer Befund für D336: Layer 01 und Layer 03 degradieren bei fehlender
+Referenz unterschiedlich, aber beide graceful — kein Absturz auf keiner der beiden
+Ebenen, nur unterschiedliche Vokabeln.
+
+**Befund (b) — widerlegt, Ursache ist eine Konfundierung im Prompt (Supervisor).** Die
+Uhrendrift (c) wurde vor dem Widerruf-Test (b) auf demselben Subjekt/Anker verlangt:
+annas Uhrendrift löscht bereits vor dem Widerruf-Test alle Baseline-Vouches lokal
+(`t_exp`-Ablauf), wodurch anna schon vorher `d=None/flow=0` zeigt und der eigentliche
+Test — bleibt der Vor-Widerruf-Wert erhalten, wenn der Widerruf nie ankommt? — nicht
+isoliert beobachtbar ist. Tatsächlich bestätigt: anna weicht stabil und fehlerfrei von
+bruno/chris/dora ab (Wert vor und nach dem nie zugestellten Widerruf identisch) — das
+erfüllt D336s eigentliche Kernaussage („stabil, abweichend, widerspruchsfrei"), nur nicht
+mit der im Prompt getippten Vergleichszahl aus Lauf 1.
+
+**Befund (c) — bestätigt.** Nur anna sieht `vouch_c_b` als `expired`; `now` bleibt
+lokal/subjektiv auch im Mehrparteien-Graphen, wie `01-claim-atom.md §6` normativ verlangt.
+
+**Gesamtbild.** Kein Absturz, keine widersprüchliche Kennzahl, keine stille
+Fehlbehandlung in einem der drei Fälle — die Rechenschaftsschiene (D332/D333) bricht
+unter Partition nicht. Zwei der drei „erwarteten Marker" waren vom Supervisor falsch
+benannt bzw. konfundiert, nicht vom Protokoll widerlegt.
+
+**Offen, falls sauber isoliert gewünscht.** Ein Szenario D' mit (i) einem Nicht-Autor
+als Ziel des Umordnungstests (nicht anna selbst) und (ii) getrennten Subjekten/Läufen
+für (b) und (c), damit beide unabhängig voneinander messbar sind. Kein Zwang — die
+Kernfrage aus D336 ist bereits ausreichend beantwortet.
+
+**Nebenbefund, kein Blocker.** `check_specs.py` zeigt `00aw-szenario-d-prompt.md`
+bereits als gebunden, `00av-schlichtung-szenario-prompt.md` weiterhin als ungebunden,
+obwohl `szenario_c.py` dieselbe Zitierform verwendet wie `szenario_d.py` — Ursache
+ungeklärt, außerhalb des Prompt-Scopes.
