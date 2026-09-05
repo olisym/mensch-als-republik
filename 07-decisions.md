@@ -13083,3 +13083,48 @@ dritte, unbeteiligte Vouch an anna (n=20, neuer `h_prev`). Budgetsumme 90 ≤ D=
   auch `anna`, obwohl die Vouch dorthin nie Teil des Paars war.
 
 Jede Abweichung ist ein Befund, keine Regression.
+
+---
+
+### D341 — Abnahme Szenario E: Equivocation-Erkennung sauber, Vorhersagen zweimal zu grob
+
+**Anlass.** Abnahme zu D340, Branch `00aw-szenario-e`, Commit `dead3a6`. Unabhängig
+nachgebaut: Diff angewendet, `python -m tools.sim.szenario_e` selbst laufen lassen —
+Ausgabe deckungsgleich mit der gemeldeten.
+
+**Befund Lauf 1 — Divergenz bestätigt, Gruppierung falsch vorhergesagt.** Kein Fehler,
+keine widersprüchliche Kennzahl — aber keine Zweiteilung „dora vs. Rest", sondern eine
+Dreiteilung, aus einem Mechanismus, den ich zum dritten Mal in dieser Sitzungsreihe
+übersehen habe (D337, D340): **bruno besitzt als Autor beide Hälften seiner eigenen
+Gabelung immer, unabhängig von jeder Zustellung.** Aus bruno's eigener Sicht sind daher
+sowohl `real_b_chris` als auch `fork_b_dora` `equivocation_flagged` — und die
+Ausschlussregel (`derive.py`) entfernt konsequent **alle** seine eigenen Vouch-Gruppen aus
+seiner eigenen Trust-Berechnung, auch die unbeteiligte `legit_b_anna`. dora (einzige
+Besitzerin von `fork_b_dora`) sieht dagegen einen zusätzlichen, für sie unauffälligen Pfad
+über bruno — höherer Flow, nicht niedrigerer. anna/chris kennen nur die reale Hälfte und
+`legit_b_anna` und sehen beide als völlig normal. Drei Gruppen, drei verschiedene
+Gründe (Selbstverurteilung, zusätzlicher unentdeckter Pfad, schlicht fehlende Information)
+— kein einheitlicher „dora vs. Rest"-Schnitt, wie im Prompt behauptet.
+
+**Befund Lauf 2 — Kernaussage bestätigt, sogar stärker als vorhergesagt.**
+`classify(real_b_chris)` kippt bei chris korrekt `active` → `equivocation_flagged`,
+sobald `fork_b_dora` nachträglich ankommt. `trust(chris→anna)` fällt wie vorhergesagt
+(10→0) — `legit_b_anna` war bereits als zählender Beitrag etabliert, bevor der Autor
+entdeckt wurde, und wird beim Entdecken korrekt entfernt. `trust(chris→dora)` fällt
+entgegen meiner Erwartung **nicht** (50→50, nur Kantenzahl 5→3): der neu ankommende
+Beitrag von `fork_b_dora` wird im selben `derive()`-Durchlauf erkannt und ausgeschlossen,
+in dem er erstmals erscheint — es gibt kein Zeitfenster, in dem ein soeben entdeckter
+Equivocations-Beitrag kurz zählt, bevor er entfernt wird. Das ist eine **stärkere**
+Eigenschaft als die im Prompt behauptete: Erkennung und Ausschluss sind atomar, nicht
+sequenziell.
+
+**Gesamtbild.** In keinem der beiden Läufe ein Fehler, eine widersprüchliche Kennzahl
+oder ein stiller Fehlschluss — die Equivocation-Schiene degradiert unter Partition
+genauso graceful wie die Rechenschaftsschiene aus D336–D339. Beide „widerlegt"-Urteile
+des Werkzeugs sind zutreffend; die Ursache liegt in zwei zu groben Vorhersagen meinerseits,
+nicht in einem Fund über MaR.
+
+**Wiederkehrendes Muster, drei Sitzungen in Folge (D337, D340).** Ein Autor besitzt jeden
+selbst signierten Claim immer, unabhängig von jeder `zustellen`-Aussage — das gilt auch für
+beide Hälften einer selbst erzeugten Gabelung. Vorschlag, keine Aktion: eine Prüfregel
+dazu wäre wahrscheinlich sinnvoll, überlasse ich Oli.
