@@ -14,9 +14,10 @@ from mensch_als_republik.governance import (
     verify_ratification,
 )
 from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.profiles import membership
+from mensch_als_republik.profiles import membership, settlement
 from mensch_als_republik.trust.derive import derive
 from mensch_als_republik.trust.findings import TrustFinding
+from mensch_als_republik.trust.flow import trust
 from mensch_als_republik.trust.params import TrustParams
 from mensch_als_republik.verifier import classify
 
@@ -145,7 +146,6 @@ def _schritt_genesis(step: dict[str, Any], ctx: Kontext) -> None:
 def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
     assert ctx.welt is not None and ctx.ex is not None
     autor = ctx.welt.teilnehmer[step["autor"]]
-    scope = _resolve_scope(step["scope"], ctx)
     praedikat = step["praedikat"]
     t = int(step.get("t", 1))
     kette_fortschreiben = bool(step.get("kette_fortschreiben", True))
@@ -153,32 +153,44 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
     if t_exp is not None:
         t_exp = int(t_exp)
 
-    if "J" in step:
-        J = _resolve_j(step["J"], ctx)
-    elif praedikat == "vouch":
-        subj = _resolve_subject(step["subject"], ctx)
-        J = (1, subj)
+    if praedikat == "revoke":
+        # core/revoke@1, selbst-bezüglich; J = (2, claim_id(target)). Kein nuc:-Präfix,
+        # kein Scope — core/* hat keinen (01 §2.3, predicates.py).
+        J = (2, claim_id(ctx.labels[step["target"]]))
+        v = None
+        p = "core/revoke@1"
+        N: bytes | None = None
     else:
-        raise ValueError(f"claim step needs J: {step!r}")
+        scope = _resolve_scope(step["scope"], ctx)
+        if "J" in step:
+            J = _resolve_j(step["J"], ctx)
+        elif praedikat in ("vouch", "obligation"):
+            # obligation@1: J = [identity, gläubiger] (03 §3.3.1), wie vouch aus subject.
+            subj = _resolve_subject(step["subject"], ctx)
+            J = (1, subj)
+        else:
+            raise ValueError(f"claim step needs J: {step!r}")
 
-    v: bytes | None = None
-    if praedikat == "vote":
-        choice = int(step.get("choice", step.get("v", {}).get("0", 0)))
-        v = cbor_canon.encode({0: choice})
-    elif praedikat == "vouch":
-        n = int(step["n"])
-        v = cbor_canon.encode({0: n})
-    elif praedikat == "ratify":
-        witnesses = [claim_id(ctx.labels[w]) for w in step["witnesses"]]
-        v = cbor_canon.encode({0: witnesses})
+        v = None
+        if praedikat == "vote":
+            choice = int(step.get("choice", step.get("v", {}).get("0", 0)))
+            v = cbor_canon.encode({0: choice})
+        elif praedikat in ("vouch", "obligation"):
+            # obligation.v Key 0 = amount:uint (03 §3.3.1); Kodierung wie vouch.n.
+            n = int(step["n"])
+            v = cbor_canon.encode({0: n})
+        elif praedikat == "ratify":
+            witnesses = [claim_id(ctx.labels[w]) for w in step["witnesses"]]
+            v = cbor_canon.encode({0: witnesses})
 
-    p = _nuc(scope, {"accept-rules": "accept-rules", "vote": "vote", "propose": "propose",
-                     "ratify": "ratify", "vouch": "vouch"}[praedikat])
+        p = _nuc(scope, {"accept-rules": "accept-rules", "vote": "vote", "propose": "propose",
+                         "ratify": "ratify", "vouch": "vouch", "obligation": "obligation"}[praedikat])
+        N = scope
 
     if kette_fortschreiben:
-        claim = autor.claim_signieren(p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp)
+        claim = autor.claim_signieren(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
     else:
-        claim = autor.claim_gabeln(p=p, J=J, t=t, v=v, N=scope, t_exp=t_exp)
+        claim = autor.claim_gabeln(p=p, J=J, t=t, v=v, N=N, t_exp=t_exp)
     if label := step.get("label"):
         ctx.labels[label] = claim
 
@@ -289,11 +301,42 @@ def _trust_row(
                 if f.kind is TrustFinding.OVERCOMMITTED_AUTHOR
             }
         )
+        flow = trust(
+            tp.store_laden(),
+            anchors=anchor_set,
+            targets=frozenset({subj}),
+            scope=ctx.ex.N_res,
+            now=tp.read_now(),
+            params=params,
+        )
         row[name] = {
             "d": d,
             "C": c,
             "edges": len(deriv.bfs.edges),
+            "flow": flow.value,
+            "paths": flow.disjoint_paths,
             "overcommitted": over_names,
+        }
+    return row
+
+
+def _settlement_row(ctx: Kontext, label: str) -> dict[str, dict[str, Any]]:
+    """Tilgungszustand je Beobachter (03-profiles.md §3.3.2)."""
+    assert ctx.welt is not None and ctx.ex is not None
+    obligation = ctx.labels[label]
+    policy = _policy(ctx.ex, ctx.ex.N_res)
+    row: dict[str, dict[str, Any]] = {}
+    for name, tp in ctx.welt.teilnehmer.items():
+        result = settlement(
+            tp.store_laden(),
+            obligation=obligation,
+            scope=ctx.ex.N_res,
+            now=tp.read_now(),
+            policy=policy,
+        )
+        row[name] = {
+            "state": result.state.value,
+            "findings": sorted(f.kind.value for f in result.findings),
         }
     return row
 
@@ -373,6 +416,8 @@ def _schritt_zeige(step: dict[str, Any], ctx: Kontext) -> str | None:
         got = _tally_row(ctx, step["target"])
     elif was == "trust":
         got = _trust_row(ctx, step["subject"], step.get("anchors", ["anna", "bruno"]))
+    elif was == "settlement":
+        got = _settlement_row(ctx, step["claim"])
     elif was == "classify":
         got = _classify_row(ctx, step["claim"])
     elif was == "ratify":
@@ -396,6 +441,24 @@ def _schritt_zeige(step: dict[str, Any], ctx: Kontext) -> str | None:
                 ("no", *(str(got[n]["no"]) for n in got)),
             ]
             return tabelle(f"tally/{step['target']}", cols, rows)
+        if was == "trust":
+            cols = ["", *got.keys()]
+            name = step.get("name", step["subject"])
+            rows = [
+                ("d", *(str(got[n]["d"]) for n in got)),
+                ("C", *(str(got[n]["C"]) for n in got)),
+                ("edges", *(str(got[n]["edges"]) for n in got)),
+                ("flow", *(str(got[n]["flow"]) for n in got)),
+                ("paths", *(str(got[n]["paths"]) for n in got)),
+            ]
+            return tabelle(f"trust/{name}", cols, rows)
+        if was == "settlement":
+            cols = ["", *got.keys()]
+            name = step.get("name", step["claim"])
+            rows = [
+                ("state", *(got[n]["state"] for n in got)),
+            ]
+            return tabelle(f"settlement/{name}", cols, rows)
     return None
 
 
@@ -422,7 +485,10 @@ def run_scenario(path: str | Path) -> None:
         elif art == "uhr":
             _schritt_uhr(step, ctx)
         elif art == "zeige":
-            _schritt_zeige(step, ctx)
+            text = _schritt_zeige(step, ctx)
+            if text:
+                print(text)
+                print()
         elif art == "erwarte":
             _schritt_erwarte(step, ctx)
         else:
