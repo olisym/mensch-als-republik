@@ -14,7 +14,7 @@ from symbolon.governance import (
     verify_ratification,
 )
 from symbolon.policy import NucleusPolicy
-from symbolon.profiles import membership, settlement
+from symbolon.profiles import membership, settlement, verdict_status
 from symbolon.trust.derive import derive
 from symbolon.trust.findings import TrustFinding
 from symbolon.trust.flow import trust
@@ -164,10 +164,20 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
         scope = _resolve_scope(step["scope"], ctx)
         if "J" in step:
             J = _resolve_j(step["J"], ctx)
-        elif praedikat in ("vouch", "obligation"):
-            # obligation@1: J = [identity, gläubiger] (03 §3.3.1), wie vouch aus subject.
+        elif praedikat in ("vouch", "obligation", "submit-arbitration"):
+            # obligation@1: J = [identity, gläubiger] (03 §3.3.1).
+            # submit-arbitration@1: J = [identity, schiedsrichter] (03 §2.4.1).
             subj = _resolve_subject(step["subject"], ctx)
             J = (1, subj)
+        elif praedikat == "accusation":
+            # 03 §2.1: J = [identity, beschuldigte] oder [claim-ref, bestrittener_claim].
+            if "target" in step:
+                J = (2, claim_id(ctx.labels[step["target"]]))
+            else:
+                J = (1, _resolve_subject(step["subject"], ctx))
+        elif praedikat == "verdict":
+            # 03 §2.2: J = [claim-ref, accusation.claim_id].
+            J = (2, claim_id(ctx.labels[step["target"]]))
         else:
             raise ValueError(f"claim step needs J: {step!r}")
 
@@ -179,12 +189,18 @@ def _schritt_claim(step: dict[str, Any], ctx: Kontext) -> None:
             # obligation.v Key 0 = amount:uint (03 §3.3.1); Kodierung wie vouch.n.
             n = int(step["n"])
             v = cbor_canon.encode({0: n})
+        elif praedikat == "verdict":
+            # verdict.v Key 0 = Ausgang:uint (03 §2.2); die Schicht liest ihn nicht.
+            n = int(step["n"])
+            v = cbor_canon.encode({0: n})
         elif praedikat == "ratify":
             witnesses = [claim_id(ctx.labels[w]) for w in step["witnesses"]]
             v = cbor_canon.encode({0: witnesses})
 
         p = _nuc(scope, {"accept-rules": "accept-rules", "vote": "vote", "propose": "propose",
-                         "ratify": "ratify", "vouch": "vouch", "obligation": "obligation"}[praedikat])
+                         "ratify": "ratify", "vouch": "vouch", "obligation": "obligation",
+                         "submit-arbitration": "submit-arbitration",
+                         "accusation": "accusation", "verdict": "verdict"}[praedikat])
         N = scope
 
     if kette_fortschreiben:
@@ -341,6 +357,29 @@ def _settlement_row(ctx: Kontext, label: str) -> dict[str, dict[str, Any]]:
     return row
 
 
+def _verdict_status_row(ctx: Kontext, label: str) -> dict[str, dict[str, Any]]:
+    """Bindungskraft je Beobachter (03-profiles.md §2.4.2)."""
+    assert ctx.welt is not None and ctx.ex is not None
+    verdict = ctx.labels[label]
+    arbitrators = frozenset(ctx.ex.constitution_res["arbitration"]["arbitrators"])
+    policy = _policy(ctx.ex, ctx.ex.N_res)
+    row: dict[str, dict[str, Any]] = {}
+    for name, tp in ctx.welt.teilnehmer.items():
+        result = verdict_status(
+            tp.store_laden(),
+            verdict=verdict,
+            scope=ctx.ex.N_res,
+            arbitrators=arbitrators,
+            now=tp.read_now(),
+            policy=policy,
+        )
+        row[name] = {
+            "status": result.status.value,
+            "findings": sorted(f.kind.value for f in result.findings),
+        }
+    return row
+
+
 def _classify_row(ctx: Kontext, label: str) -> dict[str, str]:
     assert ctx.welt is not None
     claim = ctx.labels[label]
@@ -418,6 +457,8 @@ def _schritt_zeige(step: dict[str, Any], ctx: Kontext) -> str | None:
         got = _trust_row(ctx, step["subject"], step.get("anchors", ["anna", "bruno"]))
     elif was == "settlement":
         got = _settlement_row(ctx, step["claim"])
+    elif was == "verdict_status":
+        got = _verdict_status_row(ctx, step["claim"])
     elif was == "classify":
         got = _classify_row(ctx, step["claim"])
     elif was == "ratify":
@@ -459,6 +500,13 @@ def _schritt_zeige(step: dict[str, Any], ctx: Kontext) -> str | None:
                 ("state", *(got[n]["state"] for n in got)),
             ]
             return tabelle(f"settlement/{name}", cols, rows)
+        if was == "verdict_status":
+            cols = ["", *got.keys()]
+            name = step.get("name", step["claim"])
+            rows = [
+                ("status", *(got[n]["status"] for n in got)),
+            ]
+            return tabelle(f"verdict_status/{name}", cols, rows)
     return None
 
 
@@ -468,11 +516,10 @@ def _schritt_erwarte(step: dict[str, Any], ctx: Kontext) -> None:
     _schritt_zeige(fake, ctx)
 
 
-def run_scenario(path: str | Path) -> None:
-    """Führt eine JSON-Szenariodatei aus; bricht bei erwarte-Abweichung ab."""
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+def run_schritte(schritte: list[dict[str, Any]]) -> Kontext:
+    """Führt eine Schrittliste aus und gibt den Kontext zurück (werkzeuge.md §3.2)."""
     ctx = Kontext()
-    for step in data["schritte"]:
+    for step in schritte:
         art = step["art"]
         if art == "welt":
             _schritt_welt(step, ctx)
@@ -493,3 +540,10 @@ def run_scenario(path: str | Path) -> None:
             _schritt_erwarte(step, ctx)
         else:
             raise ValueError(f"unknown step art: {art!r}")
+    return ctx
+
+
+def run_scenario(path: str | Path) -> Kontext:
+    """Führt eine JSON-Szenariodatei aus; bricht bei erwarte-Abweichung ab."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    return run_schritte(data["schritte"])
