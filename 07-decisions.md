@@ -12550,3 +12550,51 @@ Kaltmessung selbst — Testzahl, Registerstand — bleibt bei Oli; sie hängt an
 **Was das nicht ändert.** Die Zwei-Dinge-Regel aus Abschnitt 10 (dauerhafte Anweisung, jüngste
 Übergabedatei) bleibt bestehen. Ob die Übergabedatei künftig ebenfalls aus dem Klon gelesen
 statt eingefügt wird, ist eine offene Frage, keine hier getroffene Entscheidung.
+
+### D326 — Externe Analyse bestätigt D234–D236; ein Ausweg wiederholt sich (O31, O59)
+
+**Anlass.** Eine unabhängig erstellte vergleichende Analyse („Removing Hostile Authorities
+without Center, Court, or Consensus") stellt exakt die Frage aus D236 noch einmal: wie entfernen
+Systeme ohne Zentrale, Gericht und Konsens einen feindlichen Träger einer Autoritätsliste. Sie
+kennt D234–D236 nicht und kam unabhängig zum selben negativen Kernergebnis.
+
+**Was sich deckt, ohne neuen Ertrag.** MLS/RFC 9420, SPKI/SDSI/RFC 2693, Stellar/SCP, Mastodon-
+Defederation, Steem→Hive, PBFT/BFT-SMaRt und Kuznetsov/Tonkikh (arXiv 2005.13499) stehen bereits
+namentlich in der Tabelle von D236, mit denselben Preisen. Das ist Redundanz, keine Bestätigung
+zweiter Ordnung — dieselben Primärquellen, zweimal gelesen.
+
+**Ein bereits verworfener Ausweg, unabhängig wiederholt.** Die Analyse empfiehlt als Stufe 2
+einen Nachfolge-/Tombstone-Mechanismus (neues Verfassungsobjekt übernimmt alle Teilnehmer außer
+dem Feindlichen). Das ist wortgleich der Vorschlag, den D236 unter „Berichtigung eines
+vorgeschlagenen Auswegs" bereits geprüft und verworfen hat: er umgeht die Blockade nicht, solange
+der Nachfolgebeschluss derselben Auszählung unterliegt — nur ein Nachfolger **ohne jeden
+Beschluss** (also: Exit/Genesis, D236 Punkt 3) umgeht sie strukturell. Die Analyse benennt diesen
+Vorbehalt selbst nicht; er gilt unverändert.
+
+**Neu, und was er trägt.**
+- Buchanan/Tullock (*The Calculus of Consent*, 1962, Kap. 6–8): die U-förmige Kostenkurve
+  (Externalitätskosten fallend, Entscheidungskosten steigend mit der Schwelle) ist die
+  theoretische Herleitung dessen, was D235s gemessene Tabelle (kleinstes blockierendes `m` je
+  Schwelle) empirisch zeigt. Stützt O31, ändert nichts an der Entscheidung.
+- Schiedsfähigkeit II–IV (BGH, insb. BGHZ 180, 221): die dort verlangten Mindestbedingungen für
+  bindende Schiedsklauseln (Mitwirkung aller Betroffenen an der Schiedsrichterbenennung) treffen
+  auf `arbitration.arbitrators` dasselbe Bearer-Problem wie auf `participants` selbst — das
+  bestätigt D236 Punkt 2 (Schlichtung als „wichtiger Grund" verworfen, zirkulär), liefert aber
+  die externe Doktrin dazu, die D236 nur benannt, nicht belegt hatte.
+- Vouchsafe (arXiv:2601.02254): monotone, capability-artige Widerrufsform, bei der
+  Unterdrückung/Verzögerung eines Tokens Autorität nur verlängern, nie ausweiten kann. Das
+  betrifft nicht `participants` (D236 bleibt unberührt), sondern die in D313 offen gelassene
+  Frage, ob Vertrauensentzug (Layer 02) als Durchsetzung reicht. Bisher ungeprüft am Primärtext.
+
+**Genauigkeitsvorbehalt (Prüfregel 27).** Die Analyse trägt selbst den Hinweis, dass die
+Buchanan/Tullock-Seitenangabe und die Hirschman-Zitate aus Sekundärquellen stammen, nicht aus
+verifiziertem Primärtext. Für dieses Register gilt dieselbe Regel wie in D236 für den
+Recherchebericht dort: die Analyse stützt, sie trägt nicht allein. Vouchsafe, die Matrix-CVEs
+(2025-49090, 2025-54315) und die Schiedsfähigkeit-Entscheidungen sind hier ebenfalls nicht am
+Primärtext nachgeprüft.
+
+**Was das für offene Posten bedeutet.** O31 bekommt eine Zeile zur theoretischen Fundierung
+(Buchanan/Tullock), keine neue Entscheidung. Neuer Posten O59: Vouchsafe als mögliche Antwort auf
+die D313-Frage nach Vertrauensentzug als Durchsetzung — ungeprüft, niedrige Dringlichkeit.
+
+**Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei.
