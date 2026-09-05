@@ -12749,3 +12749,49 @@ Dieser Eintrag zieht den Satz nach.
 
 **Kein weiterer Lauf vorgesehen.** `O56` (PyPI-Name) bleibt ein weicher Blocker, erst relevant
 bei einer Veröffentlichung — unverändert, kein Teil dieses Eintrags.
+
+---
+
+### D332 — Fork zu Stufe C: Rechenschaft ohne Bindung, geprüft an Law Merchant und Bernstein
+
+**Anlass.** Nach D236 (kein Ausschlussmechanismus) und der zweifachen Verwerfung von
+„Schlichtung als wichtiger Grund" (D236 Punkt 2, D326) bleibt die einzige noch offene Rolle von
+`03 §2` das bilaterale Verdikt zwischen zwei Parteien (Pfad ii, `§2.4`) — kein Ausschluss,
+sondern Rechenschaft im Einzelfall.
+
+**Der Fund, der die Frage schärft.** `submit-arbitration@1` ist bewusst widerrufbar (`§2.4.1`)
+— anders als reale Schiedsklauseln, die unter der FAA §2 als „valid, irrevocable, and
+enforceable" gelten, gerade weil ihre Durchsetzung auf der Bindung beruht. MaR scheint diese
+Bindung nicht zu brauchen: `05-enforcement.md §5` sagt bereits normativ, subjektive Verdikte
+reisten „als attribuierte Meinungen, deren Gewicht das Vertrauen des Beobachters in den
+Schiedsrichter ist — nie eine globale Score-Änderung" — unabhängig vom
+`BINDING`/`ATTRIBUTED_OPINION`-Status aus `03 §2.4`. Das ist strukturell die
+Durchsetzungslogik des Law Merchant (Milgrom/North/Weingast 1990, Champagne-Messen, private
+Richter ohne Staatsmacht) und der Diamantenhändler (Bernstein 1992): keine erzwingbare
+Bindung, sondern Reputationsinformation, die sich in einer eng verflochtenen Gruppe verbreitet
+(vgl. auch Ellickson 1991, Shasta County).
+
+**Was das nicht ist.** Keine Bestätigungsübung wie die verworfene Ausschluss-Idee — die
+Beobachtungsgewichtung ist in `05-enforcement.md` als Prinzip benannt, aber nirgends als
+Formel oder Code. Offen bleibt: lässt sich dieses Prinzip mit den vorhandenen Primitiven
+(Layer 02 Trust-Flow, Layer 03 Verdikt-Cluster) tatsächlich abbilden, oder verlangt es einen
+Mechanismus, den es noch nicht gibt?
+
+**Die Hypothese für den Prototyp.** Zwei Pfade im selben Lauf:
+1. B unterwirft sich, A klagt an, Z urteilt gegen B, `verdict_status()` liefert `BINDING`. Ein
+   Beobachter C, der Z vertraut, widerruft seinen Vouch auf B. Trust-Flow-Effekt messen (wie
+   D328: Distanz, Kapazität, Fluss, Pfade).
+2. B widerruft seine Unterwerfung, bevor `verdict_status()` ausgewertet wird — Status kippt zu
+   `ATTRIBUTED_OPINION`. Derselbe Beobachter C sieht Anklage, Verdikt und den Zeitpunkt des
+   Widerrufs; die Szenario-Regel für C lautet: widerruft denselben Vouch, wenn
+   `trust_flow(C, Z) > 0` — eine Beobachter-Policy, keine Protokollmechanik. Denselben
+   Trust-Flow-Zustand danach messen.
+
+**Erwartung, vor dem Lauf benannt (Golden Anchors werden nie nachgezogen).** Zeigen beide
+Pfade denselben Trust-Flow-Effekt nach dem jeweiligen Vouch-Widerruf, trägt die
+Reputationsschiene unabhängig von `BINDING`. Der Bond-Slash (`03 §2.3`) bliebe im
+widerrufenen Pfad trotzdem aus — eine bereits benannte, keine neu gefundene Asymmetrie, wenn
+sie sich bestätigt.
+
+**Modus.** D311 gilt: Wegwerfcode, keine Golden Numbers, keine Rücknahmeprobe, keine
+Zweitimplementierung. Nur der Befund geht ins Register.
