@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.keys import resolve_current_key
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.verifier import State
+from symbolon.atom import claim_id
+from symbolon.index import classify_all
+from symbolon.keys import resolve_current_key
+from symbolon.policy import NucleusPolicy
+from symbolon.verifier import State
 from tests.helpers import Identity, scope_id, store_with
 
 NOW = 1000

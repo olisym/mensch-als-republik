@@ -5,14 +5,14 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.findings import Finding, NucleusFinding, dedupe_sort
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.findings import Finding, NucleusFinding, dedupe_sort
+from symbolon.index import classify_all
+from symbolon.policy import NucleusPolicy, constitution_hash as hash_constitution
+from symbolon.predicates import is_nuc_name
+from symbolon.verifier import ClaimStore, State
 
 _J_TAG_IDENTITY = 1
 _J_TAG_CLAIM_REF = 2

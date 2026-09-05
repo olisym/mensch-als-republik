@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # Unversioniert in diesen Bereichen ist ein vergessenes `git add`, kein Zwischenstand.
-SOURCE_DIRS = ("mensch_als_republik/", "tests/", "tools/")
+SOURCE_DIRS = ("symbolon/", "tests/", "tools/")
 SOURCE_SUFFIXES = (".py",)
 
 # Unversionierte Spec-Dateien im Wurzelverzeichnis zählen ebenso.

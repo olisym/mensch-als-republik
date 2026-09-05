@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
+from symbolon import cbor_canon
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.policy import NucleusPolicy, constitution_hash as hash_constitution
+from symbolon.profiles.findings import Finding, ProfileFinding, dedupe_sort
 
 
 @dataclass(frozen=True, slots=True)

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import Finding, GovernanceFinding, verify_ratification
-from mensch_als_republik.governance.findings import dedupe_sort
-from mensch_als_republik.governance.objects import Proposal
-from mensch_als_republik.governance.tally import TallyState
-from mensch_als_republik.policy import constitution_hash
-from mensch_als_republik.resolve import resolve_state
+from symbolon.atom import claim_id
+from symbolon.governance import Finding, GovernanceFinding, verify_ratification
+from symbolon.governance.findings import dedupe_sort
+from symbolon.governance.objects import Proposal
+from symbolon.governance.tally import TallyState
+from symbolon.policy import constitution_hash
+from symbolon.resolve import resolve_state
 from tests.helpers import Identity, store_with
 from tests.test_kettenwelt import _welt
 

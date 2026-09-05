@@ -14,20 +14,20 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id, signed_bytes
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance import Epoch
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.profiles import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id, signed_bytes
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance import Epoch
+from symbolon.policy import NucleusPolicy, constitution_hash
+from symbolon.predicates import is_nuc_name
+from symbolon.profiles import (
     MembershipState,
     SettlementState,
     membership,
     resolve_policy,
     settlement,
 )
-from mensch_als_republik.verifier import InMemoryStore, read_claim
+from symbolon.verifier import InMemoryStore, read_claim
 from tools.autor import Autor, DateiRueckhalt
 
 NOW = 10_000

@@ -10,11 +10,11 @@ auseinanderlaufen.
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import Claim, claim_id, signed_bytes
-from mensch_als_republik.errors import ForeignLifecycle, VerifierError
-from mensch_als_republik.policy import NucleusPolicy, is_irrevocable
-from mensch_als_republik.predicates import is_core_predicate, parse_predicate
-from mensch_als_republik.verifier import (
+from symbolon.atom import Claim, claim_id, signed_bytes
+from symbolon.errors import ForeignLifecycle, VerifierError
+from symbolon.policy import NucleusPolicy, is_irrevocable
+from symbolon.predicates import is_core_predicate, parse_predicate
+from symbolon.verifier import (
     Classification,
     ClaimStore,
     State,

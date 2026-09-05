@@ -6,9 +6,9 @@ import itertools
 
 import pytest
 
-from mensch_als_republik.trust import trust
-from mensch_als_republik.trust.dinic import Dinic
-from mensch_als_republik.trust.graph import (
+from symbolon.trust import trust
+from symbolon.trust.dinic import Dinic
+from symbolon.trust.graph import (
     SINK,
     SOURCE,
     bfs_capacities,
@@ -17,8 +17,8 @@ from mensch_als_republik.trust.graph import (
     node_in,
     node_out,
 )
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.trust.groups import build_groups
+from symbolon.index import classify_all
+from symbolon.trust.groups import build_groups
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, PARAMS, T_EXP, build, build_A_prime

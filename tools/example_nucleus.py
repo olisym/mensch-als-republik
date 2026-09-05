@@ -7,10 +7,10 @@ import hashlib
 import sys
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance import (
     Epoch,
     GovernanceFinding,
     Proposal,
@@ -18,17 +18,17 @@ from mensch_als_republik.governance import (
     decide,
     verify_ratification,
 )
-from mensch_als_republik.governance.tally import threshold_class
-from mensch_als_republik.findings import Finding, NucleusFinding
-from mensch_als_republik.keys import resolve_authorized_keys
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.profiles import MembershipState, membership, resolve_policy
-from mensch_als_republik.resolve import resolve_state
-from mensch_als_republik.trust.derive import derive
-from mensch_als_republik.trust.findings import TrustFinding
-from mensch_als_republik.trust.graph import capacity
-from mensch_als_republik.trust.params import TrustParams
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon.governance.tally import threshold_class
+from symbolon.findings import Finding, NucleusFinding
+from symbolon.keys import resolve_authorized_keys
+from symbolon.policy import NucleusPolicy, constitution_hash
+from symbolon.profiles import MembershipState, membership, resolve_policy
+from symbolon.resolve import resolve_state
+from symbolon.trust.derive import derive
+from symbolon.trust.findings import TrustFinding
+from symbolon.trust.graph import capacity
+from symbolon.trust.params import TrustParams
+from symbolon.verifier import InMemoryStore
 from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 
 NOW = 1000

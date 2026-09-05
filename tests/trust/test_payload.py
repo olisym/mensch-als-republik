@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.trust import Finding, TrustFinding, TrustParams, trust
-from mensch_als_republik.trust.groups import _decode_weight
+from symbolon import cbor_canon
+from symbolon.atom import claim_id
+from symbolon.trust import Finding, TrustFinding, TrustParams, trust
+from symbolon.trust.groups import _decode_weight
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, T_EXP

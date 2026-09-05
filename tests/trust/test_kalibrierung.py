@@ -6,9 +6,9 @@ import hashlib
 
 import pytest
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.trust.params import TrustParams, resolve_trust_params
+from symbolon import cbor_canon
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.trust.params import TrustParams, resolve_trust_params
 from tools.example_nucleus import build
 
 _RAW = {0: 100, 1: 1, 2: 2, 3: 100}

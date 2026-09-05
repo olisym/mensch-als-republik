@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from mensch_als_republik import cbor_canon
+from symbolon import cbor_canon
 from tools.gitter import mutant_lines as gitter_lines
 from tools.korpus import seed_lines
 from tools.paare import main, mutant_lines

@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon.atom import claim_id
+from symbolon.index import classify_all
+from symbolon.verifier import ClaimStore, State
 
 from .findings import Finding, TrustFinding
 from .graph import BfsResult, bfs_capacities

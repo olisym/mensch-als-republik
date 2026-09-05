@@ -5,8 +5,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_NUC_EPOCH, DOM_NUC_PROPOSAL
+from symbolon import cbor_canon
+from symbolon.domains import DOM_NUC_EPOCH, DOM_NUC_PROPOSAL
 
 
 def epoch_id(scope: bytes, index: int, constitution_hash: bytes) -> bytes:

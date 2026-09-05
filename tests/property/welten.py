@@ -6,15 +6,15 @@ from dataclasses import dataclass
 
 from hypothesis import strategies as st
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.governance import decide
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.trust.derive import derive
-from mensch_als_republik.trust.flow import trust
-from mensch_als_republik.trust.params import TrustParams
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.governance import decide
+from symbolon.index import classify_all
+from symbolon.policy import NucleusPolicy
+from symbolon.trust.derive import derive
+from symbolon.trust.flow import trust
+from symbolon.trust.params import TrustParams
+from symbolon.verifier import InMemoryStore
 from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 from tools.example_nucleus import build
 

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from hypothesis import given, strategies as st
 
-from mensch_als_republik.atom import Claim, claim_id, signed_bytes
-from mensch_als_republik.errors import ErrorCode, VerifierError
-from mensch_als_republik.verifier import read_claim, structural_check
+from symbolon.atom import Claim, claim_id, signed_bytes
+from symbolon.errors import ErrorCode, VerifierError
+from symbolon.verifier import read_claim, structural_check
 
 from tests.property.welten import welten
 

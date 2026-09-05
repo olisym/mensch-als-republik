@@ -6,8 +6,8 @@ import itertools
 
 import pytest
 
-from mensch_als_republik.trust import RelaxParams, rank, trust
-from mensch_als_republik.trust.derive import derive
+from symbolon.trust import RelaxParams, rank, trust
+from symbolon.trust.derive import derive
 
 from tests.helpers import Identity, scope_id, store_with
 from .pr02 import RP, mass_bound
@@ -113,8 +113,8 @@ def test_PR_INV4_edge_set_is_shared_with_paragraph_4(
 ) -> None:
     """Der Kantensatz, ueber den 02 §5 rechnet, ist byte-gleich mit dem von 02 §4 (D49): beide
     rufen dieselbe derive()-Funktion auf."""
-    from mensch_als_republik.trust.flow import derive as derive_in_flow
-    from mensch_als_republik.trust.relax import derive as derive_in_relax
+    from symbolon.trust.flow import derive as derive_in_flow
+    from symbolon.trust.relax import derive as derive_in_relax
 
     # Diese Zeile traegt die Invariante -- ein Identitaetsvergleich der Funktionsobjekte
     # kann nicht zufaellig gruen sein. Die folgenden Knotenmengen-Vergleiche sind Zusatz

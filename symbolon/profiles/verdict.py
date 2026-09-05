@@ -5,12 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
-from mensch_als_republik.verifier import Classification, ClaimStore, State
+from symbolon.atom import Claim, claim_id
+from symbolon.index import classify_all
+from symbolon.policy import NucleusPolicy
+from symbolon.predicates import is_nuc_name
+from symbolon.profiles.findings import Finding, ProfileFinding, dedupe_sort
+from symbolon.verifier import Classification, ClaimStore, State
 
 
 class VerdictStatus(str, Enum):

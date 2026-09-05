@@ -6,22 +6,22 @@ import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.epoch import verify_ratification
-from mensch_als_republik.governance.findings import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance.epoch import verify_ratification
+from symbolon.governance.findings import (
     Finding,
     GovernanceFinding,
     dedupe_sort,
 )
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import decide
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import constitution_hash
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.profiles.policy import resolve_policy
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.governance.tally import decide
+from symbolon.index import classify_all
+from symbolon.policy import constitution_hash
+from symbolon.predicates import is_nuc_name
+from symbolon.profiles.policy import resolve_policy
+from symbolon.verifier import ClaimStore, State
 
 
 @dataclass(frozen=True, slots=True)

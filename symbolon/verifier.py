@@ -9,8 +9,8 @@ from typing import Protocol
 
 from cbor2 import CBORDecoder
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import (
+from symbolon import cbor_canon
+from symbolon.atom import (
     Claim,
     claim_from_map,
     claim_id,
@@ -19,7 +19,7 @@ from mensch_als_republik.atom import (
     is_genesis,
     verify_sig,
 )
-from mensch_als_republik.errors import (
+from symbolon.errors import (
     BadScopeBinding,
     BadSignature,
     ErrorCode,
@@ -34,8 +34,8 @@ from mensch_als_republik.errors import (
     UnsupportedVersion,
     VerifierError,
 )
-from mensch_als_republik.policy import NucleusPolicy, is_irrevocable
-from mensch_als_republik.predicates import check_scope_binding, is_core_predicate, parse_predicate
+from symbolon.policy import NucleusPolicy, is_irrevocable
+from symbolon.predicates import check_scope_binding, is_core_predicate, parse_predicate
 
 _SUPPORTED_VERSION = 1
 _VALID_J_TAGS = frozenset({1, 2, 3})
@@ -260,7 +260,7 @@ def _predecessor_known_and_valid(
 
 def _find_revoking_claim(target: Claim, store: ClaimStore) -> Claim | None:
     """Gültiger selbst-bezüglicher core/revoke@1 für target."""
-    from mensch_als_republik.atom import signed_bytes
+    from symbolon.atom import signed_bytes
 
     for c in store.all_claims():
         if not is_core_predicate(c):
@@ -282,7 +282,7 @@ def _find_revoking_claim(target: Claim, store: ClaimStore) -> Claim | None:
 
 def _find_superseding_claim(target: Claim, store: ClaimStore) -> Claim | None:
     """Gültiger selbst-bezüglicher core/supersede@1, der target ersetzt."""
-    from mensch_als_republik.atom import signed_bytes
+    from symbolon.atom import signed_bytes
 
     for c in store.all_claims():
         if not is_core_predicate(c):

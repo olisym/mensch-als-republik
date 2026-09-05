@@ -11,8 +11,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PublicKey,
 )
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_CID, DOM_ID_GEN, DOM_SIG
+from symbolon import cbor_canon
+from symbolon.domains import DOM_CID, DOM_ID_GEN, DOM_SIG
 
 _NULL_HPREV = bytes(32)
 

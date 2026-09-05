@@ -8,19 +8,19 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.findings import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance.findings import (
     Finding,
     GovernanceFinding,
     dedupe_sort,
 )
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.index import classify_all
+from symbolon.policy import NucleusPolicy, constitution_hash
+from symbolon.predicates import is_nuc_name
+from symbolon.verifier import ClaimStore, State
 
 _CLASS_BY_INDEX = {0: "ordinary", 1: "membership", 2: "amendment"}
 

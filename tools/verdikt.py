@@ -6,9 +6,9 @@ from __future__ import annotations
 import sys
 from typing import TextIO
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.errors import ErrorCode
-from mensch_als_republik.verifier import read_claim
+from symbolon.atom import claim_id
+from symbolon.errors import ErrorCode
+from symbolon.verifier import read_claim
 
 
 def line_bytes(line: str) -> bytes | None:

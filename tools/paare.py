@@ -8,7 +8,7 @@ from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik import cbor_canon
+from symbolon import cbor_canon
 from tools.gitter import (
     SEED_NAMES,
     SIG_KEY,

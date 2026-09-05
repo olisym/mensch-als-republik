@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id, signed_bytes
+from symbolon import cbor_canon
+from symbolon.atom import claim_id, signed_bytes
 from tools.sim import run_scenario
 from tools.sim.welt import Welt
 

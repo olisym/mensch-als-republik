@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik import findings as nucleus_findings
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import findings as governance_findings
-from mensch_als_republik.governance.chain import resolve_epoch
-from mensch_als_republik.keys import resolve_authorized_keys
-from mensch_als_republik.profiles import findings as profiles_findings
-from mensch_als_republik.profiles.policy import resolve_policy
-from mensch_als_republik.resolve import resolve_state
+from symbolon import findings as nucleus_findings
+from symbolon.atom import claim_id
+from symbolon.governance import findings as governance_findings
+from symbolon.governance.chain import resolve_epoch
+from symbolon.keys import resolve_authorized_keys
+from symbolon.profiles import findings as profiles_findings
+from symbolon.profiles.policy import resolve_policy
+from symbolon.resolve import resolve_state
 from tests.helpers import store_with
 from tests.governance.fixtures import (
     C1,

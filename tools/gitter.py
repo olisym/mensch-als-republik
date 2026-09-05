@@ -9,8 +9,8 @@ from typing import Any
 import cbor2
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_SIG
+from symbolon import cbor_canon
+from symbolon.domains import DOM_SIG
 from tools.korpus import seed_lines
 
 SEED_NAMES = frozenset({"TV1", "TV2", "TV3", "TV4", "TV5", "TV6"})

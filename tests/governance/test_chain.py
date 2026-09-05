@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import (
+from symbolon.atom import claim_id
+from symbolon.governance import (
     Finding,
     GovernanceFinding,
     resolve_epoch,
 )
-from mensch_als_republik.governance.findings import dedupe_sort
-from mensch_als_republik.governance.tally import TallyState
-from mensch_als_republik.predicates import is_nuc_name
+from symbolon.governance.findings import dedupe_sort
+from symbolon.governance.tally import TallyState
+from symbolon.predicates import is_nuc_name
 from tests.helpers import store_with
 
 from .fixtures import (

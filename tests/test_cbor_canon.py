@@ -2,7 +2,7 @@
 
 import pytest
 
-from mensch_als_republik import cbor_canon
+from symbolon import cbor_canon
 
 
 def test_encode_decode_roundtrip():

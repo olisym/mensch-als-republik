@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import verify_ratification
-from mensch_als_republik.governance.findings import GovernanceFinding
-from mensch_als_republik.governance.objects import Proposal
-from mensch_als_republik.governance.tally import TallyState
-from mensch_als_republik.policy import constitution_hash
+from symbolon.atom import claim_id
+from symbolon.governance import verify_ratification
+from symbolon.governance.findings import GovernanceFinding
+from symbolon.governance.objects import Proposal
+from symbolon.governance.tally import TallyState
+from symbolon.policy import constitution_hash
 from tests.helpers import store_with
 
 from .fixtures import C1, C2, EPOCH_1, NOW, _tally, fresh_p1, policy_of, ratify_claim, vote

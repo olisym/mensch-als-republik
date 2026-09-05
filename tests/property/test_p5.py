@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from hypothesis import given
 
-from mensch_als_republik.governance.tally import TallyState
+from symbolon.governance.tally import TallyState
 
 from tests.property.welten import auszaehlung, speicher, teilmengen, welten
 

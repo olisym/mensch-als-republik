@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import hashlib
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import decide
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash
+from symbolon import cbor_canon
+from symbolon.atom import Claim
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.governance.tally import decide
+from symbolon.policy import NucleusPolicy, constitution_hash
 from tests.helpers import SEED_ALICE, SEED_BOB, SEED_CAROL, Identity
 
 SEED_DAVE = bytes([0x04] * 32)

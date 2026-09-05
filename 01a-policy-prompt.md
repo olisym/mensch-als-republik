@@ -18,7 +18,7 @@ Layer lang dekorativ. Layer 03 braucht ihn: ohne ihn kann ein Schuldner seine ei
 
 ---
 
-## 2. Neues Modul `mensch_als_republik/policy.py`
+## 2. Neues Modul `symbolon/policy.py`
 
 ```python
 PROTOCOL_IRREVOCABLE = frozenset({"obligation@1"})   # Boden, D70 / 00 §5.2

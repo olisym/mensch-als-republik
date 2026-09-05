@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.verifier import InMemoryStore
 from tools.autor import Autor, SpeicherRueckhalt, StoreAusgang
 
 # Normative Seeds aus 00 §3.1 / 03-golden-anchors.md §3.1 — eine Definition (D88).

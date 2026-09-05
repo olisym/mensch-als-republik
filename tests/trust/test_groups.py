@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.trust import TrustFinding, TrustParams, trust
-from mensch_als_republik.trust.derive import derive
-from mensch_als_republik.verifier import State
+from symbolon.atom import claim_id
+from symbolon.index import classify_all
+from symbolon.trust import TrustFinding, TrustParams, trust
+from symbolon.trust.derive import derive
+from symbolon.verifier import State
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import T_EXP

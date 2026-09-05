@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id, is_equivocation_pair
-from mensch_als_republik.profiles import (
+from symbolon.atom import claim_id, is_equivocation_pair
+from symbolon.profiles import (
     Finding,
     ProfileFinding,
     SettlementState,

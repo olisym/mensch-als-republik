@@ -20,7 +20,7 @@ check-tree:
 	$(PY) tools/check_tree.py
 
 check-lint:
-	$(RUFF) check mensch_als_republik tests tools
+	$(RUFF) check symbolon tests tools
 
 check: check-tree check-specs check-offen check-lint test
 
@@ -28,4 +28,4 @@ check-all: check-tree check-specs check-offen check-lint test test-prop
 
 clean:
 	find . -name __pycache__ -type d -not -path "./.venv/*" -exec rm -rf {} +
-	rm -rf .pytest_cache mensch_als_republik.egg-info
+	rm -rf .pytest_cache symbolon.egg-info
