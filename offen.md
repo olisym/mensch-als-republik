@@ -22,16 +22,15 @@ Ein Posten ist eine Vermutung über eine Lücke, keine Entscheidung. Entscheidun
 
 ## A — Anwendungsabschnitt
 
-### O1 Es gibt kein Gruppen-Soll
+### O1 Es gibt kein Gruppen-Soll — erledigt (D327)
 
-Drei bilaterale Obligationen an dieselbe Person sind drei Obligationen, kein Anspruch gegen eine
-Gemeinschaft. Vermutung: verteilt Macht, gehört nicht ins Protokoll, und die Umlage aus
-bilateralen Zusagen ist die Antwort statt ein Ersatz. Aus D312.
+Verteilt Macht, gehört nicht ins Protokoll; kein neuer Mechanismus nötig. Die Umlage aus
+bilateralen Zusagen ist die Antwort, kein Ersatz. Aus D312, entschieden in D327.
 
-### O2 Es gibt keine Verwahrerrolle
+### O2 Es gibt keine Verwahrerrolle — erledigt (D327)
 
-Wer sammelt, ist eine benannte Person. Das Protokoll kann feststellen, dass sie nicht auszahlt,
-aber nichts erzwingen. Vermutung: Policy, und `00 §4.2` warnt zusätzlich vor dem Ort. Aus D312.
+Konzentriert Macht über die Auszahlungsentscheidung. Ort: Policy, in einem eigenen Scope,
+getrennt von `participants` (`00 §4.2`). Aus D312, entschieden in D327.
 
 ### O3 `OPEN` unterscheidet Verweigerung nicht von Partition
 

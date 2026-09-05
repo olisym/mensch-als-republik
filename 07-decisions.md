@@ -12598,3 +12598,33 @@ Primärtext nachgeprüft.
 die D313-Frage nach Vertrauensentzug als Durchsetzung — ungeprüft, niedrige Dringlichkeit.
 
 **Kein Lauf.** Dieser Eintrag ändert keine Spec-Datei.
+
+### D327 — Stufe B: O1, O2 und das Fall-Prädikat durch das Aufnahmekriterium geschickt (D313)
+
+**Anlass.** D313 hat beschlossen, dass Stufe B als Spec-Arbeit beginnt: die drei Befunde ohne Ort
+aus D312 werden durch das Aufnahmekriterium aus `08 §3` geschickt und als Zeilen in dessen
+Prüftabelle eingetragen.
+
+**O1 — Gruppen-Soll.** Der Test lautet: senkt der Mechanismus Prüfkosten, oder verteilt er Macht?
+Ein Gruppen-Soll bräuchte eine Regel, wer zur Gruppe zählt und wessen Nichtzustimmung die anderen
+bindet — das ist Machtverteilung, keine Kostensenkung beim Feststellen, wer was gesagt hat. Die
+Umlage aus bilateralen `obligation`-Claims erreicht dasselbe Ergebnis bereits mit vorhandenen
+Protokollprimitiven. **Ort: kein neuer Mechanismus nötig**, Policy nur falls überhaupt gewünscht.
+
+**O2 — Verwahrerrolle.** Eine Sammelstelle mit Auszahlungspflicht konzentriert Macht: wer über
+Auszahlung entscheidet, hält die Position, die MaR sonst nirgends vergibt. `00 §4.2` verlangt
+zusätzlich einen eigenen Scope, getrennt von dem, dessen `participants` abgestimmt werden. **Ort:
+Policy, in einem eigenen Scope** — bestätigt die Vermutung aus `offen.md`.
+
+**Das dritte Element aus D313 — Prädikat für den Versicherungsfall.** D312 selbst korrigiert das
+unter „Ungenau im Bericht": `accusation@1` existiert bereits, ist nach D67 vollständig opak und
+hätte den Fall tragen können. Das war ein Messfehler im ursprünglichen Prompt, keine Lücke im
+Protokoll. **Ort: Protokoll, bereits vorhanden.**
+
+**Was das für Stufe B insgesamt heisst.** Kein einziges der drei Elemente verlangt einen neuen
+Protokollmechanismus. Eine Versicherung im gewohnten Sinn bleibt damit — wie D312 schon
+feststellte — eine Zusammensetzung aus Protokoll (Obligation, Quittung, `accusation@1`), Policy
+(Verwahrerscope, falls gewünscht) und Werkzeug, nicht ein fehlendes Protokollstück.
+
+**Kein Lauf.** Dieser Eintrag ändert `08-scope.md` (Prüftabelle) und schliesst O1, O2 in
+`offen.md`. Keine Code-Datei ist betroffen.

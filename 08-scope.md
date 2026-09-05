@@ -104,6 +104,9 @@ Anwendung auf den Bestand:
 | Schwellenwerte, Arbitratorenlisten, Ressourcengrenzen | verteilen Macht | Policy |
 | Werkzeug: Schlüssel halten, Claims bauen, Empfangenes einlesen | erzeugt Claims, senkt nichts | Werkzeug, weder Protokoll noch Policy |
 | Ort der Schreibautorität, Geräte als Endpunkte | Betrieb | Werkzeug (D123) |
+| Gruppen-Soll (Anspruch einer Gruppe gegen einen Beitragspflichtigen) | verteilt Macht (wer zählt zur Gruppe, wessen Nichtzustimmung bindet); Umlage aus bilateralen Obligationen reicht bereits | kein neuer Mechanismus nötig (O1, D327) |
+| Verwahrerrolle (Sammelstelle mit Auszahlungspflicht) | konzentriert Macht über die Auszahlungsentscheidung | Policy, eigener Scope (O2, D327), `00 §4.2` |
+| Prädikat für den Versicherungsfall | macht einen Zustand feststellbar | Protokoll, bereits vorhanden: `accusation@1` (D67, D327) |
 
 Die Prüftabelle ist bei jedem neuen Mechanismus fortzuschreiben. Ein Eintrag in der rechten
 Spalte "Protokoll" verlangt eine Begründung in der mittleren.
