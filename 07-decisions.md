@@ -12981,3 +12981,34 @@ Kernfrage aus D336 ist bereits ausreichend beantwortet.
 bereits als gebunden, `00av-schlichtung-szenario-prompt.md` weiterhin als ungebunden,
 obwohl `szenario_c.py` dieselbe Zitierform verwendet wie `szenario_d.py` — Ursache
 ungeklärt, außerhalb des Prompt-Scopes.
+
+---
+
+### D338 — Fork zu Szenario D′: saubere Isolierung von (a) und (b) aus D336
+
+**Anlass.** D337 hat zwei Konstruktionsfehler im Prompt zu D336 benannt: (a) wurde an
+anna gemessen, der Autorin von `acc_a_b` — Autoren besitzen ihren eigenen Claim trivial,
+die Umordnung testet dort nichts. (b) und (c) liefen sequenziell im selben Kontext auf
+demselben Subjekt (`vouch_c_b`), wodurch annas Uhrendrift (c) bereits vor der
+Widerruf-Messung (b) alle Baseline-Vouches lokal ablaufen ließ und den eigentlichen Test
+überdeckte.
+
+**Was das nicht ist.** Kein neuer Fund über MaR, keine neue Hypothese — dieselbe
+Fragestellung wie D336, nur ohne die zwei benannten Konfundierungen. (c) selbst war in
+D337 bereits unkonfundiert und bestätigt; wird nicht wiederholt.
+
+**Die Korrektur.**
+- **(a) neu:** Umordnung an bruno (Beschuldigter, Autor weder von `acc_a_b` noch
+  `verdict_z`) und chris (Beobachter) messen, nicht an anna. Erwartete Marker jetzt
+  korrekt aus D337 abgeleitet: `verdict_status` zeigt `ATTRIBUTED_OPINION` +
+  `UNKNOWN_ACCUSATION`, solange `acc_a_b` fehlt, danach `BINDING`. `classify(verdict_z)`
+  bleibt durchgehend `active` — `State.PENDING` gilt nur für fehlende *Kettenvorgänger*
+  (revoke-/supersede-Ziel), nicht für die Anklage-Querreferenz; keine Erwartung von
+  `PENDING` mehr.
+- **(b) neu:** eigener, unabhängiger Lauf ohne jede Uhrmanipulation — nur die Baseline
+  plus Widerruf von `vouch_c_b`, zugestellt an bruno/chris/dora, niemals an anna.
+  Erwartung: anna behält exakt den Vor-Widerruf-Wert aus der Broadcast-Kontrolle, die
+  anderen drei zeigen den Nach-Widerruf-Wert.
+
+Jede Abweichung ist wie in D336 ein Befund, kein Golden-Number-Lauf, kein Rollback
+(Szenariomodus, D311).
