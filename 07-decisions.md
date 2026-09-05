@@ -12836,3 +12836,27 @@ unveraendert (8/8, wie vor dem Lauf).
 Gesamtsuite (797/797) und `test_sim.py` (8/8) selbst laufen lassen, `verdict_status()` gegen
 `03 §2.4` gelesen — keine Aenderung an einer Spec-Datei. Alle Nicht-Ziele aus dem Prompt
 eingehalten. **Merge freigegeben.**
+
+---
+
+### D334 — GitHub-Spiegel umbenannt zu symbolon
+
+**Anlass.** D331 benannte den GitHub-Spiegel bewusst nicht mit um — reiner Scope-Schnitt
+des `00at`-Laufs, keine Dauerentscheidung. Vor dem Restack-Antragstext (Phase 1,
+Repo-Link) nachgezogen, damit Gitea-Name, Paketname und oeffentlicher Spiegel wieder
+uebereinstimmen. Lokaler Ordnername bleibt bewusst `~/mensch-als-republik`
+(Arbeitsbequemlichkeit, keine Konsistenzpflicht).
+
+**Ausgefuehrt (ausserhalb von Git, durch Oli).** GitHub-Repository umbenannt:
+`github.com/olisym/mensch-als-republik` → `github.com/olisym/symbolon` (GitHub legt
+automatisch einen Redirect vom alten Pfad an). Gitea-Push-Mirror-Ziel-URL entsprechend
+umgestellt. Beim Editieren der Mirror-URL gingen die hinterlegten Zugangsdaten verloren
+(bekannte Gitea-Eigenheit) — Push schlug zunaechst mit `terminal prompts disabled` fehl.
+Behoben durch neu erzeugten GitHub Personal Access Token, im eingeklappten
+„Authentifizierung"-Abschnitt der Mirror-Einstellungen nachgetragen. Manueller Sync
+danach erfolgreich, kein Fehler-Badge mehr.
+
+**Stand.** Gitea `git.h.error13.de/oli/symbolon`, GitHub-Spiegel
+`github.com/olisym/symbolon`, Paketname `symbolon`, lokaler Ordner
+`~/mensch-als-republik` — drei von vier Namen jetzt deckungsgleich, der vierte bewusst
+unveraendert.
