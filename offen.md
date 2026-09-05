@@ -280,10 +280,10 @@ Ausweichnamen: `symbolon-protocol`, `mar`.
 
 ### O57 Förderantrag
 
-Setzt O52 und O53 voraus. **Gemessen im September 2026:** der zuvor genannte Commons-Fonds hat
-seinen dreizehnten und letzten Aufruf am 1. Juni 2026 geschlossen, für ihn werden keine Anträge
-mehr gesucht. Andere Linien laufen weiter, mit Fristen am 3. jedes ungeraden Monats. Welche
-Linie passt, ist vor dem Schreiben eines Antrags erneut zu messen.
+Setzt O52 und O53 voraus. **Neu gemessen am 5. September 2026 (D323):** NGI Zero ist
+abgeschlossen, der Commons-Fonds bleibt zu. Nachfolger ist „Open Internet Stack", seit
+3. September 2026 wieder offen. `Restack` passt inhaltlich am ehesten. Nächste Frist:
+**3. November 2026**. Ohne O52 und O53 gibt es nichts, worauf ein Antrag verweisen könnte.
 
 ### O58 Die Implementierungen liegen in zwei Repositorien
 
