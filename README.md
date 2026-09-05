@@ -3,10 +3,13 @@
 **Can mutual assurance and collective decision-making work without a central authority —
 no court, no platform, no admin key?**
 
-Mensch als Republik (MaR — a working title; renaming is planned but hasn't happened yet, see
-the decision register) is a protocol under active development that tries to answer that
+Mensch als Republik (MaR) is a protocol under active development that tries to answer that
 question by building the thing and measuring what breaks, instead of arguing about it in the
 abstract.
+
+The repository and Python package are named `symbolon` — short, pronounceable, and decided
+on its own merits (see the decision register, D317); the project's title stays *Mensch als
+Republik*, since a repository name doesn't name the actual subject.
 
 This repository is the English entry point. The project's actual working language is German —
 the specifications, the decision register, and the day-to-day process are written in German

@@ -12720,3 +12720,32 @@ Ort findet.
 
 **Kein Lauf, keine Codeänderung.** Dieser Eintrag ändert `offen.md` (schliesst O58), sonst
 nichts.
+
+### D331 — Abnahme 00at: O55 ausgeführt, `symbolon` ist Verzeichnis, Paket und Gitea-Name
+
+**Abnahme.** Der Lauf hat geliefert, was der Prompt verlangt. Unabhängig nachgebaut (eigener
+Klon, vollständiger Diff angewendet, Tests und `check_specs.py` wiederholt) — identische Zahlen:
+123 Dateien, +561/−440, `archiv/`, `go/` und `07-decisions.md` unberührt, 797 Tests unverändert,
+Register unverändert bei D1–D330 (dieser Lauf schrieb nicht ins Register). Eine einzelne
+abweichende Beobachtung beim Nachbau (`mensch_als_republik/` blieb als leeres Verzeichnis
+stehen) ist ein Artefakt von `git apply` gegenüber einem echten `git mv`-Commit, kein Befund
+gegen den Lauf. `governance/__init__.py` (Löschen+Neuanlage statt Rename, Ähnlichkeit unter der
+Schwelle) inhaltlich geprüft: reiner Bezeichnerwechsel, keine zusätzliche Änderung.
+
+**Zwei Spuren, unabhängig ausgeführt.** Server-seitig (ausserhalb von Git, per Gitea-API):
+`git.h.error13.de/oli/mensch-als-republik` → `oli/symbolon` umbenannt, `oli/mar-go` archiviert
+(D330), lokaler `origin`-Remote umgestellt. Code-seitig (dieser Lauf, `00at-umbenennung`):
+Verzeichnis, Importe, `pyproject.toml`, `Makefile`, Codepfad-Zitate in `03-profiles.md` und den
+aktiven Prompt-Dateien. Bewusst **nicht** angefasst: der GitHub-Spiegel bleibt unter
+`github.com/olisym/mensch-als-republik` — der Push-Mirror pusht unter dem alten Namen weiter,
+das bricht nichts, und eine GitHub-Umbenennung war nie Teil dieses Laufs.
+
+**Was noch nachzuziehen war.** `README.md` behauptete weiterhin, die Umbenennung sei „planned
+but hasn't happened yet" — das war zum Zeitpunkt des Prompts richtig (Nicht-Ziel 2 schloss die
+Reponame-Sätze aus diesem Lauf ausdrücklich aus), ist es nach der Server-Umbenennung nicht mehr.
+Dieser Eintrag zieht den Satz nach.
+
+**O55 abgeschlossen.**
+
+**Kein weiterer Lauf vorgesehen.** `O56` (PyPI-Name) bleibt ein weicher Blocker, erst relevant
+bei einer Veröffentlichung — unverändert, kein Teil dieses Eintrags.

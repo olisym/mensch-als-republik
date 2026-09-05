@@ -268,10 +268,10 @@ Deutsch bleibt normativ für Layer-Dateien, Register und Prüfregeln. Die englis
 sind keine Übersetzungen, sondern eigenständiger Text — keine Drift-Gefahr, weil keine
 Übersetzungsbeziehung besteht.
 
-### O55 Umbenennung auf `symbolon`
+### O55 Umbenennung auf `symbolon` — erledigt (D331)
 
-Name entschieden (D317), Umbenennung nicht ausgeführt. Betrifft Verzeichnis, Paketname, Importe,
-`LAYER_FILES`, Remote und die Go-Fassung auf eingefrorenem Anker.
+Verzeichnis, Paketname, Importe, Gitea-Name ausgeführt. `LAYER_FILES` war nie betroffen
+(Korrektur im Prompt); GitHub-Spiegel und Go-Anker bewusst unverändert.
 
 ### O56 Der PyPI-Name `symbolon` ist belegt
 
