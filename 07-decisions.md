@@ -13045,3 +13045,41 @@ Kennzahl, durchgehend graceful degradation, nur über zwei verschiedene, jetzt k
 benannte Mechanismen (Layer 01 `State.PENDING` für Kettenvorgänger, Layer 03
 `ProfileFinding.*` für Anklage-/Verdikt-Querreferenzen). Die LoRa/Reticulum-Kernfrage aus
 `00av`/`00aw` ist damit für dieses Szenario abgeschlossen; kein weiterer Nachlauf offen.
+
+---
+
+### D340 — Fork zu Szenario E: Equivocation unter Partition
+
+**Anlass.** D336–D339 haben ehrliche, aber verspätete/unvollständige Zustellung geprüft.
+Offen bleibt der bösartige Fall: ein Autor, der bewusst zwei widersprüchliche Claims am
+selben `h_prev` signiert (`01 §4`, `is_equivocation_pair`, `symbolon/atom.py`) — erkennt
+ein Beobachter das noch, wenn die Netzpartition die beiden Hälften dauerhaft trennt?
+
+**Der Fund, der die Frage schärft.** `_is_in_equivocation_pair` (`symbolon/verifier.py`)
+prüft ausschließlich gegen `store.by_author_hprev(...)` — also gegen das, was der
+jeweilige Beobachter selbst besitzt. `tools/autor.py::gabeln()` signiert bewusst an der
+aktuellen Kettenspitze, ohne sie vorzurücken (D129) — der eingebaute Mechanismus für eine
+Gabelung, bislang nur einzeln unit-getestet, nie unter echter, dauerhafter
+Wissensasymmetrie. `derive.py` schließt bei **jedem** `EQUIVOCATION_FLAGGED`-Fund alle
+Vouch-Gruppen des betroffenen Autors aus — auch unbeteiligte, nicht selbst geflaggte
+Claims desselben Autors.
+
+**Was das nicht ist.** Kein neues Primitiv — `kette_fortschreiben: false` in
+`szenario.py::_schritt_claim` ruft `gabeln()` bereits. Kein Golden-Number-Lauf, kein
+Rollback (Szenariomodus, D311).
+
+**Die Hypothese für den Prototyp.** bruno equivoziert: Gabel-Vouch an dora (n=40,
+`gabeln`), reale Vouch an chris (n=30, gleicher `h_prev`, `signieren`), danach eine
+dritte, unbeteiligte Vouch an anna (n=20, neuer `h_prev`). Budgetsumme 90 ≤ D=100, damit
+`OVERCOMMITTED_AUTHOR` nicht hineinspielt.
+
+- **Lauf 1 „Getrennte Partition"**: Gabel nur an dora, reale Hälfte plus unbeteiligte
+  Vouch nur an chris/anna — dauerhaft, keine Seite bekommt je beide Hälften. Erwartung:
+  jede Seite sieht bruno lokal als unauffällig, mit je einem anderen, in sich
+  konsistenten Bild — kein Fehler, stille Divergenz.
+- **Lauf 2 „Späte Konvergenz"**: chris bekommt zuerst nur die reale Hälfte, später
+  zusätzlich die Gabel. Erwartung: `classify(real_b_chris)` kippt bei chris von `active`
+  auf `equivocation_flagged`; `trust(chris→dora)` und `trust(chris→anna)` fallen beide —
+  auch `anna`, obwohl die Vouch dorthin nie Teil des Paars war.
+
+Jede Abweichung ist ein Befund, keine Regression.
