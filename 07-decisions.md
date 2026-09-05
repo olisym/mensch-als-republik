@@ -12530,3 +12530,23 @@ aktiver Text, ihre Korrektur ist keinen eigenen Posten wert.
 **Was offen bleibt.** Ob „vier" irgendwann bewusst entschieden wurde und nur nie einen eigenen
 Registereintrag bekam, lässt sich nicht ausschließen. Ohne Beleg gilt die unbezifferte Fassung
 aus D237 als maßgeblich.
+### D325 — Direkter Spiegel-Zugriff ersetzt die Repomix-Pflicht
+
+**Der Anlass.** Seit O52 ist `github.com/olisym/mensch-als-republik` ein öffentlicher,
+synchron gehaltener Spiegel. Der Supervisor kann ihn im eigenen Sandbox klonen und lesen, ohne
+dass Oli etwas einfügt oder Repomix laufen lässt.
+
+**Entscheidung.** `arbeitsweise.md` beschreibt jetzt den direkten Klon/Pull als den Weg, auf
+dem der Supervisor Dateien holt, wenn eine Entscheidung von ihrem Inhalt abhängt. Repomix wird
+kein Pflichtschritt mehr; es bleibt ein optionales Werkzeug für Token-Diagnosen, wie es D322
+schon einmal genutzt hat.
+
+**Die Sicherung.** Vor jedem Lesen aus dem Klon steht ein Hash-Abgleich: der geklonte `HEAD`
+muss den von Oli gemeldeten Commit tragen. Weicht er ab, wird neu gepullt, nicht einfach
+gelesen — der Spiegel ist ausdrücklich nicht die primäre Quelle, Gitea bleibt es (O52). Die
+Kaltmessung selbst — Testzahl, Registerstand — bleibt bei Oli; sie hängt an einem echten
+`pytest`-Lauf, den der Supervisor nicht nachstellen kann.
+
+**Was das nicht ändert.** Die Zwei-Dinge-Regel aus Abschnitt 10 (dauerhafte Anweisung, jüngste
+Übergabedatei) bleibt bestehen. Ob die Übergabedatei künftig ebenfalls aus dem Klon gelesen
+statt eingefügt wird, ist eine offene Frage, keine hier getroffene Entscheidung.
