@@ -34,8 +34,11 @@ benannte Entscheidung von ihrem Inhalt abhängt — dann aber vollständig, und 
 Das ändert die **Messung**, nicht die Abnahme. Die Abnahme bleibt beim Supervisor und bleibt am
 Diff.
 
-Die Projektkopie `/tmp/mar-context.xml` wird gezogen, wenn ein Nachbau ansteht. Für die Frage,
-ob etwas irgendwo steht, reicht ein `grep` mit wenigen Zeilen Ausgabe.
+Der öffentliche Spiegel (`github.com/olisym/mensch-als-republik`) wird direkt geklont oder
+gepullt, wenn eine Entscheidung von einem Dateiinhalt abhängt — der Supervisor tut das selbst.
+Vor dem Lesen steht ein Hash-Abgleich: der geklonte `HEAD` muss den gemeldeten Commit tragen,
+sonst wird neu gepullt, nicht gelesen (D325). Repomix bleibt ein optionales Diagnosewerkzeug,
+kein Pflichtschritt mehr.
 
 ---
 
