@@ -59,6 +59,10 @@ repository included — is part of how those people might eventually turn up.
 ## Repository layout
 
 - `00` – `08`, plus lettered sub-specifications: the layered specification, in German.
+- `*-prompt.md`, `*-golden-anchors.md`: implementation prompts and expected-value anchors
+  for specific layers. They sit flat in the root, unsorted into folders, on purpose — once a
+  prompt file is cited by a docstring (`NAME §X`), it becomes normative text like any spec
+  file, and moving it would break that citation. It looks unusual. It's not clutter.
 - `07-decisions.md`: the decision register. Large by design — it is the point of the project,
   not overhead to be trimmed. `tools/register_index.py` gives you structured lookup by entry
   number, so you don't have to read the whole thing at once.
