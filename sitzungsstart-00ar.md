@@ -31,7 +31,7 @@ Branchzahl. Ablesen, nicht schätzen. Vor der Testzahl `.hypothesis` und `__pyca
 oder gezielte Auszüge ersetzen den Volltext im Kontext. `tools/stand.py` liest die Registerzahl
 weiterhin direkt aus der Datei, unabhängig von der Packung.
 
-Der Stand am Ende von `00ar`, gemessen: `e7ce4d9`, **797 Tests**, Register **D1–D324**,
+Der Stand am Ende von `00ar`, gemessen: `5106491`, **797 Tests**, Register **D1–D325**,
 Prüfregeln **1–64**, **58 Posten**, **drei Branches**. In der Wurzel liegen 31 Markdown-Dateien,
 davon 30 gebunden (`00ar-always-bound-prompt.md` bleibt ungebunden bis zur nächsten Übergabe).
 
@@ -88,6 +88,11 @@ aus einem Verdikt-Unterschied getragen. Layer 01 ist damit ausgelesen — unver�
 - **Aufräumen (D316 nachgeholt)** — drei ungebundene Wurzeldateien nach `archiv/` verschoben
   (`00aq-nachtrag-prompt.md`, `00aq-werkzeuge-prompt.md`, `sitzungsstart-00ap.md`). Mit dieser
   Übergabe zusätzlich: `sitzungsstart-00aq.md` archiviert, diese Datei tritt an ihre Stelle.
+- **D325** — nach Abschluss der Öffnung: direkter Klon/Pull des öffentlichen Spiegels ersetzt
+  Repomix als Standardweg, mit HEAD-Hash-Abgleich vor jedem Lesen. `arbeitsweise.md` und
+  `README.md` (Erklärung der flachen Prompt-/Golden-Anchor-Struktur) entsprechend angepasst.
+  **Diese Übergabedatei wurde danach noch einmal nachgezogen** — der Kopf oben ist der
+  wirkliche Endstand, nicht der Stand vor D325.
 
 ## Der nächste Schritt
 
