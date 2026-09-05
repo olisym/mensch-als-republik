@@ -173,6 +173,7 @@ ALWAYS_BOUND = frozenset(
     {
         "pruefregeln.md",  # das Regelwerk; Volltext der Prüfregeln, Einstieg jeder Sitzung
         "README.md",  # Projektsicht von aussen; niemand muss sie mit Abschnitt zitieren
+        "CONTRIBUTING.md",  # Projektsicht für Mitwirkende von aussen; niemand zitiert sie mit Abschnitt
         "VISION.md",  # Absicht, nicht Layer, aber der Einstieg in die Leitsätze
         "werkzeuge.md",  # Werkzeugschicht ohne Layer-Nummer
         "example-nucleus.md",  # gerechnetes Beispielobjekt, Anker der Tests
