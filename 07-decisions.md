@@ -12795,3 +12795,44 @@ sie sich bestätigt.
 
 **Modus.** D311 gilt: Wegwerfcode, keine Golden Numbers, keine Rücknahmeprobe, keine
 Zweitimplementierung. Nur der Befund geht ins Register.
+
+---
+
+### D333 — Abnahme Szenario C (00av): Reputationsschiene traegt unabhaengig von BINDING
+
+**Lauf.** Branch `00av-schlichtung-szenario`, Commit `445b423`, Basis `6b46273`. Zwei Phasen
+aus identischer Baseline (`anna`=Anklaeger, `bruno`=Beschuldigter, `dora`=Schiedsrichter,
+`chris`=Beobachter). Unabhaengig nachgebaut: Diff angewendet, Umgebung neu aufgesetzt,
+`tools/sim/szenario_c.py` selbst ausgefuehrt — Ausgabe deckungsgleich mit der Meldung.
+
+**B1 — Hypothese aus D332 bestaetigt.** `verdict_status()` liefert `BINDING` (Phase 1) bzw.
+`ATTRIBUTED_OPINION` (Phase 2, nach Widerruf der Unterwerfung). Trust-Flow-Kennzahlen
+(`d`, `C`, `edges`, `flow`, `paths`) nach dem jeweiligen Vouch-Widerruf sind in beiden Phasen
+identisch (`d=2, C=25, edges=2, flow=25, paths=1`). Die Beobachter-Regel
+`revoke, wenn trust_flow(C,Z)>0` ist mit der vorhandenen `trust()`-Funktion ausdrueckbar, ohne
+neue Formel oder neuen Code in `symbolon/`. Die Reputationsschiene aus `05-enforcement.md §5`
+traegt damit unabhaengig vom formalen Bindungsstatus aus `03 §2.4` — die gleiche Struktur wie
+beim Law Merchant (Milgrom/North/Weingast 1990) und den Diamantenhaendlern (Bernstein 1992):
+Durchsetzung ueber Reputation, nicht ueber erzwingbare Bindung.
+
+**B2 — Bond-Slash bleibt Spec-Satz, nicht Laufbefund.** Kein Bond-Primitiv in `symbolon/`
+(unabhaengig per Volltextsuche bestaetigt). Abnahmekriterium 3 konnte nicht eintreten, weil
+nichts hinterlegt war — korrekt als nicht anwendbar gemeldet, nicht erfunden. Die in D332
+benannte Asymmetrie (Bond-Slash erfordert `BINDING`, Reputationsschiene nicht) bleibt damit
+eine Aussage aus `03 §2.3`, kein Prototyp-Ergebnis.
+
+**B3 — Szenario-Design verifiziert.** `constitution_res.arbitration.arbitrators =
+[bruno, chris, anna]` (unabhaengig in `tools/example_nucleus.py` geprueft) — `dora` fehlt.
+Waere sie gelistet, triege Pfad (i) in Phase 2 trotz Widerrufs der Unterwerfung, und der
+Kontrast waere zerstoert. Bewusste, korrekte Wahl.
+
+**B4–B6 — Rahmenbefunde, wie gemeldet.** Kein Klon-Schritt im Rahmen (zwei unabhaengige
+Laeufe aus identischen Baseline-Schritten). Beobachter-Policy steht im Treiber, nicht in
+einer Szenariodatei — `03 §2.2` (die Schicht liest den Ausgang nicht). Rahmenerweiterung um
+`submit-arbitration`, `accusation`, `verdict`, `zeige was=verdict_status`; `test_sim.py`
+unveraendert (8/8, wie vor dem Lauf).
+
+**Abnahme.** Diff eigenstaendig gegen `6b46273` angewendet, Umgebung neu aufgesetzt,
+Gesamtsuite (797/797) und `test_sim.py` (8/8) selbst laufen lassen, `verdict_status()` gegen
+`03 §2.4` gelesen — keine Aenderung an einer Spec-Datei. Alle Nicht-Ziele aus dem Prompt
+eingehalten. **Merge freigegeben.**
