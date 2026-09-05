@@ -12880,3 +12880,46 @@ zitiert wortwoertlich Restacks eigene Sprache ("local-first infrastructure").
 **Ausgefuehrt.** Zeile in `README.md` direkt nach dem Titel ergaenzt (Commit `6b31ecd`).
 Kurzbeschreibungen bei Gitea (`git.h.error13.de/oli/symbolon`) und GitHub
 (`github.com/olisym/symbolon`) ausserhalb von Git durch Oli auf denselben Wortlaut gesetzt.
+
+---
+
+### D336 — Fork zu Szenario D: Rechenschaft unter Partition (LoRa/Reticulum-Frage)
+
+**Anlass.** Offene Forschungsfrage aus `00av`/Sitzungsstart `00aw`: trägt das Stufe-C-Ergebnis
+(D332/D333 — Trust-Flow-Konsequenz unabhängig von `BINDING`/`ATTRIBUTED_OPINION`) auch dann,
+wenn Beobachter nicht wie in Stufe C sofort und vollständig beliefert werden, sondern wie unter
+LoRa/Reticulum: Pakete gehen dauerhaft verloren, Reihenfolge ist nicht garantiert, Uhren sind
+nicht synchron.
+
+**Der Fund, der die Frage schärft.** Die Bausteine dafür existieren bereits, ungenutzt in dieser
+Kombination: `tools/sim/welt.py::Welt.zustellen(nur=...)` erlaubt selektive, dauerhaft partielle
+Zustellung; `Teilnehmer.write_now()` setzt lokale Uhren unabhängig je Teilnehmer;
+`tools/sim/szenario.py::_trust_row/_verdict_status_row/_classify_row` werten bereits pro
+Teilnehmer aus dessen eigenem `store_laden()` aus, nicht global. Spec-seitig ist Degradation bei
+fehlender Referenz vorgesehen (`State.PENDING`, `symbolon/verifier.py`;
+`ProfileFinding.UNRESOLVED_ACCUSED`, `symbolon/profiles/verdict.py`) — aber bisher nur an
+Einzelatomen unit-getestet, nie an einem Mehrparteien-Vertrauensgraphen unter echter,
+dauerhafter Wissensasymmetrie durchgespielt.
+
+**Was das nicht ist.** Kein neues Primitiv, keine Netz-Simulation mit Zufallsverlust — die
+vorhandene selektive Zustellung reicht, um jedes Zustellmuster deterministisch nachzustellen.
+Kein Golden-Number-Lauf, kein Rollback (Szenariomodus, D311).
+
+**Die Hypothese für den Prototyp.** Zwei Läufe auf demselben Stufe-C-Baseline (A=anna, B=bruno,
+Z=dora, C=chris; Vouch-Graph C→B, C→Z, Z→B; Obligation B→A; `submit-arbitration` ×2,
+`accusation`, `verdict`):
+
+- **Lauf 1 „Broadcast"** — Kontrolle, identisch zu Stufe C: sofortige, vollständige Zustellung,
+  chronologische Reihenfolge.
+- **Lauf 2 „Funkstille"** — dieselben Claims, aber:
+  (a) **Umordnung**: `verdict_z` erreicht A und C, bevor `acc_a_b` (sein Referenzziel) dort
+      ankommt — erwartet: `PENDING`/`UNRESOLVED_ACCUSED`, kein Absturz; nach Nachlieferung
+      Konvergenz auf denselben Endzustand wie Lauf 1.
+  (b) **Dauerhafter Verlust**: der Widerruf von `vouch_c_b` (wie Stufe-C-Phase-1) erreicht Z und
+      B, aber nie A — erwartet: A behält lokal einen stabilen, von B/Z/C abweichenden, aber in
+      sich widerspruchsfreien `trust(C→B)`-Wert.
+  (c) **Uhrendrift**: A's lokale Uhr wird über `t_exp` einer der Vouches gesetzt, während
+      B/C/Z darunter bleiben — erwartet: nur A sieht diese Vouch lokal als `expired`.
+
+Jede Abweichung von (a)–(c) ist ein Befund, keine Regression — die Erwartung selbst ist die
+Messlatte, nicht ein vorab getippter Zahlenwert.
