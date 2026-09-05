@@ -262,11 +262,11 @@ Menschen aus `08 §2.2` zu finden.
 README, LICENSE, CONTRIBUTING und ein Dokument zur Methode auf Englisch. Neu geschrieben, nicht
 übersetzt. Die Werkstatt bleibt deutsch.
 
-### O54 Normative Sprache der Layer-Dateien
+### O54 Normative Sprache der Layer-Dateien — erledigt (D329)
 
-Gabelung, nicht entschieden. Deutsch normativ und Englisch als driftende Übersetzung, oder
-Englisch normativ und eine Zuordnungstabelle für D1 bis D315. Braucht einen eigenen
-Registereintrag und einen Blick in `tools/check_specs.py`.
+Deutsch bleibt normativ für Layer-Dateien, Register und Prüfregeln. Die englischen Dateien
+sind keine Übersetzungen, sondern eigenständiger Text — keine Drift-Gefahr, weil keine
+Übersetzungsbeziehung besteht.
 
 ### O55 Umbenennung auf `symbolon`
 
@@ -285,22 +285,10 @@ abgeschlossen, der Commons-Fonds bleibt zu. Nachfolger ist „Open Internet Stac
 3. September 2026 wieder offen. `Restack` passt inhaltlich am ehesten. Nächste Frist:
 **3. November 2026**. Ohne O52 und O53 gibt es nichts, worauf ein Antrag verweisen könnte.
 
-### O58 Die Implementierungen liegen in zwei Repositorien
+### O58 Die Implementierungen liegen in zwei Repositorien — erledigt (D321, D330)
 
-Die Go-Zweitimplementierung steht unter `~/mar-go` mit eigenem Remote. Sie ist der stärkste
-Beleg für die Methode — fünf Spec-Defekte, gegen die die Python-Testreihe blind war — und in
-einem zweiten, unbekannten Repositorium für einen Leser von aussen unsichtbar.
-
-Vermutung: `~/mar-go` wird zu `go/` im Hauptbaum, mit erhaltener Historie über `git subtree`
-oder einen Merge mit `--allow-unrelated-histories`. Der Python-Baum wird **nicht** umgebaut; ein
-Schnitt in `spec/`, `impl/python/` und `impl/go/` bräche jeden Pfad in Werkzeugen, Prompts und
-Zeilenangaben.
-
-D302 bleibt: die eingefrorene Spec-Kopie ist der Mechanismus der Unabhängigkeit, nicht die
-Repositoriumsgrenze. Sie bleibt eine Kopie im Baum, und die Drift gegen die lebende Spec wird
-als Befund gemeldet, nicht als Fehler.
-
-Tier 1, eigener Lauf, nicht zusammen mit `O55`.
+Nach `go/` gemergt (D321, fünf Commits erhalten, blob-geprüft). Das verwaiste Gitea-
+Repositorium `mar-go` wird archiviert, nicht umbenannt oder gelöscht (D330).
 
 ### O59 Vouchsafe als Antwort auf die Vertrauensentzug-Frage aus D313 — erledigt, verneint (D328)
 

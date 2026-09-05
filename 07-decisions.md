@@ -12680,3 +12680,43 @@ tatsächliche Antwort liefert dieser Eintrag, gemessen statt aus einer Fremdquel
 
 **Abschluss.** Merge von `00as-szenario-b` nach `main`. Die Prompt-Datei bindet sich über den
 Verweis auf D313/D328 selbst.
+
+### D329 — O54 entschieden: Deutsch bleibt normativ, Englisch ist keine Übersetzung
+
+**Anlass.** O54 stellte eine Gabelung: Deutsch normativ mit driftender englischer Übersetzung,
+oder Englisch normativ mit einer Zuordnungstabelle für D1 bis D315.
+
+**Befund.** `README.md` trifft diese Entscheidung bereits, nur nie als eigener Registereintrag
+festgehalten. Der Text sagt: die Arbeitssprache ist Deutsch, Spec, Register und Prozess bleiben
+es; `README.md`, `CONTRIBUTING.md` und `docs/METHOD.md` sind für ein englischsprachiges
+Publikum direkt verfasst, nicht aus etwas übersetzt.
+
+**Beschluss.** Layer-Dateien, Register und Prüfregeln bleiben ausschliesslich Deutsch und
+normativ. Die drei englischen Dateien sind keine Übersetzungen — eigenständiger Text ohne
+Anspruch auf 1:1-Entsprechung. Damit entfällt die in O54 unterstellte Drift-Gefahr: es gibt
+keine Übersetzungsbeziehung, die auseinanderlaufen könnte.
+
+**Was das für `tools/check_specs.py` heisst.** Keine Änderung nötig. Der Linter prüft
+Zitiergrammatik unabhängig von der Sprache, und die drei englischen Dateien tragen keine
+`§`-Zitate, die eine Zuordnungstabelle bräuchten.
+
+**Kein Lauf.** Dieser Eintrag ändert `offen.md` (schliesst O54), sonst nichts.
+
+### D330 — O58 abgeschlossen: das Gitea-Repositorium `mar-go` wird archiviert
+
+**Anlass.** D321 hat `~/mar-go` nach `go/` gemergt, aber offengelassen, was mit dem
+eigenständigen Gitea-Repositorium geschieht — archivieren, umbenennen oder stilllegen.
+
+**Beschluss.** Archivieren, nicht umbenennen oder löschen. Archivieren macht das Repositorium
+schreibgeschützt, ohne Historie oder eingehende Links zu zerstören — dieselbe Haltung wie D314
+gegenüber Wurzeldateien: Git hält ohnehin alles, also wird markiert, nicht gelöscht. Umbenennen
+böte keinen Vorteil, da niemand mehr auf das Repositorium verweisen soll; wer es findet, soll es
+als abgeschlossen erkennen, nicht als umgezogen.
+
+**Ausführung, ausserhalb von Git.** Oli archiviert `git.h.error13.de/oli/mar-go` über die
+Gitea-Weboberfläche (Repository-Einstellungen → Archive Repository). Die Beschreibung des
+Repositoriums sollte auf `go/` im Hauptrepositorium verweisen, damit ein Betrachter den neuen
+Ort findet.
+
+**Kein Lauf, keine Codeänderung.** Dieser Eintrag ändert `offen.md` (schliesst O58), sonst
+nichts.
