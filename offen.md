@@ -302,7 +302,7 @@ als Befund gemeldet, nicht als Fehler.
 
 Tier 1, eigener Lauf, nicht zusammen mit `O55`.
 
-### O59 Vouchsafe als Antwort auf die Vertrauensentzug-Frage aus D313
+### O59 Vouchsafe als Antwort auf die Vertrauensentzug-Frage aus D313 — erledigt, verneint (D328)
 
-Monotone Widerrufsform ohne Ausweitungsrisiko bei Suppression. Betrifft Layer 02, nicht
-`participants`. Primärtext (arXiv:2601.02254) ungeprüft. Aus D326.
+Falsche Passung: löst Capability-Widerruf, nicht wirtschaftliche Durchsetzung. Die
+D313-Frage ist stattdessen durch den gemessenen Lauf 00as beantwortet. Aus D326.

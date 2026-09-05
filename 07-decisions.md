@@ -12628,3 +12628,55 @@ feststellte — eine Zusammensetzung aus Protokoll (Obligation, Quittung, `accus
 
 **Kein Lauf.** Dieser Eintrag ändert `08-scope.md` (Prüftabelle) und schliesst O1, O2 in
 `offen.md`. Keine Code-Datei ist betroffen.
+
+### D328 — Abnahme 00as: Vertrauensentzug ist Kostenmechanismus, nicht Durchsetzung (D313)
+
+**Abnahme.** Der Lauf hat geliefert, was der Prompt verlangt: Baseline und Nachher-Messung für
+Distanz, Kapazität, Fluss, Pfade und Tilgungszustand. Unabhängig nachgebaut (eigener Klon,
+Diff angewendet, Lauf wiederholt) — identische Zahlen. `tests/test_sim.py`: 8 von 8, unverändert
+gegenüber der Meldung. Gesamtsuite unverändert bei 797, `check_specs.py` sauber.
+
+**Die Zahlen.**
+
+| | vorher | nachher |
+| --- | ---: | ---: |
+| `d` (Chris, von allen vier Beobachtern gleich) | 1 | 1 |
+| `C` (Chris) | 50 | 50 |
+| `edges` | 4 | 3 |
+| `flow` (`02 §4`) | 100 | 50 |
+| `paths` (disjunkt) | 2 | 1 |
+| `settlement` | OPEN | OPEN |
+
+**D313 beantwortet: Vertrauensentzug reicht nicht als Durchsetzung, wenn Redundanz besteht.**
+Anna widerruft ihren Vouch auf Chris. Distanz und Knotenkapazität (`02 §3`,
+`C(x) = ⌊C₀·γ^d⌋`) ändern sich nicht — Chris bleibt über Bruno auf derselben Stufe erreichbar.
+Der Max-Flow (`02 §4`) fällt auf die Hälfte, weil eine von zwei edge-disjunkten Vertrauenskanten
+entfällt. Das ist eine Kostensteigerung, keine Grenze: Chris verliert Kapazität, nicht Zugang.
+Die Obligation bleibt in beiden Messungen `OPEN` — Layer 02 (Vertrauen) und Layer 03
+(Verpflichtung) sind entkoppelt, wie D311/D312 vermuteten, jetzt mit einem Lauf belegt.
+
+**Die Verallgemeinerung.** Mit `n` unabhängigen, redundanten Vouch-Kanten auf denselben
+Ziel-Knoten sinkt der Fluss pro Widerruf um `1/n` des ursprünglichen Werts, nicht auf null.
+Das ist dieselbe Struktur wie Mastodon-Defederation oder Stellar-Slices (D236): kein
+kollektiver Beschluss, sondern viele lokale Akte, die sich erst in der Aggregation zu etwas
+Durchsetzungsähnlichem summieren — und selbst dann ist es Beobachtung, keine Erzwingung. Das
+Protokoll zwingt niemanden zur Zahlung; es macht nur sichtbar, wie viel Vertrauen noch da ist.
+
+**B5 — Architekturnotiz, kein Befund gegen die Spec.** `tools/example_nucleus.py::claim_set()`
+baut einen Vouch-Graphen in einer eigenständigen `ExampleNucleus`-Instanz, der nicht
+automatisch in eine `tools/sim`-`Welt` injiziert wird. Der Lauf hat den Graphen deshalb über
+eigene Szenario-Schritte nachgebaut. Werkzeug-Merkmal, keine Protokolllücke.
+
+**B6/B7 — Rahmenerweiterungen, dauerhaft, kein Wegwerfcode.** `_schritt_claim` kennt jetzt
+`obligation` und `revoke` (`core/revoke@1`, `J=(2, claim_id(target))`, kein Scope, `01 §2.3`);
+`zeige was=settlement` ist neu; `flow`/`paths` stehen jetzt in jeder `trust`-Zeile; der frühere
+Druck-Bug in `_schritt_zeige` (Rückgabewert wurde verworfen) ist behoben. Bleiben mit dem Merge
+im Baum, decken die sechs bestehenden Szenarien unverändert ab.
+
+**O59 korrigiert und geschlossen.** Vouchsafe (arXiv:2601.02254, verifiziert: echtes Paper,
+Jay Kuri, Ionzero Inc., Jan. 2026) beantwortet Offline-Widerruf von Capability-Tokens, nicht
+wirtschaftliche Durchsetzung durch Reputationsverlust — falsche Passung zu D313. Die
+tatsächliche Antwort liefert dieser Eintrag, gemessen statt aus einer Fremdquelle übernommen.
+
+**Abschluss.** Merge von `00as-szenario-b` nach `main`. Die Prompt-Datei bindet sich über den
+Verweis auf D313/D328 selbst.
