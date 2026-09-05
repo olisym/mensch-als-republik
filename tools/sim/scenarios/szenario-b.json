@@ -1,0 +1,105 @@
+{
+  "schritte": [
+    {
+      "art": "welt",
+      "pfad": "PLACEHOLDER",
+      "teilnehmer": [
+        {"name": "anna", "seed": "11", "now": 1000},
+        {"name": "bruno", "seed": "12", "now": 1000},
+        {"name": "chris", "seed": "13", "now": 1000},
+        {"name": "dora", "seed": "14", "now": 1000}
+      ]
+    },
+    {"art": "genesis", "quelle": "beispielnukleus"},
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vouch",
+      "scope": "res",
+      "subject": "bruno",
+      "n": 50,
+      "t": 1,
+      "t_exp": 1001000,
+      "label": "vouch_anna_bruno"
+    },
+    {
+      "art": "claim",
+      "autor": "bruno",
+      "praedikat": "vouch",
+      "scope": "res",
+      "subject": "anna",
+      "n": 50,
+      "t": 1,
+      "t_exp": 1001000
+    },
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "vouch",
+      "scope": "res",
+      "subject": "chris",
+      "n": 50,
+      "t": 2,
+      "t_exp": 1001000,
+      "label": "vouch_anna_chris"
+    },
+    {
+      "art": "claim",
+      "autor": "bruno",
+      "praedikat": "vouch",
+      "scope": "res",
+      "subject": "chris",
+      "n": 50,
+      "t": 2,
+      "t_exp": 1001000
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {"art": "zustellen", "von": "bruno", "an": "alle"},
+    {
+      "art": "claim",
+      "autor": "chris",
+      "praedikat": "obligation",
+      "scope": "res",
+      "subject": "anna",
+      "n": 10,
+      "t": 1,
+      "label": "obl_chris_anna"
+    },
+    {"art": "zustellen", "von": "chris", "an": "alle"},
+    {
+      "art": "zeige",
+      "was": "trust",
+      "name": "baseline",
+      "subject": "chris",
+      "anchors": ["anna", "bruno"]
+    },
+    {
+      "art": "zeige",
+      "was": "settlement",
+      "name": "baseline",
+      "claim": "obl_chris_anna"
+    },
+    {
+      "art": "claim",
+      "autor": "anna",
+      "praedikat": "revoke",
+      "target": "vouch_anna_chris",
+      "t": 3,
+      "label": "revoke_anna_chris"
+    },
+    {"art": "zustellen", "von": "anna", "an": "alle"},
+    {
+      "art": "zeige",
+      "was": "trust",
+      "name": "nach-widerruf",
+      "subject": "chris",
+      "anchors": ["anna", "bruno"]
+    },
+    {
+      "art": "zeige",
+      "was": "settlement",
+      "name": "nach-widerruf",
+      "claim": "obl_chris_anna"
+    }
+  ]
+}
