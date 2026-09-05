@@ -1,5 +1,7 @@
 # Mensch als Republik (MaR)
 
+*Symbolon: A Self-Verifying Trust Layer for Local-First Networks*
+
 **Can mutual assurance and collective decision-making work without a central authority —
 no court, no platform, no admin key?**
 
