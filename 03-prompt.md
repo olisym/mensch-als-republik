@@ -16,7 +16,7 @@ hingehört und welche Fallen die Vektoren stellen — er wiederholt die Vektoren
 
 **Zuerst, in einem eigenen Commit, vor allem anderen.**
 
-1. `mensch_als_republik/trust/index.py` → `mensch_als_republik/index.py`.
+1. `symbolon/trust/index.py` → `symbolon/index.py`.
 2. `trust/__init__.py` re-exportiert `classify_all` weiter aus dem neuen Ort. Die öffentliche
    Oberfläche von `trust` bleibt unverändert.
 3. `trust/derive.py` importiert aus dem neuen Ort.
@@ -59,8 +59,8 @@ des Helfers wieder offen.
 ## 2. Modulschnitt
 
 ```
-mensch_als_republik/index.py            classify_all(store, now, policy=None)   ← aus §0
-mensch_als_republik/profiles/
+symbolon/index.py            classify_all(store, now, policy=None)   ← aus §0
+symbolon/profiles/
   __init__.py    öffentliche Oberfläche
   findings.py    ProfileFinding, Finding(kind, subject)
   payload.py     v lesen (§3.1)
@@ -143,7 +143,7 @@ def resolve_policy(*, scope: bytes, genesis_obj: dict,
                    constitution_obj: dict | None = None) -> PolicyResolution
 ```
 
-`NucleusPolicy` wird aus `mensch_als_republik.policy` **importiert**, nicht neu definiert. Die
+`NucleusPolicy` wird aus `symbolon.policy` **importiert**, nicht neu definiert. Die
 Normalisierung (Boden D70, Negativliste D58, `core`-Filter D71) geschieht in ihrem Konstruktor
 und wird hier nicht wiederholt.
 
@@ -397,7 +397,7 @@ anderen ihn nicht werfen.
    dokumentierten Namen auffindbar.
 4. `N_A`, `N_B`, `N_C` sind berechnet und gegen die dokumentierten Werte geprüft.
 5. `git status --short` leer, `git diff --stat main` ohne Datei außerhalb von
-   `mensch_als_republik/index.py`, `mensch_als_republik/profiles/`, `mensch_als_republik/trust/`
+   `symbolon/index.py`, `symbolon/profiles/`, `symbolon/trust/`
    (nur Importzeilen) und `tests/`.
 6. Ein frischer Clone des Branches ist grün.
 

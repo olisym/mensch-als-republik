@@ -10,7 +10,7 @@ Befund, kein Spielraum.
 
 Zwei Änderungen unterhalb der neuen Schicht, beide klein, beide zuerst.
 
-### 0.1 `mensch_als_republik/domains.py`
+### 0.1 `symbolon/domains.py`
 
 ```python
 DOM_NUC_EPOCH    = b"claim-atom/v1/nucleus-epoch"
@@ -20,7 +20,7 @@ DOM_NUC_PROPOSAL = b"claim-atom/v1/nucleus-proposal"
 Zwei eigene Separatoren, damit ein `epoch_id` nie mit einem `proposal_hash`, einem
 `constitution_hash`, einer `claim_id` oder einem `N` kollidieren kann.
 
-### 0.2 `mensch_als_republik/policy.py` — D95 und ein geteilter Hash
+### 0.2 `symbolon/policy.py` — D95 und ein geteilter Hash
 
 **(a)** Neue Funktion, damit `profiles/policy.py` und `governance/` denselben Weg nehmen:
 
@@ -77,15 +77,15 @@ Vektoren: `P-7` Zeichenmenge aus einem Textwert, `P-8` Eintrag ohne `str`, `P-9`
 ## 2. Modulschnitt
 
 ```
-mensch_als_republik/domains.py       + zwei Separatoren           (§0.1)
-mensch_als_republik/policy.py        + constitution_hash(), D95   (§0.2)
-mensch_als_republik/governance/
+symbolon/domains.py       + zwei Separatoren           (§0.1)
+symbolon/policy.py        + constitution_hash(), D95   (§0.2)
+symbolon/governance/
   __init__.py    öffentliche Oberfläche
   findings.py    GovernanceFinding, Finding(kind, subject)
   objects.py     Epoch, Proposal, epoch_id(), proposal_hash()
   tally.py       decide(), reached(), hopeless(), ratio_max(), threshold_for()
   epoch.py       verify_ratification()
-mensch_als_republik/profiles/membership.py   + participants       (§7)
+symbolon/profiles/membership.py   + participants       (§7)
 ```
 
 Abhängigkeiten zeigen nach unten: `governance/*` benutzt `atom`, `cbor_canon`, `domains`,

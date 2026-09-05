@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import Claim
-from mensch_als_republik.trust import TrustParams
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon.atom import Claim
+from symbolon.trust import TrustParams
+from symbolon.verifier import InMemoryStore
 
 from tests.helpers import Identity, scope_id, store_with
 

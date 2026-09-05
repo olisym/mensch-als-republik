@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.policy import PolicyWarning
-from mensch_als_republik.profiles import Finding, ProfileFinding, resolve_policy
+from symbolon.policy import PolicyWarning
+from symbolon.profiles import Finding, ProfileFinding, resolve_policy
 
 from .fixtures import (
     CONSTITUTION_A,
@@ -120,8 +120,8 @@ def test_P_G() -> None:
     """Genesis ohne Key 4: Auflöser stört sich nicht daran (D168)."""
     import hashlib
 
-    from mensch_als_republik import cbor_canon
-    from mensch_als_republik.domains import DOM_NUC_GEN
+    from symbolon import cbor_canon
+    from symbolon.domains import DOM_NUC_GEN
 
     broken = {
         0: 1,

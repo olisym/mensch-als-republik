@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik import profiles, trust
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.policy import TRUST_GRANTING
-from mensch_als_republik.profiles import (
+from symbolon import profiles, trust
+from symbolon.atom import claim_id
+from symbolon.policy import TRUST_GRANTING
+from symbolon.profiles import (
     Finding,
     MembershipState,
     SettlementState,
@@ -18,7 +18,7 @@ from mensch_als_republik.profiles import (
     settlement,
     verdict_status,
 )
-from mensch_als_republik.profiles.payload import read_v
+from symbolon.profiles.payload import read_v
 from tests.helpers import store_with
 
 from .fixtures import (
@@ -258,7 +258,7 @@ def test_PR_INV_8() -> None:
         now=NOW,
     )
     assert result.status == VerdictStatus.BINDING
-    from mensch_als_republik.verifier import State, classify
+    from symbolon.verifier import State, classify
 
     assert classify(verdict, store, now=NOW).state == State.ACTIVE
 

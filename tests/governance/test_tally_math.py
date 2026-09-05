@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from mensch_als_republik.governance.tally import (
+from symbolon.governance.tally import (
     TallyState,
     applied_threshold,
     hopeless,
@@ -119,7 +119,7 @@ def test_D108_disjoint_yes_iff_below_majority() -> None:
 
 def test_ratio_one_half_is_admissible() -> None:
     """[1,2] ist zulässig (D108, Grenze nicht strikt)."""
-    from mensch_als_republik.governance import decide
+    from symbolon.governance import decide
     from tests.helpers import store_with
 
     result = decide(

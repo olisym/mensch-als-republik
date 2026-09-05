@@ -6,12 +6,12 @@ import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.policy import constitution_hash
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.policy import constitution_hash
+from symbolon.verifier import InMemoryStore
 from tests.governance.fixtures import nuc, vote
 from tests.helpers import Identity, store_with
 

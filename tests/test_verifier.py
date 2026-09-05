@@ -7,9 +7,9 @@ from pathlib import Path
 import cbor2
 import pytest
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_from_bytes, claim_id, is_equivocation_pair
-from mensch_als_republik.errors import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_from_bytes, claim_id, is_equivocation_pair
+from symbolon.errors import (
     BadScopeBinding,
     BadSignature,
     ErrorCode,
@@ -23,8 +23,8 @@ from mensch_als_republik.errors import (
     UnknownNamespace,
     UnsupportedVersion,
 )
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.verifier import (
+from symbolon.index import classify_all
+from symbolon.verifier import (
     InMemoryStore,
     State,
     classify,
@@ -336,7 +336,7 @@ def test_unknown_j_tag():
 
 def test_unknown_namespace_in_structural():
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from mensch_als_republik.atom import Claim, sign, signed_bytes
+    from symbolon.atom import Claim, sign, signed_bytes
 
     sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
     base = _claim("TV1")
@@ -376,7 +376,7 @@ def test_bad_scope_binding_structural():
 
 def test_reserved_core_predicate_structural():
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from mensch_als_republik.atom import Claim, sign, signed_bytes
+    from symbolon.atom import Claim, sign, signed_bytes
 
     sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
     base = _claim("TV1")
@@ -408,7 +408,7 @@ def test_foreign_lifecycle():
     store = InMemoryStore()
     store.add(_claim("TV4"))  # Bob's claim as target
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from mensch_als_republik.atom import Claim, sign, signed_bytes
+    from symbolon.atom import Claim, sign, signed_bytes
 
     sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
     target = _claim("TV4")
@@ -445,7 +445,7 @@ def test_bad_signature():
 
 def test_incoherent_expiry():
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    from mensch_als_republik.atom import Claim, sign, signed_bytes
+    from symbolon.atom import Claim, sign, signed_bytes
 
     sk = Ed25519PrivateKey.from_private_bytes(b"\x01" * 32)
     base = _claim("TV1")

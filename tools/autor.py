@@ -15,7 +15,7 @@ from typing import Protocol
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik.atom import (
+from symbolon.atom import (
     Claim,
     build_signed,
     claim_from_bytes,
@@ -23,7 +23,7 @@ from mensch_als_republik.atom import (
     id_genesis_anchor,
     signed_bytes,
 )
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon.verifier import InMemoryStore
 
 
 class KetteAngehalten(Exception):

@@ -4,15 +4,15 @@ from dataclasses import replace
 
 import pytest
 
-from mensch_als_republik.atom import Claim
-from mensch_als_republik.errors import (
+from symbolon.atom import Claim
+from symbolon.errors import (
     BadScopeBinding,
     InvalidPredicate,
     MalformedCbor,
     ReservedCorePredicate,
     UnknownNamespace,
 )
-from mensch_als_republik.predicates import (
+from symbolon.predicates import (
     is_core_predicate,
     is_nuc_name,
     parse_predicate,

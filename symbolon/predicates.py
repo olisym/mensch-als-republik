@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from mensch_als_republik.atom import Claim
-from mensch_als_republik.errors import (
+from symbolon.atom import Claim
+from symbolon.errors import (
     BadScopeBinding,
     InvalidPredicate,
     MalformedCbor,

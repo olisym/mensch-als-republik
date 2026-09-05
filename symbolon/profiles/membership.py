@@ -5,12 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash as hash_constitution
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.profiles.findings import Finding, ProfileFinding, dedupe_sort
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon.atom import claim_id
+from symbolon.policy import NucleusPolicy, constitution_hash as hash_constitution
+from symbolon.predicates import is_nuc_name
+from symbolon.profiles.findings import Finding, ProfileFinding, dedupe_sort
+from symbolon.index import classify_all
+from symbolon.verifier import ClaimStore, State
 
 
 class MembershipState(str, Enum):

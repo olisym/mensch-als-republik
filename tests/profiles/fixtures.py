@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import hashlib
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_NUC_GEN
+from symbolon import cbor_canon
+from symbolon.domains import DOM_NUC_GEN
 from tests.helpers import SEED_ALICE, SEED_BOB, SEED_CAROL, Identity
 
 ALICE = Identity("ALICE", seed=SEED_ALICE)

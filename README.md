@@ -67,7 +67,7 @@ repository included — is part of how those people might eventually turn up.
   not overhead to be trimmed. `tools/register_index.py` gives you structured lookup by entry
   number, so you don't have to read the whole thing at once.
 - `pruefregeln.md`: the accumulated review rules the project holds itself to.
-- `mensch_als_republik/`, `tests/`, `tools/`: the Python reference implementation, its test
+- `symbolon/`, `tests/`, `tools/`: the Python reference implementation, its test
   suite, and the tooling that enforces the review discipline (spec linting, mutation
   campaigns, register consistency checks).
 - `go/`: the independent Go implementation. It's deliberately pinned to a frozen snapshot of

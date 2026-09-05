@@ -12,7 +12,7 @@ Wenn dieser Test und T-02b.1 gleichzeitig gruen sind, ist die Rekursion richtig 
 
 from __future__ import annotations
 
-from mensch_als_republik.trust import rank
+from symbolon.trust import rank
 
 from .pr02 import RP
 from .tp02 import NOW, build

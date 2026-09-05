@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.trust import TrustParams, trust
+from symbolon.trust import TrustParams, trust
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, PARAMS, T_EXP, build

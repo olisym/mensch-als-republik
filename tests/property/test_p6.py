@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from hypothesis import given, strategies as st
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.verifier import State
+from symbolon.atom import claim_id
+from symbolon.index import classify_all
+from symbolon.verifier import State
 
 from tests.property.welten import EX, _SEEDS, _Signer, _nuc, _vouch_v, speicher
 

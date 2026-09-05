@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id, signed_bytes
-from mensch_als_republik.trust import TrustFinding, TrustParams, trust
-from mensch_als_republik.trust.derive import derive
+from symbolon.atom import claim_id, signed_bytes
+from symbolon.trust import TrustFinding, TrustParams, trust
+from symbolon.trust.derive import derive
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import NOW, T_EXP

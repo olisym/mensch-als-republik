@@ -7,14 +7,14 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik.atom import (
+from symbolon.atom import (
     Claim,
     build_signed,
     claim_id,
     id_genesis_anchor,
     signed_bytes,
 )
-from mensch_als_republik.verifier import InMemoryStore
+from symbolon.verifier import InMemoryStore
 from tools.autor import (
     Autor,
     DateiRueckhalt,

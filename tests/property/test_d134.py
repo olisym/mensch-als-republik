@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from hypothesis import given
 
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.trust.derive import derive
-from mensch_als_republik.trust.findings import TrustFinding
-from mensch_als_republik.trust.groups import build_groups
+from symbolon.index import classify_all
+from symbolon.trust.derive import derive
+from symbolon.trust.findings import TrustFinding
+from symbolon.trust.groups import build_groups
 
 from tests.property.welten import EX, speicher, welten
 

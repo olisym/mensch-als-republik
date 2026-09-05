@@ -7,19 +7,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.governance import (
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.governance import (
     decide,
     verify_ratification,
 )
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.profiles import membership, settlement
-from mensch_als_republik.trust.derive import derive
-from mensch_als_republik.trust.findings import TrustFinding
-from mensch_als_republik.trust.flow import trust
-from mensch_als_republik.trust.params import TrustParams
-from mensch_als_republik.verifier import classify
+from symbolon.policy import NucleusPolicy
+from symbolon.profiles import membership, settlement
+from symbolon.trust.derive import derive
+from symbolon.trust.findings import TrustFinding
+from symbolon.trust.flow import trust
+from symbolon.trust.params import TrustParams
+from symbolon.verifier import classify
 
 from tools.example_nucleus import ExampleNucleus, build
 from tools.sim.anzeige import tabelle

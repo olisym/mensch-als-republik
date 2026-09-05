@@ -9,10 +9,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from mensch_als_republik.atom import claim_from_bytes, claim_id
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.trust import classify_all
-from mensch_als_republik.verifier import InMemoryStore, State, classify
+from symbolon.atom import claim_from_bytes, claim_id
+from symbolon.policy import NucleusPolicy
+from symbolon.trust import classify_all
+from symbolon.verifier import InMemoryStore, State, classify
 
 from tests.helpers import Identity, scope_id, store_with
 from .tp02 import T_EXP, build

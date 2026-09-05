@@ -1,17 +1,17 @@
-"""Tests für mensch_als_republik.policy und den policy-Parameter von verifier.classify (01a)."""
+"""Tests für symbolon.policy und den policy-Parameter von verifier.classify (01a)."""
 
 from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.policy import (
+from symbolon.policy import (
     PROTOCOL_IRREVOCABLE,
     NucleusPolicy,
     PolicyNote,
     PolicyWarning,
     is_irrevocable,
 )
-from mensch_als_republik.verifier import State, classify
+from symbolon.verifier import State, classify
 from tests.helpers import Identity, scope_id, store_with
 
 

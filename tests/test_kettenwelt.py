@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import Finding, GovernanceFinding
-from mensch_als_republik.governance.findings import dedupe_sort
-from mensch_als_republik.keys import resolve_authorized_keys
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.profiles.policy import resolve_policy
-from mensch_als_republik.resolve import resolve_state
+from symbolon.atom import claim_id
+from symbolon.governance import Finding, GovernanceFinding
+from symbolon.governance.findings import dedupe_sort
+from symbolon.keys import resolve_authorized_keys
+from symbolon.predicates import is_nuc_name
+from symbolon.profiles.policy import resolve_policy
+from symbolon.resolve import resolve_state
 from tests.helpers import Identity
 from tests.kettenwelt import Kettenwelt, kettenwelt
 

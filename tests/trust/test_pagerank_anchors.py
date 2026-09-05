@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.trust import rank
+from symbolon.trust import rank
 
 from .pr02 import RP, mass_bound
 from .tp02 import NOW, build

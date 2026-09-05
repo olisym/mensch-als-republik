@@ -34,7 +34,7 @@ Du implementierst Schicht 02 der Referenzimplementierung von *Mensch als Republi
 
 ## 1. Modul-Layout
 
-Neu anzulegen, alles unterhalb von `mensch_als_republik/trust/`:
+Neu anzulegen, alles unterhalb von `symbolon/trust/`:
 
 ```
 trust/__init__.py      öffentliche Re-Exporte
@@ -524,7 +524,7 @@ Findings meldet als der mit `True`, hat die Reihenfolge aus §2.10 verletzt.
 2. Kein Import von `time`, `datetime`, `random`, `fractions`, `decimal`, `numpy`, `networkx`.
 3. Kein `float` im gesamten neuen Code (`grep -n 'float\|\.0\b\|/ '` prüfen; nur `//` erlaubt).
 4. Zwei Läufe liefern identische `TrustResult`, inklusive `cut` und `findings`.
-5. Kein Diff in Layer-01-Dateien: `git diff --stat main -- mensch_als_republik/*.py` zeigt nur
+5. Kein Diff in Layer-01-Dateien: `git diff --stat main -- symbolon/*.py` zeigt nur
    Neuzugänge unter `trust/`.
 
 Melde am Ende: `git diff --stat`, die pytest-Ausgabe, die Liste neuer Dateien, und **jede Stelle,

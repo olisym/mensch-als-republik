@@ -5,15 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from mensch_als_republik import findings as nucleus_findings
-from mensch_als_republik.governance import findings as governance_findings
-from mensch_als_republik.governance.chain import resolve_epoch
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.keys import resolve_authorized_keys
-from mensch_als_republik.policy import NucleusPolicy
-from mensch_als_republik.profiles import findings as profiles_findings
-from mensch_als_republik.profiles.policy import resolve_policy
-from mensch_als_republik.verifier import ClaimStore
+from symbolon import findings as nucleus_findings
+from symbolon.governance import findings as governance_findings
+from symbolon.governance.chain import resolve_epoch
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.keys import resolve_authorized_keys
+from symbolon.policy import NucleusPolicy
+from symbolon.profiles import findings as profiles_findings
+from symbolon.profiles.policy import resolve_policy
+from symbolon.verifier import ClaimStore
 
 
 @dataclass(frozen=True, slots=True)

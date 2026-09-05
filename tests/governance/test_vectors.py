@@ -6,18 +6,18 @@ import hashlib
 
 import pytest
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance import (
+from symbolon import cbor_canon
+from symbolon.atom import claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance import (
     Finding,
     GovernanceFinding,
     verify_ratification,
 )
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import TallyResult, TallyState, reached
-from mensch_als_republik.policy import constitution_hash
-from mensch_als_republik.profiles import MembershipState, membership
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.governance.tally import TallyResult, TallyState, reached
+from symbolon.policy import constitution_hash
+from symbolon.profiles import MembershipState, membership
 from tests.helpers import Identity, store_with
 
 from .fixtures import (

@@ -4,24 +4,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.governance.findings import (
+from symbolon.atom import Claim, claim_id
+from symbolon.governance.findings import (
     Finding,
     GovernanceFinding,
     dedupe_sort,
 )
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import (
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.governance.tally import (
     TallyResult,
     TallyState,
     constitution_governable,
     reached,
     read_v,
 )
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.policy import NucleusPolicy, constitution_hash
-from mensch_als_republik.predicates import is_nuc_name
-from mensch_als_republik.verifier import ClaimStore, State
+from symbolon.index import classify_all
+from symbolon.policy import NucleusPolicy, constitution_hash
+from symbolon.predicates import is_nuc_name
+from symbolon.verifier import ClaimStore, State
 
 
 @dataclass(frozen=True, slots=True)

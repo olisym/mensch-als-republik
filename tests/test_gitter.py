@@ -7,9 +7,9 @@ import sys
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_SIG
-from mensch_als_republik.errors import ErrorCode
+from symbolon import cbor_canon
+from symbolon.domains import DOM_SIG
+from symbolon.errors import ErrorCode
 from tools.gitter import C_OPERATORS, main, mutant_lines
 from tools.korpus import seed_lines
 from tools.verdikt import verdikt_line

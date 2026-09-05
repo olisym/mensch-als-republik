@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 
-from mensch_als_republik import cbor_canon
+from symbolon import cbor_canon
 
 PROTOCOL_IRREVOCABLE = frozenset(
     {"obligation@1", "rotate-key@1", "rotate-ack@1"}

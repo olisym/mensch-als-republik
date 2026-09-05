@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import Claim, claim_id
-from mensch_als_republik.predicates import parse_predicate
-from mensch_als_republik.verifier import Classification, State
+from symbolon import cbor_canon
+from symbolon.atom import Claim, claim_id
+from symbolon.predicates import parse_predicate
+from symbolon.verifier import Classification, State
 
 from .findings import Finding, TrustFinding
 

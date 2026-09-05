@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.index import classify_all
+from symbolon.index import classify_all
 
 from .findings import Finding, TrustFinding
 from .flow import TrustResult, trust

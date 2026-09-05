@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.profiles import (
+from symbolon import cbor_canon
+from symbolon.atom import claim_id
+from symbolon.profiles import (
     Finding,
     ProfileFinding,
     membership,
@@ -12,7 +12,7 @@ from mensch_als_republik.profiles import (
     settlement,
     verdict_status,
 )
-from mensch_als_republik.profiles.payload import read_v
+from symbolon.profiles.payload import read_v
 from tests.helpers import store_with
 
 from .fixtures import (

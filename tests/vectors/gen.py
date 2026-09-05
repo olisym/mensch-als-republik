@@ -10,7 +10,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik.atom import (
+from symbolon.atom import (
     Claim,
     claim_id,
     core_bytes,
@@ -20,8 +20,8 @@ from mensch_als_republik.atom import (
     signed_bytes,
     signed_map,
 )
-from mensch_als_republik.domains import DOM_NUC_GEN, DOM_SIG
-from mensch_als_republik import cbor_canon
+from symbolon.domains import DOM_NUC_GEN, DOM_SIG
+from symbolon import cbor_canon
 from tests.helpers import SEED_ALICE, SEED_BOB
 
 VECTORS_PATH = Path(__file__).resolve().parent / "vectors_01.json"

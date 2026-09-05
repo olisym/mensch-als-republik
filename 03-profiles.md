@@ -649,7 +649,7 @@ Hirschmans Exit, strukturell verankert.
 ## 6. Oberfläche und Modulschnitt
 
 ```
-mensch_als_republik/profiles/
+symbolon/profiles/
   policy.py      resolve_policy() -> PolicyResolution; Sicherheits-Default (Nukleus-Spec §5.2)
                  NucleusPolicy selbst liegt in Layer 01 — sonst wird der Import zyklisch
   membership.py  membership()     -> MembershipResult
@@ -662,7 +662,7 @@ Drei getrennte Funktionen statt einer, weil §1 drei getrennte Cluster behauptet
 Trennung sonst nur in der Prosa steht.
 
 **`classify_all` wird geteilt, nicht kopiert** — zwei Definitionen von „aktiv" driften, eine
-geteilte kann es nicht. Sie liegt dafür in `mensch_als_republik/index.py`, nicht unter
+geteilte kann es nicht. Sie liegt dafür in `symbolon/index.py`, nicht unter
 `trust/`: ihre Invariante ist die Übereinstimmung mit `verifier.classify` aus Layer 01 und hat
 mit dem Trust-Solver nichts zu tun. Beide Schichten importieren von dort; `trust/` re-exportiert
 sie weiterhin, damit die bestehende Oberfläche unverändert bleibt.

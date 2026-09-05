@@ -61,7 +61,7 @@ Vermerk `TALLY_UNEVALUABLE` statt `UNSUPPORTED_RATIFICATION`.
 Stimmen **desselben Autors** bezeichnen. Über die Autoren prüfen, nicht über die Identität der
 `claim_id`.
 
-## 3. `mensch_als_republik/policy.py`
+## 3. `symbolon/policy.py`
 
 **(a) `declared` bleibt die Deklaration.** Der Konstruktor überschreibt das Feld nicht mehr. Die
 gefilterte Menge steht in `irrevocable`; wird die geprüfte Deklaration zusätzlich gebraucht, tritt

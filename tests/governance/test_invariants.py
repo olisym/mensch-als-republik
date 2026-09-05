@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.governance import verify_ratification
-from mensch_als_republik.governance.tally import TallyState
+from symbolon.atom import claim_id
+from symbolon.governance import verify_ratification
+from symbolon.governance.tally import TallyState
 from tests.helpers import store_with
 
 from .fixtures import (

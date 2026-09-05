@@ -6,7 +6,7 @@ denselben Graphen wie 02a.
 
 from __future__ import annotations
 
-from mensch_als_republik.trust import RelaxParams
+from symbolon.trust import RelaxParams
 
 from .tp02 import PARAMS
 

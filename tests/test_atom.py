@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from mensch_als_republik.atom import (
+from symbolon.atom import (
     Claim,
     build_signed,
     claim_id,
@@ -60,7 +60,7 @@ def test_claim_id_from_vectors(name: str):
 
 
 def test_verify_sig_positive():
-    from mensch_als_republik.atom import claim_from_bytes
+    from symbolon.atom import claim_from_bytes
 
     c = claim_from_bytes(bytes.fromhex(_vec("TV1")["signed_bytes"]))
     assert verify_sig(c)
@@ -91,7 +91,7 @@ def test_sign_verify_roundtrip():
 
 
 def test_core_bytes_deterministic():
-    from mensch_als_republik.atom import claim_from_bytes
+    from symbolon.atom import claim_from_bytes
 
     tv1_data = _vec("TV1")
     c = claim_from_bytes(bytes.fromhex(tv1_data["signed_bytes"]))
@@ -99,7 +99,7 @@ def test_core_bytes_deterministic():
 
 
 def test_is_equivocation_pair():
-    from mensch_als_republik.atom import claim_from_bytes
+    from symbolon.atom import claim_from_bytes
 
     tv1 = claim_from_bytes(bytes.fromhex(_vec("TV1")["signed_bytes"]))
     nv3 = claim_from_bytes(bytes.fromhex(_vec("NV3")["signed_bytes"]))
@@ -108,7 +108,7 @@ def test_is_equivocation_pair():
 
 
 def test_claim_id_signature_independent():
-    from mensch_als_republik.atom import claim_from_bytes
+    from symbolon.atom import claim_from_bytes
 
     c = claim_from_bytes(bytes.fromhex(_vec("TV1")["signed_bytes"]))
     assert claim_id(c).hex() == GOLDEN_CLAIM_IDS["TV1"]

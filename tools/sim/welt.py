@@ -6,8 +6,8 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from mensch_als_republik.atom import Claim, claim_id, signed_bytes
-from mensch_als_republik.verifier import InMemoryStore, read_claim
+from symbolon.atom import Claim, claim_id, signed_bytes
+from symbolon.verifier import InMemoryStore, read_claim
 from tools.autor import Autor, DateiRueckhalt
 
 

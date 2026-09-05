@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.profiles.findings import ProfileFinding
+from symbolon import cbor_canon
+from symbolon.profiles.findings import ProfileFinding
 
 
 def read_v(v: bytes | None) -> tuple[dict | None, tuple[ProfileFinding, ...]]:

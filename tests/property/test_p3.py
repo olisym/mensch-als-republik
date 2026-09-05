@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from hypothesis import find, settings
 
-from mensch_als_republik.governance.tally import TallyState
-from mensch_als_republik.trust.params import TrustParams
+from symbolon.governance.tally import TallyState
+from symbolon.trust.params import TrustParams
 
 from tests.property.welten import (
     EX,

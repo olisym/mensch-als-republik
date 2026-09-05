@@ -6,12 +6,12 @@ import hashlib
 
 import pytest
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.findings import Finding, NucleusFinding
-from mensch_als_republik.keys import resolve_authorized_keys
-from mensch_als_republik.policy import constitution_hash
+from symbolon import cbor_canon
+from symbolon.atom import claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.findings import Finding, NucleusFinding
+from symbolon.keys import resolve_authorized_keys
+from symbolon.policy import constitution_hash
 from tests.helpers import Identity, store_with
 
 NOW = 1000

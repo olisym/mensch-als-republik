@@ -4,20 +4,20 @@ from __future__ import annotations
 
 import hashlib
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.atom import claim_id
-from mensch_als_republik.domains import DOM_NUC_GEN
-from mensch_als_republik.governance import verify_ratification
-from mensch_als_republik.governance.findings import GovernanceFinding
-from mensch_als_republik.governance.objects import Epoch, Proposal
-from mensch_als_republik.governance.tally import (
+from symbolon import cbor_canon
+from symbolon.atom import claim_id
+from symbolon.domains import DOM_NUC_GEN
+from symbolon.governance import verify_ratification
+from symbolon.governance.findings import GovernanceFinding
+from symbolon.governance.objects import Epoch, Proposal
+from symbolon.governance.tally import (
     TallyResult,
     TallyState,
     constitution_governable,
     decide,
     read_v,
 )
-from mensch_als_republik.policy import constitution_hash
+from symbolon.policy import constitution_hash
 from tests.helpers import store_with
 
 from .fixtures import (

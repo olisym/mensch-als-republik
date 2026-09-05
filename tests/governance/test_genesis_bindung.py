@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.governance.tally import reached
+from symbolon.governance.tally import reached
 from tests.helpers import store_with
 
 from .fixtures import (

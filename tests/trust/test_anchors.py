@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mensch_als_republik.trust import TrustFinding, trust
+from symbolon.trust import TrustFinding, trust
 
 from .tp02 import NOW, PARAMS, build, build_A_prime
 

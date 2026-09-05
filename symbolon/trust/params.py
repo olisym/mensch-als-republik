@@ -5,8 +5,8 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-from mensch_als_republik import cbor_canon
-from mensch_als_republik.domains import DOM_NUC_GEN
+from symbolon import cbor_canon
+from symbolon.domains import DOM_NUC_GEN
 
 
 @dataclass(frozen=True, slots=True)

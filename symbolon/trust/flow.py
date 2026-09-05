@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mensch_als_republik.verifier import ClaimStore
+from symbolon.verifier import ClaimStore
 
 from .derive import derive
 from .dinic import Dinic

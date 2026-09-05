@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mensch_als_republik.trust import rank
+from symbolon.trust import rank
 
 from tests.helpers import Identity, scope_id, store_with
 from .pr02 import RP

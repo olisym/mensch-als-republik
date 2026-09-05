@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from hypothesis import find, settings
 
-from mensch_als_republik.index import classify_all
-from mensch_als_republik.trust.groups import build_groups
+from symbolon.index import classify_all
+from symbolon.trust.groups import build_groups
 
 from tests.property.welten import EX, Welt, speicher, welten
 
