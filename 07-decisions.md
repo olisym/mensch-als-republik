@@ -12860,3 +12860,23 @@ danach erfolgreich, kein Fehler-Badge mehr.
 `github.com/olisym/symbolon`, Paketname `symbolon`, lokaler Ordner
 `~/mensch-als-republik` — drei von vier Namen jetzt deckungsgleich, der vierte bewusst
 unveraendert.
+
+---
+
+### D335 — Tagline fuer Symbolon: A Self-Verifying Trust Layer for Local-First Networks
+
+**Anlass.** Im Zuge des Restack-Antragsentwurfs (O57) wurde ein englischer Untertitel
+gebraucht, der die aktuelle Ausrichtung traegt, ohne D317 zu widersprechen — der Titel der
+Spec bleibt *Mensch als Republik*.
+
+**Wortwahl.** „Self-Verifying" statt „consensus-free": zieht D317 direkt weiter — die
+Marke verifiziert sich, indem die Haelften zusammenpassen, nicht weil eine Autoritaet
+signiert (`08 §2.2`). „Local-First Networks" statt „Mesh Networks": Reticulum beschreibt
+sich selbst als Mesh-Stack, aber die fuer MaR eigentlich tragende Eigenschaft ist
+"no IP addresses, no DNS, no central authority" — Adressierung und Vertrauen sind
+selbstausgestellt, nicht von einer Registrierstelle vergeben. „Local-first" trifft das und
+zitiert wortwoertlich Restacks eigene Sprache ("local-first infrastructure").
+
+**Ausgefuehrt.** Zeile in `README.md` direkt nach dem Titel ergaenzt (Commit `6b31ecd`).
+Kurzbeschreibungen bei Gitea (`git.h.error13.de/oli/symbolon`) und GitHub
+(`github.com/olisym/symbolon`) ausserhalb von Git durch Oli auf denselben Wortlaut gesetzt.
