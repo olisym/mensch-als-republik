@@ -12483,3 +12483,31 @@ Einträgen (Prüfregel 38); eine Entscheidung wird gezielt angefordert, wenn ihr
 Wortlaut gebraucht wird (Prüfregel 27). Kein Werkzeug, das direkt auf `07-decisions.md`
 zeigt (`stand.py`, `register_index.py`, `splice_run.py`), ist betroffen — sie lesen die
 Datei selbst, nicht die Kopie.
+### D323 — O57 neu gemessen: NGI Zero endet, Nachfolger „Open Internet Stack", `Restack` passt
+
+**Der Anlass.** D319 verwies auf eine spätere Neumessung, weil der zuvor gemeinte Fonds seinen
+letzten Aufruf im Juni 2026 geschlossen hatte. Die Messung war offen; hier ist sie nachgeholt,
+mit Quellen, Stand 5. September 2026.
+
+**Befund.** Der gemeinte Fonds ist der NGI Zero Commons Fund von NLnet. Sein dreizehnter und
+letzter Aufruf schloss am 1. Juni 2026; NLnet pausierte danach alle offenen Aufrufe, um „NGI
+Zero" nach zehn Jahren abzuschließen. Seit 3. September 2026 laufen die Aufrufe unter neuem
+Namen weiter: „Open Internet Stack", mit drei Programmen — `Restack`, `CodeSupply`, `ELFA`.
+Der Kadenz-Wechsel gehört zur Umstellung dazu: Frist neu am dritten statt am ersten Tag, und
+in ungeraden statt geraden Monaten. Nächste Frist: **3. November 2026**.
+
+**Passung.** `Restack` trägt die Formulierung „P2P infrastructure" und „internet commons
+across the entire technology stack" — das deckt sich eng mit MaR als Koordinationsprotokoll.
+`CodeSupply` und `ELFA` liegen näher bei Local-First-Anwendungen bzw. Software-Supply-Chain,
+nicht bei einem Konsensprotokoll selbst. `Restack` ist die Empfehlung.
+
+**Bedingungen unverändert passend.** 5.000–50.000 € pro Vorhaben, offen für Einzelpersonen,
+Pflicht zur Veröffentlichung unter freier Lizenz — bereits erfüllt durch D319.
+
+**Was offen bleibt.** O57 setzt O52 und O53 voraus (öffentlicher Spiegel, englische Schale);
+ohne beides gibt es nichts, worauf ein Antrag verweisen könnte. Diese Messung beantwortet nur,
+welche Linie passt und wann die nächste Frist liegt — nicht, ob rechtzeitig vor dem 3.
+November beide Vorarbeiten stehen.
+
+**Quellen.** nlnet.nl/commonsfund/, nlnet.nl/news/2026/20260612-NGIZero-stocktaking.html,
+nlnet.nl/news/2026/20260803-phaseshift.html, nlnet.nl/restack/, nlnet.nl/propose/.
