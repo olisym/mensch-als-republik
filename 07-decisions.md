@@ -13012,3 +13012,36 @@ D337 bereits unkonfundiert und bestätigt; wird nicht wiederholt.
 
 Jede Abweichung ist wie in D336 ein Befund, kein Golden-Number-Lauf, kein Rollback
 (Szenariomodus, D311).
+
+---
+
+### D339 — Abnahme Szenario D′: (a) und (b) sauber isoliert bestätigt
+
+**Anlass.** Abnahme zu D338, Branch `00aw-szenario-d2`, Commit `31c17de`. Unabhängig
+nachgebaut: Diff angewendet, `python -m tools.sim.szenario_d2` selbst laufen lassen —
+Ausgabe deckungsgleich mit der gemeldeten.
+
+**Ausgeführt.** Neue Datei `tools/sim/szenario_d2.py` (Wegwerf), keine Änderung an
+bestehenden Dateien. Drei vollständig unabhängige Läufe (kein geteilter Kontext), wie in
+D338 verlangt.
+
+**Befund (a) — bestätigt.** Verdikt an bruno und chris (nicht an der Autorin) vor der
+Anklage zugestellt: beide zeigen `ATTRIBUTED_OPINION` + `UNKNOWN_ACCUSATION`,
+`classify(verdict_z)` bleibt `active`. Nach Nachlieferung von `acc_a_b`: beide `BINDING`.
+Damit ist die in D337 korrigierte Erwartung (Layer-03-Degradation über
+`UNKNOWN_ACCUSATION`, nicht `State.PENDING`) am richtigen Beobachter — einem Nicht-Autor
+— bestätigt.
+
+**Befund (b) — bestätigt.** Ohne jede Uhrmanipulation, in einem eigenen Lauf: anna
+behält exakt den Broadcast-Wert (`d=1 C=50 flow=75 paths=2`), bruno/chris/dora zeigen den
+Nach-Widerruf-Wert (`d=2 C=25 flow=25 paths=1`). Die Konfundierung aus D336/D337 ist
+damit beseitigt — dauerhaft asymmetrisches Wissen allein erzeugt einen stabilen,
+abweichenden, fehlerfreien lokalen Wert.
+
+**Gesamtbild D336–D339.** Alle drei Teilfragen (a)/(b)/(c) sind jetzt unkonfundiert
+beantwortet: die Rechenschaftsschiene (D332/D333) bricht unter Partition (Umordnung,
+dauerhafter Verlust, Uhrendrift) in keinem Fall — kein Absturz, keine widersprüchliche
+Kennzahl, durchgehend graceful degradation, nur über zwei verschiedene, jetzt korrekt
+benannte Mechanismen (Layer 01 `State.PENDING` für Kettenvorgänger, Layer 03
+`ProfileFinding.*` für Anklage-/Verdikt-Querreferenzen). Die LoRa/Reticulum-Kernfrage aus
+`00av`/`00aw` ist damit für dieses Szenario abgeschlossen; kein weiterer Nachlauf offen.
