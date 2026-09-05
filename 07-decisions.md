@@ -12511,3 +12511,22 @@ November beide Vorarbeiten stehen.
 
 **Quellen.** nlnet.nl/commonsfund/, nlnet.nl/news/2026/20260612-NGIZero-stocktaking.html,
 nlnet.nl/news/2026/20260803-phaseshift.html, nlnet.nl/restack/, nlnet.nl/propose/.
+### D324 — Zitierfehler „08 §2.2 verlangt vier Menschen" gefunden und korrigiert
+
+**Der Befund.** In über zwanzig Prompt-Dateien wiederholt sich wortgleich: „08 §2.2 verlangt
+vier Menschen mit einem echten gemeinsamen Anliegen." `08 §2.2` behandelt aber Equivocation
+(„Widersprüche werden unbestreitbar, nicht unmöglich"), nicht Anwendungsbedingungen. Die
+eigentliche Quelle ist D237, und selbst dort steht keine Zahl — nur „Menschen mit einem echten
+gemeinsamen Anliegen", unbezifferte Mehrzahl.
+
+**Wie es entstand.** Vermutlich ein Prompt-Abschluss, über viele Sitzungen kopiert und nie
+gegen die Spec geprüft (Prüfregel 27, Prüfregel 38). Wo genau „vier" hinzukam, ist nicht mehr
+rekonstruierbar — die Zahl steht in keiner gefundenen Quelle vor der ersten Wiederholung.
+
+**Korrektur.** `README.md` und `CONTRIBUTING.md` zitieren jetzt D237 statt `08 §2.2` und nennen
+keine Zahl. Die alten Prompt-Dateien im Wurzelverzeichnis bleiben unverändert — Altlast, kein
+aktiver Text, ihre Korrektur ist keinen eigenen Posten wert.
+
+**Was offen bleibt.** Ob „vier" irgendwann bewusst entschieden wurde und nur nie einen eigenen
+Registereintrag bekam, lässt sich nicht ausschließen. Ohne Beleg gilt die unbezifferte Fassung
+aus D237 als maßgeblich.
