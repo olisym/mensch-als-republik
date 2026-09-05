@@ -1,72 +1,87 @@
-# Mensch als Republik — Protokoll-Spezifikation
+# Mensch als Republik (MaR)
 
-Ein **neutrales Substrat** für freiwillige, lokale, föderierte Koordination zwischen Menschen.
-Nicht *eine* Gesellschaftsordnung, sondern die Infrastruktur, auf der beliebig viele lokal und
-freiwillig nebeneinander bestehen — global gesehen ein **Markt der Gesellschaftssysteme**,
-dessen Auswahl über Exit/Fork läuft, nicht über Zwang.
+**Can mutual assurance and collective decision-making work without a central authority —
+no court, no platform, no admin key?**
 
-**Status:** Entwurf · **Protokollversion:** 1
+Mensch als Republik (MaR — a working title; renaming is planned but hasn't happened yet, see
+the decision register) is a protocol under active development that tries to answer that
+question by building the thing and measuring what breaks, instead of arguing about it in the
+abstract.
 
----
+This repository is the English entry point. The project's actual working language is German —
+the specifications, the decision register, and the day-to-day process are written in German
+and will stay that way. This file, along with `CONTRIBUTING.md` and `docs/METHOD.md`, is
+written directly for an English-reading audience, not translated from anything.
 
-## Der eine Leitgedanke
+## The question, more precisely
 
-> Alles Globale wird vermieden, alles Lokale wird ermächtigt.
+Most systems that coordinate people rely on either a trusted center — a court, a platform
+operator, a custodian holding funds — or a single dominant chain of consensus. MaR asks
+whether claims, obligations, and governance can instead be built to be checkable because they
+can **contradict each other**, not because an authority signed off on them. A claim nobody can
+ever be proven wrong about isn't more trustworthy for it — it's just unfalsifiable.
 
-Kein globaler Score, kein globaler Konsens, kein globales Gewaltmonopol, keine globale Wahrheit,
-kein globaler Preis. Aus dieser einen Entscheidung folgen alle anderen.
+The project is also deliberately built to survive its own author. One explicit goal is to
+resist forgotten decisions, silent drift, and normativity that creeps in unexamined over a
+multi-year timeline. The mechanism for that isn't discipline — it's a decision register that
+turns every normative choice, and the reasoning behind it, into a permanent, citable, checkable
+record.
 
-## Leitsätze (die Verfassung des Protokolls)
+## What exists today
 
-- **A1 — Selbstenthalten & transport-agnostisch.** Ein Claim reist über beliebige Medien
-  (Funk-Mesh, QR, Papier, …); Transport ist nie Teil des Objekts. Die Bindung an ein konkretes
-  Transportnetz (z. B. Reticulum/LXMF) ist ein separates Transport-Profil, kein Kern-Bestandteil.
-- **A2 — Lebenszyklus, nicht Bedeutung.** Das Protokoll versteht Gültigkeit, Ordnung und Widerruf —
-  nie den sozialen Sinn. **Mechanismus ins Protokoll, Policy nach oben.**
-- **A3 — Erkennen statt Verhindern.** Kein globaler Konsens; hash-verkettete Logs, Equivocation
-  beweisbar; Uneinigkeit löst sich über Exit/Fork.
-- **C1 — Gewalt ist Letztinstanz, nicht Basis.** Fünfstufige Eskalation; physischer Vollzug so
-  selten wie möglich.
-- **C2 — Physisches nie im Protokoll.** Das Protokoll koordiniert und beweist, Menschen handeln;
-  kein Monopol.
-- **D1 — Das Oracle-Problem bleibt offen.** Non-Repudiation ja, Wahrheit nie.
-- **D2 — Das Seed-Set ist die wertbildende Entscheidung**, kein technisches Detail.
-- **Der eine nicht-neutrale Commitment:** Freiwilligkeit und Konsens — Mitgliedschaft ist
-  beidseitig, Exit ist real. Ein System, das seine Mitglieder nicht gehen lässt, kann das
-  Protokoll nicht sauber abbilden. Das ist Absicht.
+- A layered specification (Layers 00–08): genesis and constitution, a claim/atom layer with a
+  formally verified rejection-code system, trust-flow and governance layers, a scope and
+  purpose layer that defines its own admission criteria.
+- A Python reference implementation, with **797 automated tests** and a decision register of
+  **more than 320 entries**, each with a named justification.
+- Layer 01 (the claim/atom layer) has been through an exhaustive mutation-testing campaign:
+  over **19,000 generated mutants**, single and paired, across three structural families. Not
+  one surviving mutant turned up anything that reading, reasoning, or a rollback probe hadn't
+  already found. That's treated as evidence the layer has been read out, not as proof of
+  correctness — the distinction matters, and it's recorded as one.
+- A second, independent implementation in Go, built against a frozen copy of the specification
+  without access to the Python code, specifically as a check on whether the specification
+  itself is complete and unambiguous. It has already found spec defects the first
+  implementation's own test suite could not surface.
+- An active scenario phase: rather than continuing to harden a single layer, the project is
+  now running deliberately adversarial comparative scenarios (for example: a shared fund with
+  a named custodian vs. a mutual-obligation model with none) to see where the protocol's
+  guarantees actually hold and where they don't. Findings from this phase go straight into the
+  register; the scenario code itself is throwaway.
 
-## Das Ergebnis in einem Satz
+## What does *not* exist yet
 
-**Nach dem Atom kommt kein einziges neues Feld hinzu.** Jede Schicht ist Komposition oder
-Auswertung über dem einen Primitiv — das war die Wette, und sie ist über vier Schichten
-aufgegangen.
+No real application. `08 §2.2` (the layer defining the project's own admission criteria) is
+explicit that a real test requires four real people with a genuine shared concern — not a
+simulation, not volunteers doing a favor. Waiting for that is treated as a legitimate state;
+pretending otherwise is not. Making the project visible — this repository
+included — is part of how those four people might eventually turn up.
 
----
+## Repository layout
 
-## Der Schichtenstack (Lesereihenfolge)
+- `00` – `08`, plus lettered sub-specifications: the layered specification, in German.
+- `07-decisions.md`: the decision register. Large by design — it is the point of the project,
+  not overhead to be trimmed. `tools/register_index.py` gives you structured lookup by entry
+  number, so you don't have to read the whole thing at once.
+- `pruefregeln.md`: the accumulated review rules the project holds itself to.
+- `mensch_als_republik/`, `tests/`, `tools/`: the Python reference implementation, its test
+  suite, and the tooling that enforces the review discipline (spec linting, mutation
+  campaigns, register consistency checks).
+- `go/`: the independent Go implementation. It's deliberately pinned to a frozen snapshot of
+  the specification — the register explains why that pin, not the repository split, is what
+  actually keeps the two implementations independent.
 
-| # | Datei | Schicht | Kern |
-|---|-------|---------|------|
-| 01 | [01-claim-atom.md](01-claim-atom.md) | Fundament | Das eine signierte, verkettete Primitiv + erste Profile (Bürgschaft, Regelannahme) |
-| 02 | [02-trust-flow.md](02-trust-flow.md) | Vertrauen | Sybil-resistenter Fluss (Min-Cut), lokal geseedet |
-| 03 | [03-profiles.md](03-profiles.md) | Soziale Akte | Weitere Profile: Verdikt, Wert/Kredit, Mitgliedschaft |
-| 04 | [04-governance.md](04-governance.md) | Konsens & Föderation | Vorschlag + Abstimmung + Auszählung; rekursiver Nukleus |
-| 05 | [05-enforcement.md](05-enforcement.md) | Durchsetzung | Fünfstufige, kurierbare Eskalation |
+## License
 
-## Bewusst offene Grenzen
+Code is licensed under **Apache-2.0** (`LICENSE`). The specification, the decision register,
+and other prose documents are licensed under **CC-BY-4.0** (`LICENSE-SPEC`). Both choices, and
+the reasoning behind them, are recorded in the register.
 
-Das Oracle-Problem (D1), der physische Vollzug (C2), die Seed-Integrität (D2) — und der
-irreduzible Rest: gegen eine hinreichend große fehlgeleitete Koalition hilft kein Protokoll.
-Kryptografie koordiniert, beweist, bindet und eskaliert; den Rest tragen Menschen.
+## Getting involved
 
-## Tests
-
-`make check` ist der schnelle Lauf während der Arbeit (Eigenschaftstests im Profil
-``schnell``). `make check-all` führt danach `make test-prop` aus — dieselben Eigenschaften
-mit mehreren hundert Beispielen.
-
-> **Ein Merge nach `main` verlangt `make check-all`, nicht `make check`.** Der schnelle Lauf zeigt,
-> dass nichts offensichtlich gebrochen ist; die Zusicherung der Eigenschaften entsteht erst bei
-> mehreren hundert Beispielen. Wird der schnelle Lauf zur Gewohnheit und der volle nie ausgeführt,
-> stehen 415 Tests da und sichern weniger als vorher — dieselbe Mechanik wie ein Wächter, der nur
-> eine Richtung kennt.
+This is currently a one-person project, but it isn't built ad hoc — every change is checked
+against the specification, not just against what compiles. See `docs/METHOD.md` for how that
+actually works day to day.
+If you're working on related problems — decentralized coordination, protocols hardened by
+contradiction rather than authority, or you think you might be one of the four people `08
+§2.2` is waiting for — open an issue, or see `CONTRIBUTING.md`.
