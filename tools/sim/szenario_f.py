@@ -60,7 +60,7 @@ def _welt(pfad: str) -> Welt:
 
 
 def _aufbau(welt: Welt) -> dict[str, Any]:
-    """Genesis, rivalisierende Vorschläge, Stimmen und ratify@1 (04 §1.1, §2, §4.4)."""
+    """Genesis, rivalisierende Vorschläge, Stimmen und ratify@1 (04 §1.1, 04 §2, 04 §4.4)."""
     pubs = {name: welt.teilnehmer[name].pub for name in NAMEN}
     participants = sorted(pubs.values())
     constitution_1 = _verfassung(participants, arbitrator=pubs[A])
@@ -145,7 +145,7 @@ def _vermerke(findings: tuple[Finding, ...]) -> list[str]:
 
 
 def _beobachte(welt: Welt, ex: dict[str, Any], name: str) -> dict[str, Any]:
-    """resolve_epoch plus decide(A) gegen die lokale Sicht (04 §3, §4.5)."""
+    """resolve_epoch plus decide(A) gegen die lokale Sicht (04 §3, 04 §4.5)."""
     tp = welt.teilnehmer[name]
     store = tp.store_laden()
     now = tp.read_now()

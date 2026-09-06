@@ -24,7 +24,6 @@ from tools.sim.szenario_c import (
     A,
     B,
     C,
-    T_EXP,
     Z,
     _baseline,
     _bis_verdikt,
