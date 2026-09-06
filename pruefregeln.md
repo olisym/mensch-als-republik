@@ -462,6 +462,15 @@ Schreiben des Skripts im ausgepackten Baum gegriffen.
 unzusammengeführt, solange `main` nicht gepusht ist, und der Löschbefehl scheitert mitten in der
 Kette. Die Reihenfolge ist damit nicht Geschmack, sondern Bedingung.
 
+**65. Der zweite Lauf eines Splices muss scheitern, nicht nur der erste gelingen.**
+Ein Assert, der nur die Eingangsbedingung des ersten Laufs prüft (der Anker kommt einmal vor),
+bleibt nach dem Einsetzen unverändert wahr, wenn der Anker selbst nicht verbraucht wird — der
+zweite Lauf des Harnesses (`splice_run.py`) gelingt dann ein zweites Mal, gilt als nicht
+idempotent-sicher und wird verworfen, samt der eigentlich richtigen ersten Anwendung. Der Assert
+prüft deshalb zusätzlich auf das Zielmuster, das erst nach dem ersten Lauf existiert (z. B. die
+neue Überschrift), oder verbraucht den Anker selbst. In `00ax` beim Schreiben von D342 gerissen
+(D343).
+
 ## Bei der Abnahme und beim Merge
 
 **56. Ein Bericht ohne den Diff ist keine Lieferung.**
@@ -500,7 +509,7 @@ D148, 24 und 25 aus D160, 26 aus D169, 27 aus D173, 28 aus D179, 29 aus D184,
 30 aus D192, 31 aus D196, 32 aus D200, 33 und 34 aus D201, 35 aus D203, 36 aus D205,
 37 aus D208, 38 aus D209, 39 aus D211, 40 aus D214, 41 aus D217, 42 aus D223, 43 aus D224,
 44 und 45 aus D229, 46 aus D232, 47 aus D239, 48 aus D244, 49 aus D245, 50 aus D254, 51 aus D257,
-52 bis 59 aus D282, 60 aus D296, 61 aus D299, 62 aus D304, 63 aus D312, 64 aus D315.
+52 bis 59 aus D282, 60 aus D296, 61 aus D299, 62 aus D304, 63 aus D312, 64 aus D315, 65 aus D343.
 
 Die Nummern **8** und **9** wurden in D144 vergeben. Parallelenprüfung und Begründungsprüfung
 liefen bis dahin unnummeriert als „die beiden älteren" mit; ohne Nummer waren sie in Prompts

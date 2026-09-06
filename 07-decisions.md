@@ -13128,3 +13128,69 @@ nicht in einem Fund über MaR.
 selbst signierten Claim immer, unabhängig von jeder `zustellen`-Aussage — das gilt auch für
 beide Hälften einer selbst erzeugten Gabelung. Vorschlag, keine Aktion: eine Prüfregel
 dazu wäre wahrscheinlich sinnvoll, überlasse ich Oli.
+
+---
+
+### D342 — Szenario F: Epochen-Rückfall bei rivalisierender Zustimmung unter Partition
+
+**Anlass.** Abnahme zu Szenario F, Branch `00ax-szenario-f`, Commit `12eb86c`.
+Unabhängig nachgebaut: Diff gelesen, `python -m tools.sim.szenario_f` selbst
+laufen lassen, Claim-IDs von `chris_a`/`chris_b` gegen die gedruckten Vermerke
+gegengeprüft (`dedupe_sort` sortiert nach Subjekt-Bytes, nicht Anhänge-
+Reihenfolge im Code — Quelle der anfänglichen Verwechslung, aufgeklärt, kein
+Fehler).
+
+**Befund.** Eine bereits materialisierte Folgeepoche kann bei einem Beobachter
+mit unvollständigem Wissen zurückfallen, sobald eine bislang unbekannte,
+rivalisierende Ja-Stimme desselben Autors eintrifft (`04 §4.4`,
+`CONFLICTING_APPROVAL`) — obwohl `ratify@1` nach `01 §5.4` unwiderruflich ist
+und keine Epoche je „widerrufen" wird. Ursache: `resolve_epoch` (`chain.py`)
+baut die Kette bei jedem Aufruf vollständig neu aus Epoche 1; ohne einen
+aktuell tragenden Übergang endet sie wieder dort, wo die Kette zuletzt sicher
+stand. Drei Stufen bei einem isolierten Beobachter (bruno): nur Vorschlag A
+bekannt → `decide(A)=PASSED`, Epoche 2; `chris`s Konfliktstimme trifft ein,
+Vorschlagsobjekt B fehlt noch → `UNKNOWN_PROPOSAL`, `chris` ausgeschlossen,
+Epoche fällt auf 1 zurück; Vorschlagsobjekt B trifft nach → Diagnose wechselt
+auf `CONFLICTING_APPROVAL`, Ergebnis (Epoche, `PENDING`) bleibt gleich — nur die
+Diagnose wird präziser. Kontrastprobe (dora): fehlt das Vorschlagsobjekt A
+dauerhaft, bleibt die Epoche dauerhaft bei 1, Vermerk
+`EPOCH_PROPOSAL_UNAVAILABLE`.
+
+**Einordnung.** Kein Implementierungsfehler. Die Kette ist bewusst zustandslos
+und rein lokal (`04 §4.5`: „Die Prüfung ist offline und vollständig lokal");
+ein Rückfall ist die Kehrseite derselben Eigenschaft, die eine falsche
+Ratifizierung verhindert (`§3.5`: „`UNEVALUABLE` ist nie `PASSED`"). Damit ist
+die im Vergleichsdokument (D326) belegte Grenze — kein Ausschluss ohne Konsens,
+Uhr oder Zentrale, siehe Buchanan/Tullock-Blockadeanalyse — um eine konkrete,
+selbst nachgebaute Variante ergänzt: nicht nur die Entfernung eines feindlichen
+Eintrags blockiert (`08 §8`, „Ein feindlicher Eintrag blockiert seine eigene
+Entfernung"), auch eine bereits erreichte, gutartige Epoche ist bei
+Teilwissen nicht dauerhaft gesichert, bis das Wissen aller relevanten Stimmen
+vollständig ist. Das ist dieselbe „Exit statt Voice"-Struktur wie bei der
+Rechenschaftsschicht (D336–D339, D340/D341): lokale, monotone Sicherheit vor
+globaler Verfügbarkeit.
+
+---
+
+### D343 — Methodik: Splice-Assert muss den Erfolgszustand verbrauchen (Prüfregel 65)
+
+**Anlass.** Eigener Fehler beim Anhängen von D342 in `00ax`: der erste Lauf von
+`tools/splice_run.py` gegen mein Splice-Skript hängte den Eintrag korrekt an; der
+Anker (letzter Satz von D341) blieb danach unverändert einmalig, weil ich nur
+danach eingefügt habe, statt ihn zu verbrauchen. Der zweite, vom Harness
+erzwungene Lauf gelang deshalb ein zweites Mal — Symptom: zwei D342-Einträge —
+und der Harness setzte beide Läufe zusammen zurück (`git checkout --`), zu Recht.
+
+**Befund.** Der Assert eines Splices muss nicht nur den Anker prüfen, sondern
+auch, dass der *Erfolgszustand des ersten Laufs* beim zweiten Lauf nicht mehr
+zutrifft — z. B. durch eine zusätzliche Prüfung auf das neu eingesetzte
+Zielmuster (hier: die Überschrift `### D342`). Ohne diese Prüfung erkennt der
+Harness die fehlende Idempotenz nicht als Fehler im *Skript*, sondern als
+Fehlschlag der *Anwendung*, und verwirft eine eigentlich korrekte erste
+Ausführung.
+
+**Einordnung.** Kein Fund über MaR, ein Fund über die eigene
+Werkzeugdisziplin — ergänzt Prüfregel 42 (Assert prüft das Ergebnis, nicht den
+eingesetzten Text) um die Idempotenz-Richtung: nicht nur *was* geprüft wird,
+sondern *ob die Prüfung nach der Anwendung noch dieselbe Antwort gibt*. Als
+Prüfregel 65 aufgenommen.
