@@ -13128,3 +13128,44 @@ nicht in einem Fund über MaR.
 selbst signierten Claim immer, unabhängig von jeder `zustellen`-Aussage — das gilt auch für
 beide Hälften einer selbst erzeugten Gabelung. Vorschlag, keine Aktion: eine Prüfregel
 dazu wäre wahrscheinlich sinnvoll, überlasse ich Oli.
+
+---
+
+### D342 — Szenario F: Epochen-Rückfall bei rivalisierender Zustimmung unter Partition
+
+**Anlass.** Abnahme zu Szenario F, Branch `00ax-szenario-f`, Commit `12eb86c`.
+Unabhängig nachgebaut: Diff gelesen, `python -m tools.sim.szenario_f` selbst
+laufen lassen, Claim-IDs von `chris_a`/`chris_b` gegen die gedruckten Vermerke
+gegengeprüft (`dedupe_sort` sortiert nach Subjekt-Bytes, nicht Anhänge-
+Reihenfolge im Code — Quelle der anfänglichen Verwechslung, aufgeklärt, kein
+Fehler).
+
+**Befund.** Eine bereits materialisierte Folgeepoche kann bei einem Beobachter
+mit unvollständigem Wissen zurückfallen, sobald eine bislang unbekannte,
+rivalisierende Ja-Stimme desselben Autors eintrifft (`04 §4.4`,
+`CONFLICTING_APPROVAL`) — obwohl `ratify@1` nach `01 §5.4` unwiderruflich ist
+und keine Epoche je „widerrufen" wird. Ursache: `resolve_epoch` (`chain.py`)
+baut die Kette bei jedem Aufruf vollständig neu aus Epoche 1; ohne einen
+aktuell tragenden Übergang endet sie wieder dort, wo die Kette zuletzt sicher
+stand. Drei Stufen bei einem isolierten Beobachter (bruno): nur Vorschlag A
+bekannt → `decide(A)=PASSED`, Epoche 2; `chris`s Konfliktstimme trifft ein,
+Vorschlagsobjekt B fehlt noch → `UNKNOWN_PROPOSAL`, `chris` ausgeschlossen,
+Epoche fällt auf 1 zurück; Vorschlagsobjekt B trifft nach → Diagnose wechselt
+auf `CONFLICTING_APPROVAL`, Ergebnis (Epoche, `PENDING`) bleibt gleich — nur die
+Diagnose wird präziser. Kontrastprobe (dora): fehlt das Vorschlagsobjekt A
+dauerhaft, bleibt die Epoche dauerhaft bei 1, Vermerk
+`EPOCH_PROPOSAL_UNAVAILABLE`.
+
+**Einordnung.** Kein Implementierungsfehler. Die Kette ist bewusst zustandslos
+und rein lokal (`04 §4.5`: „Die Prüfung ist offline und vollständig lokal");
+ein Rückfall ist die Kehrseite derselben Eigenschaft, die eine falsche
+Ratifizierung verhindert (`§3.5`: „`UNEVALUABLE` ist nie `PASSED`"). Damit ist
+die im Vergleichsdokument (D326) belegte Grenze — kein Ausschluss ohne Konsens,
+Uhr oder Zentrale, siehe Buchanan/Tullock-Blockadeanalyse — um eine konkrete,
+selbst nachgebaute Variante ergänzt: nicht nur die Entfernung eines feindlichen
+Eintrags blockiert (`08 §8`, „Ein feindlicher Eintrag blockiert seine eigene
+Entfernung"), auch eine bereits erreichte, gutartige Epoche ist bei
+Teilwissen nicht dauerhaft gesichert, bis das Wissen aller relevanten Stimmen
+vollständig ist. Das ist dieselbe „Exit statt Voice"-Struktur wie bei der
+Rechenschaftsschicht (D336–D339, D340/D341): lokale, monotone Sicherheit vor
+globaler Verfügbarkeit.
