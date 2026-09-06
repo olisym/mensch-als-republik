@@ -13169,3 +13169,28 @@ Teilwissen nicht dauerhaft gesichert, bis das Wissen aller relevanten Stimmen
 vollständig ist. Das ist dieselbe „Exit statt Voice"-Struktur wie bei der
 Rechenschaftsschicht (D336–D339, D340/D341): lokale, monotone Sicherheit vor
 globaler Verfügbarkeit.
+
+---
+
+### D343 — Methodik: Splice-Assert muss den Erfolgszustand verbrauchen (Prüfregel 65)
+
+**Anlass.** Eigener Fehler beim Anhängen von D342 in `00ax`: der erste Lauf von
+`tools/splice_run.py` gegen mein Splice-Skript hängte den Eintrag korrekt an; der
+Anker (letzter Satz von D341) blieb danach unverändert einmalig, weil ich nur
+danach eingefügt habe, statt ihn zu verbrauchen. Der zweite, vom Harness
+erzwungene Lauf gelang deshalb ein zweites Mal — Symptom: zwei D342-Einträge —
+und der Harness setzte beide Läufe zusammen zurück (`git checkout --`), zu Recht.
+
+**Befund.** Der Assert eines Splices muss nicht nur den Anker prüfen, sondern
+auch, dass der *Erfolgszustand des ersten Laufs* beim zweiten Lauf nicht mehr
+zutrifft — z. B. durch eine zusätzliche Prüfung auf das neu eingesetzte
+Zielmuster (hier: die Überschrift `### D342`). Ohne diese Prüfung erkennt der
+Harness die fehlende Idempotenz nicht als Fehler im *Skript*, sondern als
+Fehlschlag der *Anwendung*, und verwirft eine eigentlich korrekte erste
+Ausführung.
+
+**Einordnung.** Kein Fund über MaR, ein Fund über die eigene
+Werkzeugdisziplin — ergänzt Prüfregel 42 (Assert prüft das Ergebnis, nicht den
+eingesetzten Text) um die Idempotenz-Richtung: nicht nur *was* geprüft wird,
+sondern *ob die Prüfung nach der Anwendung noch dieselbe Antwort gibt*. Als
+Prüfregel 65 aufgenommen.
